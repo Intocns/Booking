@@ -1,0 +1,228 @@
+// 공통으로 쓰는 ui 컴포넌트 스타일 정의
+// 예: 버튼, 카드, 모달, 토스트, 인풋, 스위치, 탭
+
+// ======================================================================
+// 버튼
+// ======================================================================
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: $font-family-base;
+
+    &--size-24 { height: 24px; padding: 0 6px; gap: 2px; border-radius: 4px; @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line); }
+    &--size-32 { height: 32px; padding: 0 8px; gap: 3px; border-radius: 5px; @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line); }
+    &--size-40 { height: 40px; padding: 0 12px; gap: 4px; border-radius: 6px; @include typo($title-m-size, $title-m-weight, $title-m-spacing, $title-m-line); }
+
+    // solid blue
+    &--blue {
+        background-color: $primary-700;
+        color: $gray-00;
+
+        &:hover {background-color: $primary-800; box-shadow: $shadow-button-hover}
+        &:active {background-color: $primary-800; color: $primary-100;}
+        &.is-disabled {background-color: $gray-200; color: $gray-400;}
+    }
+    // outline blue
+    &--blue-outline {
+        border: 1px solid $primary-700;
+        background-color: $gray-00;
+        color: $primary-700;
+
+        &:hover {background-color: $primary-50; box-shadow: $shadow-button-hover}
+        &:active {background-color: $primary-100;}
+        &.is-disabled {border-color: $gray-300; background-color: $gray-200; color: $gray-400;}
+    }
+    // solid black
+    &--black {
+        background-color: $gray-700;
+        color: $gray-00;
+
+        &:hover {background-color: $gray-900;box-shadow: $shadow-button-hover}
+        &:active {background-color: $gray-900;}
+        &.is-disabled {background-color: $gray-200; color: $gray-400;}
+    }
+    // outline black
+    &--black-outline {
+        border: 1px solid $gray-300;
+        background: $gray-00;
+        color: $gray-700;
+
+        &:hover {background: $gray-100; box-shadow: $shadow-button-hover}
+        &:active {background: $gray-100; border-color: $gray-700;}
+        &.selected {background: $gray-100; border-color: $gray-700;}
+        &.is-disabled {border-color: $gray-300; background-color: $gray-200; color: $gray-400;}
+    }
+}
+
+// ======================================================================
+// radio/checkbox/toggle
+// ======================================================================
+// radio
+.radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    input {display: none;}
+
+    .circle {
+        width: 18px;
+        height: 18px;
+        background-image: url('@/assets/icons/ic_radio_off.svg');
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    input:checked + .circle {
+        background-image: url('@/assets/icons/ic_radio_on.svg');
+    }
+
+    .label {
+        color: $gray-900;
+        @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+    }
+}
+// checkbox
+.checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    input { display: none; }
+
+    .box {
+        width: 18px;
+        height: 18px;
+        background-image: url('@/assets/icons/ic_checkbox_unChecked.svg');
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    input:checked + .box {
+        background-image: url('@/assets/icons/ic_checkbox_checked.svg');
+    }
+
+    input:disabled + .box {
+        background-image: url('@/assets/icons/ic_checkbox_disabled.svg');
+    }
+
+    .label {
+        color: $gray-900;
+        @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+    }
+
+    input:disabled + .label {
+        color: $gray-400;
+    }
+}
+// toggle
+.toggle {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+
+    input {
+        display: none;
+    }
+
+    .toggle-img {
+        width: 32px;
+        height: 24px;
+        content: url('@/assets/icons/toggle_off.svg');
+        transition: 0.2s ease;
+    }
+
+    input:checked + .toggle-img {
+        content: url('@/assets/icons/toggle_on.svg');
+    }
+
+    input:disabled + .toggle-img {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+}
+
+// ======================================================================
+// etc (text button, flag)
+// ======================================================================
+// text-button
+.text-button {
+    display: inline-flex;
+    padding: 1px 2px;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+    border-radius: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
+
+    &--blue {
+        color: $primary-700;
+
+        &:hover {
+            background-color: $primary-100;
+        }
+    }
+
+    &--black {
+        color: $gray-700;
+
+        &:hover {
+            background-color: $gray-200 ;
+        }
+    }
+}
+// flag
+.flag {
+    display: inline-flex;
+    height: 20px;
+    padding: 0 8px;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+    border-radius: 20px;
+    text-align: center;
+    @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
+
+    &--basic {
+        background-color: $primary-100;
+        color: $primary-700;
+    }
+    &--basic-outline {
+        background-color: $gray-00;
+        border: 1px solid $primary-700;
+        color: $primary-700;
+    }
+
+    &--warning {
+        background-color: $warning-100;
+        color: $warning-300;
+    }
+    &--warning-outline {
+        background-color: $gray-00;
+        border: 1px solid $warning-300;
+        color: $warning-300;
+    }
+
+    &--black {
+        background-color: $gray-700;
+        color: $gray-00;
+    }
+    &--black-outline {
+        background-color: $gray-00;
+        border: 1px solid $gray-300;
+        color: $gray-700;
+    }
+
+    &--yellow {
+        background-color: $status-onHold_bg;
+        color: $status-onHold_text;
+    }
+
+    &--disabled {
+        background-color: $gray-200;
+        color: $gray-400;
+    }
+}

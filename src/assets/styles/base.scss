@@ -1,0 +1,105 @@
+// 브라우저 기본 스타일 재정의
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  font-family: $font-family-base;
+  font-size: 14px;
+  line-height: 1.4;
+//   background-color: $bg-default;
+//   color: $text-primary;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+button {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+input,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  border: 1px solid #ddd;
+  
+
+  &:focus {
+    border-color: $primary-700;
+    outline: none;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+// ======================================================================
+// 📌 GLOBAL UTILITY CLASSES (전역 유틸리티)
+// ======================================================================
+
+// 공통 패딩
+.p-sm { padding: $space-sm; }
+.p-md { padding: $space-md; }
+.p-lg { padding: $space-lg; }
+
+// 공통 마진
+.m-sm { margin: $space-sm; }
+.m-md { margin: $space-md; }
+.m-lg { margin: $space-lg; }
+
+// 화면 전체 영역 컨테이너
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 $space-md;
+}
+
+// text
+.heading-l { @include typo($heading-l-size, $heading-l-weight, $heading-l-spacing, $heading-l-line); }
+.heading-m { @include typo($heading-m-size, $heading-m-weight, $heading-m-spacing, $heading-m-line); }
+.heading-s { @include typo($heading-s-size, $heading-s-weight, $heading-s-spacing, $heading-s-line); }
+.title-l { @include typo($title-l-size, $title-l-weight, $title-l-spacing, $title-l-line); }
+.title-m { @include typo($title-m-size, $title-m-weight, $title-m-spacing, $title-m-line); }
+.title-s { @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line); }
+.title-xs { @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line); }
+.body-l { @include typo($body-l-size, $body-l-weight, $body-l-spacing, $body-l-line); }
+.body-m { @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line); }
+.body-s { @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line); }
+.body-xs { @include typo($body-xs-size, $body-xs-weight, $body-xs-spacing, $body-xs-line); }
+.caption { @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line); }

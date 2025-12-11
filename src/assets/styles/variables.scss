@@ -1,0 +1,133 @@
+// 색상, 여백, 폰트사이트 같은 디자인 토큰 관리
+
+// ======================================================================
+// COLOR SYSTEM (색상 시스템)
+// ======================================================================
+// Primary
+$primary-1000: #134495;
+$primary-800: #1b63ec;
+$primary-700: #0c75ff;
+$primary-500: #0098ff;
+$primary-100: #dfeaff;
+$primary-50: #e2f3ff;
+// Gray
+$gray-900: #0c0c0d;
+$gray-800: #2c2c2e;
+$gray-700: #49494d;
+$gray-600: #5d5d61;
+$gray-500: #86868a;
+$gray-400: #a5a5a8;
+$gray-300: #cdcdd1;
+$gray-200: #dedee3;
+$gray-100: #ededf2;
+$gray-50: #f5f5fa;
+$gray-00: #ffffff;
+// Warning
+$warning-500 : #ff3658;
+$warning-300 : #ff99aa;
+$warning-100 : #ffe0e5;
+// Etc
+$brand-naver: #00c73c;
+$brand-intoPet: #d659ff;
+$status-confirmed_text: #4868ec;
+$status-confirmed_bg : #cceaff;
+$status-onHold_text: #fbd563;
+$status-onHold_bg: #ffe9a5;
+$status-onHold_table_bg: #fff6d9;
+$status-canceled_text: #c41331;
+$status-canceled_bg: #ffd3db;
+$status-personal_text: #72e19e;
+$status-personal_bg: #D2FAE2;
+$vet1_bar: #d3756b;
+$vet1_bg: #ffc3a1;
+$vet2_bar: #8ea7e9;
+$vet2_bg: #cfdcff;
+$vet3_bar:#ad8b73;
+$vet3_bg: #e3caa5;
+$vet4_bar: #7d8f69;
+$vet4_bg: #e6e5a3;
+
+// ======================================================================
+// TYPOGRAPHY (폰트 설정)
+// ======================================================================
+// font family
+$font-family-base: "Pretendard", sans-serif;
+
+// Headings
+$heading-l-size: 40px;
+$heading-l-weight: 700;
+$heading-l-spacing: -0.02em;
+$heading-l-line: 140%;
+
+$heading-m-size: 30px;
+$heading-m-weight: 700;
+$heading-m-spacing: -0.02em;
+$heading-m-line: 140%;
+
+$heading-s-size: 20px;
+$heading-s-weight: 700;
+$heading-s-spacing: -0.02em;
+$heading-s-line: 140%;
+
+// Titles
+$title-l-size: 18px;
+$title-l-weight: 700;
+$title-l-spacing: -0.02em;
+$title-l-line: 120%;
+
+$title-m-size: 16px;
+$title-m-weight: 700;
+$title-m-spacing: -0.02em;
+$title-m-line: 120%;
+
+$title-s-size: 14px;
+$title-s-weight: 700;
+$title-s-spacing: -0.02em;
+$title-s-line: 120%;
+
+$title-xs-size: 12px;
+$title-xs-weight: 700;
+$title-xs-spacing: -0.02em;
+$title-xs-line: 120%;
+
+// Body
+$body-l-size: 16px;
+$body-l-weight: 400;
+$body-l-spacing: -0.02em;
+$body-l-line: 120%;
+
+$body-m-size: 14px;
+$body-m-weight: 400;
+$body-m-spacing: -0.02em;
+$body-m-line: 120%;
+
+$body-s-size: 13px;
+$body-s-weight: 400;
+$body-s-spacing: -0.02em;
+$body-s-line: 120%;
+
+$body-xs-size: 12px;
+$body-xs-weight: 400;
+$body-xs-spacing: -0.02em;
+$body-xs-line: 120%;
+
+// Caption
+$caption-size: 11px;
+$caption-weight: 600;
+$caption-spacing: -0.02em;
+$caption-line: 120%;
+
+// ======================================================================
+// SPACING SYSTEM (여백 단위)
+// ===================================================================
+$space-xxs: 4px;
+$space-xs: 6px;
+$space-sm: 8px;
+$space-md: 12px;
+$space-lg: 16px;
+$space-xl: 24px;
+
+// ======================================================================
+// RADIUS / SHADOW / Z-INDEX (모서리/그림자/레이어)
+// ======================================================================
+$shadow-button-hover: 0 2px 6px rgba(0, 0, 0, 0.06);

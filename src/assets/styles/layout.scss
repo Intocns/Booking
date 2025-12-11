@@ -1,0 +1,14 @@
+// header, footer, sidebar
+// gird, flex 레이아웃 패턴
+// 페이지 컨테이너
+// 모바일, 데스크탑 레이아웃
+
+.header {
+  height: 60px;
+  background: $primary-700;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
