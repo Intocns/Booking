@@ -3,6 +3,7 @@
 import PageTitle from '@/components/common/PageTitle.vue';
 import TableLayout from '@/components/common/TableLayout.vue';
 import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
+import CommonTable from '@/components/common/CommonTable.vue';
 
 import { useReservationStore } from '@/stores/reservationStore';
 import { onMounted } from 'vue';
@@ -45,13 +46,22 @@ onMounted(() => {
         helper-text="예약일자를 기준으로 내역이 조회됩니다"
     /> 
 
-    <TableLayout 
-        :columns="columns" 
-        :rows="reservationStore.reservePendingList" 
-    >
+    <TableLayout>
+        <!-- 검색 필터 -->
         <template #filter>
             <FilterKeywordBtn :placeholder="'고객명, 동물명, 전화번호 검색'" />
         </template>
         
+        <!-- 테이블 -->
+        <template #table>
+            <CommonTable :columns="columns" :rows="reservationStore.reservePendingList">
+    
+                <template #actions="{ row, rowIndex }">
+                    <button>상세</button>
+                    <button>대기</button>
+                </template>
+    
+            </CommonTable>
+        </template>
     </TableLayout>
 </template>

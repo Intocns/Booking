@@ -7,11 +7,11 @@ const emit = defineEmits(['row-click', 'search'])
 defineOptions({
     inheritAttrs: false
 })
-const props = defineProps({
-    columns: { type: Array },
-    rows: { type: Array },
-    // filterOptions와 같이 TableLayout이 직접 필요로 하는 props만 여기서 정의
-});
+// const props = defineProps({
+//     columns: { type: Array },
+//     rows: { type: Array },
+//     // filterOptions와 같이 TableLayout이 직접 필요로 하는 props만 여기서 정의
+// });
 
 </script>
 
@@ -23,14 +23,7 @@ const props = defineProps({
             </div>
         </div>
 
-        <CommonTable :columns="columns" :rows="rows">
-
-            <template #actions="{ row, rowIndex }">
-                <button>상세</button>
-                <button>대기</button>
-            </template>
-
-        </CommonTable>
+        <slot name="table"></slot>
     </div>
 </template>
 

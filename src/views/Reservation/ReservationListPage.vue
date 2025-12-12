@@ -11,6 +11,7 @@ import FilterKeyword from '@/components/common/filters/FilterKeyword.vue';
 import { onMounted, ref } from 'vue';
 // 스토어
 import { useReservationStore } from '@/stores/reservationStore';
+import CommonTable from '@/components/common/CommonTable.vue';
 
 const reservationStore = useReservationStore();
 
@@ -59,15 +60,21 @@ onMounted(() => {
     />
 
     <!-- 테이블 콘텐츠 (검색필터 + 테이블) -->
-    <TableLayout
-        :columns="columns" 
-        :rows="[]"
-    >
+    <TableLayout>
+        <!-- 검색필터 -->
         <template #filter>
             <FilterDate />
             <FilterSelect :label="'예약상태'" />
             <FilterSelect :label="'담당의'" />
             <FilterKeyword :placeholder="'고객명, 동물명, 전화번호 검색'" />
+        </template>
+
+        <!-- 테이블 -->
+        <template #table>
+            <CommonTable 
+                :columns="columns" 
+                :rows="[]"
+            />
         </template>
     </TableLayout>
 

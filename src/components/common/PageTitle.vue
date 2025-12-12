@@ -3,8 +3,8 @@ import icInformation from '@/assets/icons/ic_information_blue.svg'
 
 // props
 const props = defineProps({
-    title: { type: String, required: true }, // 페이지 제목
-    total: { type: Number, required: true }, // total
+    title: { type: String }, // 페이지 제목
+    total: { type: Number }, // total
     details: {
         type: Array,
         default: () => [], // 예: [{label:'확정', value: 15}]
@@ -15,47 +15,43 @@ const props = defineProps({
 
 <template>
     <div class="page-header">
-        <!-- Left: Title + Summary -->
-        <div class="page-header__left">
+        <!-- Page Title -->
+        <h1 class="page-title heading-m">
+            {{ title }}
+        </h1>
 
-            <!-- Page Title -->
-            <h1 class="page-title heading-m">
-                {{ title }}
-            </h1>
+        <!-- Summary -->
+        <div v-if="total" class="page-summary">
 
-            <!-- Summary -->
-            <div class="page-summary">
-
-                <!-- Total -->
-                <div class="page-summary__total">
-                    <span class="page-summary__total-label title-m">TOTAL</span>
-                    <span class="page-summary__total-data title-m">{{ total }}</span>
-                </div>
-
-                <div class="page-summary__line"></div>
-                
-                <!-- Detail -->
-                <div class="page-summary__detail">
-                    <div
-                        class="page-summary__detail-item"
-                        v-for="(item, idx) in details"
-                        :key="idx"
-                    >
-                        <span class="page-summary__detail-item-label body-l">
-                        {{ item.label }}
-                            </span>
-
-                        <!-- value 스타일 (warning이면 빨간색) -->
-                        <span
-                            class="page-summary__detail-item-data title-m"
-                            :class="{ warning: item.warning }"
-                        >
-                            {{ item.value }}
-                        </span>
-                    </div>
-                </div>
-
+            <!-- Total -->
+            <div class="page-summary__total">
+                <span class="page-summary__total-label title-m">TOTAL</span>
+                <span class="page-summary__total-data title-m">{{ total }}</span>
             </div>
+
+            <div class="page-summary__line"></div>
+            
+            <!-- Detail -->
+            <div class="page-summary__detail">
+                <div
+                    class="page-summary__detail-item"
+                    v-for="(item, idx) in details"
+                    :key="idx"
+                >
+                    <span class="page-summary__detail-item-label body-l">
+                    {{ item.label }}
+                        </span>
+
+                    <!-- value 스타일 (warning이면 빨간색) -->
+                    <span
+                        class="page-summary__detail-item-data title-m"
+                        :class="{ warning: item.warning }"
+                    >
+                        {{ item.value }}
+                    </span>
+                </div>
+            </div>
+
         </div>
 
         <!-- Helper -->
@@ -72,14 +68,9 @@ const props = defineProps({
     .page-header {
         width: 100%;
         display: flex;
-        justify-content: space-between;
+        gap: 16px;
+        // justify-content: space-between;
         align-items: center;
-
-        &__left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
 
         .page-title {
             color: $gray-900;
@@ -89,6 +80,7 @@ const props = defineProps({
             display: flex;
             align-items: center;
             gap: 16px;
+            flex:2;
 
             &__total {
                 @include flex-center;
