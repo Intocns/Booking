@@ -21,10 +21,10 @@ const router = createRouter({
             path: '/reservation',
             name: 'reservation',
             children: [
-                { path: 'list', component: () => import('@/views/Reservation/ReservationListPage.vue') },
-                { path: 'pending', component: () => import('@/views/Reservation/PendingReservationPage.vue') },
-                { path: 'schedule', component: () => import('@/views/Reservation/ReservationSchedulePage.vue') },
-                { path: 'sms-history', component: () => import('@/views/Reservation/SmsHistoryPage.vue') }
+                { path: 'list', name: 'reservationList', component: () => import('@/views/Reservation/ReservationListPage.vue') },
+                { path: 'pending', name: 'pendingList', component: () => import('@/views/Reservation/PendingReservationPage.vue') },
+                { path: 'schedule', name: 'reservationShedule', component: () => import('@/views/Reservation/ReservationSchedulePage.vue') },
+                { path: 'sms-history', name: 'smsHistory', component: () => import('@/views/Reservation/SmsHistoryPage.vue') }
             ]
         }
     ],

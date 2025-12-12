@@ -1,12 +1,13 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 
 import icSelectBoxOpenClosed from '@/assets/icons/Ic_selectbox_OpenClosed.svg';
 
+
 const props = defineProps({
-    modelValue: Array,
-    options: Array,
-    placeholder: String,
+    modelValue: { type: Array, default: () => [] },  // 선택된 value 목록
+    options: { type: Array, default: () => [] },     // { label, value }
+    placeholder: { type: String, default: "선택" },
     disabled: Boolean,
 });
 
@@ -15,20 +16,29 @@ const emit = defineEmits(['update:modelValue']);
 const isOpen = ref(false);
 const wrapper = ref(null);
 
-/* 🔹 토글 */
+/* 토글 */
 const toggle = () => {
-  if (!props.disabled) isOpen.value = !isOpen.value;
+    if (!props.disabled) isOpen.value = !isOpen.value;
 };
 
-/* 🔹 옵션 선택 */
-const selectOption = (option) => {
-  const exists = props.modelValue.includes(option);
+const selectedLabels = computed(() => {
+    return props.options
+            .filter(opt => props.modelValue.includes(opt.value))
+            .map(opt => opt.label)
+})
 
-  if (exists) {
-    emit('update:modelValue', props.modelValue.filter(o => o !== option));
-  } else {
-    emit('update:modelValue', [...props.modelValue, option]);
-  }
+/* 🔹 옵션 선택 */
+const selectOption = (value) => {
+    const exists = props.modelValue.includes(value);
+
+    if (exists) {
+        emit(
+        "update:modelValue",
+        props.modelValue.filter((v) => v !== value)
+        );
+    } else {
+        emit("update:modelValue", [...props.modelValue, value]);
+    }
 };
 
 /* 외부 클릭 → 닫기 */
@@ -54,9 +64,9 @@ onBeforeUnmount(() => {
         <div class="select__box" :class="{ open: isOpen }" @click="toggle">
             <span 
                 class="select__text"
-                :class="{'is-placeholder' : !modelValue.length }"
+                :class="{'is-placeholder' : !selectedLabels.length }"
             >
-                {{ modelValue.length ? modelValue.join(', ') : placeholder }}
+                {{ selectedLabels.length ? selectedLabels.join(', ') : placeholder }}
             </span>
 
             <span class="select__icon" :class="{'rotate': isOpen}">
@@ -68,19 +78,19 @@ onBeforeUnmount(() => {
         <div class="select__dropdown" v-if="isOpen">
             <div 
                 v-for="opt in options" 
-                :key="opt"
+                :key="opt.value"
                 class="select__option"
-                :class="{ selected: modelValue.includes(opt) }"
-                @click.stop="selectOption(opt)"
+                :class="{ selected: modelValue.includes(opt.value) }"
+                @click.stop="selectOption(opt.value)"
             >
                 <label class="checkbox">
                     <input 
                         type="checkbox" 
-                        :checked="modelValue.includes(opt)"
-                        @change="selectOption(opt)"
+                        :checked="modelValue.includes(opt.value)"
+                        @click.stop.prevent
                     />
                     <span class="box"></span>
-                    <span class="label body-m">{{ opt }}</span>
+                    <span class="label body-m">{{ opt.label }}</span>
                 </label>
 
             </div>
@@ -154,6 +164,7 @@ onBeforeUnmount(() => {
         }
 
         &__option {
+            width: 100%;
             height: 32px;
             padding: 0 4px;
             display: flex;
@@ -162,6 +173,7 @@ onBeforeUnmount(() => {
 
             border-radius: 4px;
 
+            label {width:100%;}
             &:hover {
                 background-color: $gray-50;
             }

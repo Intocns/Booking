@@ -172,6 +172,7 @@ const isActiveChild = (child) => {
     TOP 영역
 ----------------------------- */
 .top {
+    width: 100%;
     padding: 30px 24px 40px;
     display: flex;
     flex-direction: column;

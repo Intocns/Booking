@@ -1,5 +1,8 @@
 <script setup>
     import Sidebar from './Sidebar.vue';
+    import Spinner from '../common/Spinner.vue';
+
+    import { api } from '@/api/axios';
 </script>
 
 <template>
@@ -7,9 +10,11 @@
         <Sidebar />
 
         <main class="content">
-            <router-view />
+            <router-view :key="$route.fullPath" />
         </main>
     </div>
+
+    <Spinner v-show="api.ing.value" />
 </template>
 
 <style lang="scss" scoped>

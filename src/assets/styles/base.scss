@@ -12,6 +12,7 @@ body {
   font-family: $font-family-base;
   font-size: 14px;
   line-height: 1.4;
+  color: #343439;
 //   background-color: $bg-default;
 //   color: $text-primary;
 }
@@ -49,15 +50,18 @@ ol {
 
 input,
 textarea {
-  font-family: inherit;
-  font-size: inherit;
-  border: 1px solid #ddd;
-  
-
-  &:focus {
-    border-color: $primary-700;
+    font-family: inherit;
+    font-size: inherit;
     outline: none;
-  }
+    
+    @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+
+    border-radius: 4px;
+    border: 1px solid $gray-200;
+
+    &:focus {border-color: $gray-900;}
+    &::placeholder { color: $gray-400;}
+    &:disabled {background-color: $gray-50; color: $gray-700;}
 }
 
 ::-webkit-scrollbar {
@@ -90,6 +94,14 @@ textarea {
   padding: 0 $space-md;
 }
 
+// input:text 
+.input-text {
+    display: flex;
+    height: 32px;
+    padding: 0 10px;
+    align-items: center;
+}
+
 // text
 .heading-l { @include typo($heading-l-size, $heading-l-weight, $heading-l-spacing, $heading-l-line); }
 .heading-m { @include typo($heading-m-size, $heading-m-weight, $heading-m-spacing, $heading-m-line); }
@@ -103,3 +115,19 @@ textarea {
 .body-s { @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line); }
 .body-xs { @include typo($body-xs-size, $body-xs-weight, $body-xs-spacing, $body-xs-line); }
 .caption { @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line); }
+.tooltip { @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line); word-break: keep-all;}
+// img
+.icon-img {display: inline-block;}
+
+// empty
+.empty-box {
+    @include flex-center;
+    flex-direction: column;
+    gap: 8px;
+    margin: auto;
+    
+    span { 
+        color: $gray-700;
+        @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+    }
+}

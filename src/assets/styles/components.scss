@@ -54,7 +54,10 @@
         &.is-disabled {border-color: $gray-300; background-color: $gray-200; color: $gray-400;}
     }
 }
-
+.modal-btn {
+    width: 120px;
+    padding: 0 12px;
+}
 // ======================================================================
 // radio/checkbox/toggle
 // ======================================================================
