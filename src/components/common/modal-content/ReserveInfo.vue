@@ -9,12 +9,20 @@ import InputTextBox from '@/components/common/InputTextBox.vue';
 import TimeSelect from '@/components/common/TimeSelect.vue';
 import icInformation from '@/assets/icons/ic_information_blue.svg'
 import icSearchW from '@/assets/icons/ic_search_w.svg'
-import TextAreaBox from '../TextAreaBox.vue';
+import TextAreaBox from '@/components/common/TextAreaBox.vue';
+import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
 
 import CommonTable from '@/components/common/CommonTable.vue';
 
+import { useModalStore } from '@/stores/modalStore';
+
+const modalStore = useModalStore();
+
 const startTime = ref(null);
 const endTime = ref(null);
+
+// 예약 방문일 (단일 날짜)을 위한 ref 상태 정의
+const reserveDate = ref(null);
 
 // 고객정보 테이블 정의
 const customerInfoColumns = [
@@ -125,20 +133,7 @@ const customerInfoColumns = [
                     <div class="info-item">
                         <p class="label">예약 방문일</p>
                         <div class="d-flex gap-8" style="flex:2;">
-                            <VueDatePicker 
-                                :locale="ko"
-                                :range="false"
-                                :model-value="null"
-                                :time-config="{ enableTimePicker: false }"
-                                :hide-input="true"
-                                :week-start="0"
-                                class="date-picker-wrap"
-                            >
-                                <template #action-row="{ selectDate, closeMenu }">
-                                    <button class="btn btn--size-24 btn--black-outline"  @click="dpRef && dpRef.closeMenu()">취소</button>
-                                    <button class="btn btn--size-24 btn--black" @click="selectDate()">적용</button>
-                                </template>
-                            </VueDatePicker>
+                            <CustomDatePicker v-model="reserveDate" :range="false" />
 
                             <!-- 시간 선택 ( 00: 00 ~ 00: 00) -->
                             <div class="d-flex align-center gap-4" style="flex:2;">
@@ -194,7 +189,7 @@ const customerInfoColumns = [
                 </div>
 
                 <!-- 고객 검색 버튼 -->
-                <button class="btn btn--size-24 btn--black">
+                <button class="btn btn--size-24 btn--black" @click="modalStore.searchCustomerModal.openModal()">
                     <img :src="icSearchW" alt="아이콘">
                     고객 검색
                 </button>
@@ -268,18 +263,9 @@ const customerInfoColumns = [
         }
     }
 
-    .date-picker-wrap {flex:1; height: 32px;}
+    // .date-picker-wrap {flex:1; height: 32px;}
     :deep(.dp__input_wrap) {height: 32px !important;}
     :deep(.dp__input) {height: 32px !important;}
 
     .customer-info-table-wrapper { height: 200px; }
-
-    .modal-button-wrapper {
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-        padding-top: 16px;
-        .btn {min-width: 120px;}
-    } 
 </style>

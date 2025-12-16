@@ -27,10 +27,12 @@ export const useModalStore = defineStore("modalStore", () => {
     const smsModal = createModalState();
     const confirmModal = createModalState();
     const reserveInfoModal = createModalState();
+    const searchCustomerModal = createModalState();
 
     return {
         smsModal,
         confirmModal,
         reserveInfoModal,
+        searchCustomerModal,
     }
 })

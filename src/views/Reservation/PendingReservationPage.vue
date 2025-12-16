@@ -8,6 +8,7 @@ import Modal from '@/components/common/Modal.vue';
 import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
 import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
+import SearchCustomer from '@/components/common/modal-content/SearchCustomer.vue';
 
 import icSms from '@/assets/icons/ic_sms.svg';
 
@@ -81,6 +82,16 @@ onMounted(() => {
         :modalState="modalStore.reserveInfoModal"
     >
         <ReserveInfo />
+    </Modal>
+
+    <!--  고객 예약 정보 > 고객 검색 모달 -->
+    <Modal
+        v-if="modalStore.searchCustomerModal.isVisible"
+        size="m"
+        title="고객 검색"
+        :modalState="modalStore.searchCustomerModal"
+    >
+        <SearchCustomer />
     </Modal>
 
     <!-- 문자 발송 모달 -->
