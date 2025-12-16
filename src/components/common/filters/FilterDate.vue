@@ -175,65 +175,6 @@ const formatRange = (dates) => {
         border-color: $gray-900;
         box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.06);
     }
-    :deep(.dp--clear-btn) {display: none;}
-    :deep(.dp__input_icon) {display: none;}
-    :deep(.dp__arrow_top ) {display: none;}
-    :deep(.dp--menu-wrapper),
-    :deep(.dp__menu),
-    :deep(.dp__menu > div) {width:240px; min-width: 240px;}
-    :deep(.dp__month_year_wrap .dp__month_year_wrap) {flex-direction: row-reverse;} // 월 이동 버튼 자리 바꿈
-    :deep(.dp__month_year_select) { // 월, 년도 선택 버튼
-        font-family: $font-family-base;
-        @include typo($body-l-size, $body-l-weight, $body-l-spacing, $body-l-line);
-    }
-    :deep(.dp__inner_nav) {border: 1px solid $gray-200;}
-    :deep(.dp__calendar_header_item) { // 일자 (월/화/수/목/금)
-        color: $gray-700;  
-        font-family: $font-family-base;
-        @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
-        @include flex-center;
-    }
-    :deep(.dp__calendar_header_separator) {display: none;} // 일자 아래 보더
-    :deep(.dp__range_between) {background-color: $gray-50;} // 선택된 range 날짜 배경 컬러
-    :deep(.dp__calendar_item) {width:32px; height: 32px;}
-    :deep(.dp__cell_inner) { // 날짜
-        width: 32px;
-        height: 32px;
-        @include flex-center;
-        padding: 10px;
-        font-family: $font-family-base;
-        color: $gray-700;
-        @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
-    }
-    :deep(.dp__range_start), // 선택 start날짜
-    :deep(.dp__range_end), // 선택 end 날짜
-    :deep(.dp__active_date) { // active 날짜
-        color: $gray-00 !important;
-        background-color: $primary-700 !important;
-        border-radius: 50%;
-        z-index: 1;
-    }
-    :deep(.dp__cell_offset ) {color: $gray-200;} // 해당 하는 월에 포함되지 않는 날짜 컬러
-    :deep(.dp__action_row) {  // 캘렌더 아래 버튼 영역
-        border-top: 1px solid $gray-200;
-        justify-content: flex-end;
-        gap: 4px;
-    }
-    :deep(.dp__action_row .btn) {width: 40px;}
-    :deep(.dp__selection_preview) {display: none;} // 선택 날짜 미리보기
-    :deep(.dp__action_button) { // 액션 버튼 공통
-        font-family: $font-family-base;
-        @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
-        border-radius: 4px;
-    }
-    :deep(.dp__action_cancel) { // 취소버튼
-        background-color: $gray-00;
-        border-color: $gray-300;
-        color: $gray-700;
-    }
-    :deep(.dp__action_buttons .dp__action_select) { // 적용 버튼
-        background-color: $gray-700;
-    }
 
     .fake-input { // 선택한 일자 보여주는 영역
         position: relative;

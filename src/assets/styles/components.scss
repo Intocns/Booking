@@ -10,9 +10,9 @@
     justify-content: center;
     font-family: $font-family-base;
 
-    &--size-24 { height: 24px; padding: 0 6px; gap: 2px; border-radius: 4px; @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line); }
-    &--size-32 { height: 32px; padding: 0 8px; gap: 3px; border-radius: 5px; @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line); }
-    &--size-40 { height: 40px; padding: 0 12px; gap: 4px; border-radius: 6px; @include typo($title-m-size, $title-m-weight, $title-m-spacing, $title-m-line); }
+    &--size-24 { height: 24px; padding: 0 6px; gap: 2px; border-radius: 4px; @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line); line-height: 1; }
+    &--size-32 { height: 32px; padding: 0 8px; gap: 3px; border-radius: 5px; @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line); line-height: 1;}
+    &--size-40 { height: 40px; padding: 0 12px; gap: 4px; border-radius: 6px; @include typo($title-m-size, $title-m-weight, $title-m-spacing, $title-m-line); line-height: 1;}
 
     // solid blue
     &--blue {
@@ -188,6 +188,7 @@
     border-radius: 20px;
     text-align: center;
     @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
+    line-height: 1;
 
     &--basic {
         background-color: $primary-100;
@@ -228,4 +229,159 @@
         background-color: $gray-200;
         color: $gray-400;
     }
+}
+
+// tooltip
+.tooltip-content {
+    position: absolute;
+    @include flex-center;
+    min-width: 200px;
+    max-width: 400px;
+    padding: 15px;
+    gap: 10px;
+    pointer-events: none;
+
+    border-radius: 5px;
+    border: 1px solid $primary-700;
+    background-color: $primary-50;
+    @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
+    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.15);
+}
+
+// 모달
+.modal-backdrop {
+    @include flex-center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color:  rgba(12, 12, 13, 0.6);
+    z-index: 100;
+}
+
+.modal-container {
+    display: flex;
+    flex-direction: column;
+    min-width: 400px;
+    height: 100%;
+    max-height: 840px;
+    border-radius: 8px;
+    box-shadow: 0 0 40px 0 rgba(0, 0, 0, 0.20);
+
+    --modal-padding: 24px; // (기본값 s,xs 사이즈 모달의 패딩)
+}
+
+.modal--xl {
+    min-width: 1080px;
+    max-width: 1600px;
+    --modal-padding: 40px;
+}
+
+.modal--l,
+.modal--m {
+    min-width: 941px;
+    max-width: 1080px;
+    --modal-padding: 32px;
+}
+
+.modal--s,
+.modal--xs {
+    min-width: 400px;
+    max-width: 940px;
+    --modal-padding: 24px;
+}
+
+.modal-header {
+    flex-shrink: 0;
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px 0 var(--modal-padding);
+    border-radius: 8px 8px 0 0;
+    
+    background-color: $primary-700;
+
+    &__title {
+        color: $gray-00;
+    }
+}
+
+.modal-contents {
+    // flex-grow: 1;
+    display:flex;
+    flex-direction: column;
+    width: 100%;
+    // height: 100%;
+    min-height: 0; // flex 아이템이면서 overflow 있을 때 필요;
+    padding: var(--modal-padding);
+    border-radius: 0 0 8px 8px;
+
+    background-color: $gray-00;
+}
+
+// ======================================================================
+// datepicker 라이브러리 커스텀 스타일
+// ======================================================================
+.dp--clear-btn {display: none;}
+.dp__input_icon {display: none;}
+.dp__arrow_top {display: none;}
+
+.dp--menu-wrapper,
+.dp__menu,
+.dp__menu > div {width:240px !important; min-width: 240px !important;}
+
+.dp__month_year_wrap .dp__month_year_wrap {flex-direction: row-reverse;} // 월 이동 버튼 자리 바꿈
+.dp__month_year_select { // 월, 년도 선택 버튼
+    font-family: $font-family-base;
+    @include typo($body-l-size, $body-l-weight, $body-l-spacing, $body-l-line);
+}
+.dp__inner_nav {border: 1px solid $gray-200;}
+.dp__calendar_header_item { // 일자 (월/화/수/목/금)
+    color: $gray-700;  
+    font-family: $font-family-base;
+    @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
+    @include flex-center;
+}
+.dp__calendar_header_separator {display: none;} // 일자 아래 보더
+.dp__range_between {background-color: $gray-50;} // 선택된 range 날짜 배경 컬러
+.dp__calendar_item {width:32px; height: 32px;}
+.dp__cell_inner { // 날짜
+    width: 32px;
+    height: 32px;
+    @include flex-center;
+    padding: 10px;
+    font-family: $font-family-base;
+    color: $gray-700;
+    @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
+}
+.dp__range_start, // 선택 start날짜
+.dp__range_end, // 선택 end 날짜
+.dp__active_date { // active 날짜
+    color: $gray-00 !important;
+    background-color: $primary-700 !important;
+    border-radius: 50% !important;
+    z-index: 1;
+}
+.dp__cell_offset {color: $gray-200;} // 해당 하는 월에 포함되지 않는 날짜 컬러
+.dp__action_row {  // 캘렌더 아래 버튼 영역
+    border-top: 1px solid $gray-200;
+    justify-content: flex-end;
+    gap: 4px;
+}
+.dp__action_row .bt {width: 40px;}
+.dp__selection_preview {display: none;} // 선택 날짜 미리보기
+.dp__action_button { // 액션 버튼 공통
+    font-family: $font-family-base;
+    @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
+    border-radius: 4px;
+}
+.dp__action_cancel { // 취소버튼
+    background-color: $gray-00;
+    border-color: $gray-300;
+    color: $gray-700;
+}
+.dp__action_buttons .dp__action_select { // 적용 버튼
+    background-color: $gray-700;
 }

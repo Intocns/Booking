@@ -10,6 +10,7 @@ const props = defineProps({
     tableLink: { type: String }, // 타이틀 화살표 버튼으로 이동하는 url link 경로
     columns: { type: Array },   // [{ key:'name', label:'이름', width:'100px' }]
     rows: { type: Array},      // [{ name:'철이', phone:'010...' }]
+    tableEmptySubText: { type: String, default: '' } // 테이블이 비었을 때 보여줄 서브 텍스트
 })
 </script>
 
@@ -52,13 +53,14 @@ const props = defineProps({
                             <span v-if="!$slots[col.key]">{{ row[col.key] }}</span>
 
                             <!-- 커스텀 슬롯 존재 시 -->
-                            <slot
-                                v-else
-                                :name="col.key"
-                                :row="row"
-                                :value="row[col.key]"
-                                :rowIndex="rIndex"
-                            />
+                            <div v-else class="d-flex justify-center gap-4">
+                                <slot
+                                    :name="col.key"
+                                    :row="row"
+                                    :value="row[col.key]"
+                                    :rowIndex="rIndex"
+                                />
+                            </div>
                         </td>
 
                     </tr>
@@ -69,6 +71,7 @@ const props = defineProps({
                 <div class="empty-box">
                     <img :src="icEmpty" alt="비어있음 아이콘">
                     <span>검색 결과가 없습니다.</span>
+                    <p class="title-s">{{ tableEmptySubText }}</p>
                 </div>
             </template>
         </div>

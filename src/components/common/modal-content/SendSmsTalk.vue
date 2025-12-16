@@ -8,6 +8,46 @@ import TalkPreview from '../TalkPreview.vue';
 import { ref } from 'vue';
 
 const activeTab = ref('sms');
+
+// 툴팁용
+const isSmsTooltipVisible = ref(false); // sms탭 툴팁
+const isTalkTooltipVisible = ref(false); // 수신번호 옆 툴팁
+// 툴팁 핸들러
+const showTooltip = (type) => {
+    if (type === 'sms') {
+        isSmsTooltipVisible.value = true;
+    } else if (type === 'talk') {
+        isTalkTooltipVisible.value = true;
+    }
+}
+
+// 마우스 좌표 상태 추가 (툴팁 위치 제어용)
+const tooltipCoords = ref({ x: 0, y: 0 });
+
+// 마우스 이동 시 좌표 업데이트 및 툴팁 표시
+const handleMouseMove = (event, type) => {
+    // 툴팁 박스가 마우스 커서를 따라다니도록 좌표 업데이트
+    tooltipCoords.value = { 
+        x: event.clientX, 
+        y: event.clientY 
+    };
+
+    // 툴팁 표시 상태 업데이트
+    if (type === 'sms') {
+        isSmsTooltipVisible.value = true;
+    } else if (type === 'talk') {
+        isTalkTooltipVisible.value = true;
+    }
+}
+
+// 마우스 이탈 시 툴팁 숨김
+const hideTooltip = (type) => {
+    if (type === 'sms') {
+        isSmsTooltipVisible.value = false;
+    } else if (type === 'talk') {
+        isTalkTooltipVisible.value = false;
+    }
+};
 </script>
 
 <template>
@@ -37,14 +77,20 @@ const activeTab = ref('sms');
                     >
                     <label for="tab_sms" class="tab--radio_btn">
                         <span>SMS</span>
-                        <img class="icon-img" :src="icTooltip" alt="툴팁">
+                        <img 
+                            class="icon-img" 
+                            :src="icTooltip" 
+                            alt="툴팁"
+                            @mouseenter="handleMouseMove($event, 'sms')"
+                            @mouseleave="hideTooltip('sms')"
+                        >
                     </label>
                 </div>
             </div>
 
             <!-- 알림톡 -->
             <div class="content-talk"  v-if="activeTab === 'talk'">
-                <div class="content-talk__top">
+                <div class=" content-talk__top">
                     <!-- 템플릿 선택 -->
                     <div class="content-talk__templates-wrapper">
                         <div class="content-talk__templates-wrapper-type">
@@ -80,17 +126,18 @@ const activeTab = ref('sms');
                     <div class="content-talk__form-row">
                         <span class="title-s">
                             수신번호
-                            <img class="icon-img" :src="icTooltip" alt="툴팁">
+                            <img 
+                                class="icon-img" 
+                                :src="icTooltip" 
+                                alt="툴팁"
+                                @mouseenter="handleMouseMove($event,'talk')"
+                                @mouseleave="hideTooltip('talk')"
+                            >
                         </span>
                         <input class="input-text" type="text" name="" id="">
                     </div>
                 </div>
 
-                <!-- 버튼영역 -->
-                <div class="content-talk__buttons">
-                    <button class="btn btn--size-40 btn--blue-outline modal-btn">취소</button>
-                    <button class="btn btn--size-40 btn--blue modal-btn">발송</button>
-                </div>
             </div>
 
             <!-- sms -->
@@ -170,15 +217,32 @@ const activeTab = ref('sms');
                     </p>
                 </div>
 
-                <!-- 버튼영역 -->
-                <div class="content-sms__buttons">
-                    <button class="btn btn--size-40 btn--blue-outline modal-btn">취소</button>
-                    <button class="btn btn--size-40 btn--blue modal-btn">발송</button>
-                </div>
             </div>
             
+            <!-- 버튼영역 -->
+            <div class="content-talk__buttons">
+                <button class="btn btn--size-40 btn--blue-outline modal-btn">취소</button>
+                <button class="btn btn--size-40 btn--blue modal-btn">발송</button>
+            </div>
         </div>
 
+        <div 
+            class="tooltip-content" 
+            v-show="isSmsTooltipVisible || isTalkTooltipVisible"
+            :style="{ 
+                left: `${tooltipCoords.x }px`, /* 마우스 커서 오른쪽 10px */
+                top: `${tooltipCoords.y + 10}px`  /* 마우스 커서 아래 10px */
+            }"
+        >
+            <p class="body-s" v-if="isSmsTooltipVisible">
+                - 80Byte 이상 시 LMS로 발송되어 문자 건수가 2건씩 차감됩니다.<br/>
+                - 문자 발송 상태 확인까지 시간이 소요될 수 있으며, 확인 전까지 ‘대기’ 상태로 표시됩니다.
+                발송 내역은 ‘SMS 발송내역’ 메뉴에서 확인할 수 있습니다.
+            </p>
+            <p class="body-s" v-else-if="isTalkTooltipVisible">
+                해당 알림톡은 인투링크 프로필로 발송됩니다
+            </p>
+        </div>
     </div>
 </template>
 

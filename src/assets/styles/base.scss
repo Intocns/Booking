@@ -93,6 +93,14 @@ textarea {
   margin: 0 auto;
   padding: 0 $space-md;
 }
+.d-flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-row { flex-direction: row; }
+.gap-8 { gap: 8px; }
+.gap-4 { gap: 4px; }
+.align-center { align-items: center; }
+.align-start { align-items: flex-start !important; }
+.justify-center { justify-content: center; }
 
 // input:text 
 .input-text {
