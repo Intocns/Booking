@@ -18,7 +18,13 @@ export const menus = [
     {
         name: "네이버 플레이스 관리",
         icon: "icNaver",
-        children: []
+        children: [
+            { name: "네이버 연동 계정 관리", path: "/place/account" },
+            { name: "상품 관리", path: "/place/product" },
+            { name: "옵션 관리", path: "/place/option" },
+            { name: "간단 예약 관리", path: "/place/simple-reservation" },
+            { name: "플레이스 설정", path: "/place/settings" }
+        ]
     },
     {
         name: "인투펫 관리",
