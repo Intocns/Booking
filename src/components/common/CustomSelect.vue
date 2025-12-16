@@ -16,29 +16,80 @@ const emit = defineEmits(['update:modelValue']);
 const isOpen = ref(false);
 const wrapper = ref(null);
 
+// 'all' 옵션을 제외한 순수한 옵션들의 value 목록
+const individualOptionValues = computed(() => {
+    // 'all' 옵션을 제외한 모든 옵션의 value만 추출
+    return props.options
+        .filter(opt => opt.value !== 'all')
+        .map(opt => opt.value);
+});
+
 /* 토글 */
 const toggle = () => {
     if (!props.disabled) isOpen.value = !isOpen.value;
 };
 
+// select box에 표시할 라벨 계산 
 const selectedLabels = computed(() => {
+    // 1. modelValue가 ['all']인 경우, '전체' 옵션의 라벨을 찾아 반환
+    if (props.modelValue.includes('all') && props.modelValue.length === 1) {
+        const allOption = props.options.find(opt => opt.value === 'all');
+        // '전체' 옵션이 있다면 그 라벨을 표시하고, 없다면 '전체'라고 표시
+        return allOption ? [allOption.label] : ['전체'];
+    }
+
+    // 2. 그 외의 경우 (개별 선택)
     return props.options
-            .filter(opt => props.modelValue.includes(opt.value))
-            .map(opt => opt.label)
+        .filter(opt => props.modelValue.includes(opt.value))
+        .map(opt => opt.label);
 })
+
 
 /* 🔹 옵션 선택 */
 const selectOption = (value) => {
-    const exists = props.modelValue.includes(value);
+    let newValue = [...props.modelValue];
 
-    if (exists) {
-        emit(
-        "update:modelValue",
-        props.modelValue.filter((v) => v !== value)
-        );
+    if (value === 'all') {
+        // --- 'all' 옵션을 클릭한 경우 ---
+        const isAllCurrentlySelected = newValue.includes('all');
+
+        if (isAllCurrentlySelected) {
+            // 현재 'all'이 선택되어 있으면 -> 전부 해제 (['all'] 제거)
+            newValue = [];
+        } else {
+            // 현재 'all'이 선택되어 있지 않으면 -> 'all'만 선택 (다른 모든 개별 항목을 대체)
+            newValue = ['all'];
+        }
+
     } else {
-        emit("update:modelValue", [...props.modelValue, value]);
+        // --- 개별 옵션을 클릭한 경우 (value !== 'all') ---
+        const exists = newValue.includes(value);
+
+        // 1. 'all'이 현재 선택된 상태였으면, 'all'을 먼저 해제하고 개별 선택 시작
+        if (newValue.includes('all')) {
+            newValue = individualOptionValues.value.filter(v => v !== value);
+        } else {
+            // 2. 일반적인 토글 로직
+            if (exists) {
+                // 해제
+                newValue = newValue.filter((v) => v !== value);
+            } else {
+                // 선택
+                newValue = [...newValue, value];
+            }
+        }
+        
+        // 3. 개별 옵션 선택/해제 후, 모든 개별 옵션이 선택되었는지 확인
+        const isAllIndividualSelected = individualOptionValues.value.length > 0 &&
+                                       individualOptionValues.value.every(val => newValue.includes(val));
+
+        // 모든 개별 옵션이 선택되었다면, 'all'로 대체하여 값을 통일
+        if (isAllIndividualSelected) {
+            newValue = ['all'];
+        }
     }
+
+    emit("update:modelValue", newValue);
 };
 
 /* 외부 클릭 → 닫기 */
@@ -80,13 +131,13 @@ onBeforeUnmount(() => {
                 v-for="opt in options" 
                 :key="opt.value"
                 class="select__option"
-                :class="{ selected: modelValue.includes(opt.value) }"
+                :class="{ selected: modelValue.includes(opt.value) || (modelValue.includes('all') && opt.value !== 'all') }"
                 @click.stop="selectOption(opt.value)"
             >
                 <label class="checkbox">
                     <input 
                         type="checkbox" 
-                        :checked="modelValue.includes(opt.value)"
+                        :checked="modelValue.includes(opt.value) || (modelValue.includes('all') && opt.value !== 'all')"
                         @click.stop.prevent
                     />
                     <span class="box"></span>

@@ -33,16 +33,39 @@ const columns = [
     { key: '', label: '관리', width: '15%' },
 ]
 
+// 예약 상태 초기값
+const reservationStatus = ref(['all']);
+// 예약 상태 옵션 정의
+// TODO: 임시데이터
+const reserveStatusOptions = [
+    { label: '전체', value: 'all' },
+    { label: '예약 확정', value: 1 },
+    { label: '예약 대기', value: 2 },
+    { label: '예약 취소', value: 3 },
+];
+
+// 담당의 초기값
+const doctorList = ref(['all']);
+// 담당의 옵션 정의
+// TODO: 임시데이터
+const doctorOptions = [
+    { label: '전체', value: 'all' },
+    { label: '의료진1', value: 1 },
+    { label: '의료진2', value: 2 },
+];
+
+// 예약경로 초기값
+const reservationChannel = ref(['all']);
+// 예약경로 옵션 정의
+const reservationChannelOptions = [
+    { label: '전체', value: 'all' },
+    { label: 'IntoVetGE', value: 1 },
+    { label: '네이버', value: 2 },
+    { label: '인투펫', value: 3 },
+];
+
 onMounted(() => {
-    reservationStore.getReservationList({
-        'cocode': '2592',
-        'status': '',
-        'doctorId': '',
-        'keyword': '',
-        'startDate': '2025-12-07',
-        'endDate': '2025-12-03',
-        'reRoute': 0
-    })
+
 })
 </script>
 
@@ -62,11 +85,26 @@ onMounted(() => {
     <!-- 테이블 콘텐츠 (검색필터 + 테이블) -->
     <TableLayout>
         <!-- 검색필터 -->
-        <template #filter>
+        <template #filter>         
             <FilterDate />
-            <FilterSelect :label="'예약상태'" />
-            <FilterSelect :label="'담당의'" />
+            <FilterSelect 
+                label="예약상태"
+                :options="reserveStatusOptions"
+                v-model="reservationStatus"
+            />
+            <FilterSelect 
+                label="담당의"
+                :options="doctorOptions"
+                v-model="doctorList"
+                />
+            <FilterSelect
+                label="예약경로"
+                :options="reservationChannelOptions"
+                v-model="reservationChannel"
+            />
             <FilterKeyword :placeholder="'고객명, 동물명, 전화번호 검색'" />
+
+            <button class="btn btn--size-32 btn--blue">초기화</button>
         </template>
 
         <!-- 테이블 -->
@@ -81,7 +119,7 @@ onMounted(() => {
     <!-- 모달 -->
     <Modal 
         :visible="false" 
-        :size="'s'" 
+        size="s"
         :title="'문자 발송'"
     >
         <SendSmsTalk />
