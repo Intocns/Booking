@@ -55,7 +55,7 @@ const props = defineProps({
         </div>
 
         <!-- Helper -->
-        <div class="page-header__helper">
+        <div v-if="helperText" class="page-header__helper">
             <img :src="icInformation" alt="안내아이콘" class="helper__icon">
             <span class="body-s helper__text">
                 {{ helperText }}
