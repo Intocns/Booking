@@ -7,6 +7,7 @@ import icInto from '@/assets/icons/ic_into_w.svg'
 import icIntoPet from '@/assets/icons/ic_intoPet_w.svg'
 // 컴포넌트
 import CommonTable from '@/components/common/CommonTable.vue'
+import CommonHorizontalTable from '@/components/common/CommonHorizontalTable.vue'
 
 import { onMounted, ref } from 'vue'
 import { useReservationStore } from '@/stores/reservationStore'
@@ -28,9 +29,9 @@ const reservationStore = useReservationStore();
 
 // storeToRefs를 사용하여 reserveCount를 반응형 ref로 가져옴
 const { reserveCount: count } = storeToRefs(reservationStore); // 'count'라는 이름으로 사용
-// TODO: 두자리수로 표기
+// TODO: 기본 두자리수 표기, 세자리수 까지 표기, 세자리수 넘어가면 +999 로 표기
 
-// 테이블 col 정의
+// 대기중인 예약 테이블 col 정의
 const columns = [
     { key: 'idx', label: 'No.', width: '5%' },
     { key: 're_time', label: '예약일자', width: '10%' },
@@ -45,6 +46,22 @@ const columns = [
     { key: '', label: '접수일시', width: '15%' },
     { key: '', label: '관리', width: '15%' },
 ]
+
+// 병원정보 테이블 데이터 (임시)
+const hospitalDetails = [
+    { label: '병원명', value: '인투씨엔에스 동물병원' },
+    { label: '전화번호', value: '064-1234-5678' },
+    { label: '주소', value: '경기도 용신시 수지구123' },
+    { label: '상세주소', value: 'A동 678호', },
+    // <th>가 없는 경우 (hideLabel: true 사용)
+];
+
+// 공지사항 테이블 데이터 (임시)
+const noticeDetails = [
+    { label: '2023-09-01', value: '인투씨엔에스 예약 시스템 오픈 안내', hideLabel: true },
+    { label: '2023-08-15', value: '시스템 점검 안내', hideLabel: true },
+    { label: '2023-07-30', value: '신규 기능 업데이트 안내', hideLabel: true },
+];
 
 onMounted(() => {
     // 예약별 카운트
@@ -159,8 +176,24 @@ onMounted(() => {
 
     <!-- 병원정보 && 공지사항 표시 -->
     <div class="dashboard--bottom">
-        <div class="dashboard--bottom__left">병원정보</div>
-        <div class="dashboard--bottom__right">공지사항</div>
+        <div class="dashboard--bottom__left">
+            <!-- 병원 정보 -->
+            <CommonHorizontalTable
+                title="병원정보"
+                :table-link="'/'"
+                :details="[]"
+                :max-height="150"
+            />
+        </div>
+        <div class="dashboard--bottom__right">
+            <!-- 공지사항 -->
+            <CommonHorizontalTable 
+                title="공지사항"
+                :table-link="'/'"
+                :details="[]"
+                :max-height="150"
+            />
+        </div>
     </div>
 </template>
 
