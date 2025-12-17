@@ -71,6 +71,7 @@ const props = defineProps({
         gap: 16px;
         // justify-content: space-between;
         align-items: center;
+        margin-bottom: 8px;
 
         .page-title {
             color: $gray-900;

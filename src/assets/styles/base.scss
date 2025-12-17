@@ -102,6 +102,7 @@ textarea {
 .align-center { align-items: center; }
 .align-start { align-items: flex-start !important; }
 .justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
 
 // input:text 
 .input-text {
@@ -139,4 +140,15 @@ textarea {
         color: $gray-700;
         @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
     }
+}
+
+.contents-wrapper {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    padding: 16px;
+
+    border-radius: 8px;
+    border: 1px solid $gray-200;
+    background-color: $gray-00;
 }

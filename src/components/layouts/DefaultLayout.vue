@@ -27,7 +27,7 @@
         display:flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 24px;
+        gap: 16px;
         background-color: $gray-50;
         padding: 24px;
     }

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@daypilot/daypilot-lite-vue": "^5.1.0",
     "@vuepic/vue-datepicker": "^12.1.0",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
