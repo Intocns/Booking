@@ -137,10 +137,7 @@ textarea {
     gap: 8px;
     margin: auto;
     
-    span { 
-        color: $gray-700;
-        @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
-    }
+    color: $gray-700;
 }
 
 .contents-wrapper {

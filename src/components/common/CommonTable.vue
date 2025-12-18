@@ -3,6 +3,7 @@
 import { defineProps } from 'vue';
 import icEmpty from '@/assets/icons/ic_empty.svg'
 import icMore from '@/assets/icons/ic_more_btn.svg'
+import icInformation from '@/assets/icons/ic_information_blue.svg'
 
 const props = defineProps({
     title: { type: String, default: '' },
@@ -10,8 +11,10 @@ const props = defineProps({
     tableLink: { type: String }, // 타이틀 화살표 버튼으로 이동하는 url link 경로
     columns: { type: Array },   // [{ key:'name', label:'이름', width:'100px' }]
     rows: { type: Array},      // [{ name:'철이', phone:'010...' }]
+    tableEmptyText: { type: String, default: '검색 결과가 없습니다.' }, // 테이블이 비었을 때 보여줄 서브 텍스트
     tableEmptySubText: { type: String, default: '' }, // 테이블이 비었을 때 보여줄 서브 텍스트
-    noThead: {type: Boolean, default: false},
+    noThead: {type: Boolean, default: false}, // thead 노출 여부
+    hasInfoIcons: {type: Boolean, default: false },
 })
 </script>
 
@@ -20,13 +23,20 @@ const props = defineProps({
 
         <!-- 테이블 타이틀 있는 경우  -->
         <div v-if="title" class="table-title">
-            <p class="heading-s">{{ title }}</p>
-            <RouterLink v-if="tableRoute" :to="tableRoute" class="table-link">
-                <img :src="icMore" alt="더보기">
-            </RouterLink>
-            <a v-if="tableLink" :href="tableLink" target="_blank" class="table-link">
-                <img :src="icMore" alt="더보기">
-            </a>
+            <div class="title-wrapper">
+                <p class="heading-s d-flex gap-8">
+                    {{ title }}
+                    <img v-if="hasInfoIcons" :src="icInformation" alt="안내아이콘" class="helper__icon">
+                </p>
+                <RouterLink v-if="tableRoute" :to="tableRoute" class="table-link">
+                    <img :src="icMore" alt="더보기">
+                </RouterLink>
+                <a v-if="tableLink" :href="tableLink" target="_blank" class="table-link">
+                    <img :src="icMore" alt="더보기">
+                </a>
+            </div>
+
+            <slot name="right"></slot>
         </div>
 
         <div class="table-wrapper">
@@ -72,8 +82,8 @@ const props = defineProps({
             <template v-if="rows.length == 0">
                 <div class="empty-box">
                     <img :src="icEmpty" alt="비어있음 아이콘">
-                    <span>검색 결과가 없습니다.</span>
-                    <p class="title-s">{{ tableEmptySubText }}</p>
+                    <span class="title-s">{{ tableEmptyText }}</span>
+                    <p class="body-m">{{ tableEmptySubText }}</p>
                 </div>
             </template>
         </div>
@@ -98,7 +108,14 @@ const props = defineProps({
 .table-title {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    
+
+    .title-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 }
 
 .table-wrapper {
@@ -106,9 +123,9 @@ const props = defineProps({
     flex: 1 1 auto;
     height: 100%;
     overflow-y: auto;
-    border-bottom: 1px solid $gray-300;
+    // border-bottom: 1px solid $gray-300;
     border-top: 2px solid $gray-700;
-    background-color: $gray-50;
+    background-color: $gray-00;
 }
 
 .table {
@@ -160,7 +177,7 @@ const props = defineProps({
             td { color: $gray-400; }
         }
 
-        &:last-child td {border-bottom: none;}
+        // &:last-child td {border-bottom: none;}
     }
 
 }

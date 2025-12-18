@@ -91,17 +91,6 @@ import icDel from '@/assets/icons/ic_del.svg';
 </template>
 
 <style lang="scss" scoped> 
-    .top-bar {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px 16px;
-
-        background-color: $gray-00;
-        border-radius: 8px;
-        border: 1px solid $gray-200;
-    }
     .line {
         width: 1px;
         height: 16px;
@@ -115,10 +104,6 @@ import icDel from '@/assets/icons/ic_del.svg';
         .total-num {
             color: #3D56F0;
         }
-    }
-    .button-group {
-        display: flex;
-        gap: 8px;
     }
 
     .grid-wrapper {
