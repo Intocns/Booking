@@ -2,13 +2,35 @@
 <script setup>
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import { ko } from 'date-fns/locale'
-import { startOfDay, subDays, differenceInDays } from "date-fns";
-import { ref, computed } from 'vue';
+import { startOfDay, subDays, differenceInDays, addMonths, subMonths } from "date-fns";
+import { ref, computed, watch } from 'vue';
 
-const dpRef = ref(null);
-const today = startOfDay(new Date());
-const dateRange = ref([subDays(today, 7), today]); // 최근 7일 기본
+import CustomDatePicker from '@/components/common/CustomDatePicker.vue'
 
+import icArrowLeft from '@/assets/icons/ic_arrow_left.svg'
+import icArrowRight from '@/assets/icons/ic_arrow_right.svg'
+
+const props = defineProps({
+    modelValue: {
+        type: [Date, Array, String],
+        required: true
+    },
+    type: { // 해당 타입에 따라 빠른 선택 버튼 보기 달라짐
+        type: String,
+        default: 'range' // 'range' | 'nav' 'range'(기본/기간형) 또는 'nav'(네비게이션형)
+    }
+});
+
+// 부모와 날짜를 동기화하기 위한 emit
+const emit = defineEmits(['update:modelValue']);
+
+// 부모의 v-model(modelValue)과 직접 연결되는 계산된 속성
+const dateRange = computed({
+    get: () => props.modelValue,
+    set: (value) => emit('update:modelValue', value)
+});
+
+// 빠른 선택 로직
 const setRange = (days) => {
     const today = startOfDay(new Date());
 
@@ -25,30 +47,34 @@ const setRange = (days) => {
     dateRange.value = [subDays(today, days), today];
 };
 
+// 네비게이션 로직 (<, >, 오늘)
+const navigateDate = (direction) => {
+    // 현재 값이 배열이면 첫 번째 값 사용, 아니면 값 그대로 사용
+    const current = Array.isArray(dateRange.value) ? dateRange.value[0] : dateRange.value;
+    const baseDate = current ? new Date(current) : new Date();
+    
+    if (direction === 'prev') {
+        dateRange.value = subMonths(baseDate, 1);
+    } else if (direction === 'next') {
+        dateRange.value = addMonths(baseDate, 1);
+    } else {
+        dateRange.value = startOfDay(new Date());
+    }
+};
+
+
 const activeQuick = computed(() => {
+    if (props.type !== 'range' || !Array.isArray(dateRange.value)) return null;
     const [start, end] = dateRange.value;
     if (!start || !end) return null;
-
-    const diff = differenceInDays(end, start);
-
+    const diff = differenceInDays(new Date(end), new Date(start));
+    
     if (diff === 0) return 'today';
     if (diff === 7) return '7';
     if (diff === 15) return '15';
     if (diff === 30) return '30';
-
     return null;
 });
-
-const formatRange = (dates) => {
-    if (!dates || dates.length < 2) return "날짜 선택";
-
-    const f = (d) =>
-        `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(
-        d.getDate()
-        ).padStart(2, "0")}`;
-
-    return `${f(dates[0])} - ${f(dates[1])}`;
-};
 
 </script>
 
@@ -58,77 +84,28 @@ const formatRange = (dates) => {
         <div class="search-filter__date-range">
             <span class="search-filter__label title-s">일자</span>
             <div class="search-filter__datepicker">
-                <div class="fake-input" @click="dpRef.openMenu()">
-                    {{ formatRange(dateRange) }}
-
-                    <VueDatePicker
-                        ref="dpRef"
-                        v-model="dateRange"
-                        range
-                        :locale="ko"
-                        :time-config="{ enableTimePicker: false }"
-                        :hide-input="true"
-                        :week-start="0"
-                    >
-                        <template #action-row="{ selectDate, closeMenu }">
-                            <button class="btn btn--size-24 btn--black-outline"  @click="dpRef && dpRef.closeMenu()">취소</button>
-                            <button class="btn btn--size-24 btn--black" @click="selectDate()">적용</button>
-                        </template>
-                    </VueDatePicker>
-                </div>
+                <CustomDatePicker v-model="dateRange" :range="props.type === 'range'" />
             </div>
         </div>
 
-        <!-- 빠른 선택 버튼 -->
-        <div class="search-filter__date-buttons">
-            <!-- 오늘 -->
-            <div class="search-filter__date-button">
-                <label 
-                    for="date_today" 
-                    class="btn btn--size-24 btn--black-outline"  
-                    @click="setRange('today')"
-                    :class="{ selected: activeQuick === 'today' }"
-                >
-                    <input type="radio" name="date_today" id="date_today">
-                    <span>오늘</span>
+        <!-- 빠른 선택 버튼 (오늘/7일/15일/1개월) -->
+        <div v-if="props.type === 'range'" class="search-filter__date-buttons">
+            <div class="search-filter__date-button" v-for="opt in [['today', '오늘'], [7, '7일'], [15, '15일'], [30, '1개월']]" :key="opt[0]">
+                <label :class="['btn btn--size-24 btn--black-outline', { selected: activeQuick === String(opt[0]) }]" @click="setRange(opt[0])">
+                    <span>{{ opt[1] }}</span>
                 </label>
             </div>
-            <!-- 7일 -->
-            <div class="search-filter__date-button">
-                <label 
-                    for="date_week" 
-                    class="btn btn--size-24 btn--black-outline" 
-                    @click="setRange(7)"
-                    :class="{ selected: activeQuick === '7' }"
-                >
-                    <input type="radio" name="date_week" id="date_week">
-                    <span>7일</span>
-                </label>
-            </div>
-            <!-- 15일 -->
-            <div class="search-filter__date-button">
-                <label 
-                    for="date_half" 
-                    class="btn btn--size-24 btn--black-outline" 
-                    @click="setRange(15)"
-                    :class="{ selected: activeQuick === '15' }"
-                >
-                    <input type="radio" name="date_half" id="date_half">
-                    <span>15일</span>
-                </label>
-            </div>
-            <!-- 1개월 -->
-            <div class="search-filter__date-button">
-                <label 
-                    for="date_month" 
-                    class="btn btn--size-24 btn--black-outline" 
-                    @click="setRange(30)"
-                    :class="{ selected: activeQuick === '30' }"
-                >
-                    <input type="radio" name="date_month" id="date_month">
-                    <span>1개월</span>
-                </label>
-            </div>
+        </div>
+
+        <!-- 빠른 선택 버튼 (<,>, 오늘) -->
+        <div v-else-if="props.type === 'nav'" class="search-filter__date-nav">
+            <button type="button" class="btn--size-24 btn--black-outline" @click="navigateDate('prev')">
+                <img :src="icArrowLeft">
+            </button>
+            <button type="button" class="btn--size-24 btn--black-outline" @click="navigateDate('next')">
+                <img :src="icArrowRight">
+            </button>
+            <button type="button" class="btn--size-24 btn--black-outline" @click="navigateDate('today')">오늘</button>
         </div>
     </div>
 </template>
@@ -157,38 +134,10 @@ const formatRange = (dates) => {
 
             input[type="radio"] {display: none;}
         }
-    }
-    
-    // datepicker 라이브러리 커스텀 스타일
-    :deep(.dp__main) { 
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 32px;
-    }
-    :deep(.dp__input) { 
-        height: 32px;
-        opacity: 0;
-        padding:8px; 
-    }
-    :deep(.dp__input:focus) {
-        border-color: $gray-900;
-        box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.06);
-    }
 
-    .fake-input { // 선택한 일자 보여주는 영역
-        position: relative;
-        height: 32px;
-        padding: 0 10px;
-        border: 1px solid $gray-200;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        background-color: white;
-
-        &:hover {
-            border-color: $gray-400;
+        &-nav {
+            display: flex;
+            gap: 4px;
         }
     }
 </style>

@@ -137,7 +137,7 @@ const openDatePicker = () => {
             :teleport-center="false"
         >
             <template #action-row="{ selectDate, closeMenu }">
-                <button class="btn btn--size-24 btn--black-outline"  @click="dpRef && dpRef.closeMenu()">취소</button>
+                <button class="btn btn--size-24 btn--black-outline" @click="dpRef && dpRef.closeMenu()">취소</button>
                 <button class="btn btn--size-24 btn--black" @click="selectDate()">적용</button>
             </template>
         </VueDatePicker>
