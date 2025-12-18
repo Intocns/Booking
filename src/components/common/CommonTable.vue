@@ -10,7 +10,8 @@ const props = defineProps({
     tableLink: { type: String }, // 타이틀 화살표 버튼으로 이동하는 url link 경로
     columns: { type: Array },   // [{ key:'name', label:'이름', width:'100px' }]
     rows: { type: Array},      // [{ name:'철이', phone:'010...' }]
-    tableEmptySubText: { type: String, default: '' } // 테이블이 비었을 때 보여줄 서브 텍스트
+    tableEmptySubText: { type: String, default: '' }, // 테이블이 비었을 때 보여줄 서브 텍스트
+    noThead: {type: Boolean, default: false},
 })
 </script>
 
@@ -34,9 +35,9 @@ const props = defineProps({
                     <col v-for="(col, idx) in columns" :key="idx" :width="col.width">
                 </colgroup>
                 <!-- thead -->
-                <thead>
+                <thead v-show="!noThead">
                     <tr>
-                        <th v-for="col in columns" :key="col.key">
+                        <th v-for="col in columns" :key="col.key" :style="{ textAlign: col.text_align }">
                             {{ col.label }}
                         </th>
                     </tr>
@@ -48,6 +49,7 @@ const props = defineProps({
                         <td
                             v-for="col in columns"
                             :key="col.key"
+                            :style="{ textAlign: col.text_align }"
                         >
                             <!-- 기본 데이터 출력 -->
                             <span v-if="!$slots[col.key]">{{ row[col.key] }}</span>
