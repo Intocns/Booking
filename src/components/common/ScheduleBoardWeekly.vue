@@ -2,6 +2,20 @@
 <script setup>
 import { computed, ref } from 'vue';
 
+// 예약 상태 아이콘
+import icConfirm from '@/assets/icons/ic_res_confirm.svg'
+import icPersonal from '@/assets/icons/ic_res_personal.svg'
+import icCancel from '@/assets/icons/ic_res_canceled.svg'
+import icHold from '@/assets/icons/ic_res_hold.svg'
+
+// 상태 아이콘 매핑
+const statusIcons = {
+    confirm: icConfirm,
+    personal: icPersonal,
+    canceled: icCancel,
+    hold: icHold
+};
+
 const props = defineProps({
     events: { type: Array, default: () => [] },
     staffs: { type: Array, default: () => [] },
@@ -62,12 +76,12 @@ const weekDates = computed(() => {
         const fullDate = d.toISOString().split('T')[0];
 
         dates.push({
-        full: d.toISOString().split('T')[0],
-        monthDay: `${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')}`,
-        dayName: dayNames[d.getDay()],
-        isSunday: d.getDay() === 0,
-        isSaturday: d.getDay() === 6,
-        isToday: fullDate === todayStr // 오늘인지 확인하는 플래그 추가
+            full: d.toISOString().split('T')[0],
+            monthDay: `${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')}`,
+            dayName: dayNames[d.getDay()],
+            isSunday: d.getDay() === 0,
+            isSaturday: d.getDay() === 6,
+            isToday: fullDate === todayStr // 오늘인지 확인하는 플래그 추가
         });
     }
     return dates;
@@ -157,12 +171,16 @@ const statusLabels = {
                 <div class="detail-list">
                 <div v-for="event in selectedEvents" :key="event.id" :class="['detail-item', event.status]">
                     <div class="time-box">
-                        <span class="dot"></span>
+                        <img 
+                            :src="statusIcons[event.status || '']" 
+                            alt="" 
+                            class="status-icon"
+                        />
                         {{ formatTime(event.start) }}
                     </div>
                     <div class="event-info">
-                        <span class="patient">{{ event.text }}</span>
-                        <span class="memo">{{ event.tags?.type }}</span>
+                        <span class="patient">{{ event.name }}{{ event.patient ? '(' + event.patient + ')' : '' }}</span>
+                        <span class="memo">{{ event.product_name }}</span>
                     </div>
                 </div>
                 <div v-if="selectedEvents.length === 0" class="no-data">일정이 없습니다.</div>
@@ -210,10 +228,6 @@ const statusLabels = {
 
     td {
         height: 114px;
-
-        &:hover {
-            background-color: $gray-50;
-        }
     }
 
     // 헤더 스타일
@@ -240,7 +254,7 @@ const statusLabels = {
         position: sticky; // 가로 스크롤 시에도 날짜 고정
         left: 0;
         z-index: 5;
-        border-left: 1px solid $gray-200; // 왼쪽 끝 보더 명시
+        border-left: 1px solid $gray-200;
 
         @include flex-center;
         flex-direction: column;
@@ -248,9 +262,6 @@ const statusLabels = {
 
         background: $gray-00;
         color: $gray-700;
-
-        // .date-num { font-size: 14px; font-weight: bold; }
-        // .date-name { font-size: 12px; margin-top: 4px; }
         
         &.sun { color: $warning-500; } // 일요일 빨간색
         &.sat { color: $primary-500; } // 토요일 파란색
@@ -311,6 +322,7 @@ const statusLabels = {
         display: flex;
         align-items: center;
         padding: 8px 16px;
+        gap: 6px;
         margin-bottom: 8px;
         border-radius: 4px;
 
@@ -329,9 +341,19 @@ const statusLabels = {
         }
         
         .event-info {
-        flex: 1;
-        display: flex;
-        justify-content: space-between;
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+
+            .patient {
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .memo {
+                text-align: right;
+            }
         }
 
         // 상태별 사이드바 아이템 색상

@@ -53,10 +53,6 @@ const props = defineProps({
 // 캘린더 인스턴스 참조
 const calendarRef = ref(null);
 
-const currentDate = ref(new Date());
-const selectedSchedule = ref(null);
-const currentView = ref('Resources'); // 초기 뷰 설정 (직원별)
-
 // ---------------------------------------------
 //  리소스 및 이름 변환 로직
 // ---------------------------------------------
@@ -68,11 +64,6 @@ const columns = computed(() => {
     }));
 });
 
-const getResourceName = (resourceId) => {
-    const staff = props.staffs.find(r => r.id === resourceId);
-    return staff ? staff.name : '알 수 없음';
-};
-
 
 // ---------------------------------------------
 // 캘린더 구성 옵션
@@ -81,7 +72,7 @@ const config = ref({
     locale: "ko-kr",
     timeFormat: "Clock24Hours",
     hourNameShort: false,
-    
+
     // 이벤트 데이터 연결
     events: props.events,
     // 시작 날짜 설정
@@ -95,7 +86,7 @@ const config = ref({
     onBeforeEventRender: (args) => {
         const status = args.data.status || 'confirm';
         
-        // 상태별 배경색 매핑 (CSS 클래스로 처리 가능하므로 여기서는 최소한의 로직만)
+        // 상태별 배경색
         const bgColors = {
             confirm: '#cceaff',
             hold: '#ffe9a5',
@@ -112,7 +103,7 @@ const config = ref({
 });
 
 // ---------------------------------------------
-// 4. 프롭스 변경 감지 (Watchers)
+// 프롭스 변경 감지 
 // ---------------------------------------------
 // viewType, events, staffs, startDate 중 하나라도 변하면 캘린더 업데이트
 watch(() => [props.viewType, props.events, props.staffs, props.startDate], ([newView, newEvents, newStaffs, newDate]) => {
@@ -153,7 +144,7 @@ onMounted(() => {
                     <!-- 예약 상태 아이콘 -->
                     <div class="reserve-name">
                         <img :src="statusIcons[event.data.status] || ''" alt="상태아이콘">
-                        <span class="title" :class="event.data.status || 'confirm'">{{ event.text() }}</span>
+                        <span class="title" :class="event.data.status || 'confirm'">{{ event.data.name }} {{ event.data.patient ? '(' + event.data.patient + ')' : '' }}</span>
                     </div>
 
                     <!-- 예약경로 아이콘(네이버/인투펫/링크) -->
@@ -163,13 +154,12 @@ onMounted(() => {
                 </div>
                 <div class="event-content">
                     <!-- 상품명/진료실명 -->
-                    <p class="reserve-title" :class="event.data.status || 'confirm'">백신접종</p>
+                    <p class="reserve-title" :class="event.data.status || 'confirm'">{{ event.data.product_name }}</p>
                     <!-- 병원 메모 -->
-                    <p class="reserve-memo">[재진] 복부초음파/복통으로 내원함</p>
+                    <p class="reserve-memo">{{ event.data.memo }}</p>
                 </div>
             </template>
         </DayPilotCalendar>
-
     </div>
 </template>
 
@@ -232,25 +222,7 @@ onMounted(() => {
         &.personal {background: $status-personal_bg;}
     }
     :deep(.calendar_default_event_bar) {display: none;} // 왼쪽 색상바 안보이도록
-
-    /* 현재 시간을 나타내는 가로 선 */
-:deep(.calendar_default_currenttime_line) {
-  display: block !important;
-  background-color: #ff4d4f !important; /* 눈에 띄는 빨간색 */
-  height: 2px !important;               /* 선 두께 */
-  z-index: 10;                         /* 이벤트 박스보다 위에 보이게 */
-}
-
-/* 현재 시간 라인 왼쪽 끝에 생기는 작은 삼각형/점 (선택사항) */
-:deep(.calendar_default_currenttime_header) {
-  display: block !important;
-  width: 0;
-  height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 8px solid #ff4d4f; /* 삼각형 화살표 */
-  margin-top: -4px;
-}
+    :deep(.calendar_default_shadow) {display: none;}
 
     .event-header {
         width:100%;

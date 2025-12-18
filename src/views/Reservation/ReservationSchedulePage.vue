@@ -7,6 +7,7 @@ import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 import ScheduleBoard from '@/components/common/ScheduleBoard.vue';
 import ScheduleBoardWeekly from '@/components/common/ScheduleBoardWeekly.vue';
 import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
+import ScheduleBoardMonthly from '@/components/common/ScheduleBoardMonthly.vue';
 
 import { ref } from 'vue';
 
@@ -18,6 +19,7 @@ const changeView = (view) => {
     currentView.value = view;
 };
 
+// 임시데이터 (해당 컬럼 id 와 스케쥴 데이터의 resource가 같아야함)
 const staffResources = [
     { id: 'kim', name: '김뽀삐' },
     { id: 'lee', name: '이뽀삐' },
@@ -27,13 +29,81 @@ const staffResources = [
     { id: 'namgung', name: '남궁뽀삐' },
 ];
 
+// 임시 데이터
 const events = ref([
-    { id: "1", resource: "kim", start: "2025-12-17T10:00:00", end: "2025-12-17T11:30:00", text: "미팅 A", status: 'hold', path: 'intolink'},
-    { id: "2", resource: "lee", start: "2025-12-17T14:00:00", end: "2025-12-17T16:00:00", text: "개인일정1", status: 'personal', path: ''},
-    { id: "3", resource: "kim", start: "2025-12-17T10:00:00", end: "2025-12-17T10:30:00", text: "팀 회의 (목요일)", status: 'canceled', path: 'intopet'},
-    { id: "4", resource: "lee", start: "2025-12-17T16:00:00", end: "2025-12-17T17:00:00", text: "개인일정2", status: 'personal', path: ''},
-    { id: "5", resource: "lee", start: "2025-12-17T09:00:00", end: "2025-12-17T10:00:00", text: "건강검진", status: 'confirm', path: ''},
-    { id: "6", resource: "lee", start: "2025-12-17T09:00:00", end: "2025-12-17T10:00:00", text: "건강검진", status: 'hold', path: ''},
+    { 
+        id: "1", 
+        resource: "kim", 
+        start: "2025-12-17T10:00:00", 
+        end: "2025-12-17T11:30:00", 
+        name: "민혜린",
+        patient: '초코',
+        product_name: '건강검진',
+        memo: '건강검진으로 처음 방문, 정기 건강검진 추천', 
+        status: 'hold', 
+        path: 'intolink',
+
+    },
+    { 
+        id: "2", 
+        resource: "lee", 
+        start: "2025-12-17T14:00:00", 
+        end: "2025-12-17T16:00:00", 
+        name: '개인일정',
+        patient: '',
+        product_name: '', 
+        memo: '',
+        status: 'personal', 
+        path: ''
+    },
+    { 
+        id: "3", 
+        resource: "kim", 
+        start: "2025-12-17T10:00:00", 
+        end: "2025-12-17T10:30:00", 
+        name: '박길동',
+        patient: '두부',
+        product_name: '간단 건강검진', 
+        memo: '두부 정기검진 2회차, 보호자 개인 일정 사유로 취소됨',
+        status: 'canceled', 
+        path: 'intopet'
+    },
+    { 
+        id: "4", 
+        resource: "lee", 
+        start: "2025-12-17T16:00:00", 
+        end: "2025-12-17T17:00:00", 
+        name: '개인일정',
+        patient: '',
+        product_name: '', 
+        memo: '',
+        status: 'personal', 
+        path: ''
+    },
+    { 
+        id: "5", 
+        resource: "lee", 
+        start: "2025-12-17T09:00:00", 
+        end: "2025-12-17T10:00:00", 
+        name: '이길동',
+        patient: '먼지',
+        product_name: '일반 진료', 
+        memo: '구토로 내원함',
+        status: 'confirm', 
+        path: ''
+    },
+    { 
+        id: "6", 
+        resource: "lee", 
+        start: "2025-12-17T09:00:00", 
+        end: "2025-12-17T10:00:00", 
+        name: '김길동',
+        patient: '별이',
+        product_name: '백신 접종', 
+        memo: '3차 접종',
+        status: 'hold', 
+        path: ''
+    },
 ]);
 
 const currentDate = ref(new Date());
@@ -69,14 +139,14 @@ const currentDate = ref(new Date());
             <!-- TODO: 일자 버튼 수정 -->
             <FilterDate type="nav" v-model="currentDate" />
             <FilterSelect label="담당의" />
-            <FilterSelect label="예약 상태" />
-            <FilterSelect label="예약 경로" />
+            <FilterSelect v-if="currentView != 'Month'" label="예약 상태" />
+            <FilterSelect v-if="currentView != 'Month'" label="예약 경로" />
             <!--TODO: 초기화버튼 추가 -->
         </template>
 
         <template #table>
             <div class="contents-wrapper">
-                <!-- 스케쥴 (일간/월간) -->
+                <!-- 스케쥴 (일간) -->
                 <ScheduleBoard 
                     v-if="currentView === 'Resources'" 
                     :view-type="currentView"
@@ -88,6 +158,14 @@ const currentDate = ref(new Date());
                 <!-- 스케쥴 (주간) -->
                 <ScheduleBoardWeekly 
                     v-else-if="currentView === 'Week'" 
+                    :events="events" 
+                    :staffs="staffResources" 
+                    :startDate="currentDate" 
+                />
+
+                <!-- 스케쥴 (월간) -->
+                <ScheduleBoardMonthly 
+                    v-else-if="currentView === 'Month'" 
                     :events="events" 
                     :staffs="staffResources" 
                     :startDate="currentDate" 
