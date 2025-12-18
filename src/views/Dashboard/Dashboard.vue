@@ -8,6 +8,7 @@ import icIntoPet from '@/assets/icons/ic_intoPet_w.svg'
 // 컴포넌트
 import CommonTable from '@/components/common/CommonTable.vue'
 import CommonHorizontalTable from '@/components/common/CommonHorizontalTable.vue'
+import CommonHorizontalTable2 from '@/components/common/CommonHorizontalTable2.vue'
 
 import { onMounted, ref } from 'vue'
 import { useReservationStore } from '@/stores/reservationStore'
@@ -49,20 +50,11 @@ const columns = [
     { key: '', label: '관리', width: '15%' },
 ]
 
-// 병원정보 테이블 데이터 (임시)
-// const hospitalDetails = [
-//     { label: '병원명', value: '인투씨엔에스 동물병원' },
-//     { label: '전화번호', value: '064-1234-5678' },
-//     { label: '주소', value: '경기도 용신시 수지구123' },
-//     { label: '상세주소', value: 'A동 678호', },
-//     // <th>가 없는 경우 (hideLabel: true 사용)
-// ];
-const hospitalDetails = [
-    { key: 'name', label: '병원명' },
-    { key: 'tel', label: '전화번호' },
-    { key: 'addr', label: '주소' },
-    { key: '', label: '상세주소' },
-    // <th>가 없는 경우 (hideLabel: true 사용)
+// 병원 정보 th col 정의
+const hospitalColumns = [
+    { key: 'name', label: '병원명', width: '120px' },
+    { key: 'tel', label: '전화번호', width: '120px' },
+    { key: 'addr', label: '주소', width: '120px' },
 ];
 
 // 공지사항 테이블 데이터 (임시)
@@ -190,10 +182,11 @@ onMounted(() => {
     <div class="dashboard--bottom">
         <div class="dashboard--bottom__left">
             <!-- 병원 정보 -->
-            <CommonHorizontalTable
+            <CommonHorizontalTable2
                 title="병원정보"
+                :columns="hospitalColumns"
                 :table-link="'https://intolink.co.kr/mylink/hospital'"
-                :details="[hospitalStore.hospitalInfo]"
+                :data="hospitalStore.hospitalInfo"
                 :max-height="150"
             />
         </div>
