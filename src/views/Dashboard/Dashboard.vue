@@ -11,6 +11,7 @@ import CommonHorizontalTable from '@/components/common/CommonHorizontalTable.vue
 
 import { onMounted, ref } from 'vue'
 import { useReservationStore } from '@/stores/reservationStore'
+import { useHospitalStore } from '@/stores/hospitalStore'
 import { storeToRefs } from 'pinia'
 
 const todayDate = ref(''); // 오늘 날짜 저장
@@ -26,6 +27,7 @@ const getTodayDate = () => { // 날짜 형식 포맷팅
 }
 
 const reservationStore = useReservationStore();
+const hospitalStore = useHospitalStore();
 
 // storeToRefs를 사용하여 reserveCount를 반응형 ref로 가져옴
 const { reserveCount: count } = storeToRefs(reservationStore); // 'count'라는 이름으로 사용
@@ -48,11 +50,18 @@ const columns = [
 ]
 
 // 병원정보 테이블 데이터 (임시)
+// const hospitalDetails = [
+//     { label: '병원명', value: '인투씨엔에스 동물병원' },
+//     { label: '전화번호', value: '064-1234-5678' },
+//     { label: '주소', value: '경기도 용신시 수지구123' },
+//     { label: '상세주소', value: 'A동 678호', },
+//     // <th>가 없는 경우 (hideLabel: true 사용)
+// ];
 const hospitalDetails = [
-    { label: '병원명', value: '인투씨엔에스 동물병원' },
-    { label: '전화번호', value: '064-1234-5678' },
-    { label: '주소', value: '경기도 용신시 수지구123' },
-    { label: '상세주소', value: 'A동 678호', },
+    { key: 'name', label: '병원명' },
+    { key: 'tel', label: '전화번호' },
+    { key: 'addr', label: '주소' },
+    { key: '', label: '상세주소' },
     // <th>가 없는 경우 (hideLabel: true 사용)
 ];
 
@@ -69,6 +78,9 @@ onMounted(() => {
 
     // 대기 예약 리스트 불러오기
     reservationStore.getPendingList();
+
+    // 병원 정보 가져오기
+    hospitalStore.getHospitalInfo();
 
     todayDate.value = getTodayDate();
 })
@@ -180,8 +192,8 @@ onMounted(() => {
             <!-- 병원 정보 -->
             <CommonHorizontalTable
                 title="병원정보"
-                :table-link="'/'"
-                :details="[]"
+                :table-link="'https://intolink.co.kr/mylink/hospital'"
+                :details="[hospitalStore.hospitalInfo]"
                 :max-height="150"
             />
         </div>
@@ -189,7 +201,7 @@ onMounted(() => {
             <!-- 공지사항 -->
             <CommonHorizontalTable 
                 title="공지사항"
-                :table-link="'/'"
+                :table-link="'https://intolink.co.kr/cscenter/notice'"
                 :details="[]"
                 :max-height="150"
             />
