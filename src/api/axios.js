@@ -23,7 +23,7 @@ api.interceptors.request.use(
 
         // const accessToken = Cookies.get('INTOLINK_RESERVE_ACCESS') // 토큰값 가져오기 
         // config.headers.Authorization = `Bearer ${accessToken}` // 요청 헤더에 포함
-        config.headers.Authorization = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJuYXZlci1wbGFjZSIsInVzZXJOYW1lIjoiZGxzeG4yMDI1ISIsImV4cCI6MTc4NDcwMzA2NSwidXNlcklkIjoiaW50b2NuczAiLCJpYXQiOjB9.Esw9L6woqw61P9GQcQ5NTr3A9DVQhaxqPgFZzA3Wrpw' // 요청 헤더에 포함
+        config.headers.Authorization = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJib29raW5nLXBsYWNlIiwidXNlck5hbWUiOiJkbHN4bjIwMjUhIiwiZXhwIjoxNzk3MjkyNjc3LCJ1c2VySWQiOiJpbnRvY25zMCIsImlhdCI6MH0.q4ewsivkWaEhH1ht0IRV1c-R9X0FS6BqPty4cpHktic' // 요청 헤더에 포함
 
         return config
     },
