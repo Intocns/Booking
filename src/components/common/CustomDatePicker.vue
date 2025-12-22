@@ -89,6 +89,27 @@ const openDatePicker = () => {
         dpRef.value.openMenu();
     }
 };
+
+const onDateUpdate = (val) => {
+    if (!val || !Array.isArray(val)) return;
+
+    const [start, end] = val;
+
+    // 시작일만 선택한 경우 → 하루짜리로 자동 완성
+    if (start && !end) {
+        const fixed = [startOfDay(start), startOfDay(start)];
+        emit('update:modelValue', fixed);
+        dpRef.value?.closeMenu();
+        return;
+    }
+
+    // 시작일 + 종료일 모두 선택한 경우 → 즉시 적용
+    if (start && end) {
+        const fixed = [startOfDay(start), startOfDay(end)];
+        emit('update:modelValue', fixed);
+        dpRef.value?.closeMenu();
+    }
+};
 </script>
 
 <template>
@@ -123,13 +144,14 @@ const openDatePicker = () => {
         <VueDatePicker
             ref="dpRef"
             v-model="dateRange"
-            :range="range"
+            range
+            partial-range
             :locale="ko"
             :time-config="{ enableTimePicker: false }"
             :hide-input="true"
-            :week-start="0"
-            class="hidden-datepicker-instance" 
             :teleport-center="false"
+            class="hidden-datepicker-instance"
+            @update:model-value="onDateUpdate"
         >
             <template #action-row="{ selectDate, closeMenu }">
                 <button class="btn btn--size-24 btn--black-outline" @click="dpRef && dpRef.closeMenu()">취소</button>
