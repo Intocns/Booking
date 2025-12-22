@@ -3,9 +3,18 @@
 import icSearch from '@/assets/icons/ic_search.svg';
 import icClear from '@/assets/icons/ic_clear.svg';
 
-import { ref } from 'vue';
+const props = defineProps({
+  modelValue: {
+    type: String,
+    default: '',
+  },
+  placeholder: {
+    type: String,
+    default: '',
+  },
+});
 
-let keyword = ref("");
+const emit = defineEmits(['update:modelValue', 'search']);
 </script>
 
 <template>
@@ -13,29 +22,29 @@ let keyword = ref("");
         <span class="search-filter__label title-s">검색</span>
     
         <div class="search-filter__control search-filter__search_text_box">
-            <input 
+           <input
                 type="text"
-                v-model="keyword"
-                name="" 
-                id="" 
-                class="body-m" 
-                @input="keyword = $event.target.value"
-                placeholder="고객명, 동물명, 전화번호 검색"
-            >
-    
-            <!-- 아이콘 -->
-            <span class="search-filter__icons">
-                <!-- clear icon: 값 있을 때만 표시 -->
-                <img 
-                    :src="icClear" 
-                    alt="입력 삭제 아이콘"
-                    class="clear-icon"
-                    :class="{ visible: keyword.length > 0 }"
-                    @click="keyword = ''"
-                >
-    
-                <img :src="icSearch" alt="검색 아이콘">
-            </span>
+                class="body-m"
+                :value="props.modelValue"
+                :placeholder="props.placeholder"
+                @input="emit('update:modelValue', $event.target.value)"
+                @keyup.enter="emit('search')"
+            />
+
+        <!-- 아이콘 -->
+        <span class="search-filter__icons">
+            <img
+                :src="icClear"
+                class="clear-icon"
+                :class="{ visible: props.modelValue.length > 0 }"
+                @click="emit('update:modelValue', '')"
+            />
+
+            <img
+                :src="icSearch"
+                @click="$emit('search')"
+            />
+        </span>
         </div>
     </div>
 </template>

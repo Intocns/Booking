@@ -29,11 +29,11 @@ const dateRange = computed({
     get: () => props.modelValue,
     set: (value) => emit('update:modelValue', value)
 });
+const today = startOfDay(new Date());
+dateRange.value = [today, today]; //최초
 
 // 빠른 선택 로직
 const setRange = (days) => {
-    const today = startOfDay(new Date());
-
     if (days === 'today') {
         dateRange.value = [today, today];
         return;
@@ -67,8 +67,8 @@ const activeQuick = computed(() => {
     if (props.type !== 'range' || !Array.isArray(dateRange.value)) return null;
     const [start, end] = dateRange.value;
     if (!start || !end) return null;
-    const diff = differenceInDays(new Date(end), new Date(start));
-    
+    if (end.getTime() !== today.getTime()) return null;
+    const diff = differenceInDays(today, new Date(start));
     if (diff === 0) return 'today';
     if (diff === 7) return '7';
     if (diff === 15) return '15';

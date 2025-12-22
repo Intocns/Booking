@@ -9,70 +9,90 @@ import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 import FilterKeyword from '@/components/common/filters/FilterKeyword.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
+import { formatDate } from "@/utils/dateFormatter";
+import { RESERVE_STATUS_OPTIONS, RESERVE_ROUTE_OPTIONS } from "@/utils/reservation";
+import { startOfDay } from "date-fns";
 
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 // 스토어
 import { useReservationStore } from '@/stores/reservationStore';
 import CommonTable from '@/components/common/CommonTable.vue';
 import { useModalStore } from '@/stores/modalStore';
-
+import icSms from '@/assets/icons/ic_sms.svg';
+import { isRef } from 'vue';
 const reservationStore = useReservationStore();
 const modalStore = useModalStore();
 
 // 테이블 col 정의
 const columns = [
     { key: 'idx', label: 'No.', width: '5%' },
-    { key: '', label: '예약상태', width: '10%' },
-    { key: '', label: '예약일자', width: '10%' },
-    { key: '', label: '예약시간', width: '5%' },
-    { key: '', label: '상품명/진료실명', width: '10%' },
+    { key: 'in_state_txt', label: '예약상태', width: '5%' },
+    { key: 're_time_txt', label: '예약일자', width: '12.5%' },
+    { key: 're_time_his_txt', label: '예약시간', width: '7.5%' },
+    { key: 'room_name', label: '상품명/진료실명', width: '10%' },
     { key: 'user_name', label: '고객명', width: '10%' },
     { key: 'phone', label: '전화번호', width: '15%' },
     { key: 'pet_name', label: '동물명', width: '15%' },
     { key: 'species_name', label: '종', width: '10%' },
-    { key: '', label: '담당의', width: '10%' },
-    { key: '', label: '병원 메모', width: '20%' },
-    { key: '', label: '예약경로', width: '10%' },
-    { key: '', label: '접수일시', width: '15%' },
-    { key: '', label: '관리', width: '15%' },
+    { key: 'doctor', label: '담당의', width: '10%' },
+    { key: 'ge_re_memo', label: '병원 메모', width: '20%' },
+    { key: 're_route_txt', label: '예약경로', width: '10%' },
+    { key: 'created_at_txt', label: '접수일시', width: '15%' },
+    { key: 'actions', label: '관리', width: '15%' },
 ]
 
 // 예약 상태 초기값
 const reservationStatus = ref(['all']);
 // 예약 상태 옵션 정의
-// TODO: 임시데이터
-const reserveStatusOptions = [
-    { label: '전체', value: 'all' },
-    { label: '예약 확정', value: 1 },
-    { label: '예약 대기', value: 2 },
-    { label: '예약 취소', value: 3 },
-];
+const reserveStatusOptions = RESERVE_STATUS_OPTIONS;
 
 // 담당의 초기값
 const doctorList = ref(['all']);
 // 담당의 옵션 정의
-// TODO: 임시데이터
+// TODO: 임시데이터 수집DB 접근 불가해서 추후 확인 다시 해야함
 const doctorOptions = [
     { label: '전체', value: 'all' },
     { label: '의료진1', value: 1 },
     { label: '의료진2', value: 2 },
 ];
+const keyword = ref('');
 
 // 예약경로 초기값
 const reservationChannel = ref(['all']);
 // 예약경로 옵션 정의
-const reservationChannelOptions = [
-    { label: '전체', value: 'all' },
-    { label: 'IntoVetGE', value: 1 },
-    { label: '네이버', value: 2 },
-    { label: '인투펫', value: 3 },
-];
+const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
+
+const dateRange = ref([]); 
+const startDate = computed(() => formatDate(dateRange.value?.[0]));
+const endDate   = computed(() => formatDate(dateRange.value?.[1]));
+
+const searchList = async () => {
+    console.log(keyword.value)
+    console.log('isRef:', isRef(keyword));
+    reservationStore.getReservationList({
+        cocode: 2592, //TODO: 임시 데이터 추후 삭제
+        status: reservationStatus.value || null,
+        doctorId: doctorList.value || null,
+        keyword: keyword.value || null,
+        startDate: startDate.value ,
+        endDate: endDate.value ,
+        reRoute: reservationChannel.value || null,
+    });
+};
+
+const searchClear = () => { //초기화 버튼
+    reservationStatus.value = ['all'];
+    doctorList.value = ['all'];
+    reservationChannel.value = ['all'];
+    keyword.value = '';
+    const today = startOfDay(new Date());
+    dateRange.value = [today, today];
+};
 
 onMounted(() => {
-
+    searchList();
 })
 </script>
-
 <template>
     <!-- 페이지 타이틀 -->
     <PageTitle
@@ -90,7 +110,7 @@ onMounted(() => {
     <TableLayout>
         <!-- 검색필터 -->
         <template #filter>         
-            <FilterDate />
+            <FilterDate v-model="dateRange" />
             <FilterSelect 
                 label="예약상태"
                 :options="reserveStatusOptions"
@@ -106,17 +126,23 @@ onMounted(() => {
                 :options="reservationChannelOptions"
                 v-model="reservationChannel"
             />
-            <FilterKeyword :placeholder="'고객명, 동물명, 전화번호 검색'" />
+           
+            <FilterKeyword 
+                v-model="keyword"
+                :placeholder="'고객명, 동물명, 전화번호 검색'"
+                @search="searchList()" />
 
-            <button class="btn btn--size-32 btn--blue">초기화</button>
+            <button class="btn btn--size-32 btn--blue" @click="searchClear()">초기화</button>
         </template>
 
         <!-- 테이블 -->
         <template #table>
-            <CommonTable 
-                :columns="columns" 
-                :rows="[]"
-            />
+            <CommonTable :columns="columns" :rows="reservationStore.reserveList">
+            <template #actions="{ row, rowIndex }">
+                    <button class="btn btn--size-24 btn--black-outline" @click="modalStore.reserveInfoModal.openModal()">상세</button>
+                    <button class="btn btn--size-24 btn--black-outline" @click="modalStore.smsModal.openModal()"><img :src="icSms" alt="SMS"></button>
+            </template>
+            </CommonTable>
         </template>
     </TableLayout>
 

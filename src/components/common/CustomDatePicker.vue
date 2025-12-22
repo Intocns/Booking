@@ -2,6 +2,7 @@
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import { ko } from 'date-fns/locale'
 import { startOfDay, subDays } from "date-fns";
+import { formatDate } from '@/utils/dateFormatter.js';
 
 import { ref, computed } from 'vue';
 
@@ -57,12 +58,6 @@ const formatDisplay = () => {
     if (!hasValue.value) {
         return props.placeholder;
     }
-
-    const formatDate = (date) => {
-        if (!date) return '';
-        const d = date instanceof Date ? date : new Date(date);
-        return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
-    };
 
     if (props.range && Array.isArray(dateRange.value)) {
         const start = dateRange.value[0];
