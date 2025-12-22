@@ -65,10 +65,34 @@ const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
 const dateRange = ref([]); 
 const startDate = computed(() => formatDate(dateRange.value?.[0]));
 const endDate   = computed(() => formatDate(dateRange.value?.[1]));
+const totalCount = computed(() => reservationStore.reserveList.length);
+const reserveSummary = computed(() => {
+    let confirmed = 0;
+    let pending = 0;
+    let canceled = 0;
 
+    reservationStore.reserveList.forEach(row => {
+        switch (row.in_state) {
+            case 1: // 승인
+                confirmed++;
+                break;
+            case 0: // 대기
+                pending++;
+                break;
+            case 2: // 취소
+            case 3: // 거절
+                canceled++;
+                break;
+        }
+    });
+
+    return [
+        { label: '확정', value: confirmed.toString().padStart(2, '0') },
+        { label: '대기', value: pending.toString().padStart(2, '0') },
+        { label: '취소 · 거절', value: canceled.toString().padStart(2, '0'), warning: true },
+    ];
+});
 const searchList = async () => {
-    console.log(keyword.value)
-    console.log('isRef:', isRef(keyword));
     reservationStore.getReservationList({
         cocode: 2592, //TODO: 임시 데이터 추후 삭제
         status: reservationStatus.value || null,
@@ -97,12 +121,8 @@ onMounted(() => {
     <!-- 페이지 타이틀 -->
     <PageTitle
         title="전체 예약 조회"
-        :total="987"
-        :details="[
-            { label: '확정', value: '15' },
-            { label: '대기', value: '05' },
-            { label: '취소 · 거절', value: '05', warning: true },
-        ]"
+        :total="totalCount"
+        :details="reserveSummary"
         helper-text="예약일자를 기준으로 내역이 조회됩니다"
     />
 
