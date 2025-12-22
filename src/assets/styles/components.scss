@@ -9,6 +9,7 @@
     align-items: center;
     justify-content: center;
     font-family: $font-family-base;
+    white-space: nowrap;
 
     &--size-24 { height: 24px; padding: 0 6px; gap: 2px; border-radius: 4px; @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line); line-height: 1; }
     &--size-32 { height: 32px; padding: 0 8px; gap: 3px; border-radius: 5px; @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line); line-height: 1;}
@@ -181,6 +182,45 @@
     }
 }
 
+// segment
+.segment-wrapper {
+    width: 100%;
+    display: flex;
+    height: 32px;
+    padding: 4px;
+    align-items: center;
+    gap: 4px;
+
+    border-radius: 5px;
+    background-color: $gray-100;
+
+    .segment {
+        flex: 1;
+    
+        input[type="radio"] {display: none;}
+    
+        span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 24px;
+            padding: 0 8px;
+
+            @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
+            background-color: $gray-100;
+            border-radius: 4px;
+            color: $gray-400;
+        }
+
+        input:checked + span {
+            background-color: $gray-00;
+            color: $gray-900;
+            box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.15)
+        }
+    }
+}
+
 // ======================================================================
 // etc (text button, flag)
 // ======================================================================
@@ -270,6 +310,7 @@
 .tooltip-content {
     position: absolute;
     @include flex-center;
+    width: max-content;
     min-width: 200px;
     max-width: 400px;
     padding: 15px;
@@ -350,20 +391,26 @@
     display:flex;
     flex-direction: column;
     width: 100%;
-    // height: 100%;
+    max-height: 100%;
     min-height: 0; // flex 아이템이면서 overflow 있을 때 필요;
     padding: var(--modal-padding);
     border-radius: 0 0 8px 8px;
 
     background-color: $gray-00;
 }
+.modal-contents-inner {
+    max-height: 100%;
+    // padding-right: 10px;
+    overflow-y: auto;
+}
 .modal-button-wrapper {
     width: 100%;
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    padding-top: 16px;
-    .btn {min-width: 120px;}
+    padding-top: var(--modal-padding);
+
+    .btn {min-width: 80px;}
 } 
 
 // ======================================================================
@@ -447,13 +494,13 @@
 }
 
 .top-bar {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px 16px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 16px;
 
-        background-color: $gray-00;
-        border-radius: 8px;
-        border: 1px solid $gray-200;
-    }
+    background-color: $gray-00;
+    border-radius: 8px;
+    border: 1px solid $gray-200;
+}

@@ -1,61 +1,77 @@
 <script setup>
+// 컴포넌트
 import PageTitle from '@/components/common/PageTitle.vue';
 import CustomSelect from '@/components/common/CustomSelect.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
 import Modal from '@/components/common/Modal.vue';
-
+import CategorySetting from '@/components/common/modal-content/CategorySetting.vue';
+import OptionSetting from '@/components/common/modal-content/OptionSetting.vue';
+import ConfirmModal from '@/components/common/ConfirmModal.vue';
+// 아이콘 이미지
 import icSettingW from '@/assets/icons/ic_setting_w.svg'
 import icSetting from '@/assets/icons/ic_setting.svg'
 import icArrowLeft from '@/assets/icons/ic_arrow_left.svg'
 import icArrowRight from '@/assets/icons/ic_arrow_right.svg'
 import icEmpty from '@/assets/icons/ic_empty.svg'
+import icArrowRightBlue from '@/assets/icons/ic_arrow_right_blue.svg'
+import icEdit from '@/assets/icons/ic_edit.svg'
+import icCopy from '@/assets/icons/ic_copy.svg'
+import icDel from '@/assets/icons/ic_del.svg'
 
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+// 스토어
+import { useModalStore } from '@/stores/modalStore';
 
-// 카테고리 목록
+const modalStore = useModalStore();
+
+// 카테고리 목록 (임시)
 const categories = [
     { id: 'unassigned', label: '카테고리 미지정' },
     { id: 'required', label: '예약 필수 메뉴' },
     { id: 'new', label: '신규 생성 카테고리' }
 ];
 
-// 현재 선택된 카테고리
-const activeTab = ref('unassigned');
+// 상태 관리
+const activeTab = ref('unassigned'); // 현재 선택된 카테고리
+// 드롭다운 상태 관리
+const activeMenuIndex = ref(null);
+const menuPosition = ref({ x: 0, y: 0 });
 
+// 카테고리
 const currentIndex = computed(() => 
     categories.findIndex(cat => cat.id === activeTab.value)
 );
 
-// 이전 버튼 핸들러
+// 카테고리 이전 버튼 핸들러
 const prevTab = () => {
     if (currentIndex.value > 0) {
         activeTab.value = categories[currentIndex.value - 1].id;
     }
 };
 
-// 다음 버튼 핸들러
+// 카테고리 다음 버튼 핸들러
 const nextTab = () => {
     if (currentIndex.value < categories.length - 1) {
         activeTab.value = categories[currentIndex.value + 1].id;
     }
 };
 
-// key값 임시..
-const optionTableColumns = [
+// 테이블 key값 임시..
+const optionTableColumns = [ // th에 tooltip이 필요한 경우 여기서 추가
     { key: 'optionName', label: '옵션명' },
-    { key: 'price', label: '판매가' },
-    { key: 'count', label: '재고 수' },
-    { key: '1', label: '선택가능' },
-    { key: '2', label: '운영기간' },
-    { key: '3', label: '노출설정' },
-    { key: '4', label: '상품연결' },
+    { key: 'price', label: '판매가', tooltip: '해당 옵션의 판매 가격을 의미합니다.' }, // 툴팁 있는 경우
+    { key: 'count', label: '재고 수', tooltip: '하루 기준으로 옵션의 예약 가능한 수량을 의미합니다.\n해당 수량만큼 예약이 이루어지면 더이상 해당 옵션의 선택은 불가합니다.' },
+    { key: '1', label: '선택가능', tooltip: '고객은 해당 수량 안에서 선택 가능합니다.' },
+    { key: '2', label: '운영기간', tooltip: '운영기간이 설정되면 기간 내 날짜를 예약 할 경우에만 해당 옵션 선택이 가능합니다.' },
+    { key: 'visibleBtn', label: '노출설정' },
+    { key: 'connect', label: '상품연결' },
     { key: 'settingBtn', label: '설정' },
 ]
 
-// 데이터 임시..
+// 테이블 데이터 임시..
 const dataMap = {
     unassigned: [
-        { optionName: '증명서 발급', price: '-', count: '제한 없음', 1: '1개!', 2: '상시운영', 3: '', 4: '연결하기' }
+        { optionName: '증명서 발급', price: '-', count: '제한 없음', 1: '1개!', 2: '상시운영', 3: '', is_connect: '연결하기' }
     ],
     required: [
         { optionName: '기본 진료비', price: '10,000', count: '999', 1: '필수', 2: '상시운영', 3: '노출', 4: '연결됨' }
@@ -71,6 +87,72 @@ const currentRows = computed(() => {
 // 탭버튼 변경
 const setTab = (tabId) => {
     activeTab.value = tabId;
+};
+
+const tableTitleTooltipText = "상품에 카테고리 미지정 옵션만 연결될 경우 예약 서비스에서 카테고리 표시없이 옵션만 노출됩니다.다른 카테고리의 옵션과 함께 연결될 경우 카테고리 미지정 옵션은 '기타' 카테고리로 표시됩니다."
+
+// 카테고리 관리 클릭 이벤트 핸들러
+const categorySettingBtnClick = () => {
+    modalStore.categorySettingModal.openModal();
+}
+// 옵션등록 클릭 이벤트 핸들러
+const optionRegisterBtnClick = () => {
+    isEdit.value = false; // 등록
+    modalStore.optionSettingModal.setTitle('옵션 등록');
+    modalStore.optionSettingModal.openModal();
+}
+
+// 설정 버튼 클릭 핸들러 (좌표 계산 포함)
+const toggleSettingMenu = (e, index) => {
+    // 이미 열려있는 메뉴를 다시 누르면 닫기
+    if (activeMenuIndex.value === index) {
+        activeMenuIndex.value = null;
+        return;
+    }
+
+    menuPosition.value = {
+        x: e.clientX - 50,
+        y: e.clientY + 8
+    };
+    
+    activeMenuIndex.value = index;
+};
+
+// 바깥 클릭 시 닫기 로직
+const closeMenu = (e) => {
+    // 클릭된 요소가 설정 버튼 컨테이너 내부가 아니면 닫음
+    if (!e.target.closest('.row__btn-td')) {
+        activeMenuIndex.value = null;
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('click', closeMenu);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('click', closeMenu);
+});
+
+const isEdit = ref(false); // 수정 모드 여부 상태 추가
+
+// 메뉴 아이템 클릭 시 처리
+const handleMenuAction = (action, row) => {
+    activeMenuIndex.value = null; // 메뉴 닫기
+    
+    if (action === 'edit') {
+        isEdit.value = true; // 수정
+        modalStore.optionSettingModal.setTitle('옵션 수정');
+        modalStore.optionSettingModal.openModal();
+    } else if (action === 'copy') {
+        isEdit.value = false; // 복사는 등록과 같은 로직
+        modalStore.optionSettingModal.setTitle('옵션 복사');
+        modalStore.optionSettingModal.openModal();
+    } else if (action === 'delete') {
+        // 삭제 로직 실행
+        modalStore.confirmModal.openModal()
+        console.log('삭제 대상:', row);
+    }
 };
 </script>
 
@@ -109,7 +191,7 @@ const setTab = (tabId) => {
                     >
                         <img :src="icArrowRight" alt="다음">
                     </button>
-                    <button class="btn btn--size-32 btn--blue">
+                    <button class="btn btn--size-32 btn--blue" @click="categorySettingBtnClick">
                         <img :src="icSettingW" alt="r관리아이콘">
                         카테고리 관리
                     </button>
@@ -121,9 +203,11 @@ const setTab = (tabId) => {
                     title="등록된 옵션"
                     :columns="optionTableColumns" 
                     :rows="currentRows"
-                    :has-info-icons="true"
+                    :table-title-tooltip="tableTitleTooltipText"
                     table-empty-text="등록된 옵션이 없습니다."
                     table-empty-sub-text="예약 상품에 연결해 함께 예약할 옵션 상품이 있다면 등록해주세요."
+                    table-empty-btn-text="옵션 등록"
+                    @empty-btn-click="optionRegisterBtnClick"
                 >
                     <template #right>
                         <div class="d-flex gap-16 align-center table-title-right">
@@ -135,18 +219,58 @@ const setTab = (tabId) => {
                                 </div>
                             </div>
                             <div class="line"></div>
-                            <button class="btn btn--size-32 btn--black">옵션등록</button>
+                            <button class="btn btn--size-32 btn--black" @click="optionRegisterBtnClick">옵션등록</button>
                         </div>
                     </template>
 
 
-                    <!-- TODO: 커스텀 슬롯 노출설정, 상품연결 -->
-                    
+                    <!-- 노출설정 커스텀 슬롯 td -->
+                    <template #visibleBtn="{ row, rowIndex }">
+                        <label class="toggle"> 
+                            <input type="checkbox" />
+                            <span class="toggle-img"></span>
+                        </label>
+                    </template>
+
+                    <!-- 상품연결 커스텀 슬롯 td -->
+                    <template #connect="{ row, rowIndex }">
+                        <div class="connect_btn">
+                            <span class="title-s">{{ row.is_connect }}</span>
+                            <img :src="icArrowRightBlue" alt="">
+                        </div>
+                    </template>
+
                     <!-- 설정버튼 커스텀 슬롯 td -->
+                    <!-- 설정 -->
                     <template #settingBtn="{ row, rowIndex }">
-                        <button class="btn btn--size-24 btn--black-outline">
-                            <img :src="icSetting" alt="설정">
-                        </button>
+                        <div class="row__btn-td">
+                            <button 
+                                class="btn btn--size-24 btn--black-outline"
+                                @click.stop="toggleSettingMenu($event, rowIndex)"
+                                :class="{ 'active': activeMenuIndex === rowIndex }"
+                            >
+                                <img :src="icSetting" alt="설정">
+                            </button>
+    
+                            <ul 
+                                v-if="activeMenuIndex === rowIndex"
+                                class="setting-dropdown"
+                                :style="{ left: menuPosition.x + 'px', top: menuPosition.y + 'px' }"
+                            >
+                                <li @click="handleMenuAction('edit', row)">
+                                    <img :src="icEdit" alt="수정아이콘">
+                                    옵션수정
+                                </li>
+                                <li @click="handleMenuAction('copy', row)">
+                                    <img :src="icCopy" alt="복사아이콘">
+                                    옵션복사
+                                </li>
+                                <li @click="handleMenuAction('delete', row)">
+                                    <img :src="icDel" alt="삭제아이콘">
+                                    옵션삭제
+                                </li>
+                            </ul>
+                        </div>
                     </template>
                 </CommonTable>
             </div>
@@ -178,13 +302,35 @@ const setTab = (tabId) => {
         </div>
     </div>
 
+    <!-- 카테고리 관리 모달 -->
     <Modal
-        v-if="false"
+        v-if="modalStore.categorySettingModal.isVisible"
         size="s"
-        title="카테고리 관리"
+        modal-width="400px"
+        :title="modalStore.categorySettingModal.title"
+        :modal-state="modalStore.categorySettingModal"
     >
-    <!-- TODO: 카테고리 관리 팝업 -->
+        <CategorySetting />
     </Modal>
+
+    <!-- 옵션 등록, 수정, 복사 모달 -->
+    <Modal
+        v-if="modalStore.optionSettingModal.isVisible"
+        size="s"
+        modal-width="400px"
+        :title="modalStore.optionSettingModal.title"
+        :modal-state="modalStore.optionSettingModal"
+    >
+        <OptionSetting :is-edit="isEdit" />
+    </Modal>
+
+    <!-- 옵션 삭제 -->
+    <ConfirmModal
+        v-if="modalStore.confirmModal.isVisible"
+        title="옵션 삭제"
+        :text="`옵션을 삭제하시겠습니까?\n삭제하면 옵션정보, 설정 등 모든 정보가 사라지고\n다시 복원할 수 없습니다.`"
+        confirm-btn-text="삭제"
+    />
 </template>
 
 <style lang="scss" scoped>
@@ -236,6 +382,54 @@ const setTab = (tabId) => {
             background-color: $gray-200;
         }
     }
+
+    // 테이블 > 상품연결 버튼
+    .connect_btn {
+        display: flex;
+        gap: 4px;
+
+        color: $primary-700;
+        cursor: pointer;
+
+        &:hover {
+            text-decoration: underline;    
+        }
+    }
+
+    // 테이블 > 관리 메뉴
+    .setting-dropdown {
+        display: none;
+        position: absolute;
+
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+
+        border-radius: 4px;
+        border: 1px solid $gray-200;
+        background-color: $gray-00;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.06);
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 5px;
+            height: 32px;
+
+            border-radius: 4px;
+            cursor: pointer;
+
+            @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+
+            &:hover {
+                background-color: $gray-50;
+            }
+        }
+
+    }
+
 
 
     // 미리보기

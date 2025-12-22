@@ -1,9 +1,10 @@
 <!-- 테이블 컴포넌트 -->
 <script setup>
-import { defineProps } from 'vue';
+import { defineProps, defineEmits } from 'vue';
 import icEmpty from '@/assets/icons/ic_empty.svg'
 import icMore from '@/assets/icons/ic_more_btn.svg'
 import icInformation from '@/assets/icons/ic_information_blue.svg'
+import icInformationB from '@/assets/icons/ic_infomation_b.svg'
 
 const props = defineProps({
     title: { type: String, default: '' },
@@ -14,8 +15,17 @@ const props = defineProps({
     tableEmptyText: { type: String, default: '검색 결과가 없습니다.' }, // 테이블이 비었을 때 보여줄 서브 텍스트
     tableEmptySubText: { type: String, default: '' }, // 테이블이 비었을 때 보여줄 서브 텍스트
     noThead: {type: Boolean, default: false}, // thead 노출 여부
-    hasInfoIcons: {type: Boolean, default: false },
+    tableTitleTooltip: {type: String, default: ''},
+    tableEmptyBtnText : {type: String, default: ''},
 })
+
+//  에밋
+const emit = defineEmits(['empty-btn-click']);
+
+// 버튼 클릭 핸들러
+const handleEmptyBtnClick = () => {
+    emit('empty-btn-click');
+};
 </script>
 
 <template>
@@ -24,10 +34,15 @@ const props = defineProps({
         <!-- 테이블 타이틀 있는 경우  -->
         <div v-if="title" class="table-title">
             <div class="title-wrapper">
-                <p class="heading-s d-flex gap-8">
+                <div class="heading-s d-flex gap-8">
                     {{ title }}
-                    <img v-if="hasInfoIcons" :src="icInformation" alt="안내아이콘" class="helper__icon">
-                </p>
+                    <div v-if="tableTitleTooltip" class="helper">
+                        <img :src="icInformation" alt="안내아이콘" class="helper__icon">
+                        <div class="tooltip-content">
+                            {{ tableTitleTooltip }}
+                        </div>
+                    </div>
+                </div>
                 <RouterLink v-if="tableRoute" :to="tableRoute" class="table-link">
                     <img :src="icMore" alt="더보기">
                 </RouterLink>
@@ -48,7 +63,16 @@ const props = defineProps({
                 <thead v-show="!noThead">
                     <tr>
                         <th v-for="col in columns" :key="col.key" :style="{ textAlign: col.text_align }">
-                            {{ col.label }}
+                            <div class="d-flex align-center justify-center gap-4">
+                                {{ col.label }}
+    
+                                <div v-if="col.tooltip" class="helper">
+                                    <img :src="icInformationB" alt="안내아이콘" class="helper__icon">
+                                    <div class="tooltip-content">
+                                        {{ col.tooltip }}
+                                    </div>
+                                </div>
+                            </div>
                         </th>
                     </tr>
                 </thead>
@@ -84,6 +108,13 @@ const props = defineProps({
                     <img :src="icEmpty" alt="비어있음 아이콘">
                     <span class="title-s">{{ tableEmptyText }}</span>
                     <p class="body-m">{{ tableEmptySubText }}</p>
+                    <button 
+                        v-if="tableEmptyBtnText" 
+                        class="btn btn--size-32 btn--black" 
+                        @click="handleEmptyBtnClick"
+                    >
+                        {{ tableEmptyBtnText }}
+                    </button>
                 </div>
             </template>
         </div>
@@ -115,6 +146,7 @@ const props = defineProps({
         display: flex;
         align-items: center;
         gap: 8px;
+        z-index: 6;
     }
 }
 
@@ -185,5 +217,49 @@ const props = defineProps({
 .empty-box {
     height: calc(100% - 41px);
     background-color: $gray-00;
+}
+
+
+.helper {
+    position: relative; // 툴팁 위치의 기준점
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+
+    &__icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .tooltip-content {
+        visibility: hidden;  // 평소엔 숨김
+        opacity: 0;         // 투명도 0
+        position: absolute;
+        top: 10px;
+        left: calc(100% + 8px); // 아이콘 위쪽으로 배치
+        
+        width: max-content;
+        max-width: 400px; // 최대 너비 제한
+        padding: 15px;
+
+        border-radius: 5px;
+        border: 1px solid $primary-700;
+        background-color: $primary-50;
+        @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
+        box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.15);
+        
+        white-space: pre-wrap; // 툴팁 내 줄바꿈 허용
+        text-align: left;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 1;
+    }
+
+    // 마우스를 올렸을 때(Hover) 동작
+    &:hover {
+        .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }
+    }
 }
 </style>

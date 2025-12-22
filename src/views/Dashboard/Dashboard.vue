@@ -57,12 +57,36 @@ const hospitalColumns = [
     { key: 'addr', label: '주소', width: '120px' },
 ];
 
-// 공지사항 테이블 데이터 (임시)
-const noticeDetails = [
-    { label: '2023-09-01', value: '인투씨엔에스 예약 시스템 오픈 안내', hideLabel: true },
-    { label: '2023-08-15', value: '시스템 점검 안내', hideLabel: true },
-    { label: '2023-07-30', value: '신규 기능 업데이트 안내', hideLabel: true },
+// 공지사항 테이블 col (임시)
+const noticeColumns = [
+    { key: 'title', label: '제목', width: '90%', text_align: 'left'},
+    { key: 'created_at', label: '작성일', width: '10%'},
 ];
+// 공지사항 테이블 임시 데이터
+const noticeData = [
+    {
+        idx: 27,
+        title: "test",
+        name: "이미지 포함 공지", 
+        views: "8",
+        notice_state: "1",
+        use_login: "0",
+        created_at: "2024-11-28", 
+        updated_at: null,
+        deleted_at: null
+    },
+    {
+        idx: 26,
+        title: "[공지] 이용약관 및 개인정보 처리방침 변경 고지 안내",
+        name: "안녕하세요. 인투링크 서비스를 이용해주셔서 감사합니다...",
+        views: "25",
+        notice_state: "1",
+        use_login: "0",
+        created_at: "2023-11-13",
+        updated_at: null,
+        deleted_at: null
+    }
+]
 
 onMounted(() => {
     // 예약별 카운트
@@ -192,11 +216,12 @@ onMounted(() => {
         </div>
         <div class="dashboard--bottom__right">
             <!-- 공지사항 -->
-            <CommonHorizontalTable 
+            <CommonTable 
                 title="공지사항"
                 :table-link="'https://intolink.co.kr/cscenter/notice'"
-                :details="[]"
-                :max-height="150"
+                :columns="noticeColumns"
+                :rows="noticeData"
+                :no-thead="true"
             />
         </div>
     </div>

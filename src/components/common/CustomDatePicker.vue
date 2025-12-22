@@ -223,6 +223,9 @@ const openDatePicker = () => {
     position: relative;
     flex:2;
 }
+:deep(.dp__arrow_bottom) {
+    display: none !important;
+}
 .fake-input { 
     width: 100%;
     position: relative;

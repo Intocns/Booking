@@ -12,7 +12,8 @@ const props = defineProps({
             // 최소한 closeModal 메서드가 있는지 확인
             return typeof value.closeModal === 'function';
         }
-    }
+    },
+    modalWidth: {type: String, default: ''}
 })
 // 닫기 메서드는 Prop으로 받은 객체의 closeModal을 호출하도록 
 const close = () => {
@@ -24,7 +25,7 @@ const close = () => {
 <template>
     <teleport to="#app">
         <div class="modal-backdrop" @click="close">
-            <div class="modal-container" :class="`modal--${size}`" @click.stop>
+            <div class="modal-container" :class="`modal--${size}`" @click.stop :style="{width: modalWidth}">
                 <!-- 모달 헤더 -->
                 <div class="modal-header">
                     <p class="modal-header__title title-l">{{title}}</p>
