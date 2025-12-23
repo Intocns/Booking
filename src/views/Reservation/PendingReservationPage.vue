@@ -9,17 +9,24 @@ import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
 import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import SearchCustomer from '@/components/common/modal-content/SearchCustomer.vue';
+import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 
 import icSms from '@/assets/icons/ic_sms.svg';
 
 import { useReservationStore } from '@/stores/reservationStore';
 import { useModalStore } from '@/stores/modalStore';
 
-import { onMounted } from 'vue';
+import { RESERVE_ROUTE_OPTIONS } from "@/utils/reservation";
+import { ref, onMounted } from 'vue';
 
 const reservationStore = useReservationStore();
 const modalStore = useModalStore();
 
+// 예약경로 초기값
+const reservationChannel = ref(['all']);
+// 예약경로 옵션 정의
+const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
+const keyword = ref('');
 // 테이블 col 정의
 const columns = [
     { key: 'idx', label: 'No.', width: '5%' },
@@ -36,9 +43,18 @@ const columns = [
     { key: 'actions', label: '관리', width: '15%' }, // 커스텀 슬롯
 ]
 
+const searchList = async () => {
+    reservationStore.getPendingList({
+        cocode: 2592, //TODO: 임시 데이터 추후 삭제
+        keyword: keyword.value,
+        reRoute: reservationChannel.value,
+    });
+};
+
 onMounted(() => {
     // 대기 예약 리스트 불러오기
-    reservationStore.getPendingList();
+    searchList();
+    // reservationStore.getPendingList();
 })
 </script>
 
@@ -58,7 +74,16 @@ onMounted(() => {
     <TableLayout>
         <!-- 검색 필터 -->
         <template #filter>
-            <FilterKeywordBtn :placeholder="'고객명, 동물명, 전화번호 검색'" />
+            <FilterSelect
+                label="예약경로"
+                :options="reservationChannelOptions"
+                v-model="reservationChannel"
+            />
+            <FilterKeywordBtn 
+                :placeholder="'고객명, 동물명, 전화번호 검색'" 
+                v-model="keyword"
+                @search="searchList()"
+            />
         </template>
         
         <!-- 테이블 -->

@@ -57,8 +57,8 @@ export const useReservationStore = defineStore("reservation", () => {
     }
 
     // 대기 예약 리스트 불러오기 (대기 예약 관리,대시보드)
-    async function getPendingList() {
-        const response = await api.get(`/api/${cocode}/reserve/pendinglist`);
+    async function getPendingList(params) {
+        const response = await api.get(`/api/${cocode}/reserve/pendinglist`, {params: params});
 
         if(response.status == 200) {
             console.log(response)

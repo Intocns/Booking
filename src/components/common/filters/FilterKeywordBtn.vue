@@ -2,13 +2,27 @@
 <script setup>
 import icSearch from '@/assets/icons/ic_search_w.svg';
 import icClear from '@/assets/icons/ic_clear.svg';
-
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
+    modelValue: { type: String, default: '' },
     placeholder: String,
-})
-let keyword = ref("");
+});
+
+const emit = defineEmits(['update:modelValue', 'search']);
+
+// v-model proxy
+const keyword = computed({
+    get: () => props.modelValue,
+    set: (val) => emit('update:modelValue', val),
+});
+
+const onSearch = (e) => {
+    // 한글 조합 중 엔터 방지
+    if (e?.isComposing) return;
+    emit('search');
+};
+
 </script>
 
 <template>
@@ -19,11 +33,9 @@ let keyword = ref("");
             <input 
                 type="text"
                 v-model="keyword"
-                name="" 
-                id="" 
                 class="body-m" 
-                @input="keyword = $event.target.value"
                 :placeholder="placeholder"
+                @keyup.enter="onSearch"
             >
     
             <!-- 아이콘 -->
@@ -39,8 +51,8 @@ let keyword = ref("");
             </span>
         </div>
 
-        <button class="btn btn--size-32 btn--blue search-btn">
-            <img :src="icSearch" alt="">
+        <button class="btn btn--size-32 btn--blue search-btn" @click="onSearch">
+            <img :src="icSearch" alt="검색 아이콘"/>
             검색
         </button>
     </div>

@@ -91,6 +91,7 @@ const reserveSummary = computed(() => {
         { label: '취소 · 거절', value: canceled.toString().padStart(2, '0'), warning: true },
     ];
 });
+
 const searchList = async () => {
     reservationStore.getReservationList({
         cocode: 2592, //TODO: 임시 데이터 추후 삭제

@@ -18,8 +18,9 @@ export const RESERVE_STATUS_MAP = {
 export const RESERVE_ROUTE_OPTIONS = [
     { label: '전체', value: 'all' },
     { label: 'IntoVetGE', value: 1 },
-    { label: '네이버', value: 2 },
-    { label: '인투펫', value: 3 },
+    { label: '인투펫', value: 2 },
+    { label: 'fitpet', value: 3 },
+    { label: '네이버', value: 4 },
 ]
 
 // ② List / Table 용 (O(1))
