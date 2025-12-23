@@ -130,14 +130,14 @@ const onDateUpdate = (val) => {
                     class="icon icon--calendar"
                 />
 
-                <button 
+                <!-- <button 
                     v-else 
                     class="icon-button" 
                     @click.stop="clearDate" 
                     aria-label="선택 날짜 초기화"
                 >
                     <img :src="icClear" alt="초기화 아이콘" class="icon icon--clear" />
-                </button>
+                </button> -->
             </div>
         </div>
         

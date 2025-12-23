@@ -19,7 +19,6 @@ import { useReservationStore } from '@/stores/reservationStore';
 import CommonTable from '@/components/common/CommonTable.vue';
 import { useModalStore } from '@/stores/modalStore';
 import icSms from '@/assets/icons/ic_sms.svg';
-import { isRef } from 'vue';
 const reservationStore = useReservationStore();
 const modalStore = useModalStore();
 
