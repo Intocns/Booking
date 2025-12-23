@@ -8,7 +8,6 @@ import icIntoPet from '@/assets/icons/ic_intoPet_w.svg'
 // 컴포넌트
 import CommonTable from '@/components/common/CommonTable.vue'
 import CommonHorizontalTable from '@/components/common/CommonHorizontalTable.vue'
-import CommonHorizontalTable2 from '@/components/common/CommonHorizontalTable2.vue'
 
 import { onMounted, ref } from 'vue'
 import { useReservationStore } from '@/stores/reservationStore'
@@ -206,7 +205,7 @@ onMounted(() => {
     <div class="dashboard--bottom">
         <div class="dashboard--bottom__left">
             <!-- 병원 정보 -->
-            <CommonHorizontalTable2
+            <CommonHorizontalTable
                 title="병원정보"
                 :columns="hospitalColumns"
                 :table-link="'https://intolink.co.kr/mylink/hospital'"
