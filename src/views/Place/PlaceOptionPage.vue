@@ -21,38 +21,39 @@ import icDel from '@/assets/icons/ic_del.svg'
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
+import { useOptionStore } from '@/stores/optionStore';
 
 const modalStore = useModalStore();
-
-// 카테고리 목록 (임시)
-const categories = [
-    { id: 'unassigned', label: '카테고리 미지정' },
-    { id: 'required', label: '예약 필수 메뉴' },
-    { id: 'new', label: '신규 생성 카테고리' }
-];
+const optionStore = useOptionStore();
 
 // 상태 관리
 const activeTab = ref('unassigned'); // 현재 선택된 카테고리
 // 드롭다운 상태 관리
 const activeMenuIndex = ref(null);
 const menuPosition = ref({ x: 0, y: 0 });
+const scrollViewport = ref(null);
 
 // 카테고리
-const currentIndex = computed(() => 
-    categories.findIndex(cat => cat.id === activeTab.value)
-);
+const currentIndex = computed(() => {
+    const index = optionStore.categoryList.findIndex(cat => cat.category_id === activeTab.value);
+    return index === -1 ? 0 : index; // 찾지 못할 경우 0번으로 리턴
+});
 
 // 카테고리 이전 버튼 핸들러
 const prevTab = () => {
     if (currentIndex.value > 0) {
-        activeTab.value = categories[currentIndex.value - 1].id;
+        activeTab.value = optionStore.categoryList[currentIndex.value - 1].category_id;
+        // 스크롤 왼쪽으로 이동
+        scrollViewport.value?.scrollBy({ left: -100, behavior: 'smooth' });
     }
 };
 
 // 카테고리 다음 버튼 핸들러
 const nextTab = () => {
-    if (currentIndex.value < categories.length - 1) {
-        activeTab.value = categories[currentIndex.value + 1].id;
+    if (currentIndex.value < optionStore.categoryList.length - 1) {
+        activeTab.value = optionStore.categoryList[currentIndex.value + 1].category_id;
+        // 스크롤 오른쪽으로 이동
+        scrollViewport.value?.scrollBy({ left: 100, behavior: 'smooth' });
     }
 };
 
@@ -128,6 +129,12 @@ const closeMenu = (e) => {
 
 onMounted(() => {
     window.addEventListener('click', closeMenu);
+
+    optionStore.getCategoryList(); // 카테고리 리스트 불러옴
+
+    if (optionStore.categoryList.length > 0) {
+        activeTab.value = optionStore.categoryList[0].category_id;
+    }
 });
 
 onUnmounted(() => {
@@ -163,16 +170,16 @@ const handleMenuAction = (action, row) => {
         <div class="left">
             <!-- 상단 바 -->
             <div class="top-bar">
-                <div class="button-group">
+                <div class="category-scroll-area" ref="scrollViewport">
                     <!-- 카테고리 버튼 -->
                     <button 
-                        v-for="cat in categories" 
-                        :key="cat.id"
+                        v-for="cat in optionStore.categoryList" 
+                        :key="cat.category_id"
                         class="tab-btn btn--size-32"
-                        :class="{ 'active': activeTab === cat.id }" 
-                        @click="setTab(cat.id)"
+                        :class="{ 'active': activeTab === cat.category_id }" 
+                        @click="setTab(cat.category_id)"
                     >
-                        {{ cat.label }}
+                        {{ cat.name }}
                     </button>
                 </div>
         
@@ -187,7 +194,7 @@ const handleMenuAction = (action, row) => {
                     <button 
                         class="btn btn--size-32 btn--black-outline"
                         @click="nextTab"
-                        :disabled="currentIndex === categories.length - 1"
+                        :disabled="currentIndex === optionStore.categoryList.length - 1"
                     >
                         <img :src="icArrowRight" alt="다음">
                     </button>
@@ -349,6 +356,27 @@ const handleMenuAction = (action, row) => {
         display: flex;
         flex-direction: column;
         gap: 16px;
+    }
+
+    .category-scroll-area {
+        flex: 1;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        white-space: nowrap;
+        min-width: 0;
+
+        padding: 2px 0;
+
+        /* 스크롤바 숨기기 */
+        scrollbar-width: none; // Firefox
+        &::-webkit-scrollbar {
+            display: none; // Chrome, Safari
+        }
+
+        .tab-btn {
+            flex-shrink: 0; // 버튼이 찌그러지지 않게 고정
+        }
     }
 
     .right {
