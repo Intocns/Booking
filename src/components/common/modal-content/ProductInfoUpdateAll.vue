@@ -297,6 +297,7 @@ const goInfo = (() => {
 }
 
 /* 사진 업로드 영역 (이미지와 동일하게) */
+// TODO: 추후,, 공통 css로 
 .photo-upload {
     display: flex;
     flex-direction: column;
@@ -326,8 +327,7 @@ const goInfo = (() => {
         cursor: pointer;
 
         .icon-plus {
-            width: 24px;
-            opacity: 0.3;
+            width: 32px;
         }
 
         &:hover {

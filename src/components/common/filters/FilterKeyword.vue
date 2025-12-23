@@ -61,8 +61,10 @@ const emit = defineEmits(['update:modelValue', 'search']);
         justify-content: flex-end;
         gap: 4px;
 
-        .clear-icon {
+        img {
             cursor: pointer;
+        }
+        .clear-icon {
             opacity: 0;
             visibility: hidden;
         }

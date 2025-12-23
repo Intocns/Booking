@@ -84,7 +84,24 @@
         color: $gray-00;
     }
 }
+// 요일 버튼
+.btn-day {
+    width: 32px;
+    padding: 8px 10px 7px 11px;
+    @include flex-center;
 
+    border-radius: 4px;
+    border: 1px solid $gray-200;
+    background-color: $gray-50;
+    color: $gray-400;
+    @include typo($body-xs-size, $body-xs-weight, $body-xs-spacing, $body-xs-line);
+
+    &.active {
+        border-color: $primary-200;
+        background-color: $primary-50;
+        color: $primary-700;
+    }
+}
 .button-group {
     display: flex;
     gap: 8px;
@@ -510,4 +527,147 @@
     background-color: $gray-00;
     border-radius: 8px;
     border: 1px solid $gray-200;
+}
+
+// ======================================================================
+// formTable 공통 스타일
+// ======================================================================
+.form-container {
+    width: 100%;
+    flex: 1;
+    // overflow-y: auto;
+    
+    border-top: 2px solid $gray-600;
+}
+.form-item {
+    display: flex;
+    min-height: 32px;
+
+    border-bottom: 1px solid $gray-200;
+}
+.form-label {
+    width: 120px; 
+    display: flex;
+    align-items: center;
+
+    @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
+    color: $gray-700;
+    background: $gray-50;
+    padding: 4px 10px;
+
+    &.required::after {
+        content: '*';
+        display: inline-block;
+        margin-left: 2px;
+        color: $primary-700;
+    }
+}
+.form-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+    padding: 8px 10px;
+}
+
+// ======================================================================
+// 사진 업로드/미리보기 영역 공통
+// ======================================================================
+/* 사진 업로드 영역 (이미지와 동일하게) */
+.photo-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+
+    &__grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    /* 추가 버튼 박스 */
+    &__btn {
+        width: 96px;
+        height: 96px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+
+        background-color: $gray-00;
+        border: 1px solid $gray-200;
+        border-radius: 4px;
+        cursor: pointer;
+
+        .icon-plus {
+            width: 32px;
+        }
+
+        &:hover {
+            border-color: $primary-500;
+        }
+    }
+
+    /* 이미지 아이템 박스 */
+    &__item {
+        position: relative;
+        width: 96px;
+        height: 96px;
+        border-radius: 4px;
+        overflow: hidden;
+
+        background-color: $gray-00;
+        border: 1px solid $gray-200;
+        border-radius: 4px;
+
+        .preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .drag-handle {
+            position: absolute;
+            top: 4px;
+            left:4px;
+
+            width: 16px;
+            height: 16px;
+            
+            border-radius: 2px;
+            background-color: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(4px);
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-badge {
+            position: absolute;
+            bottom: 0;
+
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 0;
+            
+            background-color: rgba(0, 0, 0, 0.16);
+            backdrop-filter: blur(4px);
+
+            span {
+                color: $gray-00;
+            }
+        }
+    }
 }

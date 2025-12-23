@@ -119,7 +119,7 @@ onMounted(() => {
 
                         <img v-if="product.imageUrls" src="" alt="상품이미지">
 
-                        <p>{{ product.name }}</p>
+                        <p class="item-box__name">{{ product.name }}</p>
                     </div>
 
                     <div class="d-flex align-center justify-between">
@@ -290,6 +290,7 @@ onMounted(() => {
         }
 
         &__img {
+            position: relative;
             height: 168px;
             @include flex-center;
             overflow: hidden;
@@ -297,6 +298,15 @@ onMounted(() => {
 
             border-radius: 4px;
             border: 1px solid $gray-200;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        &__name {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+
+            @include typo($title-m-size, $title-m-weight, $title-m-spacing, $title-m-line);
+            color: $gray-00;
         }
         &__sub-text {
             margin: 4px 0;

@@ -141,10 +141,13 @@ textarea {
 }
 
 .contents-wrapper {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     flex: 1;
     min-height: 0;
     padding: 16px;
+    overflow-y: auto;
 
     border-radius: 8px;
     border: 1px solid $gray-200;

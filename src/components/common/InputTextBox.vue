@@ -131,11 +131,11 @@ const currentLength = computed(() => {
         
         <div class="input-text-box__bottom">
             <!-- 힌트 메세지 -->
-            <span v-show="caption" class="caption">{{ caption }}</span>
+            <span class="caption">{{ caption }}</span>
             <!-- 글자 수 영역 -->
             <span 
                 class="input-text-box__char-count"
-                v-if="maxLength > 0"
+                v-show="maxLength > 0"
             >
                 {{ currentLength }} / {{ maxLength }} {{ minLength > 0 ? '(최소' + minLength + '자)' : '' }}
             </span>
@@ -201,7 +201,7 @@ const currentLength = computed(() => {
     &__bottom {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: space-between;
 
         padding: 0 10px;
     }
@@ -214,5 +214,5 @@ const currentLength = computed(() => {
         color: $gray-500;
     }
 }
-.caption {color: $gray-700; padding: 0 10px;}
+.caption {color: $gray-700; }
 </style>
