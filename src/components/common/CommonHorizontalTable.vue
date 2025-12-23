@@ -1,4 +1,4 @@
-<!-- Horizontal table -->
+<!-- 단일 데이터 테이블 (대시보드 > 공지사항) --> 
 <script setup>
 import { defineProps } from 'vue';
 import icEmpty from '@/assets/icons/ic_empty.svg'
@@ -6,52 +6,45 @@ import icMore from '@/assets/icons/ic_more_btn.svg'
 
 const props = defineProps({
     title: { type: String, default: '' },
-    tableRoute: { type: [String, Object], default: null }, // 타이틀 화살표 버튼으로 이동하는 route 경로
-    tableLink: { type: String }, // 타이틀 화살표 버튼으로 이동하는 url link 경로
-    details: { type: Array }, // 배열 요소는 { label: string, value: any, class?: string, hideLabel?: boolean } 형태
-    maxHeight: { type: Number, default: null } // 테이블 최대 높이 설정 (px 단위)
+    tableLink: { type: String }, 
+    // columns: 보여주고 싶은 필드들 정의 
+    // [{ key: 'name', label: '병원명' }, { key: 'tel', label: '전화번호' } ...]
+    columns: { type: Array, default: () => [] }, 
+    data: { type: Object, default: () => ({}) }, 
+    maxHeight: { type: Number, default: null }
 })
 </script>
 
 <template>
     <div class="table-section">
-        <!-- 테이블 타이틀 있는 경우  -->
         <div v-if="title" class="table-title">
             <p class="heading-s">{{ title }}</p>
-            <RouterLink v-if="tableRoute" :to="tableRoute" class="table-link">
-                <img :src="icMore" alt="더보기">
-            </RouterLink>
             <a v-if="tableLink" :href="tableLink" target="_blank" class="table-link">
                 <img :src="icMore" alt="더보기">
             </a>
         </div>
 
         <div class="table-wrapper" :style="{ maxHeight: maxHeight ? `${maxHeight}px` : 'auto' }">
-            <table v-if="details.length > 0" class="table">
+            <table v-if="data && Object.keys(data).length > 0" class="table">
                 <tbody>
-                    <tr v-for="(item, index) in details" :key="index">
-                        <th v-if="!item.hideLabel">
-                            {{ item.label }}
+                    <tr v-for="col in columns" :key="col.key">
+                        <th :style="{ width: col.width }">
+                            {{ col.label }}
                         </th>
                         
-                        <td :colspan="item.hideLabel ? 2 : 1">
-                            <template v-if="item.html">
-                                <span v-html="item.value"></span>
-                            </template>
-                            <template v-else>
-                                {{ item.value }}
-                            </template>
+                        <td>
+                            <slot :name="col.key" :value="data[col.key]" :data="data">
+                                {{ data[col.key] || '-' }}
+                            </slot>
                         </td>
                     </tr>
                 </tbody>
             </table>
 
-            <template v-else>
-                <div class="empty-box">
-                    <img :src="icEmpty" alt="비어있음 아이콘">
-                    <span>해당 정보가 없습니다.</span>
-                </div>
-            </template>
+            <div v-else class="empty-box">
+                <img :src="icEmpty" alt="비어있음 아이콘">
+                <span>정보가 없습니다.</span>
+            </div>
         </div>
     </div>
 </template>
