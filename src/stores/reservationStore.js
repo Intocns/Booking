@@ -63,7 +63,7 @@ export const useReservationStore = defineStore("reservation", () => {
         if(response.status == 200) {
             console.log(response)
             let data = response.data.data;
-            reservePendingList.value = data.list.map(mapReserveRow);
+            reservePendingList.value = data.map(mapReserveRow);
         }
     }
 
