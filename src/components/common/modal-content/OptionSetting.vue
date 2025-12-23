@@ -423,11 +423,6 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
     &__content {
         flex: 1;
         width: 100%;
-
-        :deep(.caption) {
-            width: 100%;
-            text-align: right;
-        }
     }
 }
 

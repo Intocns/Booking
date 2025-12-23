@@ -241,10 +241,10 @@ const handleSave = () => {
         flex: 1;
         width: 100%;
 
-        :deep(.caption) {
-            width: 100%;
-            text-align: right;
-        }
+        // :deep(.caption) {
+        //     width: 100%;
+        //     text-align: right;
+        // }
     }
 }
 
