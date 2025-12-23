@@ -5,7 +5,7 @@ export const formatDate = (value) => {
     if (!value) return ''
     const d = new Date(value)
     if (isNaN(d)) return ''
-    
+
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
@@ -17,7 +17,8 @@ export const formatTime = (value) => {
     const d = new Date(value)
     if (isNaN(d)) return ''
 
-    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+    // return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`
 }
 
 /**

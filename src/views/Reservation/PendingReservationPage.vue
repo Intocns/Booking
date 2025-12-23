@@ -23,16 +23,16 @@ const modalStore = useModalStore();
 // 테이블 col 정의
 const columns = [
     { key: 'idx', label: 'No.', width: '5%' },
-    { key: 're_time', label: '예약일자', width: '10%' },
-    { key: '', label: '예약시간', width: '5%' },
-    { key: '', label: '상품명/진료실명', width: '10%' },
+    { key: 're_time_txt', label: '예약일자', width: '10%' },
+    { key: 're_time_his_txt', label: '예약시간', width: '5%' },
+    { key: 'room_name', label: '상품명/진료실명', width: '10%' },
     { key: 'user_name', label: '고객명', width: '10%' },
-    { key: 'phone', label: '전화번호', width: '15%' },
+    { key: 'phone_txt', label: '전화번호', width: '15%' },
     { key: 'pet_name', label: '동물명', width: '15%' },
     { key: 'species_name', label: '종', width: '10%' },
-    { key: '', label: '고객 메모', width: '20%' },
-    { key: '', label: '예약경로', width: '10%' },
-    { key: '', label: '접수일시', width: '15%' },
+    { key: 're_memo', label: '고객 메모', width: '20%' },
+    { key: 're_route_txt', label: '예약경로', width: '10%' },
+    { key: 'created_at_txt', label: '접수일시', width: '15%' },
     { key: 'actions', label: '관리', width: '15%' }, // 커스텀 슬롯
 ]
 
