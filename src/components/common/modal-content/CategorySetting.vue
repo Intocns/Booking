@@ -68,7 +68,7 @@ const handleSave = () => {
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">카테고리명</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox />
+                                    <InputTextBox :max-length="10" />
                                 </div>
                             </div>
                             <div class="setting-row">
@@ -89,7 +89,7 @@ const handleSave = () => {
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">카테고리명</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox />
+                                    <InputTextBox :max-length="10" />
                                 </div>
                             </div>
                             <div class="setting-row">
@@ -115,7 +115,7 @@ const handleSave = () => {
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">카테고리명</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox />
+                                    <InputTextBox :max-length="10" />
                                 </div>
                             </div>
                             <div class="setting-row">
@@ -189,7 +189,7 @@ const handleSave = () => {
         
         min-height: 0;
         // max-height: 460px;
-        overflow-y: auto;
+        // overflow-y: auto;
     }
 
     // 카테고리 등록

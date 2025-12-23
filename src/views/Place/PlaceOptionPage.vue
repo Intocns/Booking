@@ -307,6 +307,7 @@ const handleMenuAction = (action, row) => {
         v-if="modalStore.categorySettingModal.isVisible"
         size="s"
         modal-width="400px"
+        modal-height="662px"
         :title="modalStore.categorySettingModal.title"
         :modal-state="modalStore.categorySettingModal"
     >
@@ -328,9 +329,10 @@ const handleMenuAction = (action, row) => {
     <ConfirmModal
         v-if="modalStore.confirmModal.isVisible"
         title="옵션 삭제"
-        :text="`옵션을 삭제하시겠습니까?\n삭제하면 옵션정보, 설정 등 모든 정보가 사라지고\n다시 복원할 수 없습니다.`"
         confirm-btn-text="삭제"
-    />
+    >
+        <p>옵션을 삭제하시겠습니까?<br/>삭제하면 옵션정보, 설정 등 모든 정보가 사라지고<br/>다시 복원할 수 없습니다.</p>
+    </ConfirmModal>
 </template>
 
 <style lang="scss" scoped>

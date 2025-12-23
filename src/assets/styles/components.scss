@@ -387,30 +387,36 @@
 }
 
 .modal-contents {
-    // flex-grow: 1;
+    flex-grow: 1;
     display:flex;
     flex-direction: column;
     width: 100%;
+     min-height: 0; // flex 아이템이면서 overflow 있을 때 필요;
     max-height: 100%;
-    min-height: 0; // flex 아이템이면서 overflow 있을 때 필요;
-    padding: var(--modal-padding);
     border-radius: 0 0 8px 8px;
 
     background-color: $gray-00;
 }
 .modal-contents-inner {
+    flex: 1;
+    padding: var(--modal-padding);
+    min-height: 0; // flex 아이템이면서 overflow 있을 때 필요;
     max-height: 100%;
-    // padding-right: 10px;
     overflow-y: auto;
+    
+    // padding-right: 10px;
+    // overflow-y: auto;
 }
 .modal-button-wrapper {
     width: 100%;
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    padding-top: var(--modal-padding);
+    padding: var(--modal-padding);
+    padding-top: 0;
 
     .btn {min-width: 80px;}
+    .btn--c {min-width: 56px;}
 } 
 
 // ======================================================================

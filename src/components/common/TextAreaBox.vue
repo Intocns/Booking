@@ -93,6 +93,7 @@ const handleBlur = () => {
                 @blur="handleBlur"
             ></textarea>
 
+            <!-- 글자 수 영역 -->
             <span 
                 class="text-area-box__char-count"
                 v-if="maxLength > 0"
@@ -101,6 +102,7 @@ const handleBlur = () => {
             </span>
         </div>
 
+        <!-- 힌트 메세지 -->
         <span v-show="caption" class="caption">{{ caption }}</span>
     </div>
 </template>

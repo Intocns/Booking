@@ -27,6 +27,16 @@ const props = defineProps({
         type: String,
         default: '32px',
     },
+    // 최대 글자 수
+    maxLength: {
+        type: Number,
+        default: 0, // 0이면 무제한
+    },
+    // 최소 글자 수
+    minLength: {
+        type: Number,
+        default: 0,
+    }
     // TODO: status (success, error 등) prop 추가 가능
 })
 
@@ -42,6 +52,12 @@ const hasValue = computed(() => {
 
 // 입력 값 변경 처리 (부모에게 전달)
 const updateValue = (event) => {
+    let value = event.target.value;
+
+    if (props.maxLength > 0 && value.length > props.maxLength) {
+        // 최대 길이 초과 시 자르기
+        value = value.substring(0, props.maxLength);
+    }
     //  v-model 업데이트를 위한 이벤트 발생
     emit('update:modelValue', event.target.value);
 };
@@ -62,6 +78,12 @@ const handleBlur = () => {
     isFocused.value = false;
     emit('blur');
 };
+
+// 현재 값 길이 계산
+const currentLength = computed(() => {
+    return props.modelValue.length;
+});
+
 </script>
 
 <template>
@@ -106,7 +128,18 @@ const handleBlur = () => {
                 > -->
             </span>
         </div>
-        <span v-show="caption" class="caption">{{ caption }}</span>
+        
+        <div class="input-text-box__bottom">
+            <!-- 힌트 메세지 -->
+            <span v-show="caption" class="caption">{{ caption }}</span>
+            <!-- 글자 수 영역 -->
+            <span 
+                class="input-text-box__char-count"
+                v-if="maxLength > 0"
+            >
+                {{ currentLength }} / {{ maxLength }} {{ minLength > 0 ? '(최소' + minLength + '자)' : '' }}
+            </span>
+        </div>
     </div>
 </template>
 
@@ -163,6 +196,22 @@ const handleBlur = () => {
 
     &__icons {
         display: flex;
+    }
+
+    &__bottom {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+
+        padding: 0 10px;
+    }
+
+    &__char-count {
+        align-self: flex-end; // 오른쪽 하단에 위치
+        margin-top: 4px;
+        
+        @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line);
+        color: $gray-500;
     }
 }
 .caption {color: $gray-700; padding: 0 10px;}

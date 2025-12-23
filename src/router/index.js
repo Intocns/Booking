@@ -47,6 +47,12 @@ const router = createRouter({
                     name: 'placeProduct', 
                     component: () => import('@/views/Place/PlaceProductPage.vue') 
                 },
+                // 2. 상품 관리
+                { 
+                    path: 'product/detail', 
+                    name: 'placeProductDetail', 
+                    component: () => import('@/views/Place/PlaceProductDetail.vue') 
+                },
                 
                 // 3. 옵션 관리
                 { 

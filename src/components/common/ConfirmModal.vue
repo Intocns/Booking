@@ -45,7 +45,8 @@ const modalStore = useModalStore();
                 <div class="modal-contents">
                     <!-- 각 모달 별 콘텐츠 들어감 -->
                     <div class="contents-inner">
-                        {{ text }}
+                        <slot />
+                        <!-- {{ text }} -->
                     </div>
 
                     <!-- 버튼 -->

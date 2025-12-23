@@ -117,7 +117,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label required">옵션명</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox />
+                                    <InputTextBox :max-length="30" />
                                 </div>
                             </div>
                             <div class="setting-row">
@@ -153,7 +153,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">옵션 설명</p>
                                 <div class="setting-row__content">
-                                    <TextAreaBox />
+                                    <TextAreaBox :max-length="300" />
                                 </div>
                             </div>
     
@@ -231,7 +231,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">가격 부가설명</p>
                                 <div class="setting-row__content">
-                                    <TextAreaBox placeholder="가격 부가설명을 입력해주세요." />
+                                    <TextAreaBox placeholder="가격 부가설명을 입력해주세요." max-length="300" />
                                 </div>
                             </div>
                         </div>
@@ -317,9 +317,10 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
 .tab-menu {
     display: flex;
     width: 100%;
-    margin-bottom: 16px;
+    padding: var(--modal-padding) var(--modal-padding) 0;
     
     border-bottom: 1px solid $gray-200;
+
 }
 
 .tab {

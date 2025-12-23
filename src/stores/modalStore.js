@@ -35,6 +35,8 @@ export const useModalStore = defineStore("modalStore", () => {
     const optionDeleteModal = createModalState('옵션 삭제'); // 옵션 관리 > 옵션삭제
     const productVisibleUpdateModal = createModalState(); // 상품 관리 > 상품 일괄 설정
     const productOrderUpdateModal = createModalState(); // 상품 관리 > 순서 변경
+    const productInfoUpdateAllModal = createModalState(); // 상품 관리 > 정보 일괄 변경
+    const intoPetImportModal = createModalState(); // 상품 관리 > 인투펫 불러오기
 
     return {
         smsModal,
@@ -45,6 +47,8 @@ export const useModalStore = defineStore("modalStore", () => {
         optionSettingModal,
         optionDeleteModal,
         productVisibleUpdateModal,
-        productOrderUpdateModal
+        productOrderUpdateModal,
+        productInfoUpdateAllModal,
+        intoPetImportModal
     }
 })

@@ -9,6 +9,7 @@ const props = defineProps({
     options: { type: Array, default: () => [] },     // { label, value }
     placeholder: { type: String, default: "선택" },
     disabled: Boolean,
+    caption: {type: String, default: ''},
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -125,6 +126,9 @@ onBeforeUnmount(() => {
             </span>
         </div>
 
+        <!-- 힌트 메세지 -->
+        <span v-show="caption" class="caption">{{ caption }}</span>
+
         <!-- Dropdown -->
         <div class="select__dropdown" v-if="isOpen">
             <div 
@@ -151,7 +155,8 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
     .select {
-        width: 120px;
+        flex: 1;
+        min-width: 120px;
         position: relative;
 
         &.disabled {
@@ -234,4 +239,6 @@ onBeforeUnmount(() => {
             }
         }
     }
+
+    .caption {color: $gray-700; padding: 0 10px;}
 </style>
