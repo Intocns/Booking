@@ -16,8 +16,8 @@ import icSms from '@/assets/icons/ic_sms.svg';
 import { useReservationStore } from '@/stores/reservationStore';
 import { useModalStore } from '@/stores/modalStore';
 
-import { RESERVE_ROUTE_OPTIONS } from "@/utils/reservation";
-import { ref, onMounted } from 'vue';
+import { RESERVE_ROUTE_OPTIONS, RESERVE_ROUTE_MAP } from "@/utils/reservation";
+import { computed, ref, onMounted } from 'vue';
 
 const reservationStore = useReservationStore();
 const modalStore = useModalStore();
@@ -43,12 +43,37 @@ const columns = [
     { key: 'actions', label: '관리', width: '15%' }, // 커스텀 슬롯
 ]
 
+const totalCount = computed(() => reservationStore.reservePendingList.length);
+const reserveSummary = computed(() => {
+    const counts = {};
+
+    for (const key in RESERVE_ROUTE_MAP) {
+        counts[key] = 0;
+    }
+
+    for (const row of reservationStore.reservePendingList) {
+        if (counts[row.re_route] !== undefined) {
+            counts[row.re_route]++;
+        }
+    }
+
+    return Object.keys(RESERVE_ROUTE_MAP).map(key => ({
+        label: RESERVE_ROUTE_MAP[key],
+        value: String(counts[key]).padStart(2, '0'),
+    }));
+});
+
 const searchList = async () => {
     reservationStore.getPendingList({
         cocode: 2592, //TODO: 임시 데이터 추후 삭제
         keyword: keyword.value,
         reRoute: reservationChannel.value,
     });
+};
+
+const searchClear = () => { //초기화 버튼
+    reservationChannel.value = ['all'];
+    keyword.value = '';
 };
 
 onMounted(() => {
@@ -62,12 +87,8 @@ onMounted(() => {
     <!-- 페이지 타이틀 -->
     <PageTitle
         title="대기 예약 관리"
-        :total="987"
-        :details="[
-            { label: '네이버예약', value: '15' },
-            { label: 'IntoVet GE', value: '05' },
-            { label: '인투펫', value: '05' },
-        ]"
+        :total="totalCount"
+        :details="reserveSummary"
         helper-text="예약일자를 기준으로 내역이 조회됩니다"
     /> 
 
@@ -84,6 +105,7 @@ onMounted(() => {
                 v-model="keyword"
                 @search="searchList()"
             />
+            <button class="btn btn--size-32 btn--blue" @click="searchClear()">초기화</button>
         </template>
         
         <!-- 테이블 -->
