@@ -31,9 +31,9 @@ const keyword = ref('');
 const columns = [
     { key: 'idx', label: 'No.', width: '5%' },
     { key: 're_time_txt', label: '예약일자', width: '10%' },
-    { key: 're_time_his_txt', label: '예약시간', width: '5%' },
+    { key: 're_time_his_txt', label: '예약시간', width: '6%' },
     { key: 'room_name', label: '상품명/진료실명', width: '10%' },
-    { key: 'user_name', label: '고객명', width: '10%' },
+    { key: 'user_name', label: '고객명', width: '9%' },
     { key: 'phone_txt', label: '전화번호', width: '15%' },
     { key: 'pet_name', label: '동물명', width: '15%' },
     { key: 'species_name', label: '종', width: '10%' },
