@@ -51,7 +51,7 @@ const hideTooltip = (type) => {
 </script>
 
 <template>
-    <div class="modal-content-inner">
+    <div class="modal-contents-inner">
         <div class="tab-content-wrapper">
             <!-- 탭 메뉴 -->
             <div class="tab-menu">
@@ -247,7 +247,7 @@ const hideTooltip = (type) => {
 </template>
 
 <style lang="scss" scoped>
-    .modal-content-inner {
+    .modal-contents-inner {
         width: 592px;
         display: flex;
         flex-direction: column;

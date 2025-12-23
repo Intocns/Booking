@@ -223,8 +223,6 @@ const customerInfoColumns = [
         flex-grow: 1;
         overflow-y: auto;
         min-height: 0;
-
-        padding-right: 10px;
     }
 
     .modal-content-title-wrapper {
