@@ -11,12 +11,8 @@ export const useNoticeStore = defineStore("notice", () => {
 
     // 공지사항 리스트 가져오기 (대시보드)
     async function getNoticeList() {
-        // const params = {
-        //     page : 0,
-        //     size : 4
-        // }
         const params = {
-            page : 0,
+            page : 0, //페이지 번호 0부터 시작(ex_1페이지일 경우 -1해야함)
             size : 4
         }
 
