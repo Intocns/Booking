@@ -2,8 +2,8 @@
 <script setup>
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import { ko } from 'date-fns/locale'
-import { startOfDay, subDays, differenceInDays, addMonths, subMonths } from "date-fns";
-import { ref, computed, watch } from 'vue';
+import { startOfMonth, startOfDay, endOfMonth, addMonths, subMonths, startOfWeek, endOfWeek, addWeeks, addDays, subWeeks, subDays, differenceInDays  } from "date-fns";
+import { ref, computed, watch, onMounted } from 'vue';
 
 import CustomDatePicker from '@/components/common/CustomDatePicker.vue'
 
@@ -15,10 +15,16 @@ const props = defineProps({
         type: [Date, Array, String],
         required: true
     },
-    type: { // 해당 타입에 따라 빠른 선택 버튼 보기 달라짐
+    buttonType: { // 해당 타입에 따라 빠른 선택 버튼 보기 달라짐
         type: String,
-        default: 'range' // 'range' | 'nav' 'range'(기본/기간형) 또는 'nav'(네비게이션형)
-    }
+        default: 'quick' // 'quick'(오늘, 7일 등 버튼) | 'arrow'( < > 오늘 화살표)
+    },
+    isRange: { // 데이터 타입 (단일 선택인가, 기간 선택인가?)
+        type: Boolean,
+        default: true // 기본값이 기간 선택
+    },
+    // 기본으로 선택될 버튼 설정 (예: 'today', '7', '30')
+    defaultSelect: { type: String, default: '7' }
 });
 
 // 부모와 날짜를 동기화하기 위한 emit
@@ -30,45 +36,87 @@ const dateRange = computed({
     set: (value) => emit('update:modelValue', value)
 });
 const today = startOfDay(new Date());
-dateRange.value = [today, today]; //최초
+// dateRange.value = [today, today]; //최초
 
 // 빠른 선택 로직
 const setRange = (days) => {
+    let start, end;
     if (days === 'today') {
-        dateRange.value = [today, today];
-        return;
+        start = today;
+        end = today;
+    } else {
+        const d = days === '30' ? 30 : Number(days); // 1개월 처리
+        start = subDays(today, d);
+        end = today;
     }
 
-    if (days === 30) { // 1개월
-        dateRange.value = [subDays(today, 30), today];
-        return;
+    // isRange 값에 따라 배열 혹은 단일 객체로 전송
+    if (props.isRange) {
+        dateRange.value = [start, end];
+    } else {
+        dateRange.value = start; // 단일 선택일 경우 시작일 기준
     }
-
-    dateRange.value = [subDays(today, days), today];
 };
 
 // 네비게이션 로직 (<, >, 오늘)
 const navigateDate = (direction) => {
-    // 현재 값이 배열이면 첫 번째 값 사용, 아니면 값 그대로 사용
+    // 기준 날짜 가져오기 (배열이면 첫 번째 날 기준)
     const current = Array.isArray(dateRange.value) ? dateRange.value[0] : dateRange.value;
-    const baseDate = current ? new Date(current) : new Date();
+
+    let baseDate = current ? new Date(current) : new Date();
     
-    if (direction === 'prev') {
-        dateRange.value = subMonths(baseDate, 1);
-    } else if (direction === 'next') {
-        dateRange.value = addMonths(baseDate, 1);
+    let start, end;
+
+    if (direction === 'today') {
+        baseDate = new Date(); // 오늘 기준으로 초기화
+    }
+
+    // 월간 뷰일 때
+    if (props.defaultSelect === '30') {
+        // addMonths는 연도가 바뀌는 것을 자동 계산
+        const targetMonth = direction === 'prev' ? subMonths(baseDate, 1) : 
+                            direction === 'next' ? addMonths(baseDate, 1) : new Date();
+        
+        // 연도가 바뀌어도 안전하도록 해당 월의 1일과 말일을 다시 계산
+        start = startOfMonth(targetMonth);
+        end = endOfMonth(targetMonth);
+    } 
+    // 주간 뷰일 때
+    else if (props.defaultSelect === '7') {
+        const targetWeek = direction === 'prev' ? subWeeks(baseDate, 1) : 
+                            direction === 'next' ? addWeeks(baseDate, 1) : new Date();
+        
+        start = startOfWeek(targetWeek, { weekStartsOn: 0 }); // 일요일
+        end = endOfWeek(targetWeek, { weekStartsOn: 0 });   // 토요일
+    } 
+    // 일간 뷰 
+    else {
+        const targetDate = direction === 'prev' ? subDays(baseDate, 1) : 
+                            direction === 'next' ? addDays(baseDate, 1) : new Date();
+        start = startOfDay(targetDate);
+        end = start;
+    }
+
+    // 최종 값을 부모에게 전달
+    if (props.isRange) {
+        dateRange.value = [start, end];
     } else {
-        dateRange.value = startOfDay(new Date());
+        dateRange.value = start;
     }
 };
 
 
 const activeQuick = computed(() => {
-    if (props.type !== 'range' || !Array.isArray(dateRange.value)) return null;
+    if (props.buttonType !== 'quick' || !Array.isArray(dateRange.value)) return null;
+    
     const [start, end] = dateRange.value;
     if (!start || !end) return null;
-    if (end.getTime() !== today.getTime()) return null;
-    const diff = differenceInDays(today, new Date(start));
+    
+    // 종료일이 오늘인지 확인 (오늘 기준 빠른 선택일 경우)
+    const isEndToday = startOfDay(new Date(end)).getTime() === today.getTime();
+    if (!isEndToday) return null;
+
+    const diff = differenceInDays(today, startOfDay(new Date(start)));
     if (diff === 0) return 'today';
     if (diff === 7) return '7';
     if (diff === 15) return '15';
@@ -76,6 +124,13 @@ const activeQuick = computed(() => {
     return null;
 });
 
+onMounted(() => {
+    // 마운트 시 defaultSelect 값에 따라 범위 설정
+    // 기본값은 7일
+    if (props.defaultSelect) {
+        setRange(props.defaultSelect);
+    }
+})
 </script>
 
 <template>
@@ -84,12 +139,12 @@ const activeQuick = computed(() => {
         <div class="search-filter__date-range">
             <span class="search-filter__label title-s">일자</span>
             <div class="search-filter__datepicker">
-                <CustomDatePicker v-model="dateRange" />
+                <CustomDatePicker v-model="dateRange" :range="props.isRange" />
             </div>
         </div>
 
         <!-- 빠른 선택 버튼 (오늘/7일/15일/1개월) -->
-        <div v-if="props.type === 'range'" class="search-filter__date-buttons">
+        <div v-if="props.buttonType === 'quick'" class="search-filter__date-buttons">
             <div class="search-filter__date-button" v-for="opt in [['today', '오늘'], [7, '7일'], [15, '15일'], [30, '1개월']]" :key="opt[0]">
                 <label :class="['btn btn--size-24 btn--black-outline', { selected: activeQuick === String(opt[0]) }]" @click="setRange(opt[0])">
                     <span>{{ opt[1] }}</span>
@@ -97,8 +152,8 @@ const activeQuick = computed(() => {
             </div>
         </div>
 
-        <!-- 빠른 선택 버튼 (<,>, 오늘) -->
-        <div v-else-if="props.type === 'nav'" class="search-filter__date-nav">
+        <!-- 화살표 버튼 (<,>, 오늘) -->
+        <div v-else-if="props.buttonType === 'arrow'" class="search-filter__date-nav">
             <button type="button" class="btn--size-24 btn--black-outline" @click="navigateDate('prev')">
                 <img :src="icArrowLeft">
             </button>

@@ -134,7 +134,7 @@ onMounted(() => {
     <TableLayout>
         <!-- 검색필터 -->
         <template #filter>         
-            <FilterDate v-model="dateRange" />
+            <FilterDate v-model="dateRange" :default-select="'7'" />
             <FilterSelect 
                 label="예약상태"
                 :options="reserveStatusOptions"

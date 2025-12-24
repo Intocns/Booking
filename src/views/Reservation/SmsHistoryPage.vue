@@ -8,6 +8,7 @@ import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
 
 import icReset from '@/assets/icons/ic_reset.svg'
+import { ref } from 'vue';
 
 // sms 발송 내역 테이블 col 정의
 const columns = [
@@ -19,6 +20,8 @@ const columns = [
     { key: 'send_type', label: '발송구분', width: '10%' },
     { key: 'status', label: '발송결과', width: '10%' },
 ]
+
+const currentDate = ref(new Date())
 </script>
 
 <template>
@@ -28,7 +31,7 @@ const columns = [
     <TableLayout>
         <!-- 검색 필터 -->
         <template #filter>
-            <FilterDate />
+            <FilterDate button-type="quick" v-model="currentDate" default-select="7" />
             <FilterSelect
                 label="발송구분"
             />
