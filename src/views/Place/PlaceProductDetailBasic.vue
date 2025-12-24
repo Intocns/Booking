@@ -3,7 +3,7 @@
 import { ref } from 'vue';
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import TextAreaBox from '@/components/common/TextAreaBox.vue';
-import CustomSelect from '@/components/common/CustomSelect.vue';
+import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 // 아이콘
 import icPlus from '@/assets/icons/ic_plus_blue.svg'
 import icClear from '@/assets/icons/ic_clear.svg'
@@ -13,9 +13,27 @@ import icDragHandel from '@/assets/icons/ic_drag_handel.svg'
 const doctorAssignType = ref('assign'); // 담당의 설정 타입 (default: 'assign' - 승인 시 배정)
 const selectedDoctor = ref([]); // 선택된 담당의 ID
 const doctorOptions = [ // 담당의 목록 (예시 데이터)
-  { label: '김철수 원장', value: 'doc_01' },
-  { label: '이영희 과장', value: 'doc_02' },
+    { label: '김철수 원장', value: 'doc_01' },
+    { label: '이영희 과장', value: 'doc_02' },
 ];
+
+// 상세 설명 항목 상태관리 (예시)
+const detailList = ref([]);
+
+// 항목 추가 함수 (예시)
+const addDetailItem = () => {
+    detailList.value.push({
+        title: '',
+        content: '',
+        image: null,
+        url: ''
+    });
+};
+
+// 항목 삭제 함수 (임시로 넣음)
+const removeDetailItem = (index) => {
+    detailList.value.splice(index, 1);
+};
 </script>
 
 <template>
@@ -92,26 +110,27 @@ const doctorOptions = [ // 담당의 목록 (예시 데이터)
             <div class="form-label">상세 설명 추가</div>
             
             <div class="form-content detail-explanation-section">
-                <button class="text-button text-button--blue add-item-btn">
+                <button type="button" class="text-button text-button--blue add-item-btn" @click="addDetailItem">
                     <img :src="icPlus" alt="">항목 추가
                 </button>
 
                 <div class="detail-item-list">
-                    <div class="detail-item">
-                        <!-- <button class="detail-item__remove-btn">
-                            <img :src="icClear" alt="항목 삭제">
-                        </button> -->
+                    <div v-for="(item, index) in detailList" :key="index" class="detail-item">
+                        
+                        <button class="detail-item__remove-btn" @click="removeDetailItem(index)" v-if="detailList.length > 1">
+                            <img :src="icClear" alt="항목 삭제" width="16">
+                        </button>
 
                         <div class="detail-item__fields">
                             <InputTextBox 
+                                v-model="item.title"
                                 placeholder="제목을 입력해 주세요" 
                                 :max-length="40" 
-                                :min-length="3" 
                             />
                             <TextAreaBox 
+                                v-model="item.content"
                                 placeholder="내용을 입력해 주세요" 
                                 :max-length="1000" 
-                                :min-length="3" 
                             />
 
                             <div class="detail-item__media-group">
@@ -120,21 +139,16 @@ const doctorOptions = [ // 담당의 목록 (예시 데이터)
                                         <input type="file" hidden accept="image/*">
                                         <img :src="icAddBtn" alt="추가" width="24">
                                     </label>
-                                    <div class="preview-thumb" v-if="hasImage">
-                                        <img src="" alt="미리보기">
-                                        <button class="thumb-remove"><img :src="icClear" /></button>
                                     </div>
-                                </div>
 
                                 <InputTextBox 
+                                    v-model="item.url"
                                     class="url-input"
                                     placeholder="연결 URL 입력(선택)" 
                                 />
                             </div>
-
                             <span class="caption">※ 한 장당 최대 20MB, 최대3장</span>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -168,7 +182,7 @@ const doctorOptions = [ // 담당의 목록 (예시 데이터)
                 </div>
 
                 <div v-if="doctorAssignType === 'select'" class="doctor-select-area">
-                    <CustomSelect 
+                    <CustomSingleSelect 
                     v-model="selectedDoctor" 
                     :options="doctorOptions" 
                     placeholder="담당의를 선택해 주세요"
@@ -187,8 +201,8 @@ const doctorOptions = [ // 담당의 목록 (예시 데이터)
 
 <style lang="scss" scoped>
     .button-wrapper {
-        // padding-top: 16px;
-        padding-top: 40px;
+        padding-top: 16px;
+        // padding-top: 40px;
         display: flex;
         gap: 8px;
 

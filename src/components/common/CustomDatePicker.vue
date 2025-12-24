@@ -141,10 +141,11 @@ const onDateUpdate = (val) => {
             </div>
         </div>
         
+        <!-- :range="range" 로 수정해놓음 -->
         <VueDatePicker
             ref="dpRef"
             v-model="dateRange"
-            range
+            :range="range"
             partial-range
             :locale="ko"
             :time-config="{ enableTimePicker: false }"

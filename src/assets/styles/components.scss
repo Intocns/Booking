@@ -86,7 +86,7 @@
 }
 // 요일 버튼
 .btn-day {
-    width: 32px;
+    // width: 32px;
     padding: 8px 10px 7px 11px;
     @include flex-center;
 
@@ -97,6 +97,8 @@
     @include typo($body-xs-size, $body-xs-weight, $body-xs-spacing, $body-xs-line);
 
     &.active {
+        @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
+        
         border-color: $primary-200;
         background-color: $primary-50;
         color: $primary-700;
@@ -137,6 +139,7 @@
     .label {
         color: $gray-900;
         @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+        line-height: 1;
     }
 }
 // checkbox
@@ -166,6 +169,7 @@
     .label {
         color: $gray-900;
         @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+        line-height: 1;
     }
 
     input:disabled + .label {
@@ -174,6 +178,7 @@
 }
 // toggle
 .toggle {
+    width: fit-content;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -225,6 +230,7 @@
             padding: 0 8px;
 
             @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
+            line-height: 1;
             background-color: $gray-100;
             border-radius: 4px;
             color: $gray-400;
@@ -535,7 +541,7 @@
 .form-container {
     width: 100%;
     flex: 1;
-    // overflow-y: auto;
+    overflow-y: auto;
     
     border-top: 2px solid $gray-600;
 }

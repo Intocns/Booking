@@ -84,7 +84,7 @@ const activeQuick = computed(() => {
         <div class="search-filter__date-range">
             <span class="search-filter__label title-s">일자</span>
             <div class="search-filter__datepicker">
-                <CustomDatePicker v-model="dateRange" :range="props.type === 'range'" />
+                <CustomDatePicker v-model="dateRange" />
             </div>
         </div>
 
