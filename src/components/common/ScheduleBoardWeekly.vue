@@ -1,6 +1,7 @@
 <!-- 스케쥴 (주간) -->
 <script setup>
 import { computed, ref } from 'vue';
+import { startOfWeek, addDays, format, isSameDay } from "date-fns";
 
 // 예약 상태 아이콘
 import icConfirm from '@/assets/icons/ic_res_confirm.svg'
@@ -19,7 +20,7 @@ const statusIcons = {
 const props = defineProps({
     events: { type: Array, default: () => [] },
     staffs: { type: Array, default: () => [] },
-    startDate: { type: Date, default: new Date() }
+    startDate: { type: [Date, String], default: () => new Date() }
 });
 
 // 1. 선택된 셀 정보 (직원명, 날짜)
@@ -45,53 +46,48 @@ const selectedEvents = computed(() => {
     if (!selectedCell.value.fullDate) return [];
     
     return props.events
-        .filter(e => 
-        e.start.startsWith(selectedCell.value.fullDate) && 
-        e.resource === selectedCell.value.staffId
-        )
-        .sort((a, b) => a.start.localeCompare(b.start)); // 시간순 정렬
+        .filter(e => {
+            const eventDate = e.start.split('T')[0]; 
+            return eventDate === selectedCell.value.fullDate && e.resource === selectedCell.value.staffId;
+        })
+        .sort((a, b) => a.start.localeCompare(b.start));
 });
 
-// 시간 포맷팅 함수 (예: 2025-11-03T11:00 -> 11:00)
 const formatTime = (dateTimeStr) => {
     return dateTimeStr.split('T')[1].substring(0, 5);
 };
 
-// 1. 7일치 날짜 배열 생성
+// 7일치 날짜 배열 생성
 const weekDates = computed(() => {
     const dates = [];
-    const start = new Date(props.startDate);
-    // 해당 주의 일요일부터 시작하도록 계산 (필요에 따라 조정)
-    const day = start.getDay();
-    start.setDate(start.getDate() - day);
-
-    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-
-    // 오늘 날짜 문자열 (YYYY-MM-DD)
-    const todayStr = new Date().toISOString().split('T')[0];
+    // props.startDate를 Date 객체로 변환
+    const baseDate = new Date(props.startDate);
+    
+    // 기준 날짜가 속한 주의 일요일(0) 구하기
+    const sunday = startOfWeek(baseDate, { weekStartsOn: 0 });
 
     for (let i = 0; i < 7; i++) {
-        const d = new Date(start);
-        d.setDate(start.getDate() + i);
-        const fullDate = d.toISOString().split('T')[0];
+        const d = addDays(sunday, i);
+        const fullDate = format(d, 'yyyy-MM-dd');
+        const todayStr = format(new Date(), 'yyyy-MM-dd');
 
         dates.push({
-            full: d.toISOString().split('T')[0],
-            monthDay: `${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')}`,
-            dayName: dayNames[d.getDay()],
+            full: fullDate,
+            monthDay: format(d, 'MM.dd'),
+            dayName: ['일', '월', '화', '수', '목', '금', '토'][d.getDay()],
             isSunday: d.getDay() === 0,
             isSaturday: d.getDay() === 6,
-            isToday: fullDate === todayStr // 오늘인지 확인하는 플래그 추가
+            isToday: fullDate === todayStr
         });
     }
     return dates;
 });
 
-// 2. 데이터를 [날짜][직원][상태]별로 그룹화 (카운팅)
+// 데이터를 [날짜][직원][상태]별로 그룹화 
 const summaryData = computed(() => {
     const grid = {};
     props.events.forEach(event => {
-        const date = event.start.split('T')[0];
+        const date = event.start.includes('T') ? event.start.split('T')[0] : event.start;
         const staff = event.resource;
         const status = event.status || 'confirm';
 

@@ -1,5 +1,5 @@
 <script setup>
-import { DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
+import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
 import { ref, onMounted, watch, computed } from 'vue';
 import { api } from "@/api/axios";
 // 예약 상태 아이콘
@@ -108,11 +108,13 @@ const config = ref({
 // viewType, events, staffs, startDate 중 하나라도 변하면 캘린더 업데이트
 watch(() => [props.viewType, props.events, props.staffs, props.startDate], ([newView, newEvents, newStaffs, newDate]) => {
     if (calendarRef.value && calendarRef.value.control) {
-        calendarRef.value.control.update({
+        const dp = calendarRef.value.control;
+        
+        dp.update({
             viewType: newView,
+            startDate: new DayPilot.Date(newDate), // 일반 Date를 DayPilot Date로 래핑
             events: newEvents,
-            startDate: newDate,
-            columns: newView === 'Resources' ? columns.value : null, 
+            columns: newView === 'Resources' ? columns.value : null,
         });
     }
 }, { deep: true });
@@ -121,7 +123,7 @@ onMounted(() => {
     // 초기 로드 시 업데이트
     if (calendarRef.value && calendarRef.value.control) {
         calendarRef.value.control.update({
-            startDate: props.startDate,
+            startDate: new DayPilot.Date(props.startDate),
             events: props.events,
             columns: props.viewType === 'Resources' ? columns.value : null,
         });

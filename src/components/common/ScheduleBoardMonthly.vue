@@ -31,32 +31,31 @@ const selectedDateStr = ref("");
 const summaryEvents = computed(() => {
     const dayGroups = {};
 
-    // 날짜별로 이벤트를 묶음
     props.events.forEach(ev => {
-        const date = ev.start.split('T')[0];
+        // T를 기준으로 자르되, 데이터가 없을 경우를 대비
+        const date = ev.start.includes('T') ? ev.start.split('T')[0] : ev.start;
         if (!dayGroups[date]) dayGroups[date] = {};
         
-        // 스태프별로 개수 카운트
         const rId = ev.resource;
         dayGroups[date][rId] = (dayGroups[date][rId] || 0) + 1;
     });
 
     const processed = [];
 
-  // 가공된 그룹을 DayPilot이 인식할 수 있는 이벤트 형태로 변환
     Object.entries(dayGroups).forEach(([date, staffCounts]) => {
         Object.entries(staffCounts).forEach(([resId, count]) => {
-        const staff = props.staffs.find(s => s.id === resId);
-        const staffName = staff ? staff.name : resId;
+            // staffs가 아직 비어있을 수 있으므로 체크
+            const staff = props.staffs?.find(s => s.id === resId);
+            const staffName = staff ? staff.name : resId;
 
-        processed.push({
-            id: `summary-${date}-${resId}`, // 고유 ID
-            start: `${date}T00:00:00`,
-            end: `${date}T23:59:59`,
-            text: `${staffName} ${count}`, // 캘린더 막대에 표시될 글자
-            resourceId: resId,
-            tags: { isSummary: true }
-        });
+            processed.push({
+                id: `summary-${date}-${resId}`,
+                start: `${date}T00:00:00`,
+                end: `${date}T23:59:59`,
+                text: `${staffName} ${count}`,
+                resourceId: resId,
+                tags: { isSummary: true }
+            });
         });
     });
 
@@ -82,46 +81,54 @@ const config = ref({
 
     //  날짜 클릭 시 원본 데이터(props.events)를 필터링해서 사이드바에 표시
     onTimeRangeSelected: (args) => {
-        console.log(args)
-        const date = new Date(args.start.toString()); 
-        
-        // 월, 일 추출
+        //  클릭한 날짜 문자열 추출 
+        const clickedDateStr = args.start.toString("yyyy-MM-dd");
+        selectedDateStr.value = clickedDateStr;
+
+        // JS Date 객체로 변환하여 헤더 텍스트 생성
+        const date = new Date(clickedDateStr); 
         const month = date.getMonth() + 1;
         const day = date.getDate();
-        
-        // 요일 추출
         const week = ['일', '월', '화', '수', '목', '금', '토'];
         const dayOfWeek = week[date.getDay()];
 
         selectedDate.value = `${month}월 ${day}일 (${dayOfWeek})`;
 
-        const clickedDateStr = args.start.toString("yyyy-MM-dd");
-        selectedDateStr.value = clickedDateStr;
-
-        selectedEvents.value = props.events.filter(e => e.start.startsWith(clickedDateStr));
+        // 필터링 비교
+        selectedEvents.value = props.events.filter(e => {
+            const eventDate = e.start.includes('T') ? e.start.split('T')[0] : e.start;
+            return eventDate === clickedDateStr;
+        });
         
+        // 셀 배경색 업데이트
         if (calendarRef.value) {
             calendarRef.value.control.update();
         }
-        // if (calendarRef.value) calendarRef.value.control.clearSelection();
     },
 
     onBeforeCellRender: (args) => {
+        // 기준이 되는 달 (props.startDate 기준)
         const currentMonth = new DayPilot.Date(props.startDate).getMonth();
         const cellMonth = args.cell.start.getMonth();
-
-        const today = DayPilot.Date.today().toString("yyyy-MM-dd");
         const cellDate = args.cell.start.toString("yyyy-MM-dd");
+        const today = DayPilot.Date.today().toString("yyyy-MM-dd");
 
-        if (cellDate === selectedDateStr.value) {
-            args.cell.properties.backColor = "#8BCDFF"; // 선택한 날 배경색
-        } else if (currentMonth !== cellMonth) {
-            // 다른 달 날짜에는 배경색 지정
-            args.cell.properties.backColor = "#f5f5fa"; 
-        } else if (cellDate === today) { // 오늘 날짜 배경색
+        // 초기화 (이전 설정 초기화)
+        args.cell.properties.backColor = "#ffffff";
+
+        // 1. 다른 달 날짜 처리
+        if (currentMonth !== cellMonth) {
+            args.cell.properties.backColor = "#f8f9fa";
+        } 
+        
+        // 2. 오늘 날짜 하이라이트
+        if (cellDate === today) {
             args.cell.properties.backColor = "#E2F3FF";
-        } else {
-            args.cell.properties.backColor = "#ffffff";
+        }
+
+        // 3. 사용자가 클릭해서 선택한 날짜 (가장 우선순위 높음)
+        if (cellDate === selectedDateStr.value) {
+            args.cell.properties.backColor = "#8BCDFF";
         }
     }
 });
@@ -158,11 +165,11 @@ const toggleStaff = (staffId) => {
     openStaffs.value[staffId] = !openStaffs.value[staffId];
 };
 
-watch(() => [props.startDate, props.events], () => {
-    if (calendarRef.value) {
+watch(() => [props.startDate, props.events, props.staffs], () => {
+    if (calendarRef.value && calendarRef.value.control) {
         calendarRef.value.control.update({
-        startDate: new DayPilot.Date(props.startDate),
-        events: summaryEvents.value // 업데이트 시에도 가공된 데이터 사용
+            startDate: new DayPilot.Date(props.startDate),
+            events: summaryEvents.value
         });
     }
 }, { deep: true });

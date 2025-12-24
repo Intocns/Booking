@@ -9,7 +9,9 @@ import ScheduleBoardWeekly from '@/components/common/ScheduleBoardWeekly.vue';
 import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
 import ScheduleBoardMonthly from '@/components/common/ScheduleBoardMonthly.vue';
 
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { startOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from "date-fns";
+import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
 
 // 캘린더 뷰 상태 관리 (초기값: 'Resources' 또는 'Week' 등)
 // DayPilot 기준으로 'Resources', 'Week', 'Month' 중 하나를 사용합니다.
@@ -18,6 +20,10 @@ const currentView = ref('Resources');
 const changeView = (view) => {
     currentView.value = view;
 };
+
+const safeDayPilotDate = computed(() => {
+    return format(currentDate.value, 'yyyy-MM-dd');
+});
 
 // 임시데이터 (해당 컬럼 id 와 스케쥴 데이터의 resource가 같아야함)
 const staffResources = [
@@ -107,6 +113,28 @@ const events = ref([
 ]);
 
 const currentDate = ref(new Date());
+
+const datePickerValue = computed({
+    get: () => {
+        // 주간/월간 뷰일 때는 FilterDate가 [시작, 끝] 배열을 원하므로 가공해서 줌
+        if (currentView.value === 'Week') {
+        return [startOfWeek(currentDate.value, { weekStartsOn: 0 }), endOfWeek(currentDate.value, { weekStartsOn: 0 })];
+        } else if (currentView.value === 'Month') {
+        return [startOfMonth(currentDate.value), endOfMonth(currentDate.value)];
+        }
+        // 일간 뷰일 때는 그냥 날짜 하나
+        return currentDate.value;
+    },
+    set: (newValue) => {
+        //newValue가 배열 [Date, Date]로 들어오든 단일 Date로 들어오든 
+        //기준 날짜' 하나만 뽑음
+        if (Array.isArray(newValue)) {
+            currentDate.value = newValue[0]; 
+        } else {
+            currentDate.value = newValue;
+        }
+    }
+});
 </script>
 
 <template>
@@ -136,8 +164,13 @@ const currentDate = ref(new Date());
                     @click="changeView('Month')"
                 >월</button>
             </div>
-            <!-- TODO: 일자 버튼 수정 -->
-            <FilterDate type="nav" v-model="currentDate" />
+
+            <FilterDate 
+                button-type="arrow" 
+                v-model="datePickerValue" 
+                :is-range="currentView === 'Resources' ? false : true"
+                :default-select="currentView === 'Resources' ? 'today' : (currentView === 'Week' ? '7' : '30')"
+            />
             <FilterSelect label="담당의" />
             <FilterSelect v-if="currentView != 'Month'" label="예약 상태" />
             <FilterSelect v-if="currentView != 'Month'" label="예약 경로" />
@@ -152,7 +185,7 @@ const currentDate = ref(new Date());
                     :view-type="currentView"
                     :events="events" 
                     :staffs="staffResources" 
-                    :startDate="currentDate" 
+                    :startDate="safeDayPilotDate"
                 />
 
                 <!-- 스케쥴 (주간) -->
@@ -160,7 +193,7 @@ const currentDate = ref(new Date());
                     v-else-if="currentView === 'Week'" 
                     :events="events" 
                     :staffs="staffResources" 
-                    :startDate="currentDate" 
+                    :startDate="safeDayPilotDate" 
                 />
 
                 <!-- 스케쥴 (월간) -->
@@ -168,7 +201,7 @@ const currentDate = ref(new Date());
                     v-else-if="currentView === 'Month'" 
                     :events="events" 
                     :staffs="staffResources" 
-                    :startDate="currentDate" 
+                    :startDate="safeDayPilotDate" 
                 />
             </div>
         </template>
