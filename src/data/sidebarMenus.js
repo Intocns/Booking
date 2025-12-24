@@ -29,7 +29,10 @@ export const menus = [
     {
         name: "인투펫 관리",
         icon: "icIntoPet",
-        children: []
+        children: [
+            { name: "운영 설정", path: "/intoPet/settings"},
+            { name: "진료실 관리", path: "/intoPet/clinic"}
+        ]
     },
     {
         name: "병원정보 관리",

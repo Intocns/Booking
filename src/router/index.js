@@ -76,6 +76,26 @@ const router = createRouter({
                 }
             ]
         },
+        // 인투펫 관리
+        {
+            path: '/intoPet',
+            name: 'intoPet',
+            meta: { requiresAuth: true },
+            children: [
+                // 1. 운영설정
+                { 
+                    path: 'settings', 
+                    name: 'intoPetSettings', 
+                    component: () => import('@/views/IntoPet/IntoPetSettingsPage.vue') 
+                },
+                // 2. 진료실 관리
+                { 
+                    path: 'clinic', 
+                    name: 'intoPetClinic', 
+                    component: () => import('@/views/IntoPet/IntoPetClinicPage.vue') 
+                },
+            ]
+        },
     ],
 })
 
