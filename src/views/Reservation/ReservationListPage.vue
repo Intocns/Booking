@@ -1,14 +1,16 @@
 <!-- 전체예약 조회 -->
 <script setup>
+// 컴포넌트
 import PageTitle from '@/components/common/PageTitle.vue';
 import TableLayout from '@/components/common/TableLayout.vue';
 import Modal from '@/components/common/Modal.vue';
 import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
 import FilterDate from '@/components/common/filters/FilterDate.vue';
 import FilterSelect from '@/components/common/filters/FilterSelect.vue';
-import FilterKeyword from '@/components/common/filters/FilterKeyword.vue';
+import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
+
 import { formatDate } from "@/utils/dateFormatter";
 import { RESERVE_STATUS_OPTIONS, RESERVE_ROUTE_OPTIONS } from "@/utils/reservation";
 import { startOfDay } from "date-fns";
@@ -18,7 +20,9 @@ import { onMounted, ref, computed } from 'vue';
 import { useReservationStore } from '@/stores/reservationStore';
 import CommonTable from '@/components/common/CommonTable.vue';
 import { useModalStore } from '@/stores/modalStore';
+// 아이콘
 import icSms from '@/assets/icons/ic_sms.svg';
+import icReset from '@/assets/icons/ic_reset.svg';
 const reservationStore = useReservationStore();
 const modalStore = useModalStore();
 
@@ -147,12 +151,14 @@ onMounted(() => {
                 v-model="reservationChannel"
             />
            
-            <FilterKeyword 
+            <FilterKeywordBtn 
                 v-model="keyword"
                 :placeholder="'고객명, 동물명, 전화번호 검색'"
                 @search="searchList()" />
 
-            <button class="btn btn--size-32 btn--blue" @click="searchClear()">초기화</button>
+            <button class="btn btn--size-32 btn--black-outline" @click="searchClear()" style="width: 40px;">
+                <img :src="icReset" alt="초기화아이콘">
+            </button>
         </template>
 
         <!-- 테이블 -->

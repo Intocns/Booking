@@ -4,8 +4,10 @@ import PageTitle from '@/components/common/PageTitle.vue';
 import TableLayout from '@/components/common/TableLayout.vue';
 import FilterDate from '@/components/common/filters/FilterDate.vue';
 import FilterSelect from '@/components/common/filters/FilterSelect.vue';
-import FilterKeyword from '@/components/common/filters/FilterKeyword.vue';
+import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
+
+import icReset from '@/assets/icons/ic_reset.svg'
 
 // sms 발송 내역 테이블 col 정의
 const columns = [
@@ -38,7 +40,10 @@ const columns = [
                     { label: '실패', value: 'failed' },
                 ]" 
             />
-            <FilterKeyword :placeholder="'고객명, 동물명, 전화번호 검색'" />
+            <FilterKeywordBtn :placeholder="'고객명, 동물명, 전화번호 검색'" />
+            <button class="btn btn--size-32 btn--black-outline" @click="searchClear()" style="width: 40px;">
+                <img :src="icReset" alt="초기화아이콘">
+            </button>
         </template>
 
         <!-- 테이블 -->

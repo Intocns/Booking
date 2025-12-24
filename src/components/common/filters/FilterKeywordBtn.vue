@@ -6,7 +6,7 @@ import { ref, computed } from 'vue';
 
 const props = defineProps({
     modelValue: { type: String, default: '' },
-    placeholder: String,
+    placeholder: { type: String, default: '' },
 });
 
 const emit = defineEmits(['update:modelValue', 'search']);

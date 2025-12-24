@@ -12,6 +12,7 @@ import SearchCustomer from '@/components/common/modal-content/SearchCustomer.vue
 import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 
 import icSms from '@/assets/icons/ic_sms.svg';
+import icReset from '@/assets/icons/ic_reset.svg'
 
 import { useReservationStore } from '@/stores/reservationStore';
 import { useModalStore } from '@/stores/modalStore';
@@ -105,7 +106,9 @@ onMounted(() => {
                 v-model="keyword"
                 @search="searchList()"
             />
-            <button class="btn btn--size-32 btn--blue" @click="searchClear()">초기화</button>
+            <button class="btn btn--size-32 btn--black-outline" @click="searchClear()" style="width: 40px;">
+                <img :src="icReset" alt="초기화아이콘">
+            </button>
         </template>
         
         <!-- 테이블 -->
