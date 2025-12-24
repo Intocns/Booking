@@ -5,8 +5,9 @@ import { useOptionStore } from '@/stores/optionStore';
 import icDropDown from '@/assets/icons/ic_arrow_down_b.svg'
 import icDragHandel from '@/assets/icons/ic_drag_handel.svg'
 import icCheckOff from '@/assets/icons/ic_check_mark_off.svg'
-import { onMounted } from 'vue';
+import icEmpty from '@/assets/icons/ic_empty.svg'
 
+import { onMounted } from 'vue';
 import { ref } from 'vue';
 
 const optionStore = useOptionStore();
@@ -36,71 +37,87 @@ const toggleAccordion = (index) => {
 const isOpen = (index) => expandedIndexes.value.includes(index);
 
 onMounted(() => {
-    optionStore.getCategoryList()
+    optionStore.getCategoryList()     
 })
 </script>
 
 <template>
     <p class="heading-s">예약받을 옵션을 선택 해 주세요.</p>
 
-    <div class="product-detail-option-wrapper">
-        <!-- left -->
-        <div class="option-selection-container">
-    
-            <div class="category-section">
-    
-                <div 
-                    v-for="(category, cIdx) in optionStore.categoryList" 
-                    :key="category.id"
-                    class="category-item"
-                >
-                    <div class="category-header" @click="toggleAccordion(cIdx)">
-                        <div class="d-flex align-center gap-8">
-                            <label class="checkbox" @click.stop>
-                                <input type="checkbox" v-model="category.checked" />
-                                <span class="box"></span>
-                                <span class="label">{{ category.name }}</span>
-                            </label>
-                        </div>
-                        <img 
-                            :src="icDropDown" 
-                            class="arrow-icon" 
-                            :class="{ 'is-rotated': isOpen(cIdx) }"
-                            alt="열기"
-                        />
-                    </div>
-    
-                    <div v-show="isOpen(cIdx)" class="category-contents">
-                        <ul class="option-list">
-                            <li v-for="option in tempOptionList" :key="option.id" class="option-item">
-                                <div class="drag-handle">
-                                    <img :src="icDragHandel" alt="정렬" />
-                                </div>
-                                
-                                <div class="option-info">
-                                    <p class="option-name title-m">{{ option.name }}</p>
-                                    <p class="option-desc body-xs">{{ option.desc }}</p>
-                                </div>
-    
-                                <div class="option-status">
-                                    <img :src="icCheckOff" v-if="option.selected" />
-                                </div>
-                            </li>
-                        </ul>
-    
-                    </div>
-                </div>
-    
-            </div>
-    
-        </div>
+    <template v-if="optionStore.categoryList.length > 0">
+        <div class="product-detail-option-wrapper">
+            <!-- left -->
+            <div class="option-selection-container">
         
-        <div class="button-wrapper">
-            <button class="btn btn--size-40 btn--black">목록으로</button>
-            <button class="btn btn--size-40 btn--blue">저장</button>
+                <div class="category-section">
+        
+                    <div 
+                        v-for="(category, cIdx) in optionStore.categoryList" 
+                        :key="category.id"
+                        class="category-item"
+                    >
+                        <div class="category-header" @click="toggleAccordion(cIdx)">
+                            <div class="d-flex align-center gap-8">
+                                <label class="checkbox" @click.stop>
+                                    <input type="checkbox" v-model="category.checked" />
+                                    <span class="box"></span>
+                                    <span class="label">{{ category.name }}</span>
+                                </label>
+                            </div>
+                            <img 
+                                :src="icDropDown" 
+                                class="arrow-icon" 
+                                :class="{ 'is-rotated': isOpen(cIdx) }"
+                                alt="열기"
+                            />
+                        </div>
+        
+                        <div v-show="isOpen(cIdx)" class="category-contents">
+                            <ul class="option-list">
+                                <li v-for="option in tempOptionList" :key="option.id" class="option-item">
+                                    <div class="drag-handle">
+                                        <img :src="icDragHandel" alt="정렬" />
+                                    </div>
+                                    
+                                    <div class="option-info">
+                                        <p class="option-name title-m">{{ option.name }}</p>
+                                        <p class="option-desc body-xs">{{ option.desc }}</p>
+                                    </div>
+        
+                                    <div class="option-status">
+                                        <img :src="icCheckOff" v-if="option.selected" />
+                                    </div>
+                                </li>
+                            </ul>
+        
+                        </div>
+                    </div>
+        
+                </div>
+        
+            </div>
+            
+            <div class="button-wrapper">
+                <button class="btn btn--size-40 btn--black">목록으로</button>
+                <button class="btn btn--size-40 btn--blue">저장</button>
+            </div>
         </div>
-    </div>
+    </template>
     
+    <template v-else>
+        <div class="empty-option-wrapper">
+            <div class="empty-box">
+                <img :src="icEmpty" alt="비어있음 아이콘">
+                <span class="title-s">등록된 옵션이 없습니다.</span>
+                <p class="body-m">예약 상품에 연결할 옵션을 등록 후 연결해주세요.</p>
+                <button class="btn btn--size-32 btn--black">옵션 등록</button>
+            </div>
+        </div>
+
+        <div class="empty-button-wrapper">
+            <button class="btn btn--size-40 btn--black">목록으로</button>
+        </div>
+    </template>
 </template>
 
 <style lang="scss" scoped>
@@ -194,5 +211,22 @@ onMounted(() => {
     button {
         flex: 1;
     }
+}
+
+.empty-option-wrapper {
+    display: flex;
+    height: 100%;
+    @include flex-center;
+
+    .empty-box {
+        button {margin-top: 16px;}
+    }
+}
+.empty-button-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+
+    button { width: 400px; }
 }
 </style>
