@@ -12,6 +12,7 @@ import CommonHorizontalTable from '@/components/common/CommonHorizontalTable.vue
 import { onMounted, ref } from 'vue'
 import { useReservationStore } from '@/stores/reservationStore'
 import { useHospitalStore } from '@/stores/hospitalStore'
+import { useNoticeStore } from '@/stores/noticeStore'
 import { storeToRefs } from 'pinia'
 
 const todayDate = ref(''); // 오늘 날짜 저장
@@ -28,6 +29,7 @@ const getTodayDate = () => { // 날짜 형식 포맷팅
 
 const reservationStore = useReservationStore();
 const hospitalStore = useHospitalStore();
+const noticeStore = useNoticeStore();
 
 // storeToRefs를 사용하여 reserveCount를 반응형 ref로 가져옴
 const { reserveCount: count } = storeToRefs(reservationStore); // 'count'라는 이름으로 사용
@@ -61,32 +63,11 @@ const noticeColumns = [
     { key: 'title', label: '제목', width: '90%', text_align: 'left'},
     { key: 'created_at', label: '작성일', width: '10%'},
 ];
-// 공지사항 테이블 임시 데이터
-const noticeData = [
-    {
-        idx: 27,
-        title: "test",
-        name: "이미지 포함 공지", 
-        views: "8",
-        notice_state: "1",
-        use_login: "0",
-        created_at: "2024-11-28", 
-        updated_at: null,
-        deleted_at: null
-    },
-    {
-        idx: 26,
-        title: "[공지] 이용약관 및 개인정보 처리방침 변경 고지 안내",
-        name: "안녕하세요. 인투링크 서비스를 이용해주셔서 감사합니다...",
-        views: "25",
-        notice_state: "1",
-        use_login: "0",
-        created_at: "2023-11-13",
-        updated_at: null,
-        deleted_at: null
-    }
-]
 
+//공지사항 클릭 이벤트 => 이동
+const openNoticeDetail = (row) => {
+  window.open('https://intolink.co.kr/cscenter/noticeDet/'+row.idx)
+}
 onMounted(() => {
     // 예약별 카운트
     reservationStore.getReserveCount();
@@ -96,6 +77,9 @@ onMounted(() => {
 
     // 병원 정보 가져오기
     hospitalStore.getHospitalInfo();
+
+    // 공지사항 리스트 가져오기
+    noticeStore.getNoticeList();
 
     todayDate.value = getTodayDate();
 })
@@ -219,7 +203,8 @@ onMounted(() => {
                 title="공지사항"
                 :table-link="'https://intolink.co.kr/cscenter/notice'"
                 :columns="noticeColumns"
-                :rows="noticeData"
+                :rows="noticeStore.noticeList"
+                @row-click="openNoticeDetail"
                 :no-thead="true"
             />
         </div>

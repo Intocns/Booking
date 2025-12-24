@@ -20,7 +20,7 @@ const props = defineProps({
 })
 
 //  에밋
-const emit = defineEmits(['empty-btn-click']);
+const emit = defineEmits(['empty-btn-click', 'row-click']);
 
 // 버튼 클릭 핸들러
 const handleEmptyBtnClick = () => {
@@ -78,7 +78,7 @@ const handleEmptyBtnClick = () => {
                 </thead>
                 <!-- tbody -->
                 <tbody>
-                    <tr v-for="(row, rIndex) in rows" :key="rIndex">
+                    <tr v-for="(row, rIndex) in rows" :key="rIndex" @click="$emit('row-click', row)" style="cursor: pointer">
                         
                         <td
                             v-for="col in columns"
