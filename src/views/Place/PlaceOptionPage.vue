@@ -40,18 +40,20 @@ const currentIndex = computed(() => {
 });
 
 // 카테고리 이전 버튼 핸들러
-const prevTab = () => {
+const prevTab = async () => {
     if (currentIndex.value > 0) {
-        activeTab.value = optionStore.categoryList[currentIndex.value - 1].category_id;
+        const prevCategoryId = optionStore.categoryList[currentIndex.value - 1].category_id;
+        await setTab(prevCategoryId);
         // 스크롤 왼쪽으로 이동
         scrollViewport.value?.scrollBy({ left: -100, behavior: 'smooth' });
     }
 };
 
 // 카테고리 다음 버튼 핸들러
-const nextTab = () => {
+const nextTab = async () => {
     if (currentIndex.value < optionStore.categoryList.length - 1) {
-        activeTab.value = optionStore.categoryList[currentIndex.value + 1].category_id;
+        const nextCategoryId = optionStore.categoryList[currentIndex.value + 1].category_id;
+        await setTab(nextCategoryId);
         // 스크롤 오른쪽으로 이동
         scrollViewport.value?.scrollBy({ left: 100, behavior: 'smooth' });
     }
@@ -69,8 +71,8 @@ const optionTableColumns = [ // th에 tooltip이 필요한 경우 여기서 추�
     { key: 'settingBtn', label: '설정' },
 ]
 
-// 테이블 데이터 임시..
-const dataMap = {
+// 테이블 데이터 맵 (카테고리별 옵션 리스트 저장) - 반응형으로 생성
+const dataMap = ref({
     unassigned: [
         { optionName: '증명서 발급', price: '-', count: '제한 없음', 1: '1개!', 2: '상시운영', 3: '', is_connect: '연결하기' }
     ],
@@ -78,16 +80,19 @@ const dataMap = {
         { optionName: '기본 진료비', price: '10,000', count: '999', 1: '필수', 2: '상시운영', 3: '노출', 4: '연결됨' }
     ],
     new: [] // 비어있는 경우
-};
+});
 
 // 선택된 카테고리에 따라 rows반환
 const currentRows = computed(() => {
-    return dataMap[activeTab.value] || [];
+    return dataMap.value[activeTab.value] || [];
 });
 
 // 탭버튼 변경
-const setTab = (tabId) => {
+const setTab = async (tabId) => {
     activeTab.value = tabId;
+    await optionStore.getOptionListByCategoryId(tabId);
+    // dataMap에 옵션 리스트 저장 (반응형으로 업데이트)
+    dataMap.value[tabId] = optionStore.optionList || [];
 };
 
 const tableTitleTooltipText = "상품에 카테고리 미지정 옵션만 연결될 경우 예약 서비스에서 카테고리 표시없이 옵션만 노출됩니다.다른 카테고리의 옵션과 함께 연결될 경우 카테고리 미지정 옵션은 '기타' 카테고리로 표시됩니다."
@@ -127,13 +132,14 @@ const closeMenu = (e) => {
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
     window.addEventListener('click', closeMenu);
 
-    optionStore.getCategoryList(); // 카테고리 리스트 불러옴
+    await optionStore.getCategoryList(); // 카테고리 리스트 불러옴
 
     if (optionStore.categoryList.length > 0) {
-        activeTab.value = optionStore.categoryList[0].category_id;
+        const firstCategoryId = optionStore.categoryList[0].category_id;
+        await setTab(firstCategoryId);
     }
 });
 
