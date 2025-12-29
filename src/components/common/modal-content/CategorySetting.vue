@@ -1,14 +1,19 @@
 <!-- 카테고리 관리 -->
 <script setup>
-import { ref, watch, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted, reactive } from 'vue';
 // 컴포넌트
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import CustomSelect from '@/components/common/CustomSelect.vue'
+import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue'
 import icClear from '@/assets/icons/ic_clear.svg'
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
+import { useCategoryStore } from '@/stores/categoryStore'
+//util
+import { CATEGORY_TYPE_OPTIONS} from "@/utils/category";
 
 const modalStore = useModalStore();
+const categoryStore = useCategoryStore();
 
 /**
  * 화면 모드 상태 관리
@@ -16,6 +21,8 @@ const modalStore = useModalStore();
  * REGISTER: 새 카테고리 등록 폼
  */
 const mode = ref('LIST');
+
+const categoryRegisterData = reactive({ name: '', type: '' })
 
 // 모드 변경 감시 -> 스토어 타이틀 업데이트
 watch(mode, (newMode) => {
@@ -25,6 +32,11 @@ watch(mode, (newMode) => {
         modalStore.categorySettingModal.setTitle('카테고리 등록');
     }
 }, { immediate: true });
+
+onMounted(() => {
+    //모달창 구성될 때 카테고리 조회
+    categoryStore.getCategoryList();
+});
 
 // 컴포넌트가 꺼질 때 타이틀을 기본값으로 복구
 onUnmounted(() => {
@@ -37,14 +49,41 @@ onUnmounted(() => {
 const goRegister = () => { mode.value = 'REGISTER'; };
 const goList = () => { mode.value = 'LIST'; };
 const handleApply = () => {
-    // TODO: 적용 로직
+    let category_list = categoryStore.categoryList;
+    let params = [];
+
+    // TODO: 적용 로직(카테고리 수정)
+    category_list.forEach(item => {
+        params.push({
+                "name": item.name,
+                "selectionTypeCode": item.selection_type_code, //NUMBER, CHECK
+                "categoryId": item.category_id,
+                "useFlag": item.use_flag, //1:수정일 시, 0:삭제일 시
+                "idx": item.idx,
+                "order": item.order
+        })
+    })
+
+    params = JSON.stringify(params);
+    categoryStore.modifyCategory(params);
+
     modalStore.categorySettingModal.closeModal();
 };
 const handleSave = () => {
     // TODO: 등록 로직
+    let params = {
+        "name": categoryRegisterData.name,
+        "selectionTypeCode": categoryRegisterData.type, //NUMBER, CHECK
+    }
+    
+    categoryStore.addCategory(params);
+
     // 성공 시 다시 리스트 모드로 이동
     goList();
 };
+const handelDelete = (category) => {
+    category.use_flag = 0;//카테고리 삭제 => v-show로 숨김처리됨
+}
 </script>
 
 <template>
@@ -58,55 +97,12 @@ const handleSave = () => {
                 </div>
         
                 <div class="category-manager__list">
-        
-                    <div class="category-item">
+                    <div v-for="category in categoryStore.categoryList" class="category-item" v-show="category.use_flag">
                         <div class="category-item__title">
                             <p class="title-m">카테고리 미지정</p>
-                        </div>
-        
-                        <div class="category-item__settings">
-                            <div class="setting-row">
-                                <p class="title-s setting-row__label">카테고리명</p>
-                                <div class="setting-row__content">
-                                    <InputTextBox :max-length="10" />
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <p class="title-s setting-row__label">유형</p>
-                                <div class="setting-row__content">
-                                    <CustomSelect class="select" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-        
-                    <div class="category-item">
-                        <div class="category-item__title">
-                            <p class="title-m">예약 필수 메뉴</p>
-                        </div>
-        
-                        <div class="category-item__settings">
-                            <div class="setting-row">
-                                <p class="title-s setting-row__label">카테고리명</p>
-                                <div class="setting-row__content">
-                                    <InputTextBox :max-length="10" />
-                                </div>
-                            </div>
-                            <div class="setting-row">
-                                <p class="title-s setting-row__label">유형</p>
-                                <div class="setting-row__content">
-                                    <CustomSelect class="select" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-        
-                    <div class="category-item">
-                        <div class="category-item__title">
-                            <p class="title-m">방문수단 선택</p>
         
                             <!-- 삭제버튼 -->
-                            <div class="delete-btn" @click="() => console.log('삭제 클릭')">
+                            <div class="delete-btn" @click="handelDelete(category)">
                                 <img :src="icClear" alt="삭제" class="icon-img">
                             </div>
                         </div>
@@ -115,18 +111,24 @@ const handleSave = () => {
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">카테고리명</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox :max-length="10" />
+                                    <InputTextBox
+                                        v-model="category.name"
+                                        :max-length="10"
+                                    />
                                 </div>
                             </div>
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">유형</p>
                                 <div class="setting-row__content">
-                                    <CustomSelect class="select" />
+                                    <CustomSingleSelect
+                                        v-model="category.selection_type_code"
+                                        :options="CATEGORY_TYPE_OPTIONS"
+                                        class="select"
+                                    />
                                 </div>
                             </div>
                         </div>
                     </div>
-        
                 </div>
             </div>
         </div>
@@ -146,13 +148,21 @@ const handleSave = () => {
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">카테고리명</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox placeholder="카테고리명을 입력해주세요." />
+                                    <InputTextBox 
+                                        v-model="categoryRegisterData.name" 
+                                        placeholder="카테고리명을 입력해주세요."
+                                        :max-length="10" 
+                                    />
                                 </div>
                             </div>
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">유형</p>
                                 <div class="setting-row__content">
-                                    <CustomSelect class="select" />
+                                    <CustomSingleSelect 
+                                        v-model="categoryRegisterData.type"
+                                        :options="CATEGORY_TYPE_OPTIONS"
+                                        class="select" 
+                                    />
                                 </div>
                             </div>
                         </div>

@@ -38,11 +38,7 @@ export const useCategoryStore = defineStore("category", () => {
 
         if(response.data.status_code <= 300) {
             //$params에서 수정인지 삭제인지 확인 필요
-            let msg = '수정이 완료되었습니다.';
-
-            if(params['useFlag' == 0]){
-                msg = '삭제가 완료되었습니다.';
-            }
+            let msg = '처리가 완료되었습니다.';
 
             alert(msg);
         }else{
