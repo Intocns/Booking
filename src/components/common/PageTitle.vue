@@ -9,7 +9,8 @@ const props = defineProps({
         type: Array,
         default: () => [], // 예: [{label:'확정', value: 15}]
     },
-    helperText: { type: String, default: ""}, // 안내 문구
+    helperText: { type: String, default: ""}, // 안내 문구 (파란색, 인포 아이콘)
+    descText: { type: String, default: ""}, // 회색 무눅
 })
 </script>
 
@@ -52,6 +53,11 @@ const props = defineProps({
                 </div>
             </div>
 
+        </div>
+
+        <!-- desc text -->
+        <div v-if="descText" class="page-header__desc">
+            <span class="body-l">{{ descText }}</span>
         </div>
 
         <!-- Helper -->
@@ -128,6 +134,10 @@ const props = defineProps({
                 color: $gray-900;
                 &.warning {color: $warning-500;}
             }
+        }
+
+        &__desc {
+            color: $gray-700;
         }
 
         &__helper {

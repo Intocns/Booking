@@ -8,17 +8,21 @@ export const useModalStore = defineStore("modalStore", () => {
         // isVisible은 내부에서만 변경되도록 ref 사용
         const isVisible = ref(initialVisibility); 
         const title = ref(initialTitle);
+        const data = ref(null)
         
         return {
             // isVisible을 외부에서는 읽기 전용으로 노출
             isVisible: readonly(isVisible), 
             title,
+            data: data,
             // 모달을 열고 닫는 메서드
             openModal() {
                 isVisible.value = true;
+                data.value = payload;
             },
             closeModal() {
                 isVisible.value = false;
+                data.value = null;
             },
             setTitle(newTitle) { title.value = newTitle; }, // 타이틀 변경 메서드
         }
@@ -38,6 +42,14 @@ export const useModalStore = defineStore("modalStore", () => {
     const productInfoUpdateAllModal = createModalState(); // 상품 관리 > 정보 일괄 변경
     const intoPetImportModal = createModalState(); // 상품 관리 > 인투펫 불러오기
 
+    // 네이버 연동 계정 관리
+    const productRegistrationModal = createModalState(); // 상품 등록 필요 모달
+    const naverConnectNoticeModal = createModalState(); // 계정 연동 완료 모달
+
+    // 플레이스 설정
+    const bookingGuideModal = createModalState(); // 운영 설정 > 예약 받기 > 자세히 설명 모달
+    const bookingGuideTextModal = createModalState(); // 알림 설정 > 안내 문구 추가
+
     return {
         smsModal,
         confirmModal,
@@ -49,6 +61,10 @@ export const useModalStore = defineStore("modalStore", () => {
         productVisibleUpdateModal,
         productOrderUpdateModal,
         productInfoUpdateAllModal,
-        intoPetImportModal
+        intoPetImportModal,
+        productRegistrationModal,
+        naverConnectNoticeModal,
+        bookingGuideModal,
+        bookingGuideTextModal,
     }
 })

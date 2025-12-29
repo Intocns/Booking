@@ -7,6 +7,7 @@
 .btn {
     display: inline-flex;
     align-items: center;
+    gap: 3px;
     justify-content: center;
     font-family: $font-family-base;
     white-space: nowrap;
@@ -36,7 +37,7 @@
     }
     // solid black
     &--black {
-        background-color: $gray-700;
+        background-color: $gray-800;
         color: $gray-00;
 
         &:hover {background-color: $gray-900;box-shadow: $shadow-button-hover}
@@ -258,6 +259,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
+    line-height: 1;
 
     &--blue {
         color: $primary-700;
@@ -329,6 +331,49 @@
     }
 }
 
+.helper {
+    position: relative; // 툴팁 위치의 기준점
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+
+    &__icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .tooltip-content {
+        visibility: hidden;  // 평소엔 숨김
+        opacity: 0;         // 투명도 0
+        position: absolute;
+        top: 10px;
+        left: calc(100% + 8px); // 아이콘 위쪽으로 배치
+        
+        width: max-content;
+        max-width: 400px; // 최대 너비 제한
+        padding: 15px;
+
+        border-radius: 5px;
+        border: 1px solid $primary-700;
+        background-color: $primary-50;
+        @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
+        box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.15);
+        
+        white-space: pre-wrap; // 툴팁 내 줄바꿈 허용
+        text-align: left;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 1;
+    }
+
+    // 마우스를 올렸을 때(Hover) 동작
+    &:hover {
+        .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }
+    }
+}
+
 // tooltip
 .tooltip-content {
     position: absolute;
@@ -374,22 +419,25 @@
 }
 
 .modal--xl {
-    min-width: 1080px;
-    max-width: 1600px;
+    width: 1600px;
     --modal-padding: 40px;
 }
 
-.modal--l,
+.modal--l {
+    width: 1080px;
+    --modal-padding: 32px;
+}
 .modal--m {
-    min-width: 941px;
-    max-width: 1080px;
+    width: 940px;
     --modal-padding: 32px;
 }
 
-.modal--s,
+.modal--s {
+    width: 640px;
+    --modal-padding: 24px;
+}
 .modal--xs {
-    min-width: 400px;
-    max-width: 940px;
+    width: 400px;
     --modal-padding: 24px;
 }
 
@@ -429,17 +477,46 @@
     
     // padding-right: 10px;
     // overflow-y: auto;
+
+}
+.modal-contents-title {
+    @include typo($title-l-size, $title-l-weight, $title-l-spacing, $title-l-line); 
+    color: $gray-900;;
+}
+.modal-contents-subTitle {
+    @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line); 
+    color: $gray-900;
+}
+.modal-contents-body {
+    margin-top: 16px;
+    margin-bottom: 8px;
+
+    @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+    color: $gray-700;
+
+    .strong {color:  $primary-700;}
+}
+.modal-contents-caption {
+    display: block;
+    color: $gray-500;
+    .strong {color:  $primary-700;}
 }
 .modal-button-wrapper {
     width: 100%;
     display: flex;
-    justify-content: flex-end;
     gap: 8px;
     padding: var(--modal-padding);
     padding-top: 0;
 
-    .btn {min-width: 80px;}
-    .btn--c {min-width: 56px;}
+    .buttons {
+        flex: 2;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        .btn {min-width: 80px;}
+        .btn--c {min-width: 56px;}
+    }
+
 } 
 
 // ======================================================================
@@ -574,7 +651,7 @@
     flex-direction: column;
     justify-content: center;
     gap: 16px;
-    padding: 8px 10px;
+    padding: 4px 10px;
 }
 
 // ======================================================================

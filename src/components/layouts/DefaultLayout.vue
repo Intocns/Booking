@@ -23,6 +23,7 @@
     }
     .content {
         flex: 1;
+        width: calc(100% - 220px);
         height: 100vh;
         display:flex;
         flex-direction: column;
