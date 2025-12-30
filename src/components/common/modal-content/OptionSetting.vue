@@ -9,6 +9,7 @@ import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
 // 유틸
 import { formatDate } from '@/utils/dateFormatter.js';
+import { formatPrice, parsePrice } from '@/utils/priceFormatter.js';
 
 import { ref, computed, onMounted, onUnmounted, defineProps, nextTick } from 'vue';
 
@@ -63,6 +64,40 @@ const periodDate = ref(null); // 운영기간 (Date 배열)
 // refs for focus
 const categorySelectRef = ref(null);
 const optionNameInputRef = ref(null);
+const stockCountInputRef = ref(null);
+const priceInputRef = ref(null);
+
+// 숫자만 입력 허용 핸들러
+const handleNumberInput = (value, field) => {
+    // 숫자만 추출 (콤마 제거 후 숫자만)
+    const numericValue = parsePrice(value);
+    if (field === 'minCount') {
+        minCount.value = numericValue;
+    } else if (field === 'maxCount') {
+        maxCount.value = numericValue;
+    } else if (field === 'stockCount') {
+        stockCount.value = numericValue;
+    } else if (field === 'price') {
+        price.value = numericValue;
+    } else if (field === 'normalPrice') {
+        normalPrice.value = numericValue;
+    }
+};
+
+// 포맷팅된 가격 표시용 computed
+const formattedPrice = computed({
+    get: () => formatPrice(price.value),
+    set: (value) => {
+        price.value = parsePrice(value);
+    }
+});
+
+const formattedNormalPrice = computed({
+    get: () => formatPrice(normalPrice.value),
+    set: (value) => {
+        normalPrice.value = parsePrice(value);
+    }
+});
 
 // 옵션 데이터 생성
 const hourOptions = Array.from({ length: 6 }, (_, i) => i);
@@ -117,6 +152,30 @@ const handleNext = async () => {
         }
         return;
     }
+    // 재고가 켜져 있으면 재고 수 필수 체크
+    if (isStockEnabled.value && (!stockCount.value || stockCount.value.trim() === '')) {
+        alert('재고 수를 입력해주세요.');
+        await nextTick();
+        if (stockCountInputRef.value) {
+            const inputElement = stockCountInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return;
+    }
+    // 가격이 켜져 있으면 판매가 필수 체크
+    if (isPriceEnabled.value && (!price.value || price.value.trim() === '')) {
+        alert('판매가를 입력해주세요.');
+        await nextTick();
+        if (priceInputRef.value) {
+            const inputElement = priceInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return;
+    }
     
     // 검증 통과 시 다음 단계로 이동
     goConnect();
@@ -151,6 +210,30 @@ const handleSave = async () => {
         }
         return;
     }
+    // 재고가 켜져 있으면 재고 수 필수 체크
+    if (isStockEnabled.value && (!stockCount.value || stockCount.value.trim() === '')) {
+        alert('재고 수를 입력해주세요.');
+        await nextTick();
+        if (stockCountInputRef.value) {
+            const inputElement = stockCountInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return;
+    }
+    // 가격이 켜져 있으면 판매가 필수 체크
+    if (isPriceEnabled.value && (!price.value || price.value.trim() === '')) {
+        alert('판매가를 입력해주세요.');
+        await nextTick();
+        if (priceInputRef.value) {
+            const inputElement = priceInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return;
+    }
 
     // 소요시간 계산 (분 단위)
     const serviceDuration = selectedHour.value * 60 + selectedMinute.value;
@@ -164,8 +247,8 @@ const handleSave = async () => {
         minBookingCount: minCount.value ? parseInt(minCount.value) : null,
         maxBookingCount: maxCount.value ? parseInt(maxCount.value) : null,
         stock: isStockEnabled.value && stockCount.value ? parseInt(stockCount.value) : null,
-        price: isPriceEnabled.value && price.value ? parseInt(price.value.replace(/,/g, '')) : null,
-        normalPrice: isPriceEnabled.value && normalPrice.value ? parseInt(normalPrice.value.replace(/,/g, '')) : null,
+        price: isPriceEnabled.value && price.value ? parseInt(parsePrice(price.value)) : null,
+        normalPrice: isPriceEnabled.value && normalPrice.value ? parseInt(parsePrice(normalPrice.value)) : null,
         priceDesc: isPriceEnabled.value && priceDesc.value.trim() ? priceDesc.value.trim() : null,
         startDate: isPeriodEnabled.value && periodDate.value && periodDate.value[0] 
             ? formatDate(periodDate.value[0]) || null
@@ -287,13 +370,25 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">최소 수량</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox v-model="minCount" />
+                                    <div class="input-with-unit">
+                                        <InputTextBox 
+                                            :model-value="minCount" 
+                                            @update:model-value="handleNumberInput($event, 'minCount')"
+                                        />
+                                        <span class="unit">개</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">최대 수량</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox v-model="maxCount" />
+                                    <div class="input-with-unit">
+                                        <InputTextBox 
+                                            :model-value="maxCount" 
+                                            @update:model-value="handleNumberInput($event, 'maxCount')"
+                                        />
+                                        <span class="unit">개</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -314,7 +409,15 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label required">재고 수</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox v-model="stockCount" placeholder="개수 입력" />
+                                    <div class="input-with-unit">
+                                        <InputTextBox 
+                                            ref="stockCountInputRef"
+                                            :model-value="stockCount" 
+                                            @update:model-value="handleNumberInput($event, 'stockCount')"
+                                            placeholder="개수 입력" 
+                                        />
+                                        <span class="unit">개</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -336,13 +439,26 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label required">판매가</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox v-model="price" placeholder="판매가 입력" />
+                                    <div class="input-with-unit">
+                                        <InputTextBox 
+                                            ref="priceInputRef"
+                                            v-model="formattedPrice"
+                                            placeholder="판매가 입력" 
+                                        />
+                                        <span class="unit">원</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">정가</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox v-model="normalPrice" placeholder="정가 입력" />
+                                    <div class="input-with-unit">
+                                        <InputTextBox 
+                                            v-model="formattedNormalPrice"
+                                            placeholder="정가 입력" 
+                                        />
+                                        <span class="unit">원</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="setting-row">
@@ -540,6 +656,56 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
     &__content {
         flex: 1;
         width: 100%;
+    }
+}
+
+// 입력 필드와 단위 표시
+.input-with-unit {
+    position: relative;
+    width: 100%;
+
+    .input-text-box-wrapper {
+        width: 100%;
+    }
+
+    // 단위를 입력 박스 내부 오른쪽에 배치
+    .unit {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1;
+        pointer-events: none;
+        
+        @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+        color: $gray-900;
+        white-space: nowrap;
+    }
+
+    // input에 오른쪽 패딩 추가 및 우측 정렬
+    :deep(.input-text-box) {
+        position: relative;
+        
+        input[type="text"] {
+            padding-right: 15px; // 단위 공간 확보
+            text-align: right; // 숫자 우측 정렬
+        }
+
+        // X 아이콘을 단위 위에 배치하고 호버 시에만 표시
+        .input-text-box__icons {
+            position: absolute;
+            right: 5px; // 단위와 같은 위치
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 2;
+            opacity: 0; // 기본적으로 숨김
+            transition: opacity 0.2s;
+        }
+
+        // 호버 시 X 아이콘 표시
+        &:hover .input-text-box__icons {
+            opacity: 1;
+        }
     }
 }
 
