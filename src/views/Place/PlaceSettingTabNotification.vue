@@ -60,101 +60,103 @@ const handleGuideSubmit = () => {
 </script>
 
 <template>
-    <ul class="setting-list">
-        <!-- 예약자 리마인드 알림 -->
-        <li class="setting-item">
-            <div class="setting-item__header">
-                <div class="setting-item__title-area">
-                    <p class="title-m">예약자 리마인드 알림</p>
-                    <span class="caption">예약자가 잊지 않고 방문할 수 있도록 방문 전에 리마인드 알림을 발송합니다.</span>
-                </div>
-            </div>
-
-            <div class="setting-item__content">
-                <div class="option-row">
-                    <label class="radio">
-                        <input type="radio" value="today" v-model="remindType"/>
-                        <span class="circle"></span>
-                        <span class="label">당일 방문 시각 3시간 전 발송</span>
-                    </label>
-                </div>
-                <div class="option-row">
-                    <label class="radio">
-                        <input type="radio" value="yesterday" v-model="remindType"/>
-                        <span class="circle"></span>
-                        <span class="label">방문 전일 오전 9시 발송</span>
-                    </label>
-                </div>
-            </div>
-        </li>
-
-        <!-- 예약자 안내 문구 설정 -->
-        <li class="setting-item">
-            <div class="setting-item__header">
-                <div class="setting-item__title-area">
-                    <p class="title-m">예약자 안내 문구 설정</p>
-                </div>
-            </div>
-
-            <div class="setting-item__content">
-                <!-- 예약 확정 시 안내 문구 설정 -->
-                <div class="setting-item__guide-content">
-                    <div class="d-flex gap-8">
-                        <p class="title-s">예약 확정 시 안내</p>
-                        <span class="caption">예약 확정시 예약자에게 추가로 안내할 내용을 최대 10개까지 미리등록 할 수 있습니다.<br/>등록한 안내 사항 중 1개를 기본으로 지정하여 확정 처리 시 자동 선택되도록 할 수 있습니다.</span>
+    <div class="contents-wrapper">
+        <ul class="setting-list">
+            <!-- 예약자 리마인드 알림 -->
+            <li class="setting-item">
+                <div class="setting-item__header">
+                    <div class="setting-item__title-area">
+                        <p class="title-m">예약자 리마인드 알림</p>
+                        <span class="caption">예약자가 잊지 않고 방문할 수 있도록 방문 전에 리마인드 알림을 발송합니다.</span>
                     </div>
-
-                    <button class="btn btn--size-32 btn--black-outline add-guide-btn" 
-                        @click="openGuideModal('confirm')" :disabled="confirmGuides.length >= 10">
-                        <img :src="icPlus"> 안내 문구 추가({{ confirmGuides.length }}/10)
-                    </button>
-
-                    <!-- 추가 문구 리스트 -->
-                    <ul class="guide-list">
-                        <li v-for="(guide, index) in confirmGuides" :key="guide.id" class="guide-list__item">
-                            <label class="radio">
-                                <input type="radio" :value="index" v-model="defaultConfirmIndex" />
-                                <span class="circle"></span>
-                                <span class="label">{{ guide.text }}</span>
-                            </label>
-                            <button class="delete-btn" @click="removeGuide('confirm', index)">
-                                <img :src="icClose" alt="삭제">
-                            </button>
-                        </li>
-                    </ul>
-
                 </div>
-
-                <!-- 예약 취소 시 안내 문구 설정 -->
-                <div class="setting-item__guide-content">
-                    <div class="d-flex gap-8">
-                        <p class="title-s">예약 취소 시 안내</p>
-                        <span class="caption">예약 확정시 예약자에게 추가로 안내할 내용을 최대 10개까지 미리등록 할 수 있습니다.<br/>등록한 안내 사항 중 1개를 기본으로 지정하여 확정 처리 시 자동 선택되도록 할 수 있습니다.</span>
+    
+                <div class="setting-item__content">
+                    <div class="option-row">
+                        <label class="radio">
+                            <input type="radio" value="today" v-model="remindType"/>
+                            <span class="circle"></span>
+                            <span class="label">당일 방문 시각 3시간 전 발송</span>
+                        </label>
                     </div>
-
-                    <button class="btn btn--size-32 btn--black-outline add-guide-btn" 
-                        @click="openGuideModal('cancel')" :disabled="cancelGuides.length >= 10">
-                        <img :src="icPlus"> 안내 문구 추가({{ cancelGuides.length }}/10)
-                    </button>
-
-                    <!-- 추가 문구 리스트 -->
-                    <ul class="guide-list">
-                        <li v-for="(guide, index) in cancelGuides" :key="guide.id" class="guide-list__item">
-                            <label class="radio">
-                                <input type="radio" :value="index" v-model="defaultCancelIndex" />
-                                <span class="circle"></span>
-                                <span class="label">{{ guide.text }}</span>
-                            </label>
-                            <button class="delete-btn" @click="removeGuide('cancel', index)">
-                                <img :src="icClose" alt="삭제">
-                            </button>
-                        </li>
-                    </ul>
-
+                    <div class="option-row">
+                        <label class="radio">
+                            <input type="radio" value="yesterday" v-model="remindType"/>
+                            <span class="circle"></span>
+                            <span class="label">방문 전일 오전 9시 발송</span>
+                        </label>
+                    </div>
                 </div>
-            </div>
-        </li>
-    </ul>
+            </li>
+    
+            <!-- 예약자 안내 문구 설정 -->
+            <li class="setting-item">
+                <div class="setting-item__header">
+                    <div class="setting-item__title-area">
+                        <p class="title-m">예약자 안내 문구 설정</p>
+                    </div>
+                </div>
+    
+                <div class="setting-item__content">
+                    <!-- 예약 확정 시 안내 문구 설정 -->
+                    <div class="setting-item__guide-content">
+                        <div class="d-flex gap-8">
+                            <p class="title-s">예약 확정 시 안내</p>
+                            <span class="caption">예약 확정시 예약자에게 추가로 안내할 내용을 최대 10개까지 미리등록 할 수 있습니다.<br/>등록한 안내 사항 중 1개를 기본으로 지정하여 확정 처리 시 자동 선택되도록 할 수 있습니다.</span>
+                        </div>
+    
+                        <button class="btn btn--size-32 btn--black-outline add-guide-btn" 
+                            @click="openGuideModal('confirm')" :disabled="confirmGuides.length >= 10">
+                            <img :src="icPlus"> 안내 문구 추가({{ confirmGuides.length }}/10)
+                        </button>
+    
+                        <!-- 추가 문구 리스트 -->
+                        <ul class="guide-list">
+                            <li v-for="(guide, index) in confirmGuides" :key="guide.id" class="guide-list__item">
+                                <label class="radio">
+                                    <input type="radio" :value="index" v-model="defaultConfirmIndex" />
+                                    <span class="circle"></span>
+                                    <span class="label">{{ guide.text }}</span>
+                                </label>
+                                <button class="delete-btn" @click="removeGuide('confirm', index)">
+                                    <img :src="icClose" alt="삭제">
+                                </button>
+                            </li>
+                        </ul>
+    
+                    </div>
+    
+                    <!-- 예약 취소 시 안내 문구 설정 -->
+                    <div class="setting-item__guide-content">
+                        <div class="d-flex gap-8">
+                            <p class="title-s">예약 취소 시 안내</p>
+                            <span class="caption">예약 확정시 예약자에게 추가로 안내할 내용을 최대 10개까지 미리등록 할 수 있습니다.<br/>등록한 안내 사항 중 1개를 기본으로 지정하여 확정 처리 시 자동 선택되도록 할 수 있습니다.</span>
+                        </div>
+    
+                        <button class="btn btn--size-32 btn--black-outline add-guide-btn" 
+                            @click="openGuideModal('cancel')" :disabled="cancelGuides.length >= 10">
+                            <img :src="icPlus"> 안내 문구 추가({{ cancelGuides.length }}/10)
+                        </button>
+    
+                        <!-- 추가 문구 리스트 -->
+                        <ul class="guide-list">
+                            <li v-for="(guide, index) in cancelGuides" :key="guide.id" class="guide-list__item">
+                                <label class="radio">
+                                    <input type="radio" :value="index" v-model="defaultCancelIndex" />
+                                    <span class="circle"></span>
+                                    <span class="label">{{ guide.text }}</span>
+                                </label>
+                                <button class="delete-btn" @click="removeGuide('cancel', index)">
+                                    <img :src="icClose" alt="삭제">
+                                </button>
+                            </li>
+                        </ul>
+    
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
 
     <!-- 예약 확정시 안내 문구 추가 모달 -->
     <Modal
@@ -179,6 +181,9 @@ const handleGuideSubmit = () => {
 <style lang="scss" scoped>
     .setting-list {
         width: 50%;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
         display: flex;
         flex-direction: column;
         gap: 8px;

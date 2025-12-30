@@ -151,7 +151,7 @@
 
     input { display: none; }
 
-    .box {
+    .box, .box-naver {
         width: 18px;
         height: 18px;
         background-image: url('@/assets/icons/ic_checkbox_unChecked.svg');
@@ -161,6 +161,9 @@
 
     input:checked + .box {
         background-image: url('@/assets/icons/ic_checkbox_checked.svg');
+    }
+    input:checked + .box-naver {
+        background-image: url('@/assets/icons/ic_checkbox_checked_naver.svg');
     }
 
     input:disabled + .box {

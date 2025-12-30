@@ -44,6 +44,7 @@ export const useModalStore = defineStore("modalStore", () => {
     // 플레이스 설정
     const bookingGuideModal = createModalState(); // 운영 설정 > 예약 받기 > 자세히 설명 모달
     const bookingGuideTextModal = createModalState(); // 알림 설정 > 안내 문구 추가
+    const addRequestModal = createModalState(); //  예약자 정보 요청 > 질문 추가
 
     return {
         smsModal,
@@ -61,5 +62,6 @@ export const useModalStore = defineStore("modalStore", () => {
         naverConnectNoticeModal,
         bookingGuideModal,
         bookingGuideTextModal,
+        addRequestModal,
     }
 })

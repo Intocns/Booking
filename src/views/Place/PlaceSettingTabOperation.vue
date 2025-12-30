@@ -35,72 +35,74 @@ const selectedTime = ref('');
 </script>
 
 <template>
-    <ul class="setting-list">
-        <li class="setting-item">
-            <div class="setting-item__header">
-                <div class="setting-item__title-area">
-                    <p class="title-m">예약 받기</p>
-                    <button class="text-button text-button--blue" @click="modalStore.bookingGuideModal.openModal()">
-                        자세히
-                        <img :src="icArrowRightB" alt="아이콘">
-                    </button>
+    <div class="contents-wrapper">
+        <ul class="setting-list">
+            <li class="setting-item">
+                <div class="setting-item__header">
+                    <div class="setting-item__title-area">
+                        <p class="title-m">예약 받기</p>
+                        <button class="text-button text-button--blue" @click="modalStore.bookingGuideModal.openModal()">
+                            자세히
+                            <img :src="icArrowRightB" alt="아이콘">
+                        </button>
+                    </div>
+    
+                    <label class="toggle">
+                        <input type="checkbox" v-model="isAcceptingReservation" />
+                        <img class="toggle-img" />
+                    </label>
                 </div>
-
-                <label class="toggle">
-                    <input type="checkbox" v-model="isAcceptingReservation" />
-                    <img class="toggle-img" />
-                </label>
-            </div>
-
-            <div class="setting-item__content">
-                <div class="status-box">
-                    <span class="body-m">
-                        {{ isAcceptingReservation 
-                            ? '서비스가 노출 상태이므로 예약을 받을 수 있습니다.' 
-                            : '서비스가 미노출 상태이므로. 예약을 받을 수 없습니다.' 
-                        }}
-                    </span>
-                    <button class="btn btn--size-24 btn--black-outline">노출 이력</button>
-                </div>
-            </div>
-        </li>
-
-        <li class="setting-item">
-            <div class="setting-item__header">
-                <div class="setting-item__title-area helper">
-                    <p class="title-m">당일예약</p>
-                    <img :src="icInfo" alt="안내아이콘" class="helper__icon">
-                    <div class="tooltip-content">
-                        이용 당일에도 예약신청을 받을지 설정합니다.
+    
+                <div class="setting-item__content">
+                    <div class="status-box">
+                        <span class="body-m">
+                            {{ isAcceptingReservation 
+                                ? '서비스가 노출 상태이므로 예약을 받을 수 있습니다.' 
+                                : '서비스가 미노출 상태이므로. 예약을 받을 수 없습니다.' 
+                            }}
+                        </span>
+                        <button class="btn btn--size-24 btn--black-outline">노출 이력</button>
                     </div>
                 </div>
-
-                <label class="toggle">
-                    <input type="checkbox" v-model="isTodayReservationEnabled" />
-                    <img class="toggle-img" />
-                </label>
-            </div>
-
-            <div class="setting-item__content">
-                <template v-if="isTodayReservationEnabled">
-                    <div class="option-row">
-                        <span class="body-m">당일 예약 시 이용시간</span>
-                        <CustomSingleSelect :options="todayReserveTimeOptions" select-width="100px" v-model="selectedTime" />
-                        <span class="body-m">까지 예약을 받습니다.</span>
+            </li>
+    
+            <li class="setting-item">
+                <div class="setting-item__header">
+                    <div class="setting-item__title-area helper">
+                        <p class="title-m">당일예약</p>
+                        <img :src="icInfo" alt="안내아이콘" class="helper__icon">
+                        <div class="tooltip-content">
+                            이용 당일에도 예약신청을 받을지 설정합니다.
+                        </div>
                     </div>
-                    <p class="setting-item__caption caption"> 
-                        [예시] 이용시간이 오후 5시인 경우, 오후 4시까지 예약 가능
-                    </p>
-                </template>
-
-                <template v-else>
-                    <div class="option-row">
-                        <p class="body-m">이용 당일에는 예약을 받지 않습니다.</p>
-                    </div>
-                </template>
-            </div>
-        </li>
-    </ul>
+    
+                    <label class="toggle">
+                        <input type="checkbox" v-model="isTodayReservationEnabled" />
+                        <img class="toggle-img" />
+                    </label>
+                </div>
+    
+                <div class="setting-item__content">
+                    <template v-if="isTodayReservationEnabled">
+                        <div class="option-row">
+                            <span class="body-m">당일 예약 시 이용시간</span>
+                            <CustomSingleSelect :options="todayReserveTimeOptions" select-width="100px" v-model="selectedTime" />
+                            <span class="body-m">까지 예약을 받습니다.</span>
+                        </div>
+                        <p class="setting-item__caption caption"> 
+                            [예시] 이용시간이 오후 5시인 경우, 오후 4시까지 예약 가능
+                        </p>
+                    </template>
+    
+                    <template v-else>
+                        <div class="option-row">
+                            <p class="body-m">이용 당일에는 예약을 받지 않습니다.</p>
+                        </div>
+                    </template>
+                </div>
+            </li>
+        </ul>
+    </div>
 
     <!-- 예약 받기 자세히 모달 -->
     <Modal
@@ -144,6 +146,9 @@ const selectedTime = ref('');
 
 <style lang="scss" scoped>
     .setting-list {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
         width: 50%;
         display: flex;
         flex-direction: column;
