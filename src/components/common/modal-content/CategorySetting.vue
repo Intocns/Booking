@@ -5,6 +5,7 @@ import { ref, watch, onMounted, onUnmounted, reactive } from 'vue';
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import CustomSelect from '@/components/common/CustomSelect.vue'
 import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import icClear from '@/assets/icons/ic_clear.svg'
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
@@ -28,15 +29,13 @@ const categoryRegisterData = reactive({ name: '', type: '' })
 watch(mode, (newMode) => {
     if (newMode === 'LIST') {
         modalStore.categorySettingModal.setTitle('카테고리 관리');
+
+        //모달창 구성될 때 카테고리 조회
+        categoryStore.getCategoryList();
     } else {
         modalStore.categorySettingModal.setTitle('카테고리 등록');
     }
 }, { immediate: true });
-
-onMounted(() => {
-    //모달창 구성될 때 카테고리 조회
-    categoryStore.getCategoryList();
-});
 
 // 컴포넌트가 꺼질 때 타이틀을 기본값으로 복구
 onUnmounted(() => {
@@ -48,7 +47,7 @@ onUnmounted(() => {
  */
 const goRegister = () => { mode.value = 'REGISTER'; };
 const goList = () => { mode.value = 'LIST'; };
-const handleApply = () => {
+const handleApply = async() => {
     let category_list = categoryStore.categoryList;
     let params = [];
 
@@ -65,24 +64,52 @@ const handleApply = () => {
     })
 
     params = JSON.stringify(params);
-    categoryStore.modifyCategory(params);
+    await categoryStore.modifyCategory(params);
 
-    modalStore.categorySettingModal.closeModal();
+    if(categoryStore.responseCode == 200){
+        modalStore.categorySettingModal.closeModal();
+    }
 };
-const handleSave = () => {
+const handleSave = async() => {
     // TODO: 등록 로직
     let params = {
         "name": categoryRegisterData.name,
         "selectionTypeCode": categoryRegisterData.type, //NUMBER, CHECK
     }
     
-    categoryStore.addCategory(params);
+    await categoryStore.addCategory(params);
 
     // 성공 시 다시 리스트 모드로 이동
-    goList();
+    
+    if(categoryStore.responseCode == 200){
+        goList();
+    }
 };
-const handelDelete = (category) => {
-    category.use_flag = 0;//카테고리 삭제 => v-show로 숨김처리됨
+
+let deleteCategoryData = ref({});//삭제 아이콘 클릭 시 해당 데이터 저장
+
+const openConfirmDeleteModal = (category) => {
+    deleteCategoryData.value = category;
+    modalStore.confirmModal.openModal()
+}
+
+const handleDelete = async() => {
+    modalStore.confirmModal.closeModal()
+
+    let categoryInfo = deleteCategoryData.value;
+
+    let params = {
+        "categoryId": categoryInfo.category_id,
+        "idx": categoryInfo.idx
+    }
+
+    //삭제 api todo
+    await categoryStore.deleteCategory(params);
+
+    // 삭제 성공 시 다시 리스트 모드로 이동
+    if(categoryStore.responseCode == 200){
+        goList();
+    }
 }
 </script>
 
@@ -97,12 +124,12 @@ const handelDelete = (category) => {
                 </div>
         
                 <div class="category-manager__list">
-                    <div v-for="category in categoryStore.categoryList" class="category-item" v-show="category.use_flag">
+                    <div v-for="category in categoryStore.categoryList" class="category-item">
                         <div class="category-item__title">
-                            <p class="title-m">카테고리 미지정</p>
+                            <p class="title-m">{{category.name}}</p>
         
                             <!-- 삭제버튼 -->
-                            <div class="delete-btn" @click="handelDelete(category)">
+                            <div class="delete-btn" @click="openConfirmDeleteModal(category)">
                                 <img :src="icClear" alt="삭제" class="icon-img">
                             </div>
                         </div>
@@ -131,51 +158,66 @@ const handelDelete = (category) => {
                     </div>
                 </div>
             </div>
-        </div>
             <!-- 버튼 -->
             <div class="modal-button-wrapper">
                 <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.categorySettingModal.closeModal()">취소</button>
                 <button class="btn btn--size-32 btn--blue" @click="handleApply">적용</button>
             </div>
-        </template>
+        </div>
+    </template>
 
-        <!-- 카테고리 등록 -->
-        <template v-else>
-            <div class="modal-contents-inner">
-                <div class="category-manager">
-                    <div class="category-manager__register-form">
-                        <div class="category-item__settings">
-                            <div class="setting-row">
-                                <p class="title-s setting-row__label">카테고리명</p>
-                                <div class="setting-row__content">
-                                    <InputTextBox 
-                                        v-model="categoryRegisterData.name" 
-                                        placeholder="카테고리명을 입력해주세요."
-                                        :max-length="10" 
-                                    />
-                                </div>
+    <!-- 카테고리 등록 -->
+    <template v-else>
+        <div class="modal-contents-inner">
+            <div class="category-manager">
+                <div class="category-manager__register-form">
+                    <div class="category-item__settings">
+                        <div class="setting-row">
+                            <p class="title-s setting-row__label">카테고리명</p>
+                            <div class="setting-row__content">
+                                <InputTextBox 
+                                    v-model="categoryRegisterData.name" 
+                                    placeholder="카테고리명을 입력해주세요."
+                                    :max-length="10" 
+                                />
                             </div>
-                            <div class="setting-row">
-                                <p class="title-s setting-row__label">유형</p>
-                                <div class="setting-row__content">
-                                    <CustomSingleSelect 
-                                        v-model="categoryRegisterData.type"
-                                        :options="CATEGORY_TYPE_OPTIONS"
-                                        class="select" 
-                                    />
-                                </div>
+                        </div>
+                        <div class="setting-row">
+                            <p class="title-s setting-row__label">유형</p>
+                            <div class="setting-row__content">
+                                <CustomSingleSelect 
+                                    v-model="categoryRegisterData.type"
+                                    :options="CATEGORY_TYPE_OPTIONS"
+                                    class="select" 
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- 버튼 -->
-            <div class="modal-button-wrapper">
-                <button class="btn btn--size-32 btn--blue-outline" @click="goList">이전으로</button>
-                <button class="btn btn--size-32 btn--blue" @click="handleSave">등록</button>
-            </div>
-        </template>
+        <!-- 버튼 -->
+        <div class="modal-button-wrapper">
+            <button class="btn btn--size-32 btn--blue-outline" @click="goList">이전으로</button>
+            <button class="btn btn--size-32 btn--blue" @click="handleSave">등록</button>
+        </div>
+    </template>
+
+    <!-- 옵션 삭제 -->
+    <ConfirmModal
+        v-if="modalStore.confirmModal.isVisible"
+        title="카테고리 삭제"
+        confirm-btn-text="삭제"
+        @confirm="handleDelete"
+    >
+        <p>[방문 수단 선택] 카테고리를 삭제하시겠습니가?
+            <br/><br/>삭제할 경우 해당 카테고리에 포함된
+            <br/>모든 옵션이 삭제되며 복원되지 않습니다.
+            <br/><br/>해당카테고리의 옵션을 계속 사용 하시려면
+            <br/>삭제 전 옵션을 다른 카테고리로 이동해주세요.
+        </p>
+    </ConfirmModal>
 </template>
 
 <style lang="scss" scoped>
