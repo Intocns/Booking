@@ -289,7 +289,8 @@ const handleSave = async () => {
         endDate: isPeriodEnabled.value && periodDate.value && periodDate.value[1] 
             ? formatDate(periodDate.value[1]) || null
             : null,
-        isImp: 1
+        isImp: 1,
+        useFlag: 1,
     };
 
     try {
