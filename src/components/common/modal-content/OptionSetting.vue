@@ -7,8 +7,10 @@ import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
+// 유틸
+import { formatDate } from '@/utils/dateFormatter.js';
 
-import { ref, computed, onMounted, onUnmounted, defineProps } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineProps, nextTick } from 'vue';
 
 const props = defineProps({
     isEdit: {
@@ -47,6 +49,21 @@ const categoryOptions = computed(() => {
     }));
 });
 
+// 입력 필드 데이터
+const optionName = ref(''); // 옵션명
+const optionDesc = ref(''); // 옵션 설명
+const minCount = ref(''); // 최소 수량
+const maxCount = ref(''); // 최대 수량
+const stockCount = ref(''); // 재고 수
+const price = ref(''); // 판매가
+const normalPrice = ref(''); // 정가
+const priceDesc = ref(''); // 가격 부가설명
+const periodDate = ref(null); // 운영기간 (Date 배열)
+
+// refs for focus
+const categorySelectRef = ref(null);
+const optionNameInputRef = ref(null);
+
 // 옵션 데이터 생성
 const hourOptions = Array.from({ length: 6 }, (_, i) => i);
 const minuteOptions = Array.from({ length: 12 }, (_, i) => i * 5);
@@ -74,17 +91,99 @@ const closeAll = (e) => {
  */
 const goConnect = () => { mode.value = 'CONNECT'; };
 const goOption = () => { mode.value = 'OPTION'; };
-const handleNext = () => {
-    // TODO: 옵션 저장 로직
+const handleNext = async () => {
+    // 필수 필드 검증
+    if (!selectedCategory.value) {
+        alert('카테고리를 선택해주세요.');
+        await nextTick();
+        // CustomSingleSelect의 드롭다운 열기
+        if (categorySelectRef.value) {
+            const selectBox = categorySelectRef.value.$el?.querySelector('.select__box');
+            if (selectBox) {
+                selectBox.click();
+            }
+        }
+        return;
+    }
+    if (!optionName.value || optionName.value.trim() === '') {
+        alert('옵션명을 입력해주세요.');
+        await nextTick();
+        // InputTextBox에 포커스
+        if (optionNameInputRef.value) {
+            const inputElement = optionNameInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return;
+    }
+    
+    // 검증 통과 시 다음 단계로 이동
     goConnect();
 }
 const handlePrev = () => {
     goOption();
 }
-const handleSave = () => {
-    // TODO: 등록 로직
-    console.log('등록')
-    modalStore.optionSettingModal.closeModal();
+
+const handleSave = async () => {
+    // 필수 필드 검증
+    if (!selectedCategory.value) {
+        alert('카테고리를 선택해주세요.');
+        await nextTick();
+        // CustomSingleSelect의 드롭다운 열기
+        if (categorySelectRef.value) {
+            const selectBox = categorySelectRef.value.$el?.querySelector('.select__box');
+            if (selectBox) {
+                selectBox.click();
+            }
+        }
+        return;
+    }
+    if (!optionName.value || optionName.value.trim() === '') {
+        alert('옵션명을 입력해주세요.');
+        await nextTick();
+        // InputTextBox에 포커스
+        if (optionNameInputRef.value) {
+            const inputElement = optionNameInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return;
+    }
+
+    // 소요시간 계산 (분 단위)
+    const serviceDuration = selectedHour.value * 60 + selectedMinute.value;
+
+    // 엔티티 형태로 데이터 매핑
+    const optionData = {
+        categoryId: selectedCategory.value,
+        name: optionName.value.trim(),
+        serviceDuration: serviceDuration > 0 ? serviceDuration : null,
+        desc: optionDesc.value.trim() || null,
+        minBookingCount: minCount.value ? parseInt(minCount.value) : null,
+        maxBookingCount: maxCount.value ? parseInt(maxCount.value) : null,
+        stock: isStockEnabled.value && stockCount.value ? parseInt(stockCount.value) : null,
+        price: isPriceEnabled.value && price.value ? parseInt(price.value.replace(/,/g, '')) : null,
+        normalPrice: isPriceEnabled.value && normalPrice.value ? parseInt(normalPrice.value.replace(/,/g, '')) : null,
+        priceDesc: isPriceEnabled.value && priceDesc.value.trim() ? priceDesc.value.trim() : null,
+        startDate: isPeriodEnabled.value && periodDate.value && periodDate.value[0] 
+            ? formatDate(periodDate.value[0]) || null
+            : null,
+        endDate: isPeriodEnabled.value && periodDate.value && periodDate.value[1] 
+            ? formatDate(periodDate.value[1]) || null
+            : null,
+    };
+
+    try {
+        await optionStore.addOption(optionData);
+        alert('옵션이 등록되었습니다.');
+        modalStore.optionSettingModal.closeModal();
+        // TODO: 옵션 리스트 새로고침
+    } catch (error) {
+        console.error('옵션 등록 실패:', error);
+        alert('옵션 등록 중 오류가 발생했습니다.');
+    }
 };
 const handleUpdate = () => {
     console.log('수정 API 호출');
@@ -124,6 +223,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                                 <p class="title-s setting-row__label required">카테고리</p>
                                 <div class="setting-row__content">
                                     <CustomSingleSelect 
+                                        ref="categorySelectRef"
                                         class="select" 
                                         v-model="selectedCategory"
                                         :options="categoryOptions"
@@ -134,7 +234,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label required">옵션명</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox :max-length="30" />
+                                    <InputTextBox ref="optionNameInputRef" v-model="optionName" :max-length="30" />
                                 </div>
                             </div>
                             <div class="setting-row">
@@ -170,7 +270,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">옵션 설명</p>
                                 <div class="setting-row__content">
-                                    <TextAreaBox :max-length="300" />
+                                    <TextAreaBox v-model="optionDesc" :max-length="300" />
                                 </div>
                             </div>
     
@@ -187,13 +287,13 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">최소 수량</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox />
+                                    <InputTextBox v-model="minCount" />
                                 </div>
                             </div>
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">최대 수량</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox />
+                                    <InputTextBox v-model="maxCount" />
                                 </div>
                             </div>
                         </div>
@@ -214,7 +314,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label required">재고 수</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox placeholder="개수 입력" />
+                                    <InputTextBox v-model="stockCount" placeholder="개수 입력" />
                                 </div>
                             </div>
                         </div>
@@ -236,19 +336,19 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label required">판매가</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox placeholder="판매가 입력" />
+                                    <InputTextBox v-model="price" placeholder="판매가 입력" />
                                 </div>
                             </div>
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">정가</p>
                                 <div class="setting-row__content">
-                                    <InputTextBox placeholder="정가 입력" />
+                                    <InputTextBox v-model="normalPrice" placeholder="정가 입력" />
                                 </div>
                             </div>
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">가격 부가설명</p>
                                 <div class="setting-row__content">
-                                    <TextAreaBox placeholder="가격 부가설명을 입력해주세요." max-length="300" />
+                                    <TextAreaBox v-model="priceDesc" placeholder="가격 부가설명을 입력해주세요." max-length="300" />
                                 </div>
                             </div>
                         </div>
@@ -270,7 +370,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label required">기간</p>
                                 <div class="setting-row__content">
-                                    <CustomDatePicker />
+                                    <CustomDatePicker v-model="periodDate" />
                                 </div>
                             </div>
                         </div>

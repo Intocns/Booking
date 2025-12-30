@@ -8,21 +8,16 @@ export const useModalStore = defineStore("modalStore", () => {
         // isVisible은 내부에서만 변경되도록 ref 사용
         const isVisible = ref(initialVisibility); 
         const title = ref(initialTitle);
-        const data = ref(null)
-        
         return {
             // isVisible을 외부에서는 읽기 전용으로 노출
             isVisible: readonly(isVisible), 
             title,
-            data: data,
             // 모달을 열고 닫는 메서드
             openModal() {
                 isVisible.value = true;
-                data.value = payload;
             },
             closeModal() {
                 isVisible.value = false;
-                data.value = null;
             },
             setTitle(newTitle) { title.value = newTitle; }, // 타이틀 변경 메서드
         }
