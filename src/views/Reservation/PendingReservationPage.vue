@@ -114,7 +114,14 @@ onMounted(() => {
         <!-- 테이블 -->
         <template #table>
             <CommonTable :columns="columns" :rows="reservationStore.reservePendingList">
-    
+                <!-- 예약경로 앞에 dot -->
+                <template #re_route_txt="{ row, value }">
+                    <div class="status-cell">
+                        <span class="dot" :class="`dot--route-${row.re_route}`"></span>
+                        {{ value }}
+                    </div>
+                </template>
+                <!-- 버튼 -->
                 <template #actions="{ row, rowIndex }">
                     <button class="btn btn--size-24 btn--black-outline" @click="modalStore.reserveInfoModal.openModal()">상세</button>
                     <button class="btn btn--size-24 btn--black-outline" @click="modalStore.smsModal.openModal()"><img :src="icSms" alt="SMS"></button>

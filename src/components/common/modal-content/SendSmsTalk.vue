@@ -248,7 +248,6 @@ const hideTooltip = (type) => {
 
 <style lang="scss" scoped>
     .modal-contents-inner {
-        width: 592px;
         display: flex;
         flex-direction: column;
         gap: 16px;

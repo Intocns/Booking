@@ -209,8 +209,10 @@ const customerInfoColumns = [
 
     <!-- 버튼 -->
     <div class="modal-button-wrapper">
-        <button class="btn btn--size-40 btn--blue-outline">예약취소</button>
-        <button class="btn btn--size-40 btn--blue">예약 확정</button>
+        <div class="buttons">
+            <button class="btn btn--size-40 btn--blue-outline">예약취소</button>
+            <button class="btn btn--size-40 btn--blue">예약 확정</button>
+        </div>
     </div>
 </template>
 

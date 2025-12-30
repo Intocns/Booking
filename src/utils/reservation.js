@@ -8,10 +8,10 @@ export const RESERVE_STATUS_OPTIONS = [
 ]
 
 export const RESERVE_STATUS_MAP = {
-    0: '대기',
-    1: '승인',
-    2: '취소',
-    3: '거절'
+    0: '예약대기',
+    1: '예약확정',
+    2: '예약취소',
+    3: '예약거절'
 }
 
 //예약경로 define
@@ -20,7 +20,7 @@ export const RESERVE_ROUTE_OPTIONS = [
     { label: 'IntoVetGE', value: 1 },
     { label: '인투펫', value: 2 },
     { label: 'fitpet', value: 3 },
-    { label: '네이버', value: 4 },
+    { label: '네이버예약', value: 4 },
 ]
 
 // ② List / Table 용 (O(1))
@@ -28,5 +28,5 @@ export const RESERVE_ROUTE_MAP = {
     1: 'IntoVetGE',
     2: '인투펫',
     3: 'fitpet',
-    4: '네이버'
+    4: '네이버예약'
 }

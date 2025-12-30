@@ -28,8 +28,8 @@ const modalStore = useModalStore();
 
 // 테이블 col 정의
 const columns = [
-    { key: 'idx', label: 'No.', width: '5%' },
-    { key: 'in_state_txt', label: '예약상태', width: '5%' },
+    { key: 'idx', label: 'No.', width: '8%' },
+    { key: 'in_state_txt', label: '예약상태', width: '7%' },
     { key: 're_time_txt', label: '예약일자', width: '12%' },
     { key: 're_time_his_txt', label: '예약시간', width: '6%' },
     { key: 'room_name', label: '상품명/진료실명', width: '10%' },
@@ -120,6 +120,20 @@ const searchClear = () => { //초기화 버튼
 onMounted(() => {
     searchList();
 })
+
+// 검색 결과 리스트에 클래스 주입 
+const processedRows = computed(() => {
+    return reservationStore.reserveList.map(row => {
+        let className = '';
+        if (row.in_state === 0) className = 'row-pending';  // 대기
+        if (row.in_state === 2) className = 'row-canceled'; // 취소
+        
+        return {
+            ...row,
+            rowClass: className // CommonTable의 tr :class와 연결됨
+        };
+    });
+});
 </script>
 <template>
     <!-- 페이지 타이틀 -->
@@ -163,11 +177,26 @@ onMounted(() => {
 
         <!-- 테이블 -->
         <template #table>
-            <CommonTable :columns="columns" :rows="reservationStore.reserveList">
-            <template #actions="{ row, rowIndex }">
-                    <button class="btn btn--size-24 btn--black-outline" @click="modalStore.reserveInfoModal.openModal()">상세</button>
-                    <button class="btn btn--size-24 btn--black-outline" @click="modalStore.smsModal.openModal()"><img :src="icSms" alt="SMS"></button>
-            </template>
+            <CommonTable :columns="columns" :rows="processedRows">
+                <!-- 예약상태 앞에 dot -->
+                <template #in_state_txt="{ row, value }">
+                    <div class="status-cell">
+                        <span class="dot" :class="`dot--state-${row.in_state}`"></span>
+                        {{ value }}
+                    </div>
+                </template>
+                <!-- 예약경로 앞에 dot -->
+                <template #re_route_txt="{ row, value }">
+                    <div class="status-cell">
+                        <span class="dot" :class="`dot--route-${row.re_route}`"></span>
+                        {{ value }}
+                    </div>
+                </template>
+                <!-- 버튼 -->
+                <template #actions="{ row, rowIndex }">
+                        <button class="btn btn--size-24 btn--black-outline" @click="modalStore.reserveInfoModal.openModal()">상세</button>
+                        <button class="btn btn--size-24 btn--black-outline" @click="modalStore.smsModal.openModal()"><img :src="icSms" alt="SMS"></button>
+                </template>
             </CommonTable>
         </template>
     </TableLayout>
@@ -207,3 +236,15 @@ onMounted(() => {
         </p>
     </ConfirmModal>
 </template>
+
+<style lang="scss" scoped>
+    // 예약 대기 tr 배경생
+    :deep(.row-pending) {
+        background-color: $status-onHold_table_bg !important; // 연한 노란색
+    }
+    // 예약 취소 tr 연하게
+    :deep(.row-canceled) {
+        // pointer-events: none;
+        td {color: $gray-400}
+    }
+</style>
