@@ -1,13 +1,14 @@
 <script setup>
 // 컴포넌트
 import InputTextBox from '@/components/common/InputTextBox.vue';
-import CustomSelect from '@/components/common/CustomSelect.vue';
+import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import TextAreaBox from '@/components/common/TextAreaBox.vue';
 import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
+import { useOptionStore } from '@/stores/optionStore';
 
-import { ref, onMounted, onUnmounted, defineProps } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineProps } from 'vue';
 
 const props = defineProps({
     isEdit: {
@@ -17,6 +18,7 @@ const props = defineProps({
 });
 
 const modalStore = useModalStore();
+const optionStore = useOptionStore();
 
 /**
  * 화면 모드 상태 관리
@@ -34,6 +36,16 @@ const isMinuteOpen = ref(false); // 분 셀렉트 노출/미노출
 const isStockEnabled = ref(false);    // 재고 토글
 const isPriceEnabled = ref(false);    // 가격 토글
 const isPeriodEnabled = ref(false);   // 운영기간 토글
+
+// 카테고리 선택 (단일 선택)
+const selectedCategory = ref('');
+// 카테고리 옵션 변환 (CustomSingleSelect용)
+const categoryOptions = computed(() => {
+    return optionStore.categoryList.map(cat => ({
+        label: cat.name,
+        value: cat.category_id
+    }));
+});
 
 // 옵션 데이터 생성
 const hourOptions = Array.from({ length: 6 }, (_, i) => i);
@@ -111,7 +123,12 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label required">카테고리</p>
                                 <div class="setting-row__content">
-                                    <CustomSelect class="select" />
+                                    <CustomSingleSelect 
+                                        class="select" 
+                                        v-model="selectedCategory"
+                                        :options="categoryOptions"
+                                        placeholder="카테고리 선택"
+                                    />
                                 </div>
                             </div>
                             <div class="setting-row">

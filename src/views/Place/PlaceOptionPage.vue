@@ -205,7 +205,7 @@ const handleMenuAction = (action, row) => {
                         <img :src="icArrowRight" alt="다음">
                     </button>
                     <button class="btn btn--size-32 btn--blue" @click="categorySettingBtnClick">
-                        <img :src="icSettingW" alt="r관리아이콘">
+                        <img :src="icSettingW" alt="관리아이콘">
                         카테고리 관리
                     </button>
                 </div>
