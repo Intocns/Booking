@@ -46,8 +46,11 @@ const customerColumns = [
                 />
             </div>
         </div>
-        <!-- 버튼 -->
-        <div class="modal-button-wrapper">
+    </div>
+    
+    <!-- 버튼 -->
+    <div class="modal-button-wrapper">
+        <div class="buttons">
             <button class="btn btn--size-40 btn--blue-outline">신규 동물 등록</button>
             <button class="btn btn--size-40 btn--blue">선택 동물로 접수</button>
         </div>

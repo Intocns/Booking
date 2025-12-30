@@ -10,6 +10,7 @@ import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
+import SearchCustomer from '@/components/common/modal-content/SearchCustomer.vue';
 
 import { formatDate } from "@/utils/dateFormatter";
 import { RESERVE_STATUS_OPTIONS, RESERVE_ROUTE_OPTIONS } from "@/utils/reservation";
@@ -210,6 +211,16 @@ const processedRows = computed(() => {
     >
         <ReserveInfo />
     </Modal>
+
+    <!--  고객 예약 정보 > 고객 검색 모달 -->
+    <Modal
+        v-if="modalStore.searchCustomerModal.isVisible"
+        size="m"
+        title="고객 검색"
+        :modalState="modalStore.searchCustomerModal"
+    >
+        <SearchCustomer />
+    </Modal
 
     <!-- 문자 발송 모달 -->
     <Modal 
