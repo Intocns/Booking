@@ -72,14 +72,24 @@ export const useOptionStore = defineStore("option", () => {
 
     // 옵션 등록
     async function addOption(params) {
-        console.log(params);
-        // const response = await api.post(`/api/${cocode}/option/add`, params);
+        const response = await api.post(`/api/${cocode}/option/add`, params);
 
-        // if(response.status == 200) {
-        //     return response.data;
-        // } else {
-        //     throw new Error('옵션 등록 실패');
-        // }
+        if(response.status == 200) {
+            return response.data;
+        } else {
+            throw new Error('옵션 등록 실패');
+        }
+    }
+
+    // 옵션-상품 매핑 저장
+    async function addOptionMapping(params) {
+        const response = await api.post(`/api/${cocode}/option/mapping`, params);
+
+        if(response.status == 200) {
+            return response.data;
+        } else {
+            throw new Error('옵션-상품 매핑 저장 실패');
+        }
     }
 
     return {
@@ -91,5 +101,6 @@ export const useOptionStore = defineStore("option", () => {
         getOptionList,
         getOptionListByCategoryId,
         addOption,
+        addOptionMapping,
     }
 })

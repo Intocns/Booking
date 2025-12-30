@@ -7,11 +7,12 @@ import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
+import { useProductStore } from '@/stores/productStore';
 // 유틸
 import { formatDate } from '@/utils/dateFormatter.js';
 import { formatPrice, parsePrice } from '@/utils/priceFormatter.js';
 
-import { ref, computed, onMounted, onUnmounted, defineProps, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineProps, nextTick, watch } from 'vue';
 
 const props = defineProps({
     isEdit: {
@@ -22,6 +23,7 @@ const props = defineProps({
 
 const modalStore = useModalStore();
 const optionStore = useOptionStore();
+const productStore = useProductStore();
 
 /**
  * 화면 모드 상태 관리
@@ -61,7 +63,6 @@ const normalPrice = ref(''); // 정가
 const priceDesc = ref(''); // 가격 부가설명
 const periodDate = ref(null); // 운영기간 (Date 배열)
 
-// refs for focus
 const categorySelectRef = ref(null);
 const optionNameInputRef = ref(null);
 const stockCountInputRef = ref(null);
@@ -99,6 +100,31 @@ const formattedNormalPrice = computed({
     }
 });
 
+// 상품 연결 리스트
+const productList = ref([]);
+
+// 상품 리스트 불러오기
+const loadProductList = async () => {
+    try {
+        await productStore.getProductList();
+        // API 응답 데이터를 productList에 매핑
+        console.log(productStore.productList); 
+        productList.value = (productStore.productList || []).map(product => ({
+            id: product.id || product.bizItemId || product.idx,
+            name: product.name || '',
+            isConnected: false // 기본값: 미연결 (추후 API 응답에 연결 상태 포함 여부 확인)
+        }));
+    } catch (error) {
+        console.error('상품 리스트 불러오기 실패:', error);
+        productList.value = [];
+    }
+};
+
+// 상품 연결 상태 토글 핸들러
+const toggleProductConnection = (product) => {
+    product.isConnected = !product.isConnected;
+};
+
 // 옵션 데이터 생성
 const hourOptions = Array.from({ length: 6 }, (_, i) => i);
 const minuteOptions = Array.from({ length: 12 }, (_, i) => i * 5);
@@ -124,7 +150,14 @@ const closeAll = (e) => {
 /**
  * 핸들러 함수
  */
-const goConnect = () => { mode.value = 'CONNECT'; };
+const goConnect = async () => { 
+    mode.value = 'CONNECT';
+    // 상품 리스트가 아직 로드되지 않았을 경우에만 로드
+    // (모달이 열릴 때 미리 로드되므로 대부분은 이미 로드되어 있음)
+    if (productList.value.length === 0) {
+        await loadProductList();
+    }
+};
 const goOption = () => { mode.value = 'OPTION'; };
 const handleNext = async () => {
     // 필수 필드 검증
@@ -259,7 +292,50 @@ const handleSave = async () => {
     };
 
     try {
-        await optionStore.addOption(optionData);
+        // 1. 옵션 등록
+        const optionResponse = await optionStore.addOption(optionData);
+        console.log('옵션 등록 응답:', optionResponse);
+        
+        // 옵션 등록 성공 시 optionId 추출
+        // 응답 구조: {status_code: 201, data: '{"optionId":21299980,"url":"..."}'}
+        // optionResponse.data가 문자열이므로 JSON 파싱 필요
+        let parsedData;
+        if (typeof optionResponse.data === 'string') {
+            try {
+                parsedData = JSON.parse(optionResponse.data);
+            } catch (e) {
+                console.error('JSON 파싱 실패:', e);
+                throw new Error('응답 데이터 파싱 실패');
+            }
+        } else {
+            parsedData = optionResponse.data;
+        }
+        
+        const optionId = parsedData?.optionId;
+        
+        if (!optionId) {
+            throw new Error('옵션 ID를 받아오지 못했습니다.');
+        }
+
+        // 2. 옵션-상품 매핑 저장
+        // 연결된 상품 ID 목록 추출
+        const connectedItemIds = productList.value
+            .filter(product => product.isConnected)
+            .map(product => product.id);
+        
+        // ItemOptionMappingListDto 형태로 데이터 구성 (List로 전송)
+        const mappingDataList = connectedItemIds.length > 0 ? [{
+            useFlag: 1, // 기본값 (사용 중)
+            categoryId: selectedCategory.value,
+            optionId: optionId,
+            itemIds: connectedItemIds.join(',')
+        }] : [];
+
+        // 연결된 상품이 있는 경우에만 매핑 저장
+        if (mappingDataList.length > 0) {
+            await optionStore.addOptionMapping(mappingDataList);
+        }
+
         alert('옵션이 등록되었습니다.');
         modalStore.optionSettingModal.closeModal();
         // TODO: 옵션 리스트 새로고침
@@ -272,6 +348,31 @@ const handleUpdate = () => {
     console.log('수정 API 호출');
     modalStore.optionSettingModal.closeModal();
 };
+
+
+// categoryOptions가 준비된 후에도 카테고리 선택 확인
+watch(categoryOptions, async (options) => {
+    console.log('여기옴?3');
+
+    if (options.length > 0 && modalStore.optionSettingModal.isVisible && !props.isEdit) {
+        const categoryId = modalStore.optionSettingModal.data?.categoryId;
+        if (categoryId && !selectedCategory.value) {
+            await nextTick();
+            const exists = options.some(opt => opt.value === categoryId);
+            if (exists) {
+                selectedCategory.value = categoryId;
+            }
+        }
+    }
+
+    // 상품 리스트를 미리 로드 (사용자가 모르게 백그라운드에서 로드)
+    // 다음 버튼을 눌렀을 때 로딩 표시가 보이지 않도록
+    if (productList.value.length === 0) {
+        loadProductList().catch(error => {
+            console.error('상품 리스트 미리 로드 실패:', error);
+        });
+    }
+}, { immediate: true });
 
 onMounted(() => window.addEventListener('click', closeAll));
 onUnmounted(() => window.removeEventListener('click', closeAll));
@@ -507,29 +608,31 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
         <div class="modal-contents-inner">
             <div class="option-manager">
                 <div class="option-manager__header">
-                    <p class="body-m"><span class="title-s">증명서 발급</span> 옵션과 연결할 상품을 설정해주세요.</p>
+                    <p class="body-m"><span class="title-s">{{ optionName || '옵션' }}</span> 옵션과 연결할 상품을 설정해주세요.</p>
                 </div>
 
                 <div class="option-manager__list">
-                    <div class="list-item">
+                    <div 
+                        v-for="product in productList" 
+                        :key="product.id"
+                        class="list-item"
+                    >
                         <div class="d-flex gap-4 align-center">
-                            <span class="body-m">건강검진1</span>
-                            <span class="flag flag--basic">연결</span>
+                            <span class="body-m">{{ product.name }}</span>
+                            <span 
+                                class="flag"
+                                :class="product.isConnected ? 'flag--basic' : 'flag--disabled'"
+                            >
+                                {{ product.isConnected ? '연결' : '미연결' }}
+                            </span>
                         </div>
 
                         <label class="toggle"> 
-                            <input type="checkbox" v-model="isStockEnabled"/>
-                            <span class="toggle-img"></span>
-                        </label>
-                    </div>
-                    <div class="list-item">
-                        <div class="d-flex gap-4 align-center">
-                            <span class="body-m">건강검진2</span>
-                            <span class="flag flag--disabled">미연결</span>
-                        </div>
-
-                        <label class="toggle"> 
-                            <input type="checkbox" v-model="isStockEnabled"/>
+                            <input 
+                                type="checkbox" 
+                                :checked="product.isConnected"
+                                @change="toggleProductConnection(product)"
+                            />
                             <span class="toggle-img"></span>
                         </label>
                     </div>

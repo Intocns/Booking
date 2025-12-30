@@ -105,7 +105,8 @@ const categorySettingBtnClick = () => {
 const optionRegisterBtnClick = () => {
     isEdit.value = false; // 등록
     modalStore.optionSettingModal.setTitle('옵션 등록');
-    modalStore.optionSettingModal.openModal();
+    // 현재 선택된 카테고리 ID를 전달
+    modalStore.optionSettingModal.openModal({ categoryId: activeTab.value });
 }
 
 // 설정 버튼 클릭 핸들러 (좌표 계산 포함)
