@@ -757,3 +757,29 @@
         }
     }
 }
+
+// ======================================================================
+// 예약 상태, 예약 경로 앞 dot
+// ======================================================================
+/* 예약상태, 예약 경로 동그라미 */
+.status-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+
+        &--state-1 { background-color: $primary-700; } // 확정
+        &--state-0 { background-color: $status-onHold_text; } // 대기(노랑)
+        &--state-2, &--state-3 { background-color: $warning-500; } // 취소/거절(빨강)
+
+        &--route-1 { background-color: $primary-700; } // ge
+        &--route-2 { background-color: $brand-intoPet; } // 인투펫
+        &--route-3 { background-color: $gray-100; } // fitpet
+        &--route-4 { background-color: $brand-naver;} // 네이버
+    }
+}

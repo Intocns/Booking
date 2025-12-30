@@ -78,8 +78,13 @@ const handleEmptyBtnClick = () => {
                 </thead>
                 <!-- tbody -->
                 <tbody>
-                    <tr v-for="(row, rIndex) in rows" :key="rIndex" @click="$emit('row-click', row)" style="cursor: pointer">
-                        
+                    <tr 
+                        v-for="(row, rIndex) in rows" 
+                        :key="rIndex" 
+                        @click="$emit('row-click', row)" 
+                        :class="row.rowClass"
+                        style="cursor: pointer"
+                    >
                         <td
                             v-for="col in columns"
                             :key="col.key"
