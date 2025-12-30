@@ -289,6 +289,7 @@ const handleSave = async () => {
         endDate: isPeriodEnabled.value && periodDate.value && periodDate.value[1] 
             ? formatDate(periodDate.value[1]) || null
             : null,
+        isImp: 1
     };
 
     try {
@@ -352,8 +353,6 @@ const handleUpdate = () => {
 
 // categoryOptions가 준비된 후에도 카테고리 선택 확인
 watch(categoryOptions, async (options) => {
-    console.log('여기옴?3');
-
     if (options.length > 0 && modalStore.optionSettingModal.isVisible && !props.isEdit) {
         const categoryId = modalStore.optionSettingModal.data?.categoryId;
         if (categoryId && !selectedCategory.value) {
