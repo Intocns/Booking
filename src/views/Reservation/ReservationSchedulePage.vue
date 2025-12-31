@@ -9,109 +9,41 @@ import ScheduleBoardWeekly from '@/components/common/ScheduleBoardWeekly.vue';
 import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
 import ScheduleBoardMonthly from '@/components/common/ScheduleBoardMonthly.vue';
 
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { startOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from "date-fns";
 import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
 
-// 캘린더 뷰 상태 관리 (초기값: 'Resources' 또는 'Week' 등)
-// DayPilot 기준으로 'Resources', 'Week', 'Month' 중 하나를 사용합니다.
+// 스토어
+import { useReservationStore } from '@/stores/reservationStore';
+
+const reservationStore = useReservationStore()
+
+// 캘린더 뷰 상태 관리 (초기값: 'Resources')
 const currentView = ref('Resources');
 
+// 일/주/월 탭버튼 클릭
 const changeView = (view) => {
     currentView.value = view;
 };
 
+// 날짜형식을 dayPilot 형식에 맞게 변환
 const safeDayPilotDate = computed(() => {
     return format(currentDate.value, 'yyyy-MM-dd');
 });
 
-// 임시데이터 (해당 컬럼 id 와 스케쥴 데이터의 resource가 같아야함)
+// 임시 담당의 데이터 (해당 컬럼 id 와 스케쥴 데이터의 resource가 같아야함)
 const staffResources = [
-    { id: 'kim', name: '김뽀삐' },
-    { id: 'lee', name: '이뽀삐' },
-    { id: 'park', name: '박뽀삐' },
+    { id: 'hrshin', name: '신혜린' },
+    { id: 'IntoVet', name: '관리자' },
+    { id: '', name: '미지정' },
     { id: 'choi', name: '최뽀삐' },
     { id: 'go', name: '고뽀삐' },
     { id: 'namgung', name: '남궁뽀삐' },
+    { id: 'test1', name: 'test1' },
+    // { id: 'test2', name: 'test2' },
 ];
 
-// 임시 데이터
-const events = ref([
-    { 
-        id: "1", 
-        resource: "kim", 
-        start: "2025-12-17T10:00:00", 
-        end: "2025-12-17T11:30:00", 
-        name: "민혜린",
-        patient: '초코',
-        product_name: '건강검진',
-        memo: '건강검진으로 처음 방문, 정기 건강검진 추천', 
-        status: 'hold', 
-        path: 'intolink',
-
-    },
-    { 
-        id: "2", 
-        resource: "lee", 
-        start: "2025-12-17T14:00:00", 
-        end: "2025-12-17T16:00:00", 
-        name: '개인일정',
-        patient: '',
-        product_name: '', 
-        memo: '',
-        status: 'personal', 
-        path: ''
-    },
-    { 
-        id: "3", 
-        resource: "kim", 
-        start: "2025-12-17T10:00:00", 
-        end: "2025-12-17T10:30:00", 
-        name: '박길동',
-        patient: '두부',
-        product_name: '간단 건강검진', 
-        memo: '두부 정기검진 2회차, 보호자 개인 일정 사유로 취소됨',
-        status: 'canceled', 
-        path: 'intopet'
-    },
-    { 
-        id: "4", 
-        resource: "lee", 
-        start: "2025-12-17T16:00:00", 
-        end: "2025-12-17T17:00:00", 
-        name: '개인일정',
-        patient: '',
-        product_name: '', 
-        memo: '',
-        status: 'personal', 
-        path: ''
-    },
-    { 
-        id: "5", 
-        resource: "lee", 
-        start: "2025-12-17T09:00:00", 
-        end: "2025-12-17T10:00:00", 
-        name: '이길동',
-        patient: '먼지',
-        product_name: '일반 진료', 
-        memo: '구토로 내원함',
-        status: 'confirm', 
-        path: ''
-    },
-    { 
-        id: "6", 
-        resource: "lee", 
-        start: "2025-12-17T09:00:00", 
-        end: "2025-12-17T10:00:00", 
-        name: '김길동',
-        patient: '별이',
-        product_name: '백신 접종', 
-        memo: '3차 접종',
-        status: 'hold', 
-        path: ''
-    },
-]);
-
+// 선택 날짜 값 (초기값: 오늘 날짜)
 const currentDate = ref(new Date());
 
 const datePickerValue = computed({
@@ -135,6 +67,42 @@ const datePickerValue = computed({
         }
     }
 });
+
+// 검색 파라미터 생성 로직 (현재 뷰에 따라 시작/종료일 자동 계산)
+const fetchParams = computed(() => {
+    let start, end;
+
+    if (currentView.value === 'Resources') {
+        start = format(currentDate.value, 'yyyy-MM-dd');
+        end = start;
+    } else if (currentView.value === 'Week') {
+        start = format(startOfWeek(currentDate.value, { weekStartsOn: 0 }), 'yyyy-MM-dd');
+        end = format(endOfWeek(currentDate.value, { weekStartsOn: 0 }), 'yyyy-MM-dd');
+    } else if (currentView.value === 'Month') {
+        start = format(startOfMonth(currentDate.value), 'yyyy-MM-dd');
+        end = format(endOfMonth(currentDate.value), 'yyyy-MM-dd');
+    }
+
+    return {
+        doctorId: [], // 필요한 경우 여기에 담당의 필터 추가
+        startDate: start,
+        endDate: end,
+    };
+});
+
+// 날짜나 뷰가 바뀔 때마다 실행
+watch([currentDate, currentView], () => {
+    reservationStore.getReserveSchedule(fetchParams.value);
+}, { immediate: false }); // onMounted에서 초기 호출하므로 false
+
+onMounted(() => {
+    const params = {
+        doctorId: [], // 담당의
+        startDate: currentDate,
+        endDate: currentDate,
+    }
+    reservationStore.getReserveSchedule(params)
+})
 </script>
 
 <template>
@@ -183,7 +151,7 @@ const datePickerValue = computed({
                 <ScheduleBoard 
                     v-if="currentView === 'Resources'" 
                     :view-type="currentView"
-                    :events="events" 
+                    :events="reservationStore.reserveScheduleList" 
                     :staffs="staffResources" 
                     :startDate="safeDayPilotDate"
                 />
@@ -191,7 +159,7 @@ const datePickerValue = computed({
                 <!-- 스케쥴 (주간) -->
                 <ScheduleBoardWeekly 
                     v-else-if="currentView === 'Week'" 
-                    :events="events" 
+                    :events="reservationStore.reserveScheduleList" 
                     :staffs="staffResources" 
                     :startDate="safeDayPilotDate" 
                 />
@@ -199,7 +167,7 @@ const datePickerValue = computed({
                 <!-- 스케쥴 (월간) -->
                 <ScheduleBoardMonthly 
                     v-else-if="currentView === 'Month'" 
-                    :events="events" 
+                    :events="reservationStore.reserveScheduleList" 
                     :staffs="staffResources" 
                     :startDate="safeDayPilotDate" 
                 />

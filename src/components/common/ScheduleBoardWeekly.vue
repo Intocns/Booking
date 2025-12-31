@@ -11,11 +11,15 @@ import icHold from '@/assets/icons/ic_res_hold.svg'
 
 // 상태 아이콘 매핑
 const statusIcons = {
-    confirm: icConfirm,
-    personal: icPersonal,
-    canceled: icCancel,
-    hold: icHold
+    0: icHold,
+    1: icConfirm,
+    2: icCancel,
+    3: icPersonal,
 };
+    // 0: '예약대기',
+    // 1: '예약확정',
+    // 2: '예약취소',
+    // 3: '예약거절'??
 
 const props = defineProps({
     events: { type: Array, default: () => [] },
@@ -89,7 +93,7 @@ const summaryData = computed(() => {
     props.events.forEach(event => {
         const date = event.start.includes('T') ? event.start.split('T')[0] : event.start;
         const staff = event.resource;
-        const status = event.status || 'confirm';
+        const status = event.inState ?? '';
 
         if (!grid[date]) grid[date] = {};
         if (!grid[date][staff]) grid[date][staff] = {};
@@ -100,10 +104,10 @@ const summaryData = computed(() => {
 });
 
 const statusLabels = {
-    confirm: '예약확정',
-    hold: '예약대기',
-    canceled: '예약취소',
-    personal: '개인일정'
+    1: '예약확정',
+    0: '예약대기',
+    2: '예약취소',
+    3: '개인일정'
 };
 </script>
 
@@ -113,13 +117,8 @@ const statusLabels = {
         <div class="weekly-table-wrapper">
             <table class="weekly-table">
                 <colgroup>
-                    <col width="4%">
-                    <col width="15%">
-                    <col width="15%">
-                    <col width="15%">
-                    <col width="15%">
-                    <col width="15%">
-                    <col width="15%">
+                    <col width="64px">
+                    <col v-for="staff in staffs" :key="staff.id" width="220px">
                 </colgroup>
             <thead>
                 <tr>
@@ -144,7 +143,7 @@ const statusLabels = {
                     <div 
                         v-for="(count, status) in summaryData[date.full][staff.id]" 
                         :key="status"
-                        :class="['status-item', status]"
+                        :class="['status-item', `status-item__${status}`]"
                     >
                         <span class="label">{{ statusLabels[status] }}</span>
                         <span class="count">{{ count }}</span>
@@ -165,18 +164,18 @@ const statusLabels = {
                 </div>
                 
                 <div class="detail-list">
-                <div v-for="event in selectedEvents" :key="event.id" :class="['detail-item', event.status]">
+                <div v-for="event in selectedEvents" :key="event.id" :class="['detail-item', `detail-item__${event.inState}`]">
                     <div class="time-box">
                         <img 
-                            :src="statusIcons[event.status || '']" 
+                            :src="statusIcons[event.inState ?? '']" 
                             alt="" 
                             class="status-icon"
                         />
                         {{ formatTime(event.start) }}
                     </div>
                     <div class="event-info">
-                        <span class="patient">{{ event.name }}{{ event.patient ? '(' + event.patient + ')' : '' }}</span>
-                        <span class="memo">{{ event.product_name }}</span>
+                        <span class="patient">{{ event.userName }}{{ event.petName ? '(' + event.petName + ')' : '' }}</span>
+                        <span class="memo">{{ event.roomName }}</span>
                     </div>
                 </div>
                 <div v-if="selectedEvents.length === 0" class="no-data">일정이 없습니다.</div>
@@ -284,19 +283,26 @@ const statusLabels = {
 
         @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
 
-        &.confirm { background: $status-confirmed_bg; color: $status-confirmed_text; }
-        &.hold { background: $status-onHold_bg; color: $status-onHold_text; }
-        &.canceled { background: $status-canceled_bg; color: $status-canceled_text; }
-        &.personal { background: $status-personal_bg; color: $status-personal_text; }
+        &__1 { background: $status-confirmed_bg; color: $status-confirmed_text; } // 확정
+        &__0 { background: $status-onHold_bg; color: $status-onHold_text; } // 대기
+        &__2 { background: $status-canceled_bg; color: $status-canceled_text; } // 취소
+        &__3 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
     }
 }
 
 .detail-sidebar {
     width: 300px;
     // padding: 16px;
+    height: 100%;
 
     background: #fff;
     border: 1px solid $gray-200;
+
+    .detail-container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
 
     .detail-header {
         display:flex;
@@ -311,6 +317,9 @@ const statusLabels = {
     }
 
     .detail-list {
+        flex: 1;
+        overflow-y: auto;
+
         padding: 16px;
     }
 
@@ -332,6 +341,7 @@ const statusLabels = {
             gap: 4px;
 
             @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
+            line-height: 1;
 
             .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
         }
@@ -343,20 +353,26 @@ const statusLabels = {
 
             .patient {
                 min-width: 0;
+                max-width: 80px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
             .memo {
                 text-align: right;
+                min-width: 0;
+                max-width: 70px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
         }
 
         // 상태별 사이드바 아이템 색상
-        &.confirm { background: $status-confirmed_bg; color: $status-confirmed_text; }
-        &.hold { background: $status-onHold_bg; color: $status-onHold_text; }
-        &.canceled { background: $status-canceled_bg; color: $status-canceled_text; }
-        &.personal { background: $status-personal_bg; color: $status-personal_text; }
+        &__1 { background: $status-confirmed_bg; color: $status-confirmed_text; } // 확정
+        &__0 { background: $status-onHold_bg; color: $status-onHold_text; } // 대기
+        &__2 { background: $status-canceled_bg; color: $status-canceled_text; } // 취소
+        &__3 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
     }
 }
 

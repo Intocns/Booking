@@ -8,13 +8,14 @@ import icConfirm from '@/assets/icons/ic_res_confirm.svg'
 import icPersonal from '@/assets/icons/ic_res_personal.svg'
 import icCancel from '@/assets/icons/ic_res_canceled.svg'
 import icHold from '@/assets/icons/ic_res_hold.svg'
+import icPlusCircle from '@/assets/icons/ic_plus_circle.svg'
 
 // 상태 아이콘 매핑
 const statusIcons = {
-    confirm: icConfirm,
-    personal: icPersonal,
-    canceled: icCancel,
-    hold: icHold
+    1: icConfirm, //확정
+    3: icPersonal, //개인일정
+    2: icCancel, // 취소
+    0: icHold // 대기
 };
 
 const props = defineProps(['startDate', 'events', 'staffs']);
@@ -28,40 +29,94 @@ const selectedEvents = ref([]);
 const selectedDateStr = ref("");
 
 // props 데이터를 가공해서 '스태프별 요약 데이터'로 만듬
+// const summaryEvents = computed(() => {
+//     const dayGroups = {};
+
+//     props.events.forEach(ev => {
+//         // T를 기준으로 자르되, 데이터가 없을 경우를 대비
+//         const date = ev.start.includes('T') ? ev.start.split('T')[0] : ev.start;
+//         if (!dayGroups[date]) dayGroups[date] = {};
+        
+//         const rId = ev.resource;
+//         dayGroups[date][rId] = (dayGroups[date][rId] || 0) + 1;
+//     });
+
+//     const processed = [];
+
+//     Object.entries(dayGroups).forEach(([date, staffCounts]) => {
+//         Object.entries(staffCounts).forEach(([resId, count]) => {
+//             // staffs가 아직 비어있을 수 있으므로 체크
+//             const staff = props.staffs?.find(s => s.id === resId);
+//             const staffName = staff ? staff.name : resId;
+
+//             processed.push({
+//                 id: `summary-${date}-${resId}`,
+//                 start: `${date}T00:00:00`,
+//                 end: `${date}T23:59:59`,
+//                 text: `${staffName} ${count}`,
+//                 resourceId: resId,
+//                 tags: { isSummary: true }
+//             });
+//         });
+//     });
+
+//     return processed;
+// });
 const summaryEvents = computed(() => {
     const dayGroups = {};
 
+    // 1. 데이터 그룹화 (날짜별 -> 직원별)
     props.events.forEach(ev => {
-        // T를 기준으로 자르되, 데이터가 없을 경우를 대비
         const date = ev.start.includes('T') ? ev.start.split('T')[0] : ev.start;
-        if (!dayGroups[date]) dayGroups[date] = {};
+        if (!dayGroups[date]) dayGroups[date] = [];
         
         const rId = ev.resource;
-        dayGroups[date][rId] = (dayGroups[date][rId] || 0) + 1;
+        let staffData = dayGroups[date].find(d => d.resourceId === rId);
+        if (!staffData) {
+            staffData = { resourceId: rId, count: 0 };
+            dayGroups[date].push(staffData);
+        }
+        staffData.count++;
     });
 
     const processed = [];
 
-    Object.entries(dayGroups).forEach(([date, staffCounts]) => {
-        Object.entries(staffCounts).forEach(([resId, count]) => {
-            // staffs가 아직 비어있을 수 있으므로 체크
-            const staff = props.staffs?.find(s => s.id === resId);
-            const staffName = staff ? staff.name : resId;
+    Object.entries(dayGroups).forEach(([date, staffList]) => {
+        // 한 날짜에 직원이 5명 이상인 경우에만 '더보기' 로직 적용 (4명까지는 다 보여줌)
+        const showMore = staffList.length > 4;
+        const displayList = showMore ? staffList.slice(0, 3) : staffList;
+
+        // 실제 표시할 직원 막대기 생성
+        displayList.forEach((item) => {
+            const staffIndex = props.staffs?.findIndex(s => s.id === item.resourceId) ?? "";
+            const staff = props.staffs[staffIndex] ?? "";
+            // 💡 중요: staffs 배열의 인덱스를 사용하여 1, 2, 3, 4번 색상 고정 (0~3)
+            const colorIdx = (staffIndex !== -1 ? staffIndex % 4 : 0) + 1;
 
             processed.push({
-                id: `summary-${date}-${resId}`,
+                id: `summary-${date}-${item.resourceId}`,
                 start: `${date}T00:00:00`,
                 end: `${date}T23:59:59`,
-                text: `${staffName} ${count}`,
-                resourceId: resId,
-                tags: { isSummary: true }
+                text: `${staff ? staff.name : item.resourceId} ${item.count}`,
+                tags: { colorIdx, isSummary: true } // 💡 tags에 컬러 번호 저장
             });
         });
+
+        // 4개 초과일 때 "+ 카운트" 막대기 추가
+        if (showMore) {
+            const extraCount = staffList.length - 3;
+            processed.push({
+                id: `more-${date}`,
+                start: `${date}T00:00:00`,
+                end: `${date}T23:59:59`,
+                text: `${extraCount}`,
+                tags: { isMore: true } // 더보기 전용 태그
+            });
+        }
     });
 
     return processed;
 });
-
 const config = ref({
     locale: "ko-kr",
     startDate: new DayPilot.Date(props.startDate),
@@ -71,39 +126,38 @@ const config = ref({
     
     //  캘린더 막대 
     onBeforeEventRender: (args) => {
-        args.data.html = `
-        <div class="summary-event-bar">
-            <span class="s-name">${args.data.text.split(' ')[0]}</span>
-            <span class="s-count">${args.data.text.split(' ')[1]}</span>
-        </div>
-        `;
+        if(args.data.tags?.isMore) {
+            args.data.html = `
+                <div class="summary-event-bar more-bar">
+                    <img src="${icPlusCircle}" alt="아이콘" />
+                    <span class="more-count">${args.data.text}</span>
+                </div>
+            `
+        } else {
+            args.data.html = `
+            <div class="summary-event-bar vet-color-${args.data.tags.colorIdx}">
+                <span class="s-name">${args.data.text.split(' ')[0]}</span>
+                <span class="s-count">${args.data.text.split(' ')[1]}</span>
+            </div>
+            `;
+        }
+    },
+
+    
+    //  날짜 클릭 시 원본 데이터(props.events)를 필터링해서 사이드바에 표시
+    onEventClick: (args) => {
+        //  클릭한 날짜 문자열 추출 
+        const clickedDate = args.e.start().toString("yyyy-MM-dd");
+        
+        handleDateSelection(clickedDate);
     },
 
     //  날짜 클릭 시 원본 데이터(props.events)를 필터링해서 사이드바에 표시
     onTimeRangeSelected: (args) => {
         //  클릭한 날짜 문자열 추출 
         const clickedDateStr = args.start.toString("yyyy-MM-dd");
-        selectedDateStr.value = clickedDateStr;
-
-        // JS Date 객체로 변환하여 헤더 텍스트 생성
-        const date = new Date(clickedDateStr); 
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        const week = ['일', '월', '화', '수', '목', '금', '토'];
-        const dayOfWeek = week[date.getDay()];
-
-        selectedDate.value = `${month}월 ${day}일 (${dayOfWeek})`;
-
-        // 필터링 비교
-        selectedEvents.value = props.events.filter(e => {
-            const eventDate = e.start.includes('T') ? e.start.split('T')[0] : e.start;
-            return eventDate === clickedDateStr;
-        });
         
-        // 셀 배경색 업데이트
-        if (calendarRef.value) {
-            calendarRef.value.control.update();
-        }
+        handleDateSelection(clickedDateStr);
     },
 
     onBeforeCellRender: (args) => {
@@ -133,6 +187,28 @@ const config = ref({
     }
 });
 
+// 날짜 셀 클릭 이벤트
+const handleDateSelection = (clickedDateStr) => {
+    selectedDateStr.value = clickedDateStr;
+
+    const date = new Date(clickedDateStr); 
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const week = ['일', '월', '화', '수', '목', '금', '토'];
+    const dayOfWeek = week[date.getDay()];
+
+    selectedDate.value = `${month}월 ${day}일 (${dayOfWeek})`;
+
+    selectedEvents.value = props.events.filter(e => {
+        const eventDate = e.start.includes('T') ? e.start.split('T')[0] : e.start;
+        return eventDate === clickedDateStr;
+    });
+    
+    if (calendarRef.value) {
+        calendarRef.value.control.update();
+    }
+};
+
 // 스태프별로 열림/닫힘 상태를 관리할 객체 (기본적으로 모두 열어두려면 초기값 설정)
 const openStaffs = ref({});
 
@@ -145,7 +221,7 @@ const groupedSelectedEvents = computed(() => {
         if (!groups[staffId]) {
             const staff = props.staffs.find(s => s.id === staffId);
             groups[staffId] = {
-                name: staff ? staff.name : '미지정',
+                name: staff ? (staff.name) : ('미지정(' + staffId + ')'),
                 events: []
             };
         }
@@ -196,7 +272,10 @@ onMounted(() => {
             <div class="detail-list">
                 <div v-for="(group, staffId) in groupedSelectedEvents" :key="staffId" class="staff-group">
                     <div class="staff-title" @click="toggleStaff(staffId)">
-                        <span class="title-l">{{ group.name }}</span>
+                        <div class="title-wrapper">
+                            <span class="title-l">{{ group.name }}</span>
+                            <span class="body-l">수의사</span>
+                        </div>
 
                         <div class="d-flex gap-16">
                             <span class="title-s">{{ group.events.length }} 건</span>
@@ -207,19 +286,19 @@ onMounted(() => {
                     </div>
                     
                     <div class="staff-content" v-show="openStaffs[staffId]">
-                        <div v-for="ev in group.events" :key="ev.id" class="detail-item" :class="ev.status">
+                        <div v-for="ev in group.events" :key="ev.id" class="detail-item" :class="`detail-item__${ev.inState}`">
                             <div class="d-flex gap-6">
                                 <div class="d-flex gap-4">
                                     <img 
-                                        :src="statusIcons[ev.status || '']" 
+                                        :src="statusIcons[ev.inState || '']" 
                                         alt="" 
                                         class="status-icon"
                                     />
                                     <span class="time title-s">{{ ev.start.split('T')[1].substring(0,5) }}</span>
                                 </div>
-                                <span class="patient body-s">{{ ev.name }}{{ ev.patient ? '(' + ev.patient + ')' : '' }}</span>
+                                <span class="patient body-s">{{ ev.userName }}{{ ev.petName ? '(' + ev.petName + ')' : '' }}</span>
                             </div>
-                            <span class="memo body-s">{{ ev.product_name }}</span>
+                            <span class="memo body-s">{{ ev.roomName }}</span>
                         </div>  
                     </div>
                 </div>
@@ -275,7 +354,6 @@ onMounted(() => {
 
     :deep(.month_default_cell_inner) {
         background-color: $gray-00;
-        // background-color: inherit !important;
     }
 
     :deep(.month_default_event) {
@@ -305,32 +383,16 @@ onMounted(() => {
         }
     }
 
-    :deep(.month_default_event:nth-of-type(4n+1)) {
-        .summary-event-bar {
-            background-color: $vet1_bg;
-            color: $vet1_bar;
-        }
-    }
+    /* nth-of-type 대신 직접 지정한 클래스 사용 */
+    :deep(.vet-color-1) { background-color: $vet1_bg; color: $vet1_bar; }
+    :deep(.vet-color-2) { background-color: $vet2_bg; color: $vet2_bar; }
+    :deep(.vet-color-3) { background-color: $vet3_bg; color: $vet3_bar; }
+    :deep(.vet-color-4) { background-color: $vet4_bg; color: $vet4_bar; }
 
-    :deep(.month_default_event:nth-of-type(4n+2)) {
-        .summary-event-bar {
-            background-color: $vet2_bg;
-            color: $vet2_bar;
-        }
-    }
-
-    :deep(.month_default_event:nth-of-type(4n+3)) {
-        .summary-event-bar {
-            background-color: $vet3_bg; // 연한 노랑
-            color: $vet3_bar;
-        }
-    }
-
-    :deep(.month_default_event:nth-of-type(4n)) {
-        .summary-event-bar {
-            background-color: $vet4_bg;
-            color: $vet4_bg;
-        }
+    /* 더보기 바 스타일 */
+    :deep(.more-bar) {
+        background-color: $gray-600;
+        color: $gray-00 !important;
     }
 
     :deep(.month_default_event_bar) {display: none;}
@@ -341,7 +403,7 @@ onMounted(() => {
         display: flex;
         flex-direction: column;
 
-        background: #fff;
+        background: $gray-00;
         border: 1px solid $gray-200;
 
         .detail-header { 
@@ -369,6 +431,19 @@ onMounted(() => {
 
                     color: $gray-700;
 
+                    .title-wrapper {
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                    }
+                    .title-l {
+                        max-width: 120px;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        line-height: 1;
+                    }
+
                     .arrow {
                         img {transition: transform .3s;}
                     }
@@ -381,8 +456,8 @@ onMounted(() => {
                     display: flex;
                     flex-direction: column;
                     gap: 8px;
-                    max-height: 230px;
-                    overflow-y: auto;
+                    // max-height: 230px;
+                    // overflow-y: auto;
                     padding: 16px;
 
                     border-top: 1px solid $gray-200;
@@ -407,39 +482,30 @@ onMounted(() => {
 
             .patient {
                 min-width: 0;
+                max-width: 80px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
 
             .memo {
+                max-width: 70px;
                 text-align: right;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             // 상태별 사이드바 아이템 색상
-            &.confirm { background: $status-confirmed_bg; color: $status-confirmed_text; }
-            &.hold { background: $status-onHold_bg; color: $status-onHold_text; }
-            &.canceled { background: $status-canceled_bg; color: $status-canceled_text; }
-            &.personal { background: $status-personal_bg; color: $status-personal_text; }
+            &__1 { background: $status-confirmed_bg; color: $status-confirmed_text; } // 확정
+            &__0 { background: $status-onHold_bg; color: $status-onHold_text; } // 대기
+            &__2 { background: $status-canceled_bg; color: $status-canceled_text; } // 취소
+            &__3 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
         }
     }
     
     :deep(.not-current-month) {
         background-color: #f5f5f5 !important; // 회색 배경
         opacity: 0.7;
-        
-        .summary-event-bar {
-            display: none; // 이전/다음달의 이벤트는 숨기고 싶을 때
-        }
     }
-
-    /* 클릭한 날짜 셀 하이라이트 */
-:deep(.month_default_selected) {
-    // 배경색을 원하는 강조색으로 지정 (예: 연한 노란색이나 브랜드 컬러)
-    background-color: #FFF9C4 !important; 
-    
-    // 테두리까지 주고 싶다면 추가
-    border: 2px solid $primary-500 !important;
-    box-sizing: border-box;
-}
 </style>

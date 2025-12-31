@@ -1,6 +1,6 @@
 <script setup>
 import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, watch, computed, onUnmounted } from 'vue';
 import { api } from "@/api/axios";
 // 예약 상태 아이콘
 import icConfirm from '@/assets/icons/ic_res_confirm.svg'
@@ -14,18 +14,26 @@ import icIntoLink from '@/assets/icons/ic_res_intolink.svg'
 
 // 상태 아이콘 매핑
 const statusIcons = {
-    confirm: icConfirm,
-    personal: icPersonal,
-    canceled: icCancel,
-    hold: icHold
+    0: icHold,
+    1: icConfirm,
+    2: icCancel,
+    3: icPersonal,
 };
+    // 0: '예약대기',
+    // 1: '예약확정',
+    // 2: '예약취소',
+    // 3: '예약거절'??
 
 // 예약 경로 아이콘 매핑
 const pathIcons = {
-    naver: icNaver,
-    intopet: icIntoPet,
-    intolink: icIntoLink
+    1: icIntoLink,
+    2: icIntoPet,
+    4: icNaver,
 };
+    // 1: 'IntoVetGE',
+    // 2: '인투펫',
+    // 3: 'fitpet',
+    // 4: '네이버예약'
 
 // ---------------------------------------------
 // props 정의
@@ -84,20 +92,20 @@ const config = ref({
     },
 
     onBeforeEventRender: (args) => {
-        const status = args.data.status || 'confirm';
+        const status = args.data.inState;
         
         // 상태별 배경색
         const bgColors = {
-            confirm: '#cceaff',
-            hold: '#ffe9a5',
-            canceled: '#ffd3db',
-            personal: '#D2FAE2'
+            0: '#ffe9a5', // 대기
+            1: '#cceaff', // 확정
+            2: '#ffd3db', // 취소
+            3: '#D2FAE2', // 개인(불가)
         };
         args.data.backColor = bgColors[status];
     },
     
-    cellDuration: 60,
-    cellHeight: 80, 
+    cellDuration: 30,
+    cellHeight: 40, 
     businessBeginsHour: 9,                  
     businessEndsHour: 20,
 });
@@ -145,18 +153,23 @@ onMounted(() => {
                 <div class="event-header">
                     <!-- 예약 상태 아이콘 -->
                     <div class="reserve-name">
-                        <img :src="statusIcons[event.data.status] || ''" alt="상태아이콘">
-                        <span class="title" :class="event.data.status || 'confirm'">{{ event.data.name }} {{ event.data.patient ? '(' + event.data.patient + ')' : '' }}</span>
+                        <img :src="statusIcons[event.data.inState] || ''" alt="상태아이콘">
+                        <span 
+                            class="title" 
+                            :class="`title__${event.data.inState}`"
+                        >
+                            {{ event.data.userName }} {{ event.data.petName ? '(' + event.data.petName + ')' : '' }}
+                        </span>
                     </div>
 
                     <!-- 예약경로 아이콘(네이버/인투펫/링크) -->
                     <div class="reserve-icon">
-                        <img v-if="event.data.path" :src="pathIcons[event.data.path] || ''" alt="예약경로 아이콘">
+                        <img v-if="event.data.reRoute" :src="pathIcons[event.data.reRoute] || ''" alt="예약경로 아이콘">
                     </div>
                 </div>
                 <div class="event-content">
                     <!-- 상품명/진료실명 -->
-                    <p class="reserve-title" :class="event.data.status || 'confirm'">{{ event.data.product_name }}</p>
+                    <p class="reserve-title" :class="`reserve-title__${event.data.inState}`">{{ event.data.roomName }}</p>
                     <!-- 병원 메모 -->
                     <p class="reserve-memo">{{ event.data.memo }}</p>
                 </div>
@@ -170,21 +183,77 @@ onMounted(() => {
         width: 100%;
     }
     .schedule-wrapper {
+        width: 100%;
         height: 100%;
     }
     :deep(.calendar_default_main) {
+        width: 100%;
         height: 100%;
+        overflow-x: auto;
 
         border-color: $gray-200;
         font-family: $font-family-base;
 
-        & > div:nth-child(2) {height: calc(100% - 30px) !important;}
+        // /* 헤더 영역 */
+        & > div:first-child {
+            width: auto !important;
+            overflow: visible !important;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            table {
+                tbody tr td:nth-child(2) table {
+                    td {
+                        // width: 220px !important; 
+                        min-width: 220px !important;
+                        max-width: 220px !important;
+                    }
+                }
+                width: auto !important; 
+                // table-layout: fixed;
+            }
+        }
+
+        // 캘린더영역
+        & > div:nth-child(2) {
+            height: calc(100% - 64px) !important; 
+            width: auto !important;
+            overflow: visible !important;
+
+            table {
+                tbody tr td:nth-child(2) table {
+                    td {
+                        // width: 220px !important; 
+                        min-width: 220px !important;
+                        max-width: 220px !important;
+                        & > div {
+                            // width: 220px !important; 
+                            min-width: 220px !important;
+                            max-width: 220px !important;
+                            
+                        }
+                    }
+                }
+                width: auto !important; 
+                // table-layout: fixed;
+            }
+        }
+
+    }
+
+    // 리소스 컬럼 너비 고정
+    :deep(.calendar_default_colheader),
+    :deep(.calendar_default_cell) {
+        min-width: 220px !important; 
+        max-width: 220px !important;
+        // width: 220px !important;
     }
 
     :deep(.calendar_default_cornerright_inner), 
     :deep(.calendar_default_corner_inner), 
     :deep(.calendar_default_colheader_inner), 
     :deep(.calendar_default_alldayheader_inner) {
+        height: 100%;
         background: $gray-100;
         border-color: $gray-200;
         color: $gray-700;
@@ -209,9 +278,7 @@ onMounted(() => {
         transform: translateY(-1px);
     }
     :deep(.calendar_default_event_inner) {
-        margin-left: 4px;
-        margin-top: 4px;
-        margin-bottom: 4px;
+        margin: 4px;
         
         border-radius: 4px;
         border: none;
@@ -246,10 +313,10 @@ onMounted(() => {
 
                 @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
 
-                &.confirm {color: $status-confirmed_text;}
-                &.hold {color: $status-onHold_text;}
-                &.canceled {color: $status-canceled_text;}
-                &.personal {color: $status-personal_text}
+                &__1 {color: $status-confirmed_text;} // 확정
+                &__0 {color: $status-onHold_text;} // 대기
+                &__2 {color: $status-canceled_text;} // 취소
+                &__3 {color: $status-personal_text} // 개인(불가)
             }
         }
     }
@@ -262,10 +329,10 @@ onMounted(() => {
         @include typo($body-xs-size, $body-xs-weight, $body-xs-spacing, $body-xs-line);
 
         .reserve-title {
-            &.confirm {color: $status-confirmed_text;}
-            &.hold {color: $status-onHold_text;}
-            &.canceled {color: $status-canceled_text;}
-            &.personal {color: $status-personal_text}
+            &__0 {color: $status-onHold_text;} // 대기
+            &__1 {color: $status-confirmed_text;} // 확정
+            &__2 {color: $status-canceled_text;} // 취소
+            &__3 {color: $status-personal_text} // 개인(불가)
         }
         .reserve-memo {
             overflow: hidden;
