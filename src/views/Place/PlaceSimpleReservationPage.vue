@@ -68,8 +68,8 @@ const config = ref({
 
     // 가로 스크롤 활성화를 위한 설정
     widthSpec: "Fixed", // 너비를 고정하여 컨테이너보다 넓으면 스크롤 생성
-    headerWidth: 64,    // 왼쪽 시간축 너비
-    columnWidth: 220,
+    // headerWidth: 64,    // 왼쪽 시간축 너비
+    // columnWidth: 220,
 
     startDate: currentDate,
     cellDuration: 64,
@@ -119,10 +119,10 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-    // .contents-wrapper {
-    //     width: 100%;
-    //     overflow: hidden;
-    // }
+    .contents-wrapper {
+        width: 100%;
+        // overflow: hidden;
+    }
     .calendar-container {
         width: 100%;
     }
@@ -146,6 +146,17 @@ onMounted(() => {
             position: sticky;
             top: 0;
             z-index: 2;
+            table {
+                tbody tr td:nth-child(2) table {
+                    td {
+                        // width: 220px !important; 
+                        min-width: 220px !important;
+                        max-width: 220px !important;
+                    }
+                }
+                width: auto !important; 
+                // table-layout: fixed;
+            }
         }
 
         // 캘린더영역
@@ -154,48 +165,46 @@ onMounted(() => {
             width: auto !important;
             overflow: visible !important;
 
-            & > div > table > tbody > tr > td:nth-child(1) {
-                position: sticky;
-                top: 64px;
-                left: 0;
-                z-index: 1;
+            table {
+                tbody tr td:nth-child(2) table {
+                    td {
+                        // width: 220px !important; 
+                        min-width: 220px !important;
+                        max-width: 220px !important;
+                        & > div {
+                            // width: 220px !important; 
+                            min-width: 220px !important;
+                            max-width: 220px !important;
+                            
+                        }
+                    }
+                }
+                width: auto !important; 
+                // table-layout: fixed;
             }
         }
 
-        table {
-            width: auto !important; 
-            table-layout: fixed;
-        }
-
     }
 
-    /* 3. 각 컬럼과 셀의 너비를 강제로 고정 */
+    /* 각 컬럼과 셀의 너비를 강제로 고정 */
     :deep(.calendar_default_colheader),
-    :deep(.calendar_default_colheader_inner),
-    :deep(.calendar_default_cell),
-    :deep(.calendar_default_cell_inner) {
-        // width: 220px !important; /* 리소스당 너비 */
-        min-width: 200px !important;
-    }
-    :deep(.calendar_default_corner) {
-        width: 65px !important;
+    :deep(.calendar_default_cell) {
+        min-width: 220px !important; 
+        max-width: 220px !important;
+        // width: 220px !important;
     }
 
-    /* 4. 왼쪽 시간축 고정 */
-    :deep(.calendar_default_rowheader),
-    :deep(.calendar_default_rowheader_inner) {
-        width: 64px !important;
-        min-width: 64px !important;
-        // margin-right: 1px;
-        border-right: 1px solid $gray-200;
-    }
-
-    :deep(.calendar_default_cornerright_inner), 
-    :deep(.calendar_default_corner_inner), 
-    :deep(.calendar_default_colheader_inner), 
-    :deep(.calendar_default_alldayheader_inner) {
+    :deep(.calendar_default_corner_inner) {
         background: $gray-100;
         border-color: $gray-200;
+    }
+    :deep(.calendar_default_cornerright_inner), 
+    :deep(.calendar_default_colheader_inner), 
+    :deep(.calendar_default_alldayheader_inner) {
+        height: 100%;
+        background: $gray-100;
+        border-color: $gray-200;
+        border-right: 0;
         color: $gray-700;
         @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
     }
