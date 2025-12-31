@@ -1,7 +1,7 @@
 <script setup>
 // 컴포넌트
 import PageTitle from '@/components/common/PageTitle.vue';
-import CustomSelect from '@/components/common/CustomSelect.vue';
+import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
 import Modal from '@/components/common/Modal.vue';
 import CategorySetting from '@/components/common/modal-content/CategorySetting.vue';
@@ -22,12 +22,23 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
+import { useProductStore } from '@/stores/productStore';
 
 const modalStore = useModalStore();
 const optionStore = useOptionStore();
+const productStore = useProductStore();
 
 // 상태 관리
 const activeTab = ref('unassigned'); // 현재 선택된 카테고리
+const selectedProduct = ref(''); // 미리보기에서 선택된 상품 (단일 선택)
+
+// 상품 리스트를 CustomSelect용 options로 변환
+const productOptions = computed(() => {
+    return (productStore.productList || []).map(product => ({
+        label: product.name || '',
+        value: product.id || product.bizItemId || product.idx
+    }));
+});
 // 드롭다운 상태 관리
 const activeMenuIndex = ref(null);
 const menuPosition = ref({ x: 0, y: 0 });
@@ -65,9 +76,9 @@ const optionTableColumns = [ // th에 tooltip이 필요한 경우 여기서 추�
     { key: 'price', label: '판매가', tooltip: '해당 옵션의 판매 가격을 의미합니다.' }, // 툴팁 있는 경우
     { key: 'count', label: '재고 수', tooltip: '하루 기준으로 옵션의 예약 가능한 수량을 의미합니다.\n해당 수량만큼 예약이 이루어지면 더이상 해당 옵션의 선택은 불가합니다.' },
     { key: '1', label: '선택가능', tooltip: '고객은 해당 수량 안에서 선택 가능합니다.' },
-    { key: '2', label: '운영기간', tooltip: '운영기간이 설정되면 기간 내 날짜를 예약 할 경우에만 해당 옵션 선택이 가능합니다.' },
+    { key: '2', label: '운영기간', tooltip: '운영기간이 설정되면 기간 내 날짜를 예약 할 경우에만 해당 옵션 선택이 가능합니다.', width: '18%' },
     { key: 'visibleBtn', label: '노출설정' },
-    { key: 'connect', label: '상품연결' },
+    { key: 'connect', label: '상품연결', width: '8%' },
     { key: 'settingBtn', label: '설정' },
 ]
 
@@ -136,6 +147,9 @@ const closeMenu = (e) => {
 onMounted(async () => {
     window.addEventListener('click', closeMenu);
 
+    // 상품 리스트 미리 로딩
+    await productStore.getProductList();
+    
     await optionStore.getCategoryList(); // 카테고리 리스트 불러옴
 
     if (optionStore.categoryList.length > 0) {
@@ -226,9 +240,9 @@ const handleMenuAction = (action, row) => {
                     <template #right>
                         <div class="d-flex gap-16 align-center table-title-right">
                             <div class="d-flex gap-8 align-center">
-                                <span class="title-m">수량형</span>
+                                <span class="title-m">{{ optionStore.selectionTypeCode === 'CHECK' ? '체크형' : '수량형' }}</span>
                                 <div>
-                                    <span class="title-m">2</span>
+                                    <span class="title-m">{{ optionStore.optionList.length }}</span>
                                     <span class="title-m"> 개</span>
                                 </div>
                             </div>
@@ -241,7 +255,7 @@ const handleMenuAction = (action, row) => {
                     <!-- 노출설정 커스텀 슬롯 td -->
                     <template #visibleBtn="{ row, rowIndex }">
                         <label class="toggle"> 
-                            <input type="checkbox" />
+                            <input type="checkbox" :checked="row.checked" />
                             <span class="toggle-img"></span>
                         </label>
                     </template>
@@ -298,7 +312,11 @@ const handleMenuAction = (action, row) => {
                 </div>
                 <div class="preview-contents">
                     <!-- 선택 -->
-                    <CustomSelect />
+                    <CustomSingleSelect 
+                        v-model="selectedProduct"
+                        :options="productOptions"
+                        placeholder="상품을 선택해주세요"
+                    />
 
                     <!-- 미리보기 -->
                     <div class="preview-section">

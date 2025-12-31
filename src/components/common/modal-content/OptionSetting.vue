@@ -100,25 +100,19 @@ const formattedNormalPrice = computed({
     }
 });
 
-// 상품 연결 리스트
+// 상품 연결 리스트 (productStore에서 직접 사용)
 const productList = ref([]);
 
-// 상품 리스트 불러오기
-const loadProductList = async () => {
-    try {
-        await productStore.getProductList();
-        // API 응답 데이터를 productList에 매핑
-        console.log(productStore.productList); 
-        productList.value = (productStore.productList || []).map(product => ({
+// 상품 리스트 초기화 (productStore의 데이터를 기반으로)
+watch(() => productStore.productList, (newList) => {
+    if (newList && newList.length > 0) {
+        productList.value = newList.map(product => ({
             id: product.id || product.bizItemId || product.idx,
             name: product.name || '',
             isConnected: false // 기본값: 미연결 (추후 API 응답에 연결 상태 포함 여부 확인)
         }));
-    } catch (error) {
-        console.error('상품 리스트 불러오기 실패:', error);
-        productList.value = [];
     }
-};
+}, { immediate: true });
 
 // 상품 연결 상태 토글 핸들러
 const toggleProductConnection = (product) => {
@@ -150,13 +144,8 @@ const closeAll = (e) => {
 /**
  * 핸들러 함수
  */
-const goConnect = async () => { 
+const goConnect = () => { 
     mode.value = 'CONNECT';
-    // 상품 리스트가 아직 로드되지 않았을 경우에만 로드
-    // (모달이 열릴 때 미리 로드되므로 대부분은 이미 로드되어 있음)
-    if (productList.value.length === 0) {
-        await loadProductList();
-    }
 };
 const goOption = () => { mode.value = 'OPTION'; };
 const handleNext = async () => {
@@ -338,16 +327,26 @@ const handleSave = async () => {
             await optionStore.addOptionMapping(mappingDataList);
         }
 
+        // 옵션 리스트 새로고침
+        if (selectedCategory.value) {
+            await optionStore.getOptionListByCategoryId(selectedCategory.value);
+        }
+
         alert('옵션이 등록되었습니다.');
         modalStore.optionSettingModal.closeModal();
-        // TODO: 옵션 리스트 새로고침
     } catch (error) {
         console.error('옵션 등록 실패:', error);
         alert('옵션 등록 중 오류가 발생했습니다.');
     }
 };
-const handleUpdate = () => {
+const handleUpdate = async () => {
     console.log('수정 API 호출');
+    
+    // 옵션 리스트 새로고침
+    if (selectedCategory.value) {
+        await optionStore.getOptionListByCategoryId(selectedCategory.value);
+    }
+    
     modalStore.optionSettingModal.closeModal();
 };
 
@@ -365,13 +364,7 @@ watch(categoryOptions, async (options) => {
         }
     }
 
-    // 상품 리스트를 미리 로드 (사용자가 모르게 백그라운드에서 로드)
-    // 다음 버튼을 눌렀을 때 로딩 표시가 보이지 않도록
-    if (productList.value.length === 0) {
-        loadProductList().catch(error => {
-            console.error('상품 리스트 미리 로드 실패:', error);
-        });
-    }
+    // 상품 리스트는 PlaceOptionPage에서 미리 로드됨
 }, { immediate: true });
 
 onMounted(() => window.addEventListener('click', closeAll));
