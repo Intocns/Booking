@@ -165,13 +165,17 @@ onUnmounted(() => {
 const isEdit = ref(false); // 수정 모드 여부 상태 추가
 
 // 메뉴 아이템 클릭 시 처리
-const handleMenuAction = (action, row) => {
+const handleMenuAction = async (action, row) => {
     activeMenuIndex.value = null; // 메뉴 닫기
     
     if (action === 'edit') {
         isEdit.value = true; // 수정
         modalStore.optionSettingModal.setTitle('옵션 수정');
-        modalStore.optionSettingModal.openModal();
+        console.log(row.rawData);
+        // 이미 가져온 옵션 리스트의 rawData 활용 (별도 API 호출 불필요)
+        modalStore.optionSettingModal.openModal({ 
+            optionData: row.rawData
+        });
     } else if (action === 'copy') {
         isEdit.value = false; // 복사는 등록과 같은 로직
         modalStore.optionSettingModal.setTitle('옵션 복사');

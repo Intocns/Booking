@@ -107,16 +107,106 @@ const productList = ref([]);
 watch(() => productStore.productList, (newList) => {
     if (newList && newList.length > 0) {
         productList.value = newList.map(product => ({
-            id: product.id || product.bizItemId || product.idx,
+            id: product.bizItemId || product.id || product.idx, // bizItemId를 우선으로 사용 (connectedProductIds와 매칭을 위해)
             name: product.name || '',
             isConnected: false // 기본값: 미연결 (추후 API 응답에 연결 상태 포함 여부 확인)
         }));
+        
+        // 수정 모드이고 optionData가 있으면 연결 상태 업데이트
+        if (props.isEdit && modalStore.optionSettingModal.isVisible) {
+            const optionData = modalStore.optionSettingModal.data?.optionData;
+            if (optionData && optionData.connectedProductIds) {
+                const connectedProductIds = optionData.connectedProductIds || [];
+                console.log('productList watch - connectedProductIds:', connectedProductIds);
+                productList.value.forEach(product => {
+                    // 타입 변환하여 비교 (문자열/숫자 모두 처리)
+                    const productId = String(product.id);
+                    const isConnected = connectedProductIds.some(connectedId => String(connectedId) === productId);
+                    product.isConnected = isConnected;
+                    console.log(`상품 ${product.name} (id: ${product.id}) 연결 상태:`, isConnected);
+                });
+            }
+        }
     }
 }, { immediate: true });
 
 // 상품 연결 상태 토글 핸들러
 const toggleProductConnection = (product) => {
     product.isConnected = !product.isConnected;
+};
+
+// 옵션 데이터로 필드 채우기 함수
+const fillOptionData = (optionData) => {
+    if (!optionData) return;
+    
+    // 기본 정보
+    selectedCategory.value = optionData.categoryId || '';
+    optionName.value = optionData.name || '';
+    optionDesc.value = optionData.desc || '';
+    
+    // 선택 가능 수량
+    minCount.value = optionData.minBookingCount !== null && optionData.minBookingCount !== undefined 
+        ? String(optionData.minBookingCount) : '';
+    maxCount.value = optionData.maxBookingCount !== null && optionData.maxBookingCount !== undefined 
+        ? String(optionData.maxBookingCount) : '';
+    
+    // 재고 설정
+    if (optionData.stock !== null && optionData.stock !== undefined) {
+        isStockEnabled.value = true;
+        stockCount.value = String(optionData.stock);
+    } else {
+        isStockEnabled.value = false;
+        stockCount.value = '';
+    }
+    
+    // 가격 설정
+    if (optionData.price !== null && optionData.price !== undefined) {
+        isPriceEnabled.value = true;
+        price.value = String(optionData.price);
+        normalPrice.value = optionData.normalPrice ? String(optionData.normalPrice) : '';
+        priceDesc.value = optionData.priceDesc || '';
+    } else {
+        isPriceEnabled.value = false;
+        price.value = '';
+        normalPrice.value = '';
+        priceDesc.value = '';
+    }
+    
+    // 운영기간 설정
+    if (optionData.startDate && optionData.endDate) {
+        isPeriodEnabled.value = true;
+        periodDate.value = [
+            new Date(optionData.startDate),
+            new Date(optionData.endDate)
+        ];
+    } else {
+        isPeriodEnabled.value = false;
+        periodDate.value = null;
+    }
+    
+    // 소요시간 설정
+    if (optionData.serviceDuration !== null && optionData.serviceDuration !== undefined) {
+        const hours = Math.floor(optionData.serviceDuration / 60);
+        const minutes = optionData.serviceDuration % 60;
+        selectedHour.value = hours;
+        selectedMinute.value = minutes;
+    } else {
+        selectedHour.value = 0;
+        selectedMinute.value = 0;
+    }
+    
+    // 상품 연결 상태 설정
+    const connectedProductIds = optionData.connectedProductIds || [];
+    if (productList.value.length > 0) {
+        productList.value.forEach(product => {
+            // 타입 변환하여 비교 (문자열/숫자 모두 처리)
+            const productId = String(product.id);
+            const isConnected = connectedProductIds.some(connectedId => String(connectedId) === productId);
+            product.isConnected = isConnected;
+        });
+    } else {
+        console.warn('productList가 비어있습니다. productList watch에서 처리됩니다.');
+    }
 };
 
 // 옵션 데이터 생성
@@ -340,16 +430,164 @@ const handleSave = async () => {
     }
 };
 const handleUpdate = async () => {
-    console.log('수정 API 호출');
-    
-    // 옵션 리스트 새로고침
-    if (selectedCategory.value) {
-        await optionStore.getOptionListByCategoryId(selectedCategory.value);
+    // 필수 필드 검증 (등록과 동일)
+    if (!selectedCategory.value) {
+        alert('카테고리를 선택해주세요.');
+        await nextTick();
+        if (categorySelectRef.value) {
+            const selectBox = categorySelectRef.value.$el?.querySelector('.select__box');
+            if (selectBox) {
+                selectBox.click();
+            }
+        }
+        return;
     }
-    
-    modalStore.optionSettingModal.closeModal();
+    if (!optionName.value || optionName.value.trim() === '') {
+        alert('옵션명을 입력해주세요.');
+        await nextTick();
+        if (optionNameInputRef.value) {
+            const inputElement = optionNameInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return;
+    }
+    if (isStockEnabled.value && (!stockCount.value || stockCount.value.trim() === '')) {
+        alert('재고 수를 입력해주세요.');
+        await nextTick();
+        if (stockCountInputRef.value) {
+            const inputElement = stockCountInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return;
+    }
+    if (isPriceEnabled.value && (!price.value || price.value.trim() === '')) {
+        alert('판매가를 입력해주세요.');
+        await nextTick();
+        if (priceInputRef.value) {
+            const inputElement = priceInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return;
+    }
+
+    // 소요시간 계산 (분 단위)
+    const serviceDuration = selectedHour.value * 60 + selectedMinute.value;
+
+    // 엔티티 형태로 데이터 매핑
+    const optionData = {
+        categoryId: selectedCategory.value,
+        name: optionName.value.trim(),
+        serviceDuration: serviceDuration > 0 ? serviceDuration : null,
+        desc: optionDesc.value.trim() || null,
+        minBookingCount: minCount.value ? parseInt(minCount.value) : null,
+        maxBookingCount: maxCount.value ? parseInt(maxCount.value) : null,
+        stock: isStockEnabled.value && stockCount.value ? parseInt(stockCount.value) : null,
+        price: isPriceEnabled.value && price.value ? parseInt(parsePrice(price.value)) : null,
+        normalPrice: isPriceEnabled.value && normalPrice.value ? parseInt(parsePrice(normalPrice.value)) : null,
+        priceDesc: isPriceEnabled.value && priceDesc.value.trim() ? priceDesc.value.trim() : null,
+        startDate: isPeriodEnabled.value && periodDate.value && periodDate.value[0] 
+            ? formatDate(periodDate.value[0]) || null
+            : null,
+        endDate: isPeriodEnabled.value && periodDate.value && periodDate.value[1] 
+            ? formatDate(periodDate.value[1]) || null
+            : null,
+        isImp: 1,
+        useFlag: 1,
+    };
+
+    try {
+        const optionDataFromModal = modalStore.optionSettingModal.data?.optionData;
+        if (!optionDataFromModal || !optionDataFromModal.idx) {
+            throw new Error('옵션 ID를 찾을 수 없습니다.');
+        }
+
+        // 1. 옵션 수정
+        await optionStore.updateOption(optionDataFromModal.idx, optionData);
+
+        // 2. 옵션-상품 매핑 저장 (기존 매핑 삭제 후 재등록 필요할 수 있음)
+        const connectedItemIds = productList.value
+            .filter(product => product.isConnected)
+            .map(product => product.id);
+        
+        const mappingDataList = connectedItemIds.length > 0 ? [{
+            useFlag: 1,
+            categoryId: selectedCategory.value,
+            optionId: optionDataFromModal.idx,
+            itemIds: connectedItemIds.join(',')
+        }] : [];
+
+        // 연결된 상품이 있는 경우에만 매핑 저장
+        if (mappingDataList.length > 0) {
+            await optionStore.addOptionMapping(mappingDataList);
+        }
+
+        // 옵션 리스트 새로고침
+        if (selectedCategory.value) {
+            await optionStore.getOptionListByCategoryId(selectedCategory.value);
+        }
+
+        alert('옵션이 수정되었습니다.');
+        modalStore.optionSettingModal.closeModal();
+    } catch (error) {
+        console.error('옵션 수정 실패:', error);
+        alert('옵션 수정 중 오류가 발생했습니다.');
+    }
 };
 
+
+// 모달이 열릴 때 데이터 초기화 및 수정 모드일 때 데이터 채우기
+watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
+    if (isVisible) {
+        await nextTick(); // DOM 업데이트 대기
+        if (props.isEdit) {
+            // 수정 모드: 전달받은 데이터로 필드 채우기
+            const optionData = modalStore.optionSettingModal.data?.optionData;
+            console.log('수정 모드 - optionData:', optionData);
+            console.log('props.isEdit:', props.isEdit);
+            if (optionData) {
+                fillOptionData(optionData);
+            }
+        } else {
+            // 등록 모드: 필드 초기화
+            selectedCategory.value = modalStore.optionSettingModal.data?.categoryId || '';
+            optionName.value = '';
+            optionDesc.value = '';
+            minCount.value = '';
+            maxCount.value = '';
+            stockCount.value = '';
+            price.value = '';
+            normalPrice.value = '';
+            priceDesc.value = '';
+            periodDate.value = null;
+            selectedHour.value = 0;
+            selectedMinute.value = 0;
+            isStockEnabled.value = false;
+            isPriceEnabled.value = false;
+            isPeriodEnabled.value = false;
+            
+            // 상품 연결 초기화
+            if (productList.value.length > 0) {
+                productList.value.forEach(product => {
+                    product.isConnected = false;
+                });
+            }
+        }
+    }
+});
+
+// 수정 모드일 때 optionData가 설정되면 필드 채우기 (watch가 늦게 실행될 경우 대비)
+watch(() => modalStore.optionSettingModal.data?.optionData, async (optionData) => {
+    if (props.isEdit && modalStore.optionSettingModal.isVisible && optionData) {
+        await nextTick();
+        fillOptionData(optionData);
+    }
+}, { immediate: true });
 
 // categoryOptions가 준비된 후에도 카테고리 선택 확인
 watch(categoryOptions, async (options) => {

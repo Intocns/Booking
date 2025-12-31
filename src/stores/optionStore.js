@@ -56,11 +56,15 @@ export const useOptionStore = defineStore("option", () => {
                     idxGroupMap[idx].push(option);
                 });
                 
-                // 각 idx별로 bizItemId가 있는 옵션 개수 계산
+                // 각 idx별로 bizItemId가 있는 옵션 개수 계산 및 연결된 상품 ID 리스트 수집
                 const connectionCountMap = {};
+                const connectedProductIdsMap = {}; // idx별 연결된 상품 ID 리스트
                 Object.keys(idxGroupMap).forEach(idx => {
                     const optionsWithBizItemId = idxGroupMap[idx].filter(opt => opt.bizItemId);
                     connectionCountMap[idx] = optionsWithBizItemId.length;
+                    // 연결된 상품 ID 리스트 수집 (중복 제거)
+                    const productIds = [...new Set(optionsWithBizItemId.map(opt => opt.bizItemId))];
+                    connectedProductIdsMap[idx] = productIds;
                 });
                 
                 // API 데이터를 테이블 형식에 맞게 가공
@@ -112,7 +116,27 @@ export const useOptionStore = defineStore("option", () => {
                             order: option.order || 0,
                             startDate: option.startDate,
                             endDate: option.endDate,
-                            is_connect: connectText
+                            is_connect: connectText,
+                            // 수정 모달에서 사용할 원본 데이터
+                            rawData: {
+                                idx: option.idx,
+                                name: option.name || '',
+                                desc: option.desc || '',
+                                categoryId: categoryId,
+                                minBookingCount: option.minBookingCount,
+                                maxBookingCount: option.maxBookingCount,
+                                stock: option.stock,
+                                price: option.price,
+                                normalPrice: option.normalPrice,
+                                priceDesc: option.priceDesc,
+                                startDate: option.startDate,
+                                endDate: option.endDate,
+                                serviceDuration: option.serviceDuration,
+                                isImp: option.isImp,
+                                order: option.order || 0,
+                                // 연결된 상품 ID 리스트 (이미 가져온 데이터 활용)
+                                connectedProductIds: connectedProductIdsMap[option.idx] || []
+                            }
                         };
                     });
             } else {
@@ -150,6 +174,17 @@ export const useOptionStore = defineStore("option", () => {
         }
     }
 
+    // 옵션 수정
+    async function updateOption(optionId, params) {
+        const response = await api.put(`/api/${cocode}/option/update/${optionId}`, params);
+
+        if(response.status == 200) {
+            return response.data;
+        } else {
+            throw new Error('옵션 수정 실패');
+        }
+    }
+
     return {
         //
         categoryList,
@@ -161,5 +196,6 @@ export const useOptionStore = defineStore("option", () => {
         getOptionListByCategoryId,
         addOption,
         addOptionMapping,
+        updateOption,
     }
 })
