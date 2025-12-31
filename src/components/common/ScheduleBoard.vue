@@ -85,7 +85,8 @@ const config = ref({
     events: props.events,
     // 시작 날짜 설정
     startDate: props.startDate,
-
+    eventMoveHandling: "Disabled",
+    
     onEventClick: (args) => {
         // 부모에게 클릭 이벤트 알림 (필요 시)
         console.log("선택된 스케줄:", args.e.data);
