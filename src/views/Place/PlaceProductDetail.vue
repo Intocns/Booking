@@ -48,9 +48,7 @@ const currentTab = ref('basic'); // 탭 버튼
             </div>
 
             <div class="contents-wrapper">
-                <keep-alive>
-                    <component :is="currentTab === 'basic' ? ProductTabBasic : currentTab === 'booking' ? ProductTabBooking : ProductTabOption" />
-                </keep-alive>
+                <component :is="currentTab === 'basic' ? ProductTabBasic : currentTab === 'booking' ? ProductTabBooking : ProductTabOption" />
             </div>
         </div>
 

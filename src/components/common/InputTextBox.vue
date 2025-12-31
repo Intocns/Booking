@@ -197,6 +197,7 @@ const currentLength = computed(() => {
     }
 
     &__icons {
+        width: 16px;
         display: flex;
     }
 
