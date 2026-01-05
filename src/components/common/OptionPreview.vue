@@ -1,6 +1,8 @@
 <script setup>
 import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import icEmpty from '@/assets/icons/ic_empty.svg';
+import icArrowLeft from '@/assets/icons/ic_arrow_left.svg';
+import icArrowRight from '@/assets/icons/ic_arrow_right.svg';
 import { ref, computed, watch } from 'vue';
 import { useOptionStore } from '@/stores/optionStore';
 import { useProductStore } from '@/stores/productStore';
@@ -166,6 +168,22 @@ watch(selectedProductModel, () => {
     optionQuantities.value = {};
     checkedOptions.value = {};
 });
+
+// 카테고리 버튼 스크롤 컨테이너 참조
+const categoryScrollRef = ref(null);
+
+// 카테고리 버튼 좌우 스크롤 함수
+const scrollCategoryLeft = () => {
+    if (categoryScrollRef.value) {
+        categoryScrollRef.value.scrollBy({ left: -100, behavior: 'smooth' });
+    }
+};
+
+const scrollCategoryRight = () => {
+    if (categoryScrollRef.value) {
+        categoryScrollRef.value.scrollBy({ left: 100, behavior: 'smooth' });
+    }
+};
 </script>
 
 <template>
@@ -199,15 +217,29 @@ watch(selectedProductModel, () => {
                         </div>
                         
                         <!-- 카테고리 버튼들 (수량형) -->
-                        <div v-if="quantityOptions.length > 0" class="category-buttons">
+                        <div v-if="quantityOptions.length > 0" class="category-buttons-wrapper">
                             <button 
-                                v-for="category in optionStore.categoryList" 
-                                :key="category.category_id"
-                                class="category-btn"
-                                :class="{ 'active': selectedQuantityCategory === category.category_id }"
-                                @click="selectedQuantityCategory = category.category_id"
+                                class="category-scroll-btn"
+                                @click="scrollCategoryLeft"
                             >
-                                {{ category.name }}
+                                <img :src="icArrowLeft" alt="이전">
+                            </button>
+                            <div class="category-buttons" ref="categoryScrollRef">
+                                <button 
+                                    v-for="category in optionStore.categoryList" 
+                                    :key="category.category_id"
+                                    class="category-btn"
+                                    :class="{ 'active': selectedQuantityCategory === category.category_id }"
+                                    @click="selectedQuantityCategory = category.category_id"
+                                >
+                                    {{ category.name }}
+                                </button>
+                            </div>
+                            <button 
+                                class="category-scroll-btn"
+                                @click="scrollCategoryRight"
+                            >
+                                <img :src="icArrowRight" alt="다음">
                             </button>
                         </div>
                         
@@ -316,7 +348,7 @@ watch(selectedProductModel, () => {
         flex: 1;
         min-height: 0;
         max-height: 100%;
-        padding: 24px;
+        padding: 24px 16px;
         overflow-y: auto;
         overflow-x: hidden;
         border-top: 1px solid $gray-200;
@@ -359,28 +391,69 @@ watch(selectedProductModel, () => {
                 }
             }
             
-            .category-buttons {
+            .category-buttons-wrapper {
                 display: flex;
-                gap: 8px;
-                flex-wrap: wrap;
+                align-items: center;
+                gap: 4px;
                 
-                .category-btn {
-                    padding: 8px 16px;
+                .category-scroll-btn {
+                    flex-shrink: 0;
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                     border: 1px solid $gray-300;
                     border-radius: 4px;
                     background-color: $gray-00;
-                    color: $gray-700;
                     cursor: pointer;
-                    @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+                    padding: 0;
                     
                     &:hover {
                         background-color: $gray-50;
                     }
                     
-                    &.active {
-                        border-color: $primary-700;
-                        background-color: $primary-50;
-                        color: $primary-700;
+                    img {
+                        width: 12px;
+                        height: 12px;
+                    }
+                }
+                
+                .category-buttons {
+                    flex: 1;
+                    display: flex;
+                    gap: 6px;
+                    overflow-x: auto;
+                    overflow-y: hidden;
+                    white-space: nowrap;
+                    padding: 0;
+                    min-width: 0;
+                    
+                    /* 스크롤바 숨기기 */
+                    scrollbar-width: none; // Firefox
+                    &::-webkit-scrollbar {
+                        display: none; // Chrome, Safari
+                    }
+                    
+                    .category-btn {
+                        flex-shrink: 0;
+                        padding: 6px 12px;
+                        border: 1px solid $gray-300;
+                        border-radius: 4px;
+                        background-color: $gray-00;
+                        color: $gray-700;
+                        cursor: pointer;
+                        @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+                        
+                        &:hover {
+                            background-color: $gray-50;
+                        }
+                        
+                        &.active {
+                            border-color: $primary-700;
+                            background-color: $primary-50;
+                            color: $primary-700;
+                        }
                     }
                 }
             }
@@ -442,19 +515,22 @@ watch(selectedProductModel, () => {
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
-                                border: 1px solid $gray-300;
+                                border: 1px solid #90EE90;
                                 border-radius: 4px;
-                                background-color: $gray-00;
+                                background-color: #90EE90;
                                 cursor: pointer;
                                 color: $gray-900;
                                 
                                 &:hover:not(:disabled) {
-                                    background-color: $gray-50;
+                                    background-color: #7FFF00;
+                                    border-color: #7FFF00;
                                 }
                                 
                                 &:disabled {
                                     opacity: 0.5;
                                     cursor: not-allowed;
+                                    background-color: $gray-200;
+                                    border-color: $gray-300;
                                 }
                             }
                             
@@ -469,6 +545,41 @@ watch(selectedProductModel, () => {
                     &.check-option {
                         .checkbox {
                             margin-top: 2px;
+                            
+                            .box {
+                                width: 18px;
+                                height: 18px;
+                                border: 2px solid #90EE90;
+                                border-radius: 4px;
+                                background-color: $gray-00;
+                                position: relative;
+                                background-image: none;
+                                
+                                &::after {
+                                    content: '';
+                                    position: absolute;
+                                    left: 5px;
+                                    top: 2px;
+                                    width: 4px;
+                                    height: 8px;
+                                    border: solid #90EE90;
+                                    border-width: 0 2px 2px 0;
+                                    transform: rotate(45deg);
+                                    opacity: 0;
+                                    transition: opacity 0.2s;
+                                }
+                            }
+                            
+                            input:checked + .box {
+                                background-color: #90EE90;
+                                border-color: #90EE90;
+                                background-image: none;
+                                
+                                &::after {
+                                    opacity: 1;
+                                    border-color: $gray-00;
+                                }
+                            }
                         }
                         
                         .option-info {
