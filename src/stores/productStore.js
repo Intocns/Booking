@@ -380,6 +380,27 @@ export const useProductStore = defineStore("product", () => {
             itemDetailInfo.value = data;
         }
     }
+
+    //상품 노출 변경(단건/ 일괄)
+    async function setItemShow(params) {
+        //임시 적용 start(사용 시 해당 params값 참고)
+        // let params = [
+        //     {
+        //         "bizItemId": 0,
+        //         "isImp": 0
+        //     }
+        // ]
+        //임시 적용 end(사용 시 해당 params값 참고)
+
+        const response = await api.post(`/api/${cocode}/item/show`, params);
+
+        if(response.data.status_code <= 300) {
+            responseCode.value = 200;
+            alert('저장이 완료되었습니다.');
+        }else{
+            alert('처리 중 오류가 발생했습니다.');
+        }
+    }
     
     return {
         productList,
@@ -396,6 +417,7 @@ export const useProductStore = defineStore("product", () => {
         delItem,
         addItem,
         modifyItem,
-        getItemDetailInfo
+        getItemDetailInfo,
+        setItemShow
     }
 })

@@ -93,11 +93,34 @@ const goProductDetail = (id = null) => {
 };
 // 상품별 노출/미노출 체크 변경
 const clickProductImpUpdateBtn = ((itemId, isImp) => {
-    let params = {
-        "imp" : isImp,
-    }
+    let params = [
+        {
+            "bizItemId" : itemId,
+            "isImp" : isImp,
+        }
+    ]
 
-    productStore.modifyItem(itemId, params, 1);
+    productStore.setItemShow(params);
+})
+// 상품별 일괄 노출/미노출 체크 변경
+const clickTotalProductImpUpdateBtn = (async(isImp) => {
+    let params = [];
+
+    dragList.value.forEach((item, key)  => {
+        params.push(
+            {
+                "bizItemId" : item.bizItemId,
+                "isImp" : isImp,
+            }
+        );
+    });
+
+    await productStore.setItemShow(params);
+
+    if(productStore.responseCode == 200){
+        await productStore.getProductList();//상품 관리 기존 화면 새로고침용
+        modalStore.productVisibleUpdateModal.closeModal()
+    }
 })
 // 상품 순서 변경 저장
 const saveItemOrder = (async() => {
@@ -265,11 +288,11 @@ onMounted(async () => {
     
                 <div class="segment-wrapper">
                     <label class="segment">
-                        <input type="radio" name="visibleStatus" v-model="isVisible" :value="1" />
+                        <input type="radio" name="visibleStatus" v-model="isVisible" :value="1" @click="clickTotalProductImpUpdateBtn(1)"/>
                         <span class="label">노출</span>
                     </label>
                     <label class="segment">
-                        <input type="radio" name="visibleStatus" v-model="isVisible" :value="0" />
+                        <input type="radio" name="visibleStatus" v-model="isVisible" :value="0" @click="clickTotalProductImpUpdateBtn(0)"/>
                         <span class="label">비노출</span>
                     </label>
                 </div>
