@@ -80,15 +80,12 @@ export const useOptionStore = defineStore("option", () => {
                     })
                     .map(option => {
                         const connectionCount = connectionCountMap[option.idx] || 0;
-                        const connectText = connectionCount > 0 
-                            ? `${connectionCount}개 연결중` 
-                            : '연결하기';
+                        const connectText = connectionCount > 0  ? `${connectionCount}개 연결중`  : '연결하기';
                         
                         // minBookingCount ~ maxBookingCount 형식으로 표시
                         let bookingCountText = '';
                         const hasMin = option.minBookingCount !== null && option.minBookingCount !== undefined;
                         const hasMax = option.maxBookingCount !== null && option.maxBookingCount !== undefined;
-                        console.log(hasMin, hasMax);
                         if (hasMin && hasMax) {
                             // min과 max가 모두 있는 경우
                             if (option.minBookingCount === option.maxBookingCount) {
@@ -109,9 +106,7 @@ export const useOptionStore = defineStore("option", () => {
                             price: option.price ? option.price.toLocaleString()  + ' 원' : '-',
                             count: option.stock !== null && option.stock !== undefined ? option.stock + ' 개' : '제한 없음',
                             1: bookingCountText,
-                            2: option.startDate && option.endDate 
-                                ? `${formatDate(option.startDate)} ~ ${formatDate(option.endDate)}`
-                                : '상시운영',
+                            2: option.startDate && option.endDate ? `${formatDate(option.startDate)} ~ ${formatDate(option.endDate)}` : '상시운영',
                             checked: option.isImp,
                             order: option.order || 0,
                             startDate: option.startDate,
@@ -176,12 +171,22 @@ export const useOptionStore = defineStore("option", () => {
 
     // 옵션 수정
     async function updateOption(optionId, params) {
-        const response = await api.put(`/api/${cocode}/option/update/${optionId}`, params);
-
-        if(response.status == 200) {
-            return response.data;
-        } else {
-            throw new Error('옵션 수정 실패');
+        try {
+            const response = await api.post(`/api/${cocode}/option/${optionId}/modify`, params);
+            if(response.status == 200) {
+                return response.data;
+            } else {
+                throw new Error('옵션 수정 실패');
+            }
+        } catch (error) {
+            // 409 에러 처리 (옵션을 찾을 수 없음)
+            if (error.response && error.response.status === 409) {
+                const errorMessage = error.response.data?.message || '옵션을 찾을 수 없습니다.';
+                console.error('옵션을 찾을 수 없음 (409):', errorMessage);
+                throw new Error('옵션을 찾을 수 없습니다. 옵션이 삭제되었거나 존재하지 않을 수 있습니다.');
+            }
+            // 기타 에러
+            throw error;
         }
     }
 

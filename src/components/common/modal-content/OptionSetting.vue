@@ -117,13 +117,11 @@ watch(() => productStore.productList, (newList) => {
             const optionData = modalStore.optionSettingModal.data?.optionData;
             if (optionData && optionData.connectedProductIds) {
                 const connectedProductIds = optionData.connectedProductIds || [];
-                console.log('productList watch - connectedProductIds:', connectedProductIds);
                 productList.value.forEach(product => {
                     // 타입 변환하여 비교 (문자열/숫자 모두 처리)
                     const productId = String(product.id);
                     const isConnected = connectedProductIds.some(connectedId => String(connectedId) === productId);
                     product.isConnected = isConnected;
-                    console.log(`상품 ${product.name} (id: ${product.id}) 연결 상태:`, isConnected);
                 });
             }
         }
@@ -133,6 +131,15 @@ watch(() => productStore.productList, (newList) => {
 // 상품 연결 상태 토글 핸들러
 const toggleProductConnection = (product) => {
     product.isConnected = !product.isConnected;
+};
+
+// 수정/등록 버튼 클릭 핸들러
+const handleSubmit = () => {
+    if (props.isEdit) {
+        handleUpdate();
+    } else {
+        handleSave();
+    }
 };
 
 // 옵션 데이터로 필드 채우기 함수
@@ -375,7 +382,6 @@ const handleSave = async () => {
     try {
         // 1. 옵션 등록
         const optionResponse = await optionStore.addOption(optionData);
-        console.log('옵션 등록 응답:', optionResponse);
         
         // 옵션 등록 성공 시 optionId 추출
         // 응답 구조: {status_code: 201, data: '{"optionId":21299980,"url":"..."}'}
@@ -479,36 +485,37 @@ const handleUpdate = async () => {
     // 소요시간 계산 (분 단위)
     const serviceDuration = selectedHour.value * 60 + selectedMinute.value;
 
-    // 엔티티 형태로 데이터 매핑
-    const optionData = {
-        categoryId: selectedCategory.value,
-        name: optionName.value.trim(),
-        serviceDuration: serviceDuration > 0 ? serviceDuration : null,
-        desc: optionDesc.value.trim() || null,
-        minBookingCount: minCount.value ? parseInt(minCount.value) : null,
-        maxBookingCount: maxCount.value ? parseInt(maxCount.value) : null,
-        stock: isStockEnabled.value && stockCount.value ? parseInt(stockCount.value) : null,
-        price: isPriceEnabled.value && price.value ? parseInt(parsePrice(price.value)) : null,
-        normalPrice: isPriceEnabled.value && normalPrice.value ? parseInt(parsePrice(normalPrice.value)) : null,
-        priceDesc: isPriceEnabled.value && priceDesc.value.trim() ? priceDesc.value.trim() : null,
-        startDate: isPeriodEnabled.value && periodDate.value && periodDate.value[0] 
-            ? formatDate(periodDate.value[0]) || null
-            : null,
-        endDate: isPeriodEnabled.value && periodDate.value && periodDate.value[1] 
-            ? formatDate(periodDate.value[1]) || null
-            : null,
-        isImp: 1,
-        useFlag: 1,
-    };
-
     try {
         const optionDataFromModal = modalStore.optionSettingModal.data?.optionData;
         if (!optionDataFromModal || !optionDataFromModal.idx) {
             throw new Error('옵션 ID를 찾을 수 없습니다.');
         }
 
+        // 엔티티 형태로 데이터 매핑
+        const optionData = {
+            idx: optionDataFromModal.idx, // 옵션 ID를 idx에 포함
+            categoryId: selectedCategory.value,
+            name: optionName.value.trim(),
+            serviceDuration: serviceDuration > 0 ? serviceDuration : null,
+            desc: optionDesc.value.trim() || null,
+            minBookingCount: minCount.value ? parseInt(minCount.value) : null,
+            maxBookingCount: maxCount.value ? parseInt(maxCount.value) : null,
+            stock: isStockEnabled.value && stockCount.value ? parseInt(stockCount.value) : null,
+            price: isPriceEnabled.value && price.value ? parseInt(parsePrice(price.value)) : null,
+            normalPrice: isPriceEnabled.value && normalPrice.value ? parseInt(parsePrice(normalPrice.value)) : null,
+            priceDesc: isPriceEnabled.value && priceDesc.value.trim() ? priceDesc.value.trim() : null,
+            startDate: isPeriodEnabled.value && periodDate.value && periodDate.value[0] 
+                ? formatDate(periodDate.value[0]) || null
+                : null,
+            endDate: isPeriodEnabled.value && periodDate.value && periodDate.value[1] 
+                ? formatDate(periodDate.value[1]) || null
+                : null,
+            isImp: 1,
+            useFlag: 1,
+        };
+
         // 1. 옵션 수정
-        await optionStore.updateOption(optionDataFromModal.idx, optionData);
+        const updateResponse = await optionStore.updateOption(optionDataFromModal.idx, optionData);
 
         // 2. 옵션-상품 매핑 저장 (기존 매핑 삭제 후 재등록 필요할 수 있음)
         const connectedItemIds = productList.value
@@ -874,7 +881,9 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
         <div class="modal-button-wrapper">
             <button class="btn btn--size-32 btn--blue-outline" @click="handlePrev">이전으로</button>
             <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.optionSettingModal.closeModal()">취소</button>
-            <button class="btn btn--size-32 btn--blue" @click="handleSave">등록</button>
+            <button class="btn btn--size-32 btn--blue" @click="handleSubmit">
+                {{ props.isEdit ? '수정' : '등록' }}
+            </button>
         </div>
     </template>
 </template>

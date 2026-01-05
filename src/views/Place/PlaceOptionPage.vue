@@ -164,6 +164,90 @@ onUnmounted(() => {
 
 const isEdit = ref(false); // 수정 모드 여부 상태 추가
 
+// 노출설정 토글 핸들러
+const toggleOptionVisibility = async (row) => {
+    console.log('노출설정 토글 - row:', row);
+    console.log('노출설정 토글 - row.rawData:', row.rawData);
+    console.log('노출설정 토글 - row.idx:', row.idx);
+    console.log('노출설정 토글 - row.rawData.idx:', row.rawData?.idx);
+    
+    // idx 확인: rawData.idx 또는 row.idx 사용
+    const optionId = row.rawData?.idx || row.idx;
+    
+    if (!optionId) {
+        console.error('옵션 ID를 찾을 수 없습니다. row:', row);
+        alert('옵션 ID를 찾을 수 없습니다.');
+        return;
+    }
+
+    // rawData가 없으면 현재 row 데이터로 업데이트 데이터 구성
+    const rawData = row.rawData || {
+        idx: row.idx,
+        categoryId: activeTab.value,
+        name: row.optionName || '',
+        desc: '',
+        minBookingCount: null,
+        maxBookingCount: null,
+        stock: null,
+        price: null,
+        normalPrice: null,
+        priceDesc: null,
+        startDate: row.startDate || null,
+        endDate: row.endDate || null,
+        serviceDuration: null,
+        isImp: row.checked ? 1 : 0,
+        order: row.order || 0
+    };
+
+    try {
+        // 현재 isImp 값을 반대로 변경
+        const newIsImp = row.checked ? 0 : 1;
+        console.log('노출설정 변경 - optionId:', optionId, 'newIsImp:', newIsImp);
+        
+        // 옵션 수정 API 호출 (isImp만 변경, 나머지는 기존 값 유지)
+        const updateData = {
+            idx: optionId,
+            categoryId: rawData.categoryId,
+            name: rawData.name,
+            desc: rawData.desc || null,
+            serviceDuration: rawData.serviceDuration || null,
+            minBookingCount: rawData.minBookingCount,
+            maxBookingCount: rawData.maxBookingCount,
+            stock: rawData.stock,
+            price: rawData.price,
+            normalPrice: rawData.normalPrice,
+            priceDesc: rawData.priceDesc || null,
+            startDate: rawData.startDate || null,
+            endDate: rawData.endDate || null,
+            isImp: newIsImp,
+            useFlag: 1,
+        };
+
+        await optionStore.updateOption(optionId, updateData);
+
+        // 옵션 리스트 새로고침
+        if (activeTab.value) {
+            await optionStore.getOptionListByCategoryId(activeTab.value);
+            dataMap.value[activeTab.value] = optionStore.optionList || [];
+        }
+    } catch (error) {
+        console.error('노출설정 변경 실패:', error);
+        
+        // 409 에러인 경우 특별한 메시지 표시
+        if (error.message && error.message.includes('옵션을 찾을 수 없습니다')) {
+            alert('옵션을 찾을 수 없습니다. 옵션이 삭제되었거나 존재하지 않을 수 있습니다.\n리스트를 새로고침합니다.');
+        } else {
+            alert('노출설정 변경 중 오류가 발생했습니다.');
+        }
+        
+        // 에러 발생 시 체크박스 상태를 원래대로 되돌리기 위해 리스트 새로고침
+        if (activeTab.value) {
+            await optionStore.getOptionListByCategoryId(activeTab.value);
+            dataMap.value[activeTab.value] = optionStore.optionList || [];
+        }
+    }
+};
+
 // 메뉴 아이템 클릭 시 처리
 const handleMenuAction = async (action, row) => {
     activeMenuIndex.value = null; // 메뉴 닫기
@@ -259,7 +343,11 @@ const handleMenuAction = async (action, row) => {
                     <!-- 노출설정 커스텀 슬롯 td -->
                     <template #visibleBtn="{ row, rowIndex }">
                         <label class="toggle"> 
-                            <input type="checkbox" :checked="row.checked" />
+                            <input 
+                                type="checkbox" 
+                                :checked="row.checked" 
+                                @change="toggleOptionVisibility(row)"
+                            />
                             <span class="toggle-img"></span>
                         </label>
                     </template>
