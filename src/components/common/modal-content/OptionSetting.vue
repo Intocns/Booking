@@ -41,6 +41,7 @@ const isMinuteOpen = ref(false); // 분 셀렉트 노출/미노출
 const isStockEnabled = ref(false);    // 재고 토글
 const isPriceEnabled = ref(false);    // 가격 토글
 const isPeriodEnabled = ref(false);   // 운영기간 토글
+const isImp = ref(1);                 // 노출설정 (기본값: 1, 복사 시 원본 값 사용)
 
 // 카테고리 선택 (단일 선택)
 const selectedCategory = ref('');
@@ -261,6 +262,9 @@ const fillOptionData = (optionData) => {
         selectedMinute.value = 0;
     }
     
+    // 노출설정 복사
+    isImp.value = optionData.isImp !== null && optionData.isImp !== undefined ? optionData.isImp : 1;
+    
     // 상품 연결 상태 설정
     const connectedProductIds = optionData.connectedProductIds || [];
     // 초기 연결 상태 저장 (변경사항 비교용)
@@ -305,14 +309,8 @@ const goConnect = () => {
     mode.value = 'CONNECT';
 };
 const goOption = () => { mode.value = 'OPTION'; };
-const handleNext = async () => {
-    // 필수 필드 검증
-    const isValid = await validateRequiredFields();
-    if (!isValid) {
-        return;
-    }
-    
-    // 검증 통과 시 다음 단계로 이동
+const handleNext = () => {
+    // mode watch에서 validation 처리하므로 여기서는 바로 이동
     goConnect();
 }
 const handlePrev = () => {
@@ -347,7 +345,7 @@ const handleSave = async () => {
         endDate: isPeriodEnabled.value && periodDate.value && periodDate.value[1] 
             ? formatDate(periodDate.value[1]) || null
             : null,
-        isImp: 1,
+        isImp: isImp.value, // 복사 모드일 때 원본의 isImp 값 사용
         useFlag: 1,
     };
 
@@ -532,29 +530,42 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                 fillOptionData(optionData);
             }
         } else {
-            // 등록 모드: 필드 초기화
-            selectedCategory.value = modalStore.optionSettingModal.data?.categoryId || '';
-            optionName.value = '';
-            optionDesc.value = '';
-            minCount.value = '';
-            maxCount.value = '';
-            stockCount.value = '';
-            price.value = '';
-            normalPrice.value = '';
-            priceDesc.value = '';
-            periodDate.value = null;
-            selectedHour.value = 0;
-            selectedMinute.value = 0;
-            isStockEnabled.value = false;
-            isPriceEnabled.value = false;
-            isPeriodEnabled.value = false;
-            
-            // 상품 연결 초기화
-            initialConnectedProductIds.value = [];
-            if (productList.value.length > 0) {
-                productList.value.forEach(product => {
-                    product.isConnected = false;
-                });
+            // 등록 모드 또는 복사 모드
+            const isCopy = modalStore.optionSettingModal.data?.isCopy;
+            if (isCopy) {
+                // 복사 모드: 전달받은 데이터로 필드 채우기 (옵션명은 제외하거나 수정 가능하도록)
+                const optionData = modalStore.optionSettingModal.data?.optionData;
+                if (optionData) {
+                    fillOptionData(optionData);
+                    // 복사 시 옵션명에 "복사" 추가 (선택사항)
+                    // optionName.value = (optionData.name || '') + ' 복사';
+                }
+            } else {
+                // 등록 모드: 필드 초기화
+                selectedCategory.value = modalStore.optionSettingModal.data?.categoryId || '';
+                optionName.value = '';
+                optionDesc.value = '';
+                minCount.value = '';
+                maxCount.value = '';
+                stockCount.value = '';
+                price.value = '';
+                normalPrice.value = '';
+                priceDesc.value = '';
+                periodDate.value = null;
+                selectedHour.value = 0;
+                selectedMinute.value = 0;
+                isStockEnabled.value = false;
+                isPriceEnabled.value = false;
+                isPeriodEnabled.value = false;
+                isImp.value = 1; // 등록 모드일 때 기본값 1
+                
+                // 상품 연결 초기화
+                initialConnectedProductIds.value = [];
+                if (productList.value.length > 0) {
+                    productList.value.forEach(product => {
+                        product.isConnected = false;
+                    });
+                }
             }
         }
     } else {
@@ -564,11 +575,15 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
     }
 });
 
-// 수정 모드일 때 optionData가 설정되면 필드 채우기 (watch가 늦게 실행될 경우 대비)
+// 수정 모드 또는 복사 모드일 때 optionData가 설정되면 필드 채우기 (watch가 늦게 실행될 경우 대비)
 watch(() => modalStore.optionSettingModal.data?.optionData, async (optionData) => {
-    if (props.isEdit && modalStore.optionSettingModal.isVisible && optionData) {
-        await nextTick();
-        fillOptionData(optionData);
+    if (optionData && modalStore.optionSettingModal.isVisible) {
+        const isEdit = props.isEdit;
+        const isCopy = modalStore.optionSettingModal.data?.isCopy;
+        if (isEdit || isCopy) {
+            await nextTick();
+            fillOptionData(optionData);
+        }
     }
 }, { immediate: true });
 
@@ -587,6 +602,21 @@ watch(() => props.isEdit, async (isEdit) => {
         if (initialTab) {
             await nextTick();
             mode.value = initialTab;
+        }
+    }
+});
+
+// 탭 변경 시 validation 처리 (상세정보 → 상품연결로 이동할 때)
+// 등록 모드의 "다음" 버튼과 수정/복사 모드의 탭 클릭 모두 처리
+watch(mode, async (newMode, oldMode) => {
+    // 상세정보 탭에서 상품연결 탭으로 이동할 때만 validation 수행
+    // oldMode가 undefined이거나 null인 경우는 초기 렌더링이므로 제외
+    if (oldMode && oldMode === 'OPTION' && newMode === 'CONNECT') {
+        const isValid = await validateRequiredFields();
+        if (!isValid) {
+            // validation 실패 시 탭을 원래대로 되돌림
+            await nextTick();
+            mode.value = 'OPTION';
         }
     }
 });
@@ -612,8 +642,8 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
 </script>
 
 <template>
-    <!-- 탭 메뉴 -->
-    <div v-if="isEdit" class="tab-menu">
+    <!-- 탭 메뉴 (수정 모드 또는 복사 모드일 때 표시) -->
+    <div v-if="isEdit || modalStore.optionSettingModal.data?.isCopy" class="tab-menu">
         <div class="tab">
             <input type="radio" id="tab1" v-model="mode" value="OPTION">
             <label for="tab1" class="tab--radio_btn"><span>상세정보</span></label>
@@ -877,7 +907,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
             <button class="btn btn--size-32 btn--blue-outline" @click="handlePrev">이전으로</button>
             <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.optionSettingModal.closeModal()">취소</button>
             <button class="btn btn--size-32 btn--blue" @click="handleSubmit">
-                {{ props.isEdit ? '수정' : '등록' }}
+                {{ props.isEdit ? '수정' : (modalStore.optionSettingModal.data?.isCopy ? '복사' : '등록') }}
             </button>
         </div>
     </template>

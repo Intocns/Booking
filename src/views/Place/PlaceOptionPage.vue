@@ -256,7 +256,11 @@ const handleMenuAction = async (action, row) => {
     } else if (action === 'copy') {
         isEdit.value = false; // 복사는 등록과 같은 로직
         modalStore.optionSettingModal.setTitle('옵션 복사');
-        modalStore.optionSettingModal.openModal();
+        // 복사할 옵션 데이터 전달
+        modalStore.optionSettingModal.openModal({ 
+            optionData: row.rawData,
+            isCopy: true
+        });
     } else if (action === 'delete') {
         // 삭제 로직 실행
         modalStore.confirmModal.openModal()

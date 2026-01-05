@@ -97,10 +97,7 @@ export const useOptionStore = defineStore("option", () => {
                         } else {
                             bookingCountText = '-';
                         }
-                        console.log(option)
-                        console.log(option.optionId)
-                        console.log(connectedProductIdsMap[option.idx])
-                        
+                       
                         return {
                             idx: option.idx,
                             optionName: option.name || '',
