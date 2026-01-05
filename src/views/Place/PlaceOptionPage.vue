@@ -24,6 +24,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
 import { useProductStore } from '@/stores/productStore';
+import { useDragScroll } from '@/composables/useDragScroll';
 
 const modalStore = useModalStore();
 const optionStore = useOptionStore();
@@ -35,7 +36,9 @@ const selectedProduct = ref(''); // 미리보기에서 선택된 상품 (단일 
 // 드롭다운 상태 관리
 const activeMenuIndex = ref(null);
 const menuPosition = ref({ x: 0, y: 0 });
-const scrollViewport = ref(null);
+
+// 카테고리 스크롤 영역 드래그 스크롤 기능
+const { scrollRef: scrollViewport, handleMouseDown: handleCategoryMouseDown } = useDragScroll();
 
 // 카테고리
 const currentIndex = computed(() => {
@@ -62,6 +65,7 @@ const nextTab = async () => {
         scrollViewport.value?.scrollBy({ left: 100, behavior: 'smooth' });
     }
 };
+
 
 // 테이블 key값 임시..
 const optionTableColumns = [ // th에 tooltip이 필요한 경우 여기서 추가
@@ -320,7 +324,11 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
         <div class="left">
             <!-- 상단 바 -->
             <div class="top-bar">
-                <div class="category-scroll-area" ref="scrollViewport">
+                <div 
+                    class="category-scroll-area" 
+                    ref="scrollViewport"
+                    @mousedown="handleCategoryMouseDown"
+                >
                     <!-- 카테고리 버튼 -->
                     <button 
                         v-for="cat in optionStore.categoryList" 
@@ -504,6 +512,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
         overflow-x: auto;
         white-space: nowrap;
         min-width: 0;
+        cursor: grab;
 
         padding: 2px 0;
 
@@ -511,6 +520,10 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
         scrollbar-width: none; // Firefox
         &::-webkit-scrollbar {
             display: none; // Chrome, Safari
+        }
+
+        &:active {
+            cursor: grabbing;
         }
 
         .tab-btn {

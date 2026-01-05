@@ -6,6 +6,7 @@ import icArrowRight from '@/assets/icons/ic_arrow_right.svg';
 import { ref, computed, watch } from 'vue';
 import { useOptionStore } from '@/stores/optionStore';
 import { useProductStore } from '@/stores/productStore';
+import { useDragScroll } from '@/composables/useDragScroll';
 
 const optionStore = useOptionStore();
 const productStore = useProductStore();
@@ -169,8 +170,10 @@ watch(selectedProductModel, () => {
     checkedOptions.value = {};
 });
 
-// 카테고리 버튼 스크롤 컨테이너 참조
-const categoryScrollRef = ref(null);
+// 카테고리 버튼 스크롤 컨테이너 참조 및 드래그 스크롤 기능
+const { scrollRef: categoryScrollRef, handleMouseDown } = useDragScroll({
+    buttonSelector: '.category-btn'
+});
 
 // 카테고리 버튼 좌우 스크롤 함수
 const scrollCategoryLeft = () => {
@@ -224,7 +227,11 @@ const scrollCategoryRight = () => {
                             >
                                 <img :src="icArrowLeft" alt="이전">
                             </button>
-                            <div class="category-buttons" ref="categoryScrollRef">
+                            <div 
+                                class="category-buttons" 
+                                ref="categoryScrollRef"
+                                @mousedown="handleMouseDown"
+                            >
                                 <button 
                                     v-for="category in optionStore.categoryList" 
                                     :key="category.category_id"
@@ -398,19 +405,20 @@ const scrollCategoryRight = () => {
                 
                 .category-scroll-btn {
                     flex-shrink: 0;
-                    width: 24px;
-                    height: 24px;
+                    width: 20px;
+                    height: 28px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border: 1px solid $gray-300;
-                    border-radius: 4px;
-                    background-color: $gray-00;
+                    border: none;
+                    border-radius: 0;
+                    background-color: transparent;
                     cursor: pointer;
                     padding: 0;
                     
                     &:hover {
                         background-color: $gray-50;
+                        border-radius: 4px;
                     }
                     
                     img {
@@ -428,6 +436,7 @@ const scrollCategoryRight = () => {
                     white-space: nowrap;
                     padding: 0;
                     min-width: 0;
+                    cursor: grab;
                     
                     /* 스크롤바 숨기기 */
                     scrollbar-width: none; // Firefox
@@ -435,24 +444,29 @@ const scrollCategoryRight = () => {
                         display: none; // Chrome, Safari
                     }
                     
+                    &:active {
+                        cursor: grabbing;
+                    }
+                    
                     .category-btn {
                         flex-shrink: 0;
-                        padding: 6px 12px;
-                        border: 1px solid $gray-300;
-                        border-radius: 4px;
+                        padding: 8px 16px;
+                        border: 1px solid $gray-200;
+                        border-radius: 20px;
                         background-color: $gray-00;
                         color: $gray-700;
                         cursor: pointer;
                         @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+                        white-space: nowrap;
                         
                         &:hover {
                             background-color: $gray-50;
                         }
                         
                         &.active {
-                            border-color: $primary-700;
-                            background-color: $primary-50;
-                            color: $primary-700;
+                            border-color: $gray-800;
+                            background-color: $gray-800;
+                            color: $gray-00;
                         }
                     }
                 }
@@ -515,15 +529,15 @@ const scrollCategoryRight = () => {
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
-                                border: 1px solid #90EE90;
+                                border: 1px solid #00c73c;
                                 border-radius: 4px;
-                                background-color: #90EE90;
+                                background-color: #00c73c;
                                 cursor: pointer;
                                 color: $gray-900;
                                 
                                 &:hover:not(:disabled) {
-                                    background-color: #7FFF00;
-                                    border-color: #7FFF00;
+                                    background-color: #00c73c;
+                                    border-color: #00c73c;
                                 }
                                 
                                 &:disabled {
@@ -549,7 +563,7 @@ const scrollCategoryRight = () => {
                             .box {
                                 width: 18px;
                                 height: 18px;
-                                border: 2px solid #90EE90;
+                                border: 2px solid #00c73c;
                                 border-radius: 4px;
                                 background-color: $gray-00;
                                 position: relative;
@@ -558,21 +572,21 @@ const scrollCategoryRight = () => {
                                 &::after {
                                     content: '';
                                     position: absolute;
-                                    left: 5px;
-                                    top: 2px;
+                                    left: 50%;
+                                    top: 50%;
                                     width: 4px;
                                     height: 8px;
-                                    border: solid #90EE90;
+                                    border: solid $gray-00;
                                     border-width: 0 2px 2px 0;
-                                    transform: rotate(45deg);
+                                    transform: translate(-50%, -60%) rotate(45deg);
                                     opacity: 0;
                                     transition: opacity 0.2s;
                                 }
                             }
                             
                             input:checked + .box {
-                                background-color: #90EE90;
-                                border-color: #90EE90;
+                                background-color: #00c73c;
+                                border-color: #00c73c;
                                 background-image: none;
                                 
                                 &::after {
