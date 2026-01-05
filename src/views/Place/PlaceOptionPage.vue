@@ -7,6 +7,7 @@ import Modal from '@/components/common/Modal.vue';
 import CategorySetting from '@/components/common/modal-content/CategorySetting.vue';
 import OptionSetting from '@/components/common/modal-content/OptionSetting.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
+import OptionPreview from '@/components/common/OptionPreview.vue';
 // 아이콘 이미지
 import icSettingW from '@/assets/icons/ic_setting_w.svg'
 import icSetting from '@/assets/icons/ic_setting.svg'
@@ -31,14 +32,6 @@ const productStore = useProductStore();
 // 상태 관리
 const activeTab = ref('unassigned'); // 현재 선택된 카테고리
 const selectedProduct = ref(''); // 미리보기에서 선택된 상품 (단일 선택)
-
-// 상품 리스트를 CustomSelect용 options로 변환
-const productOptions = computed(() => {
-    return (productStore.productList || []).map(product => ({
-        label: product.name || '',
-        value: product.id || product.bizItemId || product.idx
-    }));
-});
 // 드롭다운 상태 관리
 const activeMenuIndex = ref(null);
 const menuPosition = ref({ x: 0, y: 0 });
@@ -446,31 +439,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
 
         <!-- 미리보기 영역 -->
         <div class="right">
-            <div class="preview-wrapper">
-                <div class="preview-title">
-                    <p class="heading-s">미리보기</p>
-                </div>
-                <div class="preview-contents">
-                    <!-- 선택 -->
-                    <CustomSingleSelect 
-                        v-model="selectedProduct"
-                        :options="productOptions"
-                        placeholder="상품을 선택해주세요"
-                    />
-
-                    <!-- 미리보기 -->
-                    <div class="preview-section">
-                        <!-- TODO: 옵션 화면 -->
-                        
-                        <!-- 옵션 없는 경우 -->
-                        <div class="empty-box">
-                            <img :src="icEmpty" alt="비어있음 아이콘">
-                            <span class="title-s">선택한 옵션이 없습니다.</span>
-                            <p class="body-m">상품과 함께 예약 받을 옵션을 선택해 주세요.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <OptionPreview v-model:selected-product="selectedProduct" />
         </div>
     </div>
 
@@ -512,8 +481,11 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
     .contents-flex-row-layout {
         width: 100%;
         height: 100%;
+        min-height: 0;
+        max-height: 100%;
         display: flex;
         gap:16px;
+        overflow: hidden;
     }
 
     .left {
@@ -550,27 +522,16 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
         // flex: 1;
         width: 400px;
         flex: 0 0 400px;
-
+        height: 100%;
+        min-height: 0;
         display: flex;
         flex-direction: column;
         gap: 16px;
+        overflow: hidden;
     }
 
     .table-wrapper {
         height: 100%;
-    }
-
-    .preview-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap:16px;
-        height: 100%;
-        // width: 400px;
-        padding: 16px;
-
-        border-radius: 8px;
-        border: 1px solid $gray-200;
-        background-color: $gray-00;
     }
 
     .table-title-right {
@@ -627,30 +588,5 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
             }
         }
 
-    }
-
-
-
-    // 미리보기
-    .preview-contents {
-        height: 100%;
-        display:flex;
-        flex-direction: column;
-        gap: 16px;
-
-        .select {width: 100%;}
-
-        .preview-section {
-            height: 100%;
-            padding: 24px;
-            min-height: 0;
-            overflow-y: auto;
-
-            border-top: 1px solid $gray-200;
-
-            .empty-box {
-                height: 100%;
-            }
-        }
     }
 </style>
