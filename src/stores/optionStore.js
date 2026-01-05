@@ -187,6 +187,25 @@ export const useOptionStore = defineStore("option", () => {
         }
     }
 
+    // 옵션 삭제
+    async function deleteOption(optionId) {
+        try {
+            const response = await api.post(`/api/${cocode}/option/${optionId}/del`);
+            
+            if(response.status == 200) {
+                return response.data;
+            } else {
+                throw new Error('옵션 삭제 실패');
+            }
+        } catch (error) {
+            // 에러 처리
+            if (error.response && error.response.status === 409) {
+                throw new Error('옵션을 찾을 수 없습니다. 옵션이 이미 삭제되었거나 존재하지 않을 수 있습니다.');
+            }
+            throw error;
+        }
+    }
+
     return {
         //
         categoryList,
@@ -199,5 +218,6 @@ export const useOptionStore = defineStore("option", () => {
         addOption,
         addOptionMapping,
         updateOption,
+        deleteOption,
     }
 })

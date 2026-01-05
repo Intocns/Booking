@@ -262,8 +262,41 @@ const handleMenuAction = async (action, row) => {
             isCopy: true
         });
     } else if (action === 'delete') {
-        // 삭제 로직 실행
-        modalStore.confirmModal.openModal()
+        // 삭제 확인 모달 열기 (삭제할 옵션 데이터 저장)
+        modalStore.confirmModal.openModal({ 
+            optionData: row.rawData 
+        });
+    }
+};
+
+// 옵션 삭제 핸들러
+const handleDeleteOption = async () => {
+    const optionData = modalStore.confirmModal.data?.optionData;
+    if (!optionData || !optionData.optionId) {
+        alert('옵션 ID를 찾을 수 없습니다.');
+        return;
+    }
+
+    try {
+        // TODO: optionId 확인 필요 (optionData.optionId 또는 optionData.idx)
+        const optionId = optionData.optionId || optionData.idx;
+        
+        // 옵션 삭제 API 호출
+        await optionStore.deleteOption(optionId);
+        
+        alert('옵션이 삭제되었습니다.');
+        
+        // 삭제 성공 후 옵션 리스트 새로고침
+        if (activeTab.value) {
+            await optionStore.getOptionListByCategoryId(activeTab.value);
+            dataMap.value[activeTab.value] = optionStore.optionList || [];
+        }
+        
+        // 확인 모달 닫기
+        modalStore.confirmModal.closeModal();
+    } catch (error) {
+        console.error('옵션 삭제 실패:', error);
+        alert(error.message || '옵션 삭제 중 오류가 발생했습니다.');
     }
 };
 
@@ -469,6 +502,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
         v-if="modalStore.confirmModal.isVisible"
         title="옵션 삭제"
         confirm-btn-text="삭제"
+        @confirm="handleDeleteOption"
     >
         <p>옵션을 삭제하시겠습니까?<br/>삭제하면 옵션정보, 설정 등 모든 정보가 사라지고<br/>다시 복원할 수 없습니다.</p>
     </ConfirmModal>
