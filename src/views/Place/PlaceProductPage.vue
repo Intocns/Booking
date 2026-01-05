@@ -20,8 +20,11 @@ import draggable from 'vuedraggable';
 import { useProductStore } from '@/stores/productStore';
 import { useModalStore } from '@/stores/modalStore';
 
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+
+//util
+import { IS_IMP_TYPE } from "@/utils/product";
 
 const router = useRouter();
 const productStore = useProductStore();
@@ -29,8 +32,33 @@ const modalStore = useModalStore();
 
 
 // 상태관리
+const dragList = ref([...productStore.productList])
 const isVisible = ref('1')
-const dragList = ref([...productStore.productList]); // 상품 순서
+const isCheckImpType = ref(false) // 미노출 제외 체크 값
+
+// 미노출 제외 체크박스 감시
+watch(
+  [
+    isCheckImpType,
+    () => productStore.productList
+  ],
+  ([checkedImp, list]) => {
+    if (!checkedImp) {
+      // 상단 전체 / 미노출 제외 플래그
+      dragList.value = list
+      return
+    }
+
+    // 상품별 노출/미노출 기준 필터링
+    dragList.value = list.filter(item =>
+      item.isImp
+    )
+  },
+  {
+    immediate: true,
+    deep: true
+  }
+)
 
 /**
  * 이벤트 핸들러
@@ -61,8 +89,16 @@ const goProductDetail = (id = null) => {
         router.push({ name: 'placeProductDetail' });
     }
 };
-onMounted(() => {
-    productStore.getProductList();
+// 상품별 노출/미노출 체크 변경
+const clickProductImpUpdateBtn = ((itemId, isImp) => {
+    let params = {
+        "imp" : isImp,
+    }
+
+    productStore.modifyItem(itemId, params, 1);
+})
+onMounted(async () => {
+    await productStore.getProductList();
 })
 </script>
 
@@ -73,12 +109,12 @@ onMounted(() => {
     <div class="top-bar">
         <div class="d-flex gap-16 align-center">
 
-            <p class="title-m total-wrapper">전체 <span class="total-num">987</span></p>
+            <p class="title-m total-wrapper">전체 <span class="total-num">{{ productStore.productList.length }}</span></p>
 
             <div class="line"></div>
 
             <label class="checkbox">
-                <input type="checkbox" />
+                <input type="checkbox" v-model="isCheckImpType"/>
                 <span class="box"></span>
                 <span class="label">미노출 제외</span>
             </label>
@@ -112,7 +148,7 @@ onMounted(() => {
     <div class="contents-wrapper">
         <div class="grid-wrapper">
             <!-- 상품 리스트 테이블 -->
-            <div v-for="product in productStore.productList" class="item-box">
+            <div v-for="product in dragList" class="item-box">
                 <!-- top -->
                 <div class="top">
                     <div class="item-box__img">
@@ -123,10 +159,10 @@ onMounted(() => {
                     </div>
 
                     <div class="d-flex align-center justify-between">
-                        <p class="body-l">노출중</p>
+                        <p class="body-l">{{ IS_IMP_TYPE[Number(product.isImp)].label }}</p>
     
                         <label class="toggle"> 
-                            <input type="checkbox" />
+                            <input type="checkbox" v-model="product.isImp" @change="clickProductImpUpdateBtn(product.bizItemId, product.isImp)" />
                             <span class="toggle-img"></span>
                         </label>
                     </div>

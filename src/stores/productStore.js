@@ -35,7 +35,7 @@ export const useProductStore = defineStore("product", () => {
         // ]
         //임시 적용 end(사용 시 해당 params값 참고)
 
-        const response = await api.post(`/${cocode}/item/set/order`, params);
+        const response = await api.post(`/api/${cocode}/item/set/order`, params);
 
         if(response.data.status_code <= 300) {
             alert('저장이 완료되었습니다.');
@@ -67,7 +67,7 @@ export const useProductStore = defineStore("product", () => {
         // }
         //임시 적용 end(사용 시 해당 params값 참고)
 
-        const response = await api.post(`/${cocode}/item/set/desc`, params);
+        const response = await api.post(`/api/${cocode}/item/set/desc`, params);
 
         if(response.data.status_code <= 300) {
             alert('저장이 완료되었습니다.');
@@ -78,7 +78,7 @@ export const useProductStore = defineStore("product", () => {
 
     //인투펫 진료실 불러오기
     async function getItemRoomList() {
-        const response = await api.get(`/${cocode}/item/room/list`);
+        const response = await api.get(`/api/${cocode}/item/room/list`);
 
         if(response.data.status_code <= 300) {
             const data = response.data.data;
@@ -96,7 +96,7 @@ export const useProductStore = defineStore("product", () => {
         // }
         //임시 적용 end(사용 시 해당 params값 참고)
 
-        const response = await api.post(`/${cocode}/item/linkItem/${roomIdx}`, params);
+        const response = await api.post(`/api/${cocode}/item/linkItem/${roomIdx}`, params);
 
         if(response.data.status_code <= 300) {
             const data = response.data.data;
@@ -106,7 +106,7 @@ export const useProductStore = defineStore("product", () => {
 
     //상품 삭제
     async function delItem(cocode, itemId) {
-        const response = await api.post(`/${cocode}/item/set/del/${itemId}`);
+        const response = await api.post(`/api/${cocode}/item/set/del/${itemId}`);
 
         if(response.data.status_code <= 300) {
             alert('삭제가 완료되었습니다.');
@@ -233,7 +233,7 @@ export const useProductStore = defineStore("product", () => {
         // };
         //임시 적용 end(사용 시 해당 params값 참고)
 
-        const response = await api.post(`/${cocode}/item/add`, params);
+        const response = await api.post(`/api/${cocode}/item/add`, params);
 
         if(response.data.status_code <= 300) {
             alert('등록이 완료되었습니다.');
@@ -243,7 +243,7 @@ export const useProductStore = defineStore("product", () => {
     }
 
     //상품 수정
-    async function modifyItem(cocode, itemId, params) {
+    async function modifyItem(itemId, params, modifyType) { //modifyType = 0:상품 수정, 1:노출/미노출 버튼 수정
         //임시 적용 start(사용 시 해당 params값 참고)
         // let params = {
         //     "imp": true,
@@ -359,8 +359,9 @@ export const useProductStore = defineStore("product", () => {
         //     }
         // };
         //임시 적용 end(사용 시 해당 params값 참고)
+        console.log(`/${cocode}/item/modify/${itemId}`);
 
-        const response = await api.post(`/${cocode}/item/modify/${itemId}`, params);
+        const response = await api.post(`/api/${cocode}/item/modify/${itemId}`, params);
 
         if(response.data.status_code <= 300) {
             alert('수정이 완료되었습니다.');
@@ -371,7 +372,7 @@ export const useProductStore = defineStore("product", () => {
 
     //상품 기본정보 확인
     async function getItemDetailInfo(cocode, itemId) {
-        const response = await api.get(`/${cocode}/item/detail/${itemId}`);
+        const response = await api.get(`/api/${cocode}/item/detail/${itemId}`);
 
         if(response.data.status_code <= 300) {
             const data = response.data.data;
