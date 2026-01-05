@@ -166,11 +166,6 @@ const isEdit = ref(false); // 수정 모드 여부 상태 추가
 
 // 노출설정 토글 핸들러
 const toggleOptionVisibility = async (row) => {
-    console.log('노출설정 토글 - row:', row);
-    console.log('노출설정 토글 - row.rawData:', row.rawData);
-    console.log('노출설정 토글 - row.idx:', row.idx);
-    console.log('노출설정 토글 - row.rawData.idx:', row.rawData?.idx);
-    
     // idx 확인: rawData.idx 또는 row.idx 사용
     const optionId = row.rawData?.idx || row.idx;
     
@@ -202,7 +197,6 @@ const toggleOptionVisibility = async (row) => {
     try {
         // 현재 isImp 값을 반대로 변경
         const newIsImp = row.checked ? 0 : 1;
-        console.log('노출설정 변경 - optionId:', optionId, 'newIsImp:', newIsImp);
         
         // 옵션 수정 API 호출 (isImp만 변경, 나머지는 기존 값 유지)
         const updateData = {
@@ -255,7 +249,6 @@ const handleMenuAction = async (action, row) => {
     if (action === 'edit') {
         isEdit.value = true; // 수정
         modalStore.optionSettingModal.setTitle('옵션 수정');
-        console.log(row.rawData);
         // 이미 가져온 옵션 리스트의 rawData 활용 (별도 API 호출 불필요)
         modalStore.optionSettingModal.openModal({ 
             optionData: row.rawData
@@ -267,7 +260,6 @@ const handleMenuAction = async (action, row) => {
     } else if (action === 'delete') {
         // 삭제 로직 실행
         modalStore.confirmModal.openModal()
-        console.log('삭제 대상:', row);
     }
 };
 </script>

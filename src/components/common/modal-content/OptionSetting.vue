@@ -211,8 +211,6 @@ const fillOptionData = (optionData) => {
             const isConnected = connectedProductIds.some(connectedId => String(connectedId) === productId);
             product.isConnected = isConnected;
         });
-    } else {
-        console.warn('productList가 비어있습니다. productList watch에서 처리됩니다.');
     }
 };
 
@@ -555,8 +553,6 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
         if (props.isEdit) {
             // 수정 모드: 전달받은 데이터로 필드 채우기
             const optionData = modalStore.optionSettingModal.data?.optionData;
-            console.log('수정 모드 - optionData:', optionData);
-            console.log('props.isEdit:', props.isEdit);
             if (optionData) {
                 fillOptionData(optionData);
             }

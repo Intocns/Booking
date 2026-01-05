@@ -17,7 +17,6 @@ export const useOptionStore = defineStore("option", () => {
 
         if(response.status == 200) {
             let data = response.data.data;
-            console.log(data);
             categoryList.value = data;
         }
     }
@@ -27,7 +26,6 @@ export const useOptionStore = defineStore("option", () => {
 
         if(response.status == 200) {
             let data = response.data.data;
-            console.log(data);
             optionList.value = data;
         }
     }
@@ -37,7 +35,6 @@ export const useOptionStore = defineStore("option", () => {
 
         if(response.status == 200) {
             let data = response.data.data;
-            console.log(data);
             if(data && Array.isArray(data) && data.length > 0) {
                 // data는 배열이고, 첫 번째 요소가 카테고리 객체이며 그 안에 options가 있음
                 const categoryData = data[0];
@@ -181,8 +178,6 @@ export const useOptionStore = defineStore("option", () => {
         } catch (error) {
             // 409 에러 처리 (옵션을 찾을 수 없음)
             if (error.response && error.response.status === 409) {
-                const errorMessage = error.response.data?.message || '옵션을 찾을 수 없습니다.';
-                console.error('옵션을 찾을 수 없음 (409):', errorMessage);
                 throw new Error('옵션을 찾을 수 없습니다. 옵션이 삭제되었거나 존재하지 않을 수 있습니다.');
             }
             // 기타 에러
