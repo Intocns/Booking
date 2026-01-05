@@ -18,7 +18,7 @@ import icEdit from '@/assets/icons/ic_edit.svg'
 import icCopy from '@/assets/icons/ic_copy.svg'
 import icDel from '@/assets/icons/ic_del.svg'
 
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
@@ -273,6 +273,14 @@ const handleProductConnectClick = (row) => {
         initialTab: 'CONNECT'
     });
 };
+
+// 옵션 설정 모달이 닫힐 때 dataMap 업데이트 (등록/수정 후 OptionSetting에서 이미 리스트를 새로고침함)
+watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
+    if (!isVisible && activeTab.value) {
+        // OptionSetting에서 이미 getOptionListByCategoryId를 호출했으므로 dataMap만 업데이트
+        dataMap.value[activeTab.value] = optionStore.optionList || [];
+    }
+});
 </script>
 
 <template>

@@ -448,6 +448,12 @@ const handleUpdate = async () => {
 
         // 1. 옵션 수정
         const updateResponse = await optionStore.updateOption(optionDataFromModal.idx, optionData);
+        
+        // 옵션 ID 추출 (rawData에 저장된 optionId 사용)
+        const optionId = optionDataFromModal.optionId;
+        if (!optionId) {
+            throw new Error('옵션 ID를 찾을 수 없습니다.');
+        }
 
         // 2. 옵션-상품 매핑 저장/업데이트
         // 백엔드 로직: useFlag 1 = 연결, useFlag 0 = 연결 해제
@@ -472,7 +478,7 @@ const handleUpdate = async () => {
             mappingDataList.push({
                 useFlag: 1,
                 categoryId: selectedCategory.value,
-                optionId: optionDataFromModal.idx,
+                optionId: optionId,
                 itemIds: connectedItemIds.join(',')
             });
         }
@@ -482,7 +488,7 @@ const handleUpdate = async () => {
             mappingDataList.push({
                 useFlag: 0,
                 categoryId: selectedCategory.value,
-                optionId: optionDataFromModal.idx,
+                optionId: optionId,
                 itemIds: disconnectedItemIds.join(',')
             });
         }

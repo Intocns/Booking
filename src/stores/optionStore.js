@@ -53,13 +53,14 @@ export const useOptionStore = defineStore("option", () => {
                     idxGroupMap[idx].push(option);
                 });
                 
-                // 각 idx별로 bizItemId가 있는 옵션 개수 계산 및 연결된 상품 ID 리스트 수집
+                // 각 idx별로 bizItemId가 있고 useFlag가 0이 아닌 옵션 개수 계산 및 연결된 상품 ID 리스트 수집
                 const connectionCountMap = {};
                 const connectedProductIdsMap = {}; // idx별 연결된 상품 ID 리스트
                 Object.keys(idxGroupMap).forEach(idx => {
-                    const optionsWithBizItemId = idxGroupMap[idx].filter(opt => opt.bizItemId);
+                    // useFlag가 0이 아닌 경우만 카운트 (useFlag가 0이면 비활성화된 연결)
+                    const optionsWithBizItemId = idxGroupMap[idx].filter(opt => opt.bizItemId && opt.checked !== 0);
                     connectionCountMap[idx] = optionsWithBizItemId.length;
-                    // 연결된 상품 ID 리스트 수집 (중복 제거)
+                    // 연결된 상품 ID 리스트 수집 (중복 제거, useFlag가 0이 아닌 것만)
                     const productIds = [...new Set(optionsWithBizItemId.map(opt => opt.bizItemId))];
                     connectedProductIdsMap[idx] = productIds;
                 });
@@ -96,6 +97,9 @@ export const useOptionStore = defineStore("option", () => {
                         } else {
                             bookingCountText = '-';
                         }
+                        console.log(option)
+                        console.log(option.optionId)
+                        console.log(connectedProductIdsMap[option.idx])
                         
                         return {
                             idx: option.idx,
@@ -112,6 +116,7 @@ export const useOptionStore = defineStore("option", () => {
                             // 수정 모달에서 사용할 원본 데이터
                             rawData: {
                                 idx: option.idx,
+                                optionId: option.optionId,
                                 name: option.name || '',
                                 desc: option.desc || '',
                                 categoryId: categoryId,
