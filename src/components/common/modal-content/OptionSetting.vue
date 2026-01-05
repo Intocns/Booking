@@ -102,6 +102,8 @@ const formattedNormalPrice = computed({
 
 // 상품 연결 리스트 (productStore에서 직접 사용)
 const productList = ref([]);
+// 초기 연결 상태 추적 (수정 모드에서 변경사항 비교용)
+const initialConnectedProductIds = ref([]);
 
 // 상품 리스트 초기화 (productStore의 데이터를 기반으로)
 watch(() => productStore.productList, (newList) => {
@@ -131,6 +133,63 @@ watch(() => productStore.productList, (newList) => {
 // 상품 연결 상태 토글 핸들러
 const toggleProductConnection = (product) => {
     product.isConnected = !product.isConnected;
+};
+
+// 필수 필드 검증 공통 함수
+const validateRequiredFields = async () => {
+    // 카테고리 검증
+    if (!selectedCategory.value) {
+        alert('카테고리를 선택해주세요.');
+        await nextTick();
+        if (categorySelectRef.value) {
+            const selectBox = categorySelectRef.value.$el?.querySelector('.select__box');
+            if (selectBox) {
+                selectBox.click();
+            }
+        }
+        return false;
+    }
+    
+    // 옵션명 검증
+    if (!optionName.value || optionName.value.trim() === '') {
+        alert('옵션명을 입력해주세요.');
+        await nextTick();
+        if (optionNameInputRef.value) {
+            const inputElement = optionNameInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return false;
+    }
+    
+    // 재고 수 검증 (재고 토글이 켜져 있을 때)
+    if (isStockEnabled.value && (!stockCount.value || stockCount.value.trim() === '')) {
+        alert('재고 수를 입력해주세요.');
+        await nextTick();
+        if (stockCountInputRef.value) {
+            const inputElement = stockCountInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return false;
+    }
+    
+    // 판매가 검증 (가격 토글이 켜져 있을 때)
+    if (isPriceEnabled.value && (!price.value || price.value.trim() === '')) {
+        alert('판매가를 입력해주세요.');
+        await nextTick();
+        if (priceInputRef.value) {
+            const inputElement = priceInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return false;
+    }
+    
+    return true;
 };
 
 // 수정/등록 버튼 클릭 핸들러
@@ -204,6 +263,9 @@ const fillOptionData = (optionData) => {
     
     // 상품 연결 상태 설정
     const connectedProductIds = optionData.connectedProductIds || [];
+    // 초기 연결 상태 저장 (변경사항 비교용)
+    initialConnectedProductIds.value = connectedProductIds.map(id => String(id));
+    
     if (productList.value.length > 0) {
         productList.value.forEach(product => {
             // 타입 변환하여 비교 (문자열/숫자 모두 처리)
@@ -245,52 +307,8 @@ const goConnect = () => {
 const goOption = () => { mode.value = 'OPTION'; };
 const handleNext = async () => {
     // 필수 필드 검증
-    if (!selectedCategory.value) {
-        alert('카테고리를 선택해주세요.');
-        await nextTick();
-        // CustomSingleSelect의 드롭다운 열기
-        if (categorySelectRef.value) {
-            const selectBox = categorySelectRef.value.$el?.querySelector('.select__box');
-            if (selectBox) {
-                selectBox.click();
-            }
-        }
-        return;
-    }
-    if (!optionName.value || optionName.value.trim() === '') {
-        alert('옵션명을 입력해주세요.');
-        await nextTick();
-        // InputTextBox에 포커스
-        if (optionNameInputRef.value) {
-            const inputElement = optionNameInputRef.value.$el?.querySelector('input[type="text"]');
-            if (inputElement) {
-                inputElement.focus();
-            }
-        }
-        return;
-    }
-    // 재고가 켜져 있으면 재고 수 필수 체크
-    if (isStockEnabled.value && (!stockCount.value || stockCount.value.trim() === '')) {
-        alert('재고 수를 입력해주세요.');
-        await nextTick();
-        if (stockCountInputRef.value) {
-            const inputElement = stockCountInputRef.value.$el?.querySelector('input[type="text"]');
-            if (inputElement) {
-                inputElement.focus();
-            }
-        }
-        return;
-    }
-    // 가격이 켜져 있으면 판매가 필수 체크
-    if (isPriceEnabled.value && (!price.value || price.value.trim() === '')) {
-        alert('판매가를 입력해주세요.');
-        await nextTick();
-        if (priceInputRef.value) {
-            const inputElement = priceInputRef.value.$el?.querySelector('input[type="text"]');
-            if (inputElement) {
-                inputElement.focus();
-            }
-        }
+    const isValid = await validateRequiredFields();
+    if (!isValid) {
         return;
     }
     
@@ -303,52 +321,8 @@ const handlePrev = () => {
 
 const handleSave = async () => {
     // 필수 필드 검증
-    if (!selectedCategory.value) {
-        alert('카테고리를 선택해주세요.');
-        await nextTick();
-        // CustomSingleSelect의 드롭다운 열기
-        if (categorySelectRef.value) {
-            const selectBox = categorySelectRef.value.$el?.querySelector('.select__box');
-            if (selectBox) {
-                selectBox.click();
-            }
-        }
-        return;
-    }
-    if (!optionName.value || optionName.value.trim() === '') {
-        alert('옵션명을 입력해주세요.');
-        await nextTick();
-        // InputTextBox에 포커스
-        if (optionNameInputRef.value) {
-            const inputElement = optionNameInputRef.value.$el?.querySelector('input[type="text"]');
-            if (inputElement) {
-                inputElement.focus();
-            }
-        }
-        return;
-    }
-    // 재고가 켜져 있으면 재고 수 필수 체크
-    if (isStockEnabled.value && (!stockCount.value || stockCount.value.trim() === '')) {
-        alert('재고 수를 입력해주세요.');
-        await nextTick();
-        if (stockCountInputRef.value) {
-            const inputElement = stockCountInputRef.value.$el?.querySelector('input[type="text"]');
-            if (inputElement) {
-                inputElement.focus();
-            }
-        }
-        return;
-    }
-    // 가격이 켜져 있으면 판매가 필수 체크
-    if (isPriceEnabled.value && (!price.value || price.value.trim() === '')) {
-        alert('판매가를 입력해주세요.');
-        await nextTick();
-        if (priceInputRef.value) {
-            const inputElement = priceInputRef.value.$el?.querySelector('input[type="text"]');
-            if (inputElement) {
-                inputElement.focus();
-            }
-        }
+    const isValid = await validateRequiredFields();
+    if (!isValid) {
         return;
     }
 
@@ -435,48 +409,8 @@ const handleSave = async () => {
 };
 const handleUpdate = async () => {
     // 필수 필드 검증 (등록과 동일)
-    if (!selectedCategory.value) {
-        alert('카테고리를 선택해주세요.');
-        await nextTick();
-        if (categorySelectRef.value) {
-            const selectBox = categorySelectRef.value.$el?.querySelector('.select__box');
-            if (selectBox) {
-                selectBox.click();
-            }
-        }
-        return;
-    }
-    if (!optionName.value || optionName.value.trim() === '') {
-        alert('옵션명을 입력해주세요.');
-        await nextTick();
-        if (optionNameInputRef.value) {
-            const inputElement = optionNameInputRef.value.$el?.querySelector('input[type="text"]');
-            if (inputElement) {
-                inputElement.focus();
-            }
-        }
-        return;
-    }
-    if (isStockEnabled.value && (!stockCount.value || stockCount.value.trim() === '')) {
-        alert('재고 수를 입력해주세요.');
-        await nextTick();
-        if (stockCountInputRef.value) {
-            const inputElement = stockCountInputRef.value.$el?.querySelector('input[type="text"]');
-            if (inputElement) {
-                inputElement.focus();
-            }
-        }
-        return;
-    }
-    if (isPriceEnabled.value && (!price.value || price.value.trim() === '')) {
-        alert('판매가를 입력해주세요.');
-        await nextTick();
-        if (priceInputRef.value) {
-            const inputElement = priceInputRef.value.$el?.querySelector('input[type="text"]');
-            if (inputElement) {
-                inputElement.focus();
-            }
-        }
+    const isValid = await validateRequiredFields();
+    if (!isValid) {
         return;
     }
 
@@ -515,19 +449,45 @@ const handleUpdate = async () => {
         // 1. 옵션 수정
         const updateResponse = await optionStore.updateOption(optionDataFromModal.idx, optionData);
 
-        // 2. 옵션-상품 매핑 저장 (기존 매핑 삭제 후 재등록 필요할 수 있음)
+        // 2. 옵션-상품 매핑 저장/업데이트
+        // 백엔드 로직: useFlag 1 = 연결, useFlag 0 = 연결 해제
+        const currentConnectedItemIds = productList.value
+            .filter(product => product.isConnected)
+            .map(product => String(product.id));
+        
+        const initialConnectedIds = initialConnectedProductIds.value || [];
+        
+        // 연결된 상품 (useFlag: 1)
         const connectedItemIds = productList.value
             .filter(product => product.isConnected)
-            .map(product => product.id);
+            .map(product => String(product.id));
         
-        const mappingDataList = connectedItemIds.length > 0 ? [{
-            useFlag: 1,
-            categoryId: selectedCategory.value,
-            optionId: optionDataFromModal.idx,
-            itemIds: connectedItemIds.join(',')
-        }] : [];
+        // 연결 해제된 상품 (기존에 연결되어 있었지만 현재는 해제됨)
+        const disconnectedItemIds = initialConnectedIds.filter(id => !currentConnectedItemIds.includes(id));
+        
+        const mappingDataList = [];
+        
+        // 연결된 상품이 있으면 useFlag: 1로 전송
+        if (connectedItemIds.length > 0) {
+            mappingDataList.push({
+                useFlag: 1,
+                categoryId: selectedCategory.value,
+                optionId: optionDataFromModal.idx,
+                itemIds: connectedItemIds.join(',')
+            });
+        }
+        
+        // 연결 해제된 상품이 있으면 useFlag: 0으로 전송
+        if (disconnectedItemIds.length > 0) {
+            mappingDataList.push({
+                useFlag: 0,
+                categoryId: selectedCategory.value,
+                optionId: optionDataFromModal.idx,
+                itemIds: disconnectedItemIds.join(',')
+            });
+        }
 
-        // 연결된 상품이 있는 경우에만 매핑 저장
+        // 변경사항이 있으면 매핑 업데이트
         if (mappingDataList.length > 0) {
             await optionStore.addOptionMapping(mappingDataList);
         }
@@ -550,6 +510,15 @@ const handleUpdate = async () => {
 watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
     if (isVisible) {
         await nextTick(); // DOM 업데이트 대기
+        
+        // initialTab이 있으면 해당 탭으로 이동 (props.isEdit 조건 제거)
+        const initialTab = modalStore.optionSettingModal.data?.initialTab;
+        if (initialTab) {
+            mode.value = initialTab;
+        } else {
+            mode.value = 'OPTION'; // 기본값은 상세정보 탭
+        }
+        
         if (props.isEdit) {
             // 수정 모드: 전달받은 데이터로 필드 채우기
             const optionData = modalStore.optionSettingModal.data?.optionData;
@@ -575,12 +544,17 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
             isPeriodEnabled.value = false;
             
             // 상품 연결 초기화
+            initialConnectedProductIds.value = [];
             if (productList.value.length > 0) {
                 productList.value.forEach(product => {
                     product.isConnected = false;
                 });
             }
         }
+    } else {
+        // 모달이 닫힐 때 mode와 초기 연결 상태 초기화
+        mode.value = 'OPTION';
+        initialConnectedProductIds.value = [];
     }
 });
 
@@ -591,6 +565,25 @@ watch(() => modalStore.optionSettingModal.data?.optionData, async (optionData) =
         fillOptionData(optionData);
     }
 }, { immediate: true });
+
+// initialTab이 설정되면 해당 탭으로 이동 (props.isEdit가 true가 된 후에도 확인)
+watch(() => [modalStore.optionSettingModal.data?.initialTab, modalStore.optionSettingModal.isVisible, props.isEdit], async ([initialTab, isVisible, isEdit]) => {
+    if (initialTab && isVisible && isEdit) {
+        await nextTick();
+        mode.value = initialTab;
+    }
+}, { immediate: true });
+
+// props.isEdit가 변경될 때도 initialTab 확인
+watch(() => props.isEdit, async (isEdit) => {
+    if (isEdit && modalStore.optionSettingModal.isVisible) {
+        const initialTab = modalStore.optionSettingModal.data?.initialTab;
+        if (initialTab) {
+            await nextTick();
+            mode.value = initialTab;
+        }
+    }
+});
 
 // categoryOptions가 준비된 후에도 카테고리 선택 확인
 watch(categoryOptions, async (options) => {

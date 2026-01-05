@@ -262,6 +262,17 @@ const handleMenuAction = async (action, row) => {
         modalStore.confirmModal.openModal()
     }
 };
+
+// 상품연결 클릭 핸들러 (수정 팝업 열기 + 상품연결 탭으로 이동)
+const handleProductConnectClick = (row) => {
+    isEdit.value = true; // 수정 모드
+    modalStore.optionSettingModal.setTitle('옵션 수정');
+    // 상품연결 탭으로 바로 이동하도록 initialTab 전달
+    modalStore.optionSettingModal.openModal({ 
+        optionData: row.rawData,
+        initialTab: 'CONNECT'
+    });
+};
 </script>
 
 <template>
@@ -346,7 +357,7 @@ const handleMenuAction = async (action, row) => {
 
                     <!-- 상품연결 커스텀 슬롯 td -->
                     <template #connect="{ row, rowIndex }">
-                        <div class="connect_btn">
+                        <div class="connect_btn" @click="handleProductConnectClick(row)" style="cursor: pointer;">
                             <span class="title-s">{{ row.is_connect }}</span>
                             <img :src="icArrowRightBlue" alt="">
                         </div>
