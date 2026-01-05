@@ -35,6 +35,7 @@ const modalStore = useModalStore();
 const dragList = ref([...productStore.productList])
 const isVisible = ref('1')
 const isCheckImpType = ref(false) // 미노출 제외 체크 값
+const itemOrderList = ref([...productStore.productList])
 
 // 미노출 제외 체크박스 감시
 watch(
@@ -65,6 +66,7 @@ watch(
  */
 // 상품 순서 변경
 const clickProductOrderUpdateBtn = (() => {
+    itemOrderList.value = productStore.productList//상품 순서 변경 모달창 오픈 시 초기화
     modalStore.productOrderUpdateModal.openModal()
 })
 // 상품 일괄설정 
@@ -96,6 +98,28 @@ const clickProductImpUpdateBtn = ((itemId, isImp) => {
     }
 
     productStore.modifyItem(itemId, params, 1);
+})
+// 상품 순서 변경 저장
+const saveItemOrder = (async() => {
+    let params = [];
+
+    //순서변경 모달창 상품 순서 가져오기
+    itemOrderList.value.forEach((item, key)  => {
+        params.push(
+            {
+                "order" : (key + 1),
+                "bizItemId" : item.bizItemId
+            }
+        );
+    });
+
+    //상품 순서 변경 api 호출
+    await productStore.setItemOrder(params)
+
+    if(productStore.responseCode == 200){
+        await productStore.getProductList();//상품 관리 기존 화면 새로고침용
+        modalStore.productOrderUpdateModal.closeModal()
+    }
 })
 onMounted(async () => {
     await productStore.getProductList();
@@ -197,7 +221,7 @@ onMounted(async () => {
                 <p class="body-m">고객에게 보여지는 예약 상품의 순서를<br/>마우스로 선택, 드래그해서 변경하실 수 있습니다.</p>
             </div>
             <draggable 
-                v-model="productStore.productList" 
+                v-model="itemOrderList" 
                 tag="ul"
                 class="modal-product-list"
                 item-key="id" 
@@ -225,7 +249,7 @@ onMounted(async () => {
                 class="btn btn--size-32 btn--blue-outline" 
                 @click="modalStore.productOrderUpdateModal.closeModal()"
             >취소</button>
-            <button class="btn btn--size-32 btn--blue">저장</button>
+            <button class="btn btn--size-32 btn--blue" @click="saveItemOrder()">저장</button>
         </div>
     </Modal>
 
