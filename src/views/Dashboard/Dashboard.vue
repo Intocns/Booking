@@ -49,16 +49,16 @@ const { reserveCount: count } = storeToRefs(reservationStore); // 'count'라는 
 // 대기중인 예약 테이블 col 정의
 const columns = [
     { key: 'idx', label: 'No.', width: '5%' },
-    { key: 're_time_txt', label: '예약일자', width: '10%' },
-    { key: 're_time_his_txt', label: '예약시간', width: '6%' },
-    { key: 'room_name', label: '상품명/진료실명', width: '10%' },
-    { key: 'user_name', label: '고객명', width: '9%' },
-    { key: 'phone_txt', label: '전화번호', width: '15%' },
-    { key: 'pet_name', label: '동물명', width: '15%' },
-    { key: 'species_name', label: '종', width: '10%' },
-    { key: 're_memo', label: '고객 메모', width: '20%' },
-    { key: 're_route_txt', label: '예약경로', width: '10%' },
-    { key: 'created_at_txt', label: '접수일시', width: '15%' },
+    { key: 'reTimeTxt', label: '예약일자', width: '10%' },
+    { key: 'reTimeHisTxt', label: '예약시간', width: '6%' },
+    { key: 'roomName', label: '상품명/진료실명', width: '10%' },
+    { key: 'userName', label: '고객명', width: '9%' },
+    { key: 'phoneTxt', label: '전화번호', width: '15%' },
+    { key: 'petName', label: '동물명', width: '15%' },
+    { key: 'speciesName', label: '종', width: '10%' },
+    { key: 'reMemo', label: '고객 메모', width: '20%' },
+    { key: 'reRouteTxt', label: '예약경로', width: '10%' },
+    { key: 'createdAtTxt', label: '접수일시', width: '15%' },
     { key: 'actions', label: '관리', width: '15%' }, // 커스텀 슬롯
 ]
 
@@ -72,7 +72,7 @@ const hospitalColumns = [
 // 공지사항 테이블 col (임시)
 const noticeColumns = [
     { key: 'title', label: '제목', width: '90%', text_align: 'left'},
-    { key: 'created_at', label: '작성일', width: '10%'},
+    { key: 'createdAt', label: '작성일', width: '10%'},
 ];
 
 //공지사항 클릭 이벤트 => 이동
@@ -133,7 +133,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val blue">{{ formatCount(count.cnt_1) }}</p>
+                        <p class="val blue">{{ formatCount(count.cnt1) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>
@@ -148,7 +148,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val">{{ formatCount(count.cnt_2) }}</p>
+                        <p class="val">{{ formatCount(count.cnt2) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>
@@ -163,7 +163,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val">{{ formatCount(count.cnt_3) }}</p>
+                        <p class="val">{{ formatCount(count.cnt3) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>
@@ -178,7 +178,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val">{{ formatCount(count.cnt_4) }}</p>
+                        <p class="val">{{ formatCount(count.cnt4) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>
@@ -197,7 +197,7 @@ onMounted(() => {
             <!-- 예약경로 앞에 dot -->
             <template #re_route_txt="{ row, value }">
                 <div class="status-cell">
-                    <span class="dot" :class="`dot--route-${row.re_route}`"></span>
+                    <span class="dot" :class="`dot--route-${row.reRoute}`"></span>
                     {{ value }}
                 </div>
             </template>
