@@ -49,7 +49,7 @@ const selectedCategory = ref('');
 const categoryOptions = computed(() => {
     return optionStore.categoryList.map(cat => ({
         label: cat.name,
-        value: cat.category_id
+        value: cat.categoryId
     }));
 });
 

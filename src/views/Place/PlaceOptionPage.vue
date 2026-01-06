@@ -42,14 +42,14 @@ const { scrollRef: scrollViewport, handleMouseDown: handleCategoryMouseDown } = 
 
 // 카테고리
 const currentIndex = computed(() => {
-    const index = optionStore.categoryList.findIndex(cat => cat.category_id === activeTab.value);
+    const index = optionStore.categoryList.findIndex(cat => cat.categoryId === activeTab.value);
     return index === -1 ? 0 : index; // 찾지 못할 경우 0번으로 리턴
 });
 
 // 카테고리 이전 버튼 핸들러
 const prevTab = async () => {
     if (currentIndex.value > 0) {
-        const prevCategoryId = optionStore.categoryList[currentIndex.value - 1].category_id;
+        const prevCategoryId = optionStore.categoryList[currentIndex.value - 1].categoryId;
         await setTab(prevCategoryId);
         // 스크롤 왼쪽으로 이동
         scrollViewport.value?.scrollBy({ left: -100, behavior: 'smooth' });
@@ -59,7 +59,7 @@ const prevTab = async () => {
 // 카테고리 다음 버튼 핸들러
 const nextTab = async () => {
     if (currentIndex.value < optionStore.categoryList.length - 1) {
-        const nextCategoryId = optionStore.categoryList[currentIndex.value + 1].category_id;
+        const nextCategoryId = optionStore.categoryList[currentIndex.value + 1].categoryId;
         await setTab(nextCategoryId);
         // 스크롤 오른쪽으로 이동
         scrollViewport.value?.scrollBy({ left: 100, behavior: 'smooth' });
@@ -150,7 +150,7 @@ onMounted(async () => {
     await optionStore.getCategoryList(); // 카테고리 리스트 불러옴
 
     if (optionStore.categoryList.length > 0) {
-        const firstCategoryId = optionStore.categoryList[0].category_id;
+        const firstCategoryId = optionStore.categoryList[0].categoryId;
         await setTab(firstCategoryId);
     }
 });
@@ -332,10 +332,10 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                     <!-- 카테고리 버튼 -->
                     <button 
                         v-for="cat in optionStore.categoryList" 
-                        :key="cat.category_id"
+                        :key="cat.categoryId"
                         class="tab-btn btn--size-32"
-                        :class="{ 'active': activeTab === cat.category_id }" 
-                        @click="setTab(cat.category_id)"
+                        :class="{ 'active': activeTab === cat.categoryId }" 
+                        @click="setTab(cat.categoryId)"
                     >
                         {{ cat.name }}
                     </button>

@@ -6,7 +6,6 @@ import InputTextBox from '@/components/common/InputTextBox.vue';
 import CustomSelect from '@/components/common/CustomSelect.vue'
 import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
-import icClear from '@/assets/icons/ic_clear.svg'
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useCategoryStore } from '@/stores/categoryStore'
@@ -56,7 +55,7 @@ const handleApply = async() => {
         params.push({
                 "name": item.name,
                 "selectionTypeCode": item.selection_type_code, //NUMBER, CHECK
-                "categoryId": item.category_id,
+                "categoryId": item.categoryId,
                 "useFlag": item.use_flag, //1:수정일 시, 0:삭제일 시
                 "idx": item.idx,
                 "order": item.order
@@ -99,7 +98,7 @@ const handleDelete = async() => {
     let categoryInfo = deleteCategoryData.value;
 
     let params = {
-        "categoryId": categoryInfo.category_id,
+        "categoryId": categoryInfo.categoryId,
         "idx": categoryInfo.idx
     }
 
@@ -129,9 +128,9 @@ const handleDelete = async() => {
                             <p class="title-m">{{category.name}}</p>
         
                             <!-- 삭제버튼 -->
-                            <div class="delete-btn" @click="openConfirmDeleteModal(category)">
-                                <img :src="icClear" alt="삭제" class="icon-img">
-                            </div>
+                            <button class="delete-btn" @click="openConfirmDeleteModal(category)">
+                                삭제
+                            </button>
                         </div>
         
                         <div class="category-item__settings">
@@ -221,7 +220,22 @@ const handleDelete = async() => {
 </template>
 
 <style lang="scss" scoped>
+.modal-contents-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    padding: 20px; // 기본 24px에서 각 4px씩 줄임
+}
+
 .category-manager {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 
     // 상단 영역
     &__header {
@@ -230,23 +244,56 @@ const handleDelete = async() => {
         word-break: keep-all;
         padding-bottom: 16px;
         border-bottom: 1px solid $gray-200;
+        flex-shrink: 0; // 고정
+        padding-right: 4px; // 스크롤바 공간 확보
         
         p { flex: 1; }
     }
 
     // 리스트 컨테이너
     &__list {
+        flex: 1;
+        min-height: 0;
         display: flex;
         flex-direction: column;
+        overflow-y: auto;
+        padding-top: 16px;
+        padding-right: 4px;
         
-        min-height: 0;
-        // max-height: 460px;
-        // overflow-y: auto;
+        // 스크롤바 스타일 조정 (더 얇게)
+        scrollbar-width: thin; // Firefox
+        scrollbar-gutter: stable; // 스크롤바 공간 확보
+        
+        &::-webkit-scrollbar {
+            width: 1px; // Chrome, Safari
+        }
+        
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+            background-color: $gray-300;
+            border-radius: 3px;
+            
+            &:hover {
+                background-color: $gray-400;
+            }
+        }
     }
+}
 
-    // 카테고리 등록
-    &__register-form {
-
+.modal-button-wrapper {
+    flex-shrink: 0; // 버튼 영역 고정
+    display: flex;
+    justify-content: flex-end; // 우측 정렬
+    gap: 8px;
+    padding-top: 4px;
+    padding-bottom: 0;
+    padding-right: 4px; // 스크롤바 공간 확보 (버튼 정렬 맞추기)
+    
+    .btn {
+        min-width: 80px; // 카테고리 등록 버튼과 동일한 너비
     }
 }
 
@@ -260,7 +307,21 @@ const handleDelete = async() => {
     &__title {
         display: flex;
         justify-content: space-between;
-
+        align-items: center;
+    }
+    
+    .delete-btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        background-color: $gray-100;
+        color: $gray-700;
+        cursor: pointer;
+        @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+        
+        &:hover {
+            background-color: $gray-200;
+        }
     }
 
     &__settings {

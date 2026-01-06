@@ -234,10 +234,10 @@ const scrollCategoryRight = () => {
                             >
                                 <button 
                                     v-for="category in optionStore.categoryList" 
-                                    :key="category.category_id"
+                                    :key="category.categoryId"
                                     class="category-btn"
-                                    :class="{ 'active': selectedQuantityCategory === category.category_id }"
-                                    @click="selectedQuantityCategory = category.category_id"
+                                    :class="{ 'active': selectedQuantityCategory === category.categoryId }"
+                                    @click="selectedQuantityCategory = category.categoryId"
                                 >
                                     {{ category.name }}
                                 </button>
