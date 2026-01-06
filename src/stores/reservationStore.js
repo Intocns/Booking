@@ -17,15 +17,15 @@ export const useReservationStore = defineStore("reservation", () => {
     const mapReserveRow = (row) => ({
         ...row,
         // 날짜 / 시간
-        re_time_txt: formatDate(row.re_time),
-        re_time_his_txt: formatTime(row.re_time_his),
-        created_at_txt: formatDateTime(row.created_at),
+        reTimeTxt: formatDate(row.reTime),
+        reTimeHisTxt: formatTime(row.reTimeHis),
+        createdAtTxt: formatDateTime(row.createdAt),
         // 전화번호
-        phone_txt: formatPhone(row.phone),
+        phoneTxt: formatPhone(row.phone),
         // 예약상태
-        in_state_txt: RESERVE_STATUS_MAP[row.in_state] ?? '-',
+        inStateTxt: RESERVE_STATUS_MAP[row.inState] ?? '-',
         // 예약경로
-        re_route_txt: RESERVE_ROUTE_MAP[row.re_route] ?? '-',
+        reRouteTxt: RESERVE_ROUTE_MAP[row.reRoute] ?? '-',
     })
 
     // 전체 예약 내역 불러오기
