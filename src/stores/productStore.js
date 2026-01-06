@@ -245,7 +245,7 @@ export const useProductStore = defineStore("product", () => {
     }
 
     //상품 수정
-    async function modifyItem(itemId, params, modifyType) { //modifyType = 0:상품 수정, 1:노출/미노출 버튼 수정
+    async function modifyItem(itemId, params) {
         //임시 적용 start(사용 시 해당 params값 참고)
         // let params = {
         //     "imp": true,

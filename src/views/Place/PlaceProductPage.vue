@@ -51,13 +51,10 @@ watch(
     }
 
     // 상품별 노출/미노출 기준 필터링
-    dragList.value = list.filter(item =>
-      item.isImp
-    )
+    dragList.value = list.filter(item =>item.isImp)
   },
   {
-    immediate: true,
-    deep: true
+    immediate: true
   }
 )
 
@@ -92,7 +89,7 @@ const goProductDetail = (id = null) => {
     }
 };
 // 상품별 노출/미노출 체크 변경
-const clickProductImpUpdateBtn = ((itemId, isImp) => {
+const clickProductImpUpdateBtn = (async(itemId, isImp) => {
     let params = [
         {
             "bizItemId" : itemId,
@@ -100,7 +97,13 @@ const clickProductImpUpdateBtn = ((itemId, isImp) => {
         }
     ]
 
-    productStore.setItemShow(params);
+    await productStore.setItemShow(params);
+
+    if(productStore.responseCode == 200){
+        if(isCheckImpType.value){//미노출 제외인 경우
+            dragList.value = dragList.value.filter(item => item.isImp && item.bizItemId != itemId)
+        }
+    }
 })
 // 상품별 일괄 노출/미노출 체크 변경
 const clickTotalProductImpUpdateBtn = (async(isImp) => {
@@ -195,7 +198,7 @@ onMounted(async () => {
     <div class="contents-wrapper">
         <div class="grid-wrapper">
             <!-- 상품 리스트 테이블 -->
-            <div v-for="product in dragList" class="item-box">
+            <div v-for="product in dragList" class="item-box" :key="product.bizItemId">
                 <!-- top -->
                 <div class="top">
                     <div class="item-box__img">
