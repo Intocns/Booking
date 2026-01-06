@@ -31,16 +31,16 @@ const keyword = ref('');
 // 테이블 col 정의
 const columns = [
     { key: 'idx', label: 'No.', width: '5%' },
-    { key: 're_time_txt', label: '예약일자', width: '10%' },
-    { key: 're_time_his_txt', label: '예약시간', width: '6%' },
-    { key: 'room_name', label: '상품명/진료실명', width: '10%' },
-    { key: 'user_name', label: '고객명', width: '9%' },
-    { key: 'phone_txt', label: '전화번호', width: '15%' },
-    { key: 'pet_name', label: '동물명', width: '15%' },
-    { key: 'species_name', label: '종', width: '10%' },
-    { key: 're_memo', label: '고객 메모', width: '20%' },
-    { key: 're_route_txt', label: '예약경로', width: '10%' },
-    { key: 'created_at_txt', label: '접수일시', width: '15%' },
+    { key: 'reTimeTxt', label: '예약일자', width: '10%' },
+    { key: 'reTimeHisTxt', label: '예약시간', width: '6%' },
+    { key: 'roomName', label: '상품명/진료실명', width: '10%' },
+    { key: 'userName', label: '고객명', width: '9%' },
+    { key: 'phoneTxt', label: '전화번호', width: '15%' },
+    { key: 'petName', label: '동물명', width: '15%' },
+    { key: 'speciesName', label: '종', width: '10%' },
+    { key: 'reMemo', label: '고객 메모', width: '20%' },
+    { key: 'reRouteTxt', label: '예약경로', width: '10%' },
+    { key: 'createdAtTxt', label: '접수일시', width: '15%' },
     { key: 'actions', label: '관리', width: '15%' }, // 커스텀 슬롯
 ]
 
@@ -53,8 +53,8 @@ const reserveSummary = computed(() => {
     }
 
     for (const row of reservationStore.reservePendingList) {
-        if (counts[row.re_route] !== undefined) {
-            counts[row.re_route]++;
+        if (counts[row.reRoute] !== undefined) {
+            counts[row.reRoute]++;
         }
     }
 
@@ -115,9 +115,9 @@ onMounted(() => {
         <template #table>
             <CommonTable :columns="columns" :rows="reservationStore.reservePendingList">
                 <!-- 예약경로 앞에 dot -->
-                <template #re_route_txt="{ row, value }">
+                <template #reRouteTxt="{ row, value }">
                     <div class="status-cell">
-                        <span class="dot" :class="`dot--route-${row.re_route}`"></span>
+                        <span class="dot" :class="`dot--route-${row.reRoute}`"></span>
                         {{ value }}
                     </div>
                 </template>
