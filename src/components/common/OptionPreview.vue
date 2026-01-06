@@ -3,7 +3,7 @@ import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import icEmpty from '@/assets/icons/ic_empty.svg';
 import icArrowLeft from '@/assets/icons/ic_arrow_left.svg';
 import icArrowRight from '@/assets/icons/ic_arrow_right.svg';
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useOptionStore } from '@/stores/optionStore';
 import { useProductStore } from '@/stores/productStore';
 import { useDragScroll } from '@/composables/useDragScroll';
@@ -50,8 +50,8 @@ const quantityOptions = computed(() => {
     let filtered = previewOptions.value.filter(option => option.categoryType === 'NUMBER');
     
     // 선택된 카테고리가 있으면 해당 카테고리의 옵션만 표시
-    if (selectedQuantityCategory.value) {
-        filtered = filtered.filter(option => option.categoryId === selectedQuantityCategory.value);
+    if (selectedCategory.value) {
+        filtered = filtered.filter(option => option.categoryId === selectedCategory.value);
     }
     
     return filtered.map(option => ({
@@ -76,45 +76,51 @@ const checkOptions = computed(() => {
     }
     
     // categoryType이 'CHECK'인 옵션만 필터링
-    return previewOptions.value
-        .filter(option => option.categoryType === 'CHECK')
-        .map(option => ({
-            optionName: option.optionName || '',
-            rawData: {
-                optionId: option.optionId,
-                idx: option.optionId, // idx가 없으면 optionId 사용
-                desc: option.optionDesc || '',
-                price: option.optionPrice || null,
-                categoryId: option.categoryId,
-                categoryName: option.categoryName
-            }
-        }));
+    let filtered = previewOptions.value.filter(option => option.categoryType === 'CHECK');
+    
+    // 선택된 카테고리가 있으면 해당 카테고리의 옵션만 표시
+    if (selectedCategory.value) {
+        filtered = filtered.filter(option => option.categoryId === selectedCategory.value);
+    }
+    
+    return filtered.map(option => ({
+        optionName: option.optionName || '',
+        rawData: {
+            optionId: option.optionId,
+            idx: option.optionId, // idx가 없으면 optionId 사용
+            desc: option.optionDesc || '',
+            price: option.optionPrice || null,
+            categoryId: option.categoryId,
+            categoryName: option.categoryName
+        }
+    }));
 });
 
-// 수량형 옵션에서 선택된 카테고리
-const selectedQuantityCategory = ref(null);
+// 선택된 카테고리 (NUMBER, CHECK 공통)
+const selectedCategory = ref(null);
 
-// 수량형 옵션의 카테고리 목록 (API 응답에서 추출)
-const quantityCategories = computed(() => {
+// 미리보기 옵션의 카테고리 목록 (NUMBER, CHECK 모두 포함, 중복 제거)
+const previewCategories = computed(() => {
     if (!previewOptions.value.length) {
         return [];
     }
     
-    // 수량형 옵션의 카테고리만 추출 (중복 제거)
     const categoryMap = new Map();
-    previewOptions.value
-        .filter(option => option.categoryType === 'NUMBER')
-        .forEach(option => {
-            if (!categoryMap.has(option.categoryId)) {
-                categoryMap.set(option.categoryId, {
-                    category_id: option.categoryId,
-                    name: option.categoryName || ''
-                });
-            }
-        });
+    previewOptions.value.forEach(option => {
+        if (!categoryMap.has(option.categoryId)) {
+            categoryMap.set(option.categoryId, {
+                category_id: option.categoryId,
+                name: option.categoryName || '',
+                categoryType: option.categoryType
+            });
+        }
+    });
     
     return Array.from(categoryMap.values());
 });
+
+// 향후 필수 카테고리 노출 시 사용할 안내 문구 표시 여부
+const showRequiredNotice = ref(false);
 
 // 수량형 옵션의 선택 수량 관리
 const optionQuantities = ref({}); // { optionId: quantity }
@@ -185,10 +191,19 @@ watch(selectedProductModel, async (newValue) => {
             if (Array.isArray(data)) {
                 previewOptions.value = data;
                 
-                // 수량형 옵션이 있으면 첫 번째 카테고리 자동 선택
-                const numberOptions = data.filter(option => option.categoryType === 'NUMBER');
-                if (numberOptions.length > 0) {
-                    selectedQuantityCategory.value = numberOptions[0].categoryId;
+                // 옵션이 있으면 첫 번째 카테고리 자동 선택 (NUMBER, CHECK 공통)
+                const categories = Array.from(
+                    new Map(
+                        data.map(option => [option.categoryId, {
+                            category_id: option.categoryId,
+                            name: option.categoryName || '',
+                            categoryType: option.categoryType
+                        }])
+                    ).values()
+                );
+                
+                if (categories.length > 0) {
+                    selectedCategory.value = categories[0].category_id;
                 }
             }
         } catch (error) {
@@ -205,6 +220,22 @@ const { scrollRef: categoryScrollRef, handleMouseDown } = useDragScroll({
     buttonSelector: '.category-btn'
 });
 
+// 카테고리 좌우 이동 버튼 노출 여부
+const showCategoryNav = ref(false);
+
+// 카테고리 스크롤 영역이 넘칠 때만 버튼 노출
+const updateCategoryNavVisibility = () => {
+    nextTick(() => {
+        const el = categoryScrollRef.value;
+        if (!el) {
+            showCategoryNav.value = false;
+            return;
+        }
+        const overflow = el.scrollWidth - el.clientWidth;
+        showCategoryNav.value = overflow > 2;
+    });
+};
+
 // 카테고리 버튼 좌우 스크롤 함수
 const scrollCategoryLeft = () => {
     if (categoryScrollRef.value) {
@@ -217,6 +248,19 @@ const scrollCategoryRight = () => {
         categoryScrollRef.value.scrollBy({ left: 100, behavior: 'smooth' });
     }
 };
+
+// 카테고리 목록이 변할 때 버튼 노출 여부 재계산
+watch(previewCategories, () => updateCategoryNavVisibility(), { immediate: true });
+
+// 리사이즈 대응
+const handleResize = () => updateCategoryNavVisibility();
+onMounted(() => {
+    updateCategoryNavVisibility();
+    window.addEventListener('resize', handleResize);
+});
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+});
 </script>
 
 <template>
@@ -246,12 +290,14 @@ const scrollCategoryRight = () => {
                     <!-- 수량형 옵션 섹션 -->
                     <div class="preview-options-section">
                         <div class="preview-section-title">
+                            <p class="title-m option-select-title">옵션을 선택해 주세요</p>
                             <p class="body-m">함께 예약가능한 옵션이니 필요한 경우 선택하세요.</p>
                         </div>
                         
-                        <!-- 카테고리 버튼들 (수량형) -->
-                        <div v-if="quantityOptions.length > 0" class="category-buttons-wrapper">
+                        <!-- 카테고리 버튼들 (NUMBER, CHECK 공통) -->
+                        <div v-if="previewCategories.length > 0" class="category-buttons-wrapper">
                             <button 
+                                v-if="showCategoryNav"
                                 class="category-scroll-btn"
                                 @click="scrollCategoryLeft"
                             >
@@ -263,16 +309,17 @@ const scrollCategoryRight = () => {
                                 @mousedown="handleMouseDown"
                             >
                                 <button 
-                                    v-for="category in quantityCategories" 
+                                    v-for="category in previewCategories" 
                                     :key="category.category_id"
                                     class="category-btn"
-                                    :class="{ 'active': selectedQuantityCategory === category.category_id }"
-                                    @click="selectedQuantityCategory = category.category_id"
+                                    :class="{ 'active': selectedCategory === category.category_id }"
+                                    @click="selectedCategory = category.category_id"
                                 >
                                     {{ category.name }}
                                 </button>
                             </div>
                             <button 
+                                v-if="showCategoryNav"
                                 class="category-scroll-btn"
                                 @click="scrollCategoryRight"
                             >
@@ -317,10 +364,11 @@ const scrollCategoryRight = () => {
                     </div>
                     
                     <!-- 체크형 옵션 섹션 -->
-                    <div class="preview-options-section">
-                        <div class="preview-section-title">
-                            <p class="body-m">필수 항목을 확인해 주세요.</p>
-                            <p class="body-xs">필수 메뉴는 예약 시 필수로 포함되는 메뉴입니다.</p>
+                    <div v-if="checkOptions.length > 0" class="preview-options-section">
+                        <div v-if="showRequiredNotice" class="preview-section-title">
+                            <!-- 추후 필수 여부가 있는 카테고리 전용 문구 -->
+                            <!-- <p class="body-m">필수 항목을 확인해 주세요.</p>
+                            <p class="body-xs">필수 메뉴는 예약 시 필수로 포함되는 메뉴입니다.</p> -->
                         </div>
                         
                         <!-- 체크형 옵션 리스트 -->
@@ -406,13 +454,16 @@ const scrollCategoryRight = () => {
         .preview-options-wrapper {
             display: flex;
             flex-direction: column;
-            gap: 32px;
         }
         
         .preview-options-section {
             display: flex;
             flex-direction: column;
             gap: 16px;
+                
+                .option-select-title {
+                    color: $gray-900;
+                }
             
             .preview-section-title {
                 display: flex;
