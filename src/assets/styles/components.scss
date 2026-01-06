@@ -334,6 +334,7 @@
     }
 }
 
+// hover tooltip
 .helper {
     position: relative; // 툴팁 위치의 기준점
     display: inline-flex;
@@ -382,6 +383,23 @@
     }
 }
 
+// tooltip box
+.tooltip-box {
+    width: 100%;
+    padding: 15px;
+
+    border-radius: 5px;
+    background-color: $primary-50;
+    @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
+
+    ul {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding-left: 20px;
+        list-style:disc;
+    }
+}
 // ======================================================================
 // modal 스타일
 // ======================================================================

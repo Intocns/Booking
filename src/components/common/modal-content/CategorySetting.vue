@@ -51,6 +51,16 @@ const handleApply = async() => {
     let category_list = categoryStore.categoryList;
     let params = [];
 
+    // 빈 값이 있거나 10자를 초과하는 항목이 하나라도 있는지 확인
+    const hasError = category_list.some(item => 
+        !item.name || item.name.trim().length === 0 || item.name.length > 10
+    );
+
+    if (hasError) {
+        alert('입력하신 카테고리 정보를 다시 확인해주세요.');
+        return;
+    }
+
     // TODO: 적용 로직(카테고리 수정)
     category_list.forEach(item => {
         params.push({
@@ -71,7 +81,20 @@ const handleApply = async() => {
     }
 };
 const handleSave = async() => {
-    // TODO: 등록 로직
+    // 1. 유효성 검사
+    const name = categoryRegisterData.name;
+    const type = categoryRegisterData.type;
+
+    if (!name || name.trim().length === 0 || name.length > 10) {
+        alert('카테고리명을 다시 확인해주세요.');
+        return;
+    }
+
+    if (!type) {
+        alert('유형을 선택해주세요.');
+        return;
+    }
+
     let params = {
         "name": categoryRegisterData.name,
         "selectionTypeCode": categoryRegisterData.type, //NUMBER, CHECK
@@ -82,6 +105,8 @@ const handleSave = async() => {
     // 성공 시 다시 리스트 모드로 이동
     
     if(categoryStore.responseCode == 200){
+        categoryRegisterData.name = ''; // 데이터 초기화
+        categoryRegisterData.type = '';
         goList();
     }
 };
@@ -90,11 +115,20 @@ let deleteCategoryData = ref({});//삭제 아이콘 클릭 시 해당 데이터 
 
 const openConfirmDeleteModal = (category) => {
     deleteCategoryData.value = category;
-    modalStore.confirmModal.openModal()
+    modalStore.confirmModal.openModal({ // confirmModal에 데이터 전달
+        title: '카테고리 삭제',
+        text: `[${category.name}] 카테고리를 삭제하시겠습니까?\n삭제할 경우 해당 카테고리에 포함된\n모든 옵션이 삭제되며 복원되지 않습니다.`,
+        subText: '해당카테고리의 옵션을 계속 사용 하시려면\n삭제 전 옵션을 다른 카테고리로 이동해주세요.',
+        confirmBtnText: '삭제',
+        onConfirm: () => {
+            handleDelete();
+        }
+    })
+
 }
 
 const handleDelete = async() => {
-    modalStore.confirmModal.closeModal()
+    // modalStore.confirmModal.closeModal()
 
     let categoryInfo = deleteCategoryData.value;
 
@@ -108,9 +142,17 @@ const handleDelete = async() => {
 
     // 삭제 성공 시 다시 리스트 모드로 이동
     if(categoryStore.responseCode == 200){
+        await categoryStore.getCategoryList();
         goList();
     }
 }
+
+/**
+ * 수정/삭제가 불가능한 고정 카테고리인지 확인 (카테고리 미지정, 예약필수 메뉴)
+ */
+const isFixedCategory = (category) => {
+    
+};
 </script>
 
 <template>
@@ -129,8 +171,8 @@ const handleDelete = async() => {
                             <p class="title-m">{{category.name}}</p>
         
                             <!-- 삭제버튼 -->
-                            <button class="delete-btn" @click="openConfirmDeleteModal(category)">
-                                <img :src="icDel" alt="삭제" class="delete-btn__icon">
+                            <button class="btn btn--size-24 btn--black-outline" @click="openConfirmDeleteModal(category)">
+                                <img :src="icDel" alt="삭제" width="14">
                                 <span>삭제</span>
                             </button>
                         </div>
@@ -142,6 +184,8 @@ const handleDelete = async() => {
                                     <InputTextBox
                                         v-model="category.name"
                                         :max-length="10"
+                                        :is-error="!category.name || category.name.length > 10"
+                                        :error-message="!category.name ? '카테고리명을 입력해주세요.' : '10자까지만 입력 가능합니다.'"
                                     />
                                 </div>
                             </div>
@@ -149,7 +193,7 @@ const handleDelete = async() => {
                                 <p class="title-s setting-row__label">유형</p>
                                 <div class="setting-row__content">
                                     <CustomSingleSelect
-                                        v-model="category.selection_type_code"
+                                        v-model="category.selectionTypeCode"
                                         :options="CATEGORY_TYPE_OPTIONS"
                                         class="select"
                                     />
@@ -159,8 +203,10 @@ const handleDelete = async() => {
                     </div>
                 </div>
             </div>
-            <!-- 버튼 -->
-            <div class="modal-button-wrapper">
+        </div>
+        <!-- 버튼 -->
+        <div class="modal-button-wrapper">
+            <div class="buttons">
                 <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.categorySettingModal.closeModal()">취소</button>
                 <button class="btn btn--size-32 btn--blue" @click="handleApply">적용</button>
             </div>
@@ -180,6 +226,8 @@ const handleDelete = async() => {
                                     v-model="categoryRegisterData.name" 
                                     placeholder="카테고리명을 입력해주세요."
                                     :max-length="10" 
+                                    :is-error="!categoryRegisterData.name || categoryRegisterData.name.length > 10"
+                                    :error-message="!categoryRegisterData.name ? '카테고리명을 입력해주세요.' : '10자까지만 입력 가능합니다.'"
                                 />
                             </div>
                         </div>
@@ -200,25 +248,15 @@ const handleDelete = async() => {
 
         <!-- 버튼 -->
         <div class="modal-button-wrapper">
-            <button class="btn btn--size-32 btn--blue-outline" @click="goList">이전으로</button>
-            <button class="btn btn--size-32 btn--blue" @click="handleSave">등록</button>
+            <div class="buttons">
+                <button class="btn btn--size-32 btn--blue-outline" @click="goList">이전으로</button>
+                <button class="btn btn--size-32 btn--blue" @click="handleSave">등록</button>
+            </div>
         </div>
     </template>
 
     <!-- 옵션 삭제 -->
-    <ConfirmModal
-        v-if="modalStore.confirmModal.isVisible"
-        title="카테고리 삭제"
-        confirm-btn-text="삭제"
-        @confirm="handleDelete"
-    >
-        <p>[방문 수단 선택] 카테고리를 삭제하시겠습니가?
-            <br/><br/>삭제할 경우 해당 카테고리에 포함된
-            <br/>모든 옵션이 삭제되며 복원되지 않습니다.
-            <br/><br/>해당카테고리의 옵션을 계속 사용 하시려면
-            <br/>삭제 전 옵션을 다른 카테고리로 이동해주세요.
-        </p>
-    </ConfirmModal>
+    <ConfirmModal v-if="modalStore.confirmModal.isVisible" />
 </template>
 
 <style lang="scss" scoped>
@@ -259,7 +297,7 @@ const handleDelete = async() => {
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-        padding-top: 16px;
+        // padding-top: 16px;
         padding-right: 4px;
         
         // 스크롤바 스타일 조정 (더 얇게)
@@ -285,20 +323,6 @@ const handleDelete = async() => {
     }
 }
 
-.modal-button-wrapper {
-    flex-shrink: 0; // 버튼 영역 고정
-    display: flex;
-    justify-content: flex-end; // 우측 정렬
-    gap: 8px;
-    padding-top: 4px;
-    padding-bottom: 0;
-    padding-right: 4px; // 스크롤바 공간 확보 (버튼 정렬 맞추기)
-    
-    .btn {
-        min-width: 80px; // 카테고리 등록 버튼과 동일한 너비
-    }
-}
-
 .category-item {
     display: flex;
     flex-direction: column;
@@ -310,29 +334,6 @@ const handleDelete = async() => {
         display: flex;
         justify-content: space-between;
         align-items: center;
-    }
-    
-    .delete-btn {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 6px 8px;
-        border: 1px solid $gray-200;
-        border-radius: 4px;
-        background-color: $gray-00;
-        color: $gray-700;
-        cursor: pointer;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
-        
-        &__icon {
-            width: 16px;
-            height: 16px;
-        }
-        
-        &:hover {
-            background-color: $gray-50;
-        }
     }
 
     &__settings {
