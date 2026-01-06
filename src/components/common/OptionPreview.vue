@@ -8,6 +8,10 @@ import { useOptionStore } from '@/stores/optionStore';
 import { useProductStore } from '@/stores/productStore';
 import { useDragScroll } from '@/composables/useDragScroll';
 
+// 미리보기 옵션 데이터
+const previewOptions = ref([]);
+const isLoading = ref(false);
+
 const optionStore = useOptionStore();
 const productStore = useProductStore();
 
@@ -36,81 +40,81 @@ const selectedProductModel = computed({
     set: (value) => emit('update:selectedProduct', value)
 });
 
-// 미리보기: 수량형 옵션 (임시 데이터 - 화면 확인용)
+// 미리보기: 수량형 옵션
 const quantityOptions = computed(() => {
-    // TODO: 선택된 상품의 수량형 옵션들을 카테고리별로 필터링
-    // 임시 데이터 - 화면 확인용
-    if (!selectedProductModel.value) {
+    if (!selectedProductModel.value || !previewOptions.value.length) {
         return [];
     }
-    return [
-        {
-            optionName: '내과',
-            rawData: {
-                optionId: 1,
-                idx: 1,
-                desc: '강아지 내과 진료',
-                price: null,
-                minBookingCount: 0,
-                maxBookingCount: null
-            }
-        },
-        {
-            optionName: '외과',
-            rawData: {
-                optionId: 2,
-                idx: 2,
-                desc: '외과 진료',
-                price: null,
-                minBookingCount: 0,
-                maxBookingCount: null
-            }
-        },
-        {
-            optionName: '미용',
-            rawData: {
-                optionId: 3,
-                idx: 3,
-                desc: '강아지미용',
-                price: 100000,
-                minBookingCount: 0,
-                maxBookingCount: null
-            }
+    
+    // categoryType이 'NUMBER'인 옵션만 필터링
+    let filtered = previewOptions.value.filter(option => option.categoryType === 'NUMBER');
+    
+    // 선택된 카테고리가 있으면 해당 카테고리의 옵션만 표시
+    if (selectedQuantityCategory.value) {
+        filtered = filtered.filter(option => option.categoryId === selectedQuantityCategory.value);
+    }
+    
+    return filtered.map(option => ({
+        optionName: option.optionName || '',
+        rawData: {
+            optionId: option.optionId,
+            idx: option.optionId, // idx가 없으면 optionId 사용
+            desc: option.optionDesc || '',
+            price: option.optionPrice || null,
+            minBookingCount: option.minBookingCount || 0,
+            maxBookingCount: option.maxBookingCount || null,
+            categoryId: option.categoryId,
+            categoryName: option.categoryName
         }
-    ];
+    }));
 });
 
-// 미리보기: 체크형 옵션 (임시 데이터 - 화면 확인용)
+// 미리보기: 체크형 옵션
 const checkOptions = computed(() => {
-    // TODO: 선택된 상품의 체크형 옵션들을 가져오는 로직으로 변경 필요
-    // 임시 데이터 - 화면 확인용
-    if (!selectedProductModel.value) {
+    if (!selectedProductModel.value || !previewOptions.value.length) {
         return [];
     }
-    return [
-        {
-            optionName: '첫방문',
+    
+    // categoryType이 'CHECK'인 옵션만 필터링
+    return previewOptions.value
+        .filter(option => option.categoryType === 'CHECK')
+        .map(option => ({
+            optionName: option.optionName || '',
             rawData: {
-                optionId: 4,
-                idx: 4,
-                desc: '처음 방문하시거나, 새로운 동물과 방문하시는 경우 선택해 주세요.',
-                price: null
+                optionId: option.optionId,
+                idx: option.optionId, // idx가 없으면 optionId 사용
+                desc: option.optionDesc || '',
+                price: option.optionPrice || null,
+                categoryId: option.categoryId,
+                categoryName: option.categoryName
             }
-        },
-        {
-            optionName: '재방문',
-            rawData: {
-                optionId: 5,
-                idx: 5,
-                desc: '동일한 동물과 재방문 하시는 경우 선택해 주세요.',
-                price: null
-            }
-        }
-    ];
+        }));
 });
 
 // 수량형 옵션에서 선택된 카테고리
 const selectedQuantityCategory = ref(null);
+
+// 수량형 옵션의 카테고리 목록 (API 응답에서 추출)
+const quantityCategories = computed(() => {
+    if (!previewOptions.value.length) {
+        return [];
+    }
+    
+    // 수량형 옵션의 카테고리만 추출 (중복 제거)
+    const categoryMap = new Map();
+    previewOptions.value
+        .filter(option => option.categoryType === 'NUMBER')
+        .forEach(option => {
+            if (!categoryMap.has(option.categoryId)) {
+                categoryMap.set(option.categoryId, {
+                    category_id: option.categoryId,
+                    name: option.categoryName || ''
+                });
+            }
+        });
+    
+    return Array.from(categoryMap.values());
+});
 
 // 수량형 옵션의 선택 수량 관리
 const optionQuantities = ref({}); // { optionId: quantity }
@@ -164,10 +168,36 @@ const isChecked = (option) => {
     return checkedOptions.value[optionId] || false;
 };
 
-// 선택된 상품이 변경되면 수량/체크 상태 초기화
-watch(selectedProductModel, () => {
+// 선택된 상품이 변경되면 수량/체크 상태 초기화 및 옵션 데이터 로드
+watch(selectedProductModel, async (newValue) => {
     optionQuantities.value = {};
     checkedOptions.value = {};
+    previewOptions.value = [];
+    
+    if (newValue) {
+        try {
+            isLoading.value = true;
+            const response = await optionStore.getOptionPreviewByItemId(newValue);
+            
+            // API 응답 구조: response.data.data 배열
+            const data = response?.data?.data || response?.data || [];
+            
+            if (Array.isArray(data)) {
+                previewOptions.value = data;
+                
+                // 수량형 옵션이 있으면 첫 번째 카테고리 자동 선택
+                const numberOptions = data.filter(option => option.categoryType === 'NUMBER');
+                if (numberOptions.length > 0) {
+                    selectedQuantityCategory.value = numberOptions[0].categoryId;
+                }
+            }
+        } catch (error) {
+            console.error('미리보기 옵션 로드 실패:', error);
+            previewOptions.value = [];
+        } finally {
+            isLoading.value = false;
+        }
+    }
 });
 
 // 카테고리 버튼 스크롤 컨테이너 참조 및 드래그 스크롤 기능
@@ -233,11 +263,11 @@ const scrollCategoryRight = () => {
                                 @mousedown="handleMouseDown"
                             >
                                 <button 
-                                    v-for="category in optionStore.categoryList" 
-                                    :key="category.categoryId"
+                                    v-for="category in quantityCategories" 
+                                    :key="category.category_id"
                                     class="category-btn"
-                                    :class="{ 'active': selectedQuantityCategory === category.categoryId }"
-                                    @click="selectedQuantityCategory = category.categoryId"
+                                    :class="{ 'active': selectedQuantityCategory === category.category_id }"
+                                    @click="selectedQuantityCategory = category.category_id"
                                 >
                                     {{ category.name }}
                                 </button>

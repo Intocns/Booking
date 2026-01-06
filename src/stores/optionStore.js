@@ -2,6 +2,7 @@
 import { defineStore } from "pinia";
 import { api} from "@/api/axios";
 import { ref } from "vue";
+import { formatDate as formatDateUtil } from "@/utils/dateFormatter";
 
 export const useOptionStore = defineStore("option", () => {
     const cocode = '2592' // TODO: 임시
@@ -104,7 +105,7 @@ export const useOptionStore = defineStore("option", () => {
                             price: option.price ? option.price.toLocaleString()  + ' 원' : '-',
                             count: option.stock !== null && option.stock !== undefined ? option.stock + ' 개' : '제한 없음',
                             1: bookingCountText,
-                            2: option.startDate && option.endDate ? `${formatDate(option.startDate)} ~ ${formatDate(option.endDate)}` : '상시운영',
+                            2: option.startDate && option.endDate ? `${formatDateUtil(option.startDate).replace(/-/g, '.')} ~ ${formatDateUtil(option.endDate).replace(/-/g, '.')}` : '상시운영',
                             checked: option.isImp,
                             order: option.order || 0,
                             startDate: option.startDate,
@@ -139,12 +140,6 @@ export const useOptionStore = defineStore("option", () => {
         }
     }
 
-    // 날짜 포맷팅 헬퍼 함수
-    function formatDate(dateString) {
-        if(!dateString) return '';
-        const date = new Date(dateString);
-        return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-    }
 
     // 옵션 등록
     async function addOption(params) {
@@ -206,6 +201,16 @@ export const useOptionStore = defineStore("option", () => {
         }
     }
 
+    // 미리보기
+    async function getOptionPreviewByItemId(itemId) {
+        const response = await api.get(`/api/${cocode}/option/item/${itemId}`);
+        if(response.status == 200) {
+            return response.data;
+        } else {
+            throw new Error('미리보기 실패');
+        }
+    }
+
     return {
         //
         categoryList,
@@ -219,5 +224,6 @@ export const useOptionStore = defineStore("option", () => {
         addOptionMapping,
         updateOption,
         deleteOption,
+        getOptionPreviewByItemId,
     }
 })
