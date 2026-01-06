@@ -36,9 +36,24 @@ const props = defineProps({
     minLength: {
         type: Number,
         default: 0,
+    },
+    // 에러 상태 여부 추가
+    isError: {
+        type: Boolean,
+        default: false,
+    },
+    // 에러 시 보여줄 메시지 (값이 없으면 caption을 대신 보여줌)
+    errorMessage: {
+        type: String,
+        default: '',
     }
-    // TODO: status (success, error 등) prop 추가 가능
 })
+
+// 화면에 표시할 최종 메시지 결정
+const displayMessage = computed(() => {
+    if (props.isError && props.errorMessage) return props.errorMessage;
+    return props.caption;
+});
 
 const emit = defineEmits(['update:modelValue', 'change', 'focus', 'blur']);
 
@@ -48,6 +63,11 @@ const isFocused = ref(false);
 // computed: 값 존재 여부 (클리어 버튼 표시 기준)
 const hasValue = computed(() => {
     return props.modelValue !== null && props.modelValue !== undefined && String(props.modelValue).length > 0;
+});
+
+// 최종 에러 판단 (외부에서 주입한 isError 혹은 maxLength 초과 시)
+const hasError = computed(() => {
+    return props.isError || isMax.value;
 });
 
 // 입력 값 변경 처리 (부모에게 전달)
@@ -81,9 +101,18 @@ const handleBlur = () => {
 
 // 현재 값 길이 계산
 const currentLength = computed(() => {
-    return props.modelValue.length;
+    return props.modelValue ? String(props.modelValue).length : 0;
 });
 
+// 최대치 도달 여부 계산
+const isMax = computed(() => {
+    return props.maxLength > 0 && currentLength.value > props.maxLength;
+});
+
+// 클리어 아이콘 표시 조건: 값이 있고 + 포커스 상태이고 + 최대치가 아닐 때
+const showClearIcon = computed(() => {
+    return hasValue.value && isFocused.value && !props.disabled && !isMax.value;
+});
 </script>
 
 <template>
@@ -94,6 +123,7 @@ const currentLength = computed(() => {
                 '--focused': isFocused,
                 '--disabled': disabled,
                 '--has-value': hasValue,
+                '--is-error': hasError,
             }"
         >
             <input 
@@ -108,40 +138,44 @@ const currentLength = computed(() => {
     
             <!-- 아이콘 -->
             <span class="input-text-box__icons">
-                <!-- clear icon: 값 있을 때만 표시 -->
-                <img
-                    v-if="hasValue && !disabled"
-                    :src="icClear" 
-                    alt="입력 삭제 아이콘"
+                <img 
+                    v-if="hasError"
+                    :src="icWarning" 
+                    alt="경고"
                     class="clear-icon"
-                    @click="clearInput"
+                >
+                <img
+                    v-else-if="showClearIcon"
+                    :src="icClear" 
+                    alt="입력 삭제"
+                    class="clear-icon"
+                    @mousedown.prevent="clearInput" 
                 >
                 <!-- <img 
                     :src="icCheck" 
                     alt="입력 확인 아이콘"
                     class="clear-icon"
-                >
-                <img 
-                    :src="icWarning" 
-                    alt="입력  아이콘"
-                    class="clear-icon"
                 > -->
             </span>
         </div>
         
-        <template v-if="caption || maxLength"> 
-            <div class="input-text-box__bottom">
-                <!-- 힌트 메세지 -->
-                <span class="caption">{{ caption }}</span>
-                <!-- 글자 수 영역 -->
-                <span 
-                    class="input-text-box__char-count"
-                    v-show="maxLength > 0"
-                >
-                    {{ currentLength }} / {{ maxLength }} {{ minLength > 0 ? '(최소' + minLength + '자)' : '' }}
-                </span>
-            </div>
-        </template>
+        <div v-if="displayMessage || maxLength" class="input-text-box__bottom">
+            <!-- 힌트 메세지 -->
+            <span 
+                class="caption" 
+                :class="{ '--error': hasError }"
+            >
+                {{ displayMessage }}
+            </span>
+            <!-- 글자 수 영역 -->
+            <span 
+                class="input-text-box__char-count"
+                :class="{ '--max': isMax }"
+                v-show="maxLength > 0"
+            >
+                {{ currentLength }} / {{ maxLength }} {{ minLength > 0 ? '(최소' + minLength + '자)' : '' }}
+            </span>
+        </div>
     </div>
 </template>
 
@@ -170,6 +204,10 @@ const currentLength = computed(() => {
     &.--disabled {
         background-color: $gray-50;
         cursor: not-allowed;
+    }
+    // 에러 발생 시 보더 색상 변경
+    &.--is-error {
+        border-color: $warning-500;
     }
 
     input[type="text"] {
@@ -207,6 +245,17 @@ const currentLength = computed(() => {
         justify-content: space-between;
 
         padding: 0 10px;
+
+        .caption {
+            @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line);
+            color: $gray-700;
+            word-break: keep-all;
+
+            // 에러 상태일 때 메시지 빨갛게
+            &.--error {
+                color: $warning-500; // 혹은 $red-500
+            }
+        }
     }
 
     &__char-count {
@@ -215,6 +264,10 @@ const currentLength = computed(() => {
         
         @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line);
         color: $gray-500;
+
+        &.--max {
+            color: $warning-500;
+        }
     }
 }
 .caption {color: $gray-700; }
