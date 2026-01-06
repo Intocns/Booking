@@ -6,6 +6,7 @@ import InputTextBox from '@/components/common/InputTextBox.vue';
 import CustomSelect from '@/components/common/CustomSelect.vue'
 import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
+import icDel from '@/assets/icons/ic_del.svg';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useCategoryStore } from '@/stores/categoryStore'
@@ -129,7 +130,8 @@ const handleDelete = async() => {
         
                             <!-- 삭제버튼 -->
                             <button class="delete-btn" @click="openConfirmDeleteModal(category)">
-                                삭제
+                                <img :src="icDel" alt="삭제" class="delete-btn__icon">
+                                <span>삭제</span>
                             </button>
                         </div>
         
@@ -311,16 +313,25 @@ const handleDelete = async() => {
     }
     
     .delete-btn {
-        padding: 6px 12px;
-        border: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 8px;
+        border: 1px solid $gray-200;
         border-radius: 4px;
-        background-color: $gray-100;
+        background-color: $gray-00;
         color: $gray-700;
         cursor: pointer;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
         
+        &__icon {
+            width: 16px;
+            height: 16px;
+        }
+        
         &:hover {
-            background-color: $gray-200;
+            background-color: $gray-50;
         }
     }
 
