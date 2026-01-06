@@ -314,7 +314,7 @@
     }
 
     &--black {
-        background-color: $gray-700;
+        background-color: $gray-800;
         color: $gray-00;
     }
     &--black-outline {
@@ -350,10 +350,10 @@
         opacity: 0;         // 투명도 0
         position: absolute;
         top: 10px;
-        left: calc(100% + 8px); // 아이콘 위쪽으로 배치
+        left: calc(100% + 8px); 
         
         width: max-content;
-        max-width: 400px; // 최대 너비 제한
+        max-width: 450px; // 최대 너비 제한
         padding: 15px;
 
         border-radius: 5px;
@@ -369,7 +369,7 @@
 
         ul {
             list-style: disc;
-            padding-left: 15px;
+            padding-left: 20px;
         }
     }
 
@@ -380,24 +380,6 @@
             opacity: 1;
         }
     }
-}
-
-// tooltip
-.tooltip-content {
-    position: absolute;
-    @include flex-center;
-    width: max-content;
-    min-width: 200px;
-    max-width: 400px;
-    padding: 15px;
-    gap: 10px;
-    pointer-events: none;
-
-    border-radius: 5px;
-    border: 1px solid $primary-700;
-    background-color: $primary-50;
-    @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
-    box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.15);
 }
 
 // ======================================================================
