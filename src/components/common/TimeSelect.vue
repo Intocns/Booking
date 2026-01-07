@@ -177,7 +177,7 @@ onUnmounted(() => {
     height: 32px;
     min-width: 0;
     width: 100%;
-    min-width: 100px;
+    min-width: 94px;
     padding: 8px;
 
     border-radius: 5px;
@@ -238,7 +238,7 @@ onUnmounted(() => {
     top: 35px; 
     left: 0;
     width: 100%; // 너비를 InputTextBox와 맞춤
-    min-width: 100px;
+    min-width: 94px;
     
     background-color: $gray-00;
     border: 1px solid $gray-200;
@@ -250,7 +250,7 @@ onUnmounted(() => {
 
 .time-columns-container {
     display: flex;
-    height: 150px; /* 스크롤 영역의 높이 */
+    height: 100px; /* 스크롤 영역의 높이 */
     border-bottom: 1px solid $gray-200;
 }
 
@@ -273,6 +273,7 @@ onUnmounted(() => {
     scrollbar-width: none;
     
     li {
+        @include flex-center;
         padding: 8px;
         border-radius: 4px;
         cursor: pointer;

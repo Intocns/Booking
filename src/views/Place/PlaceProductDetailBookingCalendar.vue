@@ -9,6 +9,7 @@ import ModalSimple from "@/components/common/ModalSimple.vue";
 import CustomSingleSelect from "@/components/common/CustomSingleSelect.vue";
 // 스토어
 import { useModalStore } from "@/stores/modalStore";
+import TimeSelect from "@/components/common/TimeSelect.vue";
 
 const modalStore = useModalStore();
 
@@ -183,6 +184,10 @@ const modalTitle = computed(() => {
     return new DayPilot.Date(selectedEvent.value.start).toString("yy.MM.dd (ddd)","ko-kr");
 });
 
+const handelSetOperationModalOpen = (() => {
+    modalStore.setDateSettingModal.closeModal();
+    modalStore.setOperationRuleModal.openModal();
+})
 onMounted(() => {
     // 초기 로드 시 오늘 날짜로 이동
     calendarConfig.startDate = DayPilot.Date.today().firstDayOfWeek(1);
@@ -223,7 +228,7 @@ onMounted(() => {
     >
         <div class="modal-contents-inner">
             <div class="d-flex flex-col gap-16 align-center">
-                <button class="btn-link" @click="modalStore.setOperationRuleModal.openModal()">진료 가능 동물 수, 운영시간 변경하기<img :src="icArrowRight" alt="아이콘"></button>
+                <button class="btn-link" @click="handelSetOperationModalOpen">진료 가능 동물 수, 운영시간 변경하기<img :src="icArrowRight" alt="아이콘"></button>
                 <div class="d-flex gap-8">
                     <button class="btn btn--size-24 btn--black-outline">전체 가능</button>
                     <button class="btn btn--size-24 btn--black-outline">전체 마감</button>
@@ -255,7 +260,6 @@ onMounted(() => {
         v-if="modalStore.setOperationRuleModal.isVisible"
         :modal-state="modalStore.setOperationRuleModal"
         :title="modalTitle"
-        modal-width="320px"
     >
         <div class="modal-contents-inner">
             <!-- 일정 설정 -->
@@ -287,12 +291,24 @@ onMounted(() => {
                 </div>
             </div>
 
-            <!-- 시간 설정 -->
-            
+            <div style="min-height: 200px;">
+                <!-- 시간 설정 -->
+                <div class="d-flex align-center gap-8" style="margin-top: 32px;">
+                    <span class="title-s">시작</span>
+                    <TimeSelect />
+                    -
+                    <span class="title-s">마지막</span>
+                    <TimeSelect />
+                </div>
+            </div>
+
+            <div style="margin-top: 16px; border-top: 1px solid #ddd; padding-top: 16px;">
+                <button class="text-button text-button--blue" style="width: 100%;">시간 추가</button>
+            </div>
         </div>
 
         <div class="modal-button-wrapper">
-            <button class="btn btn--size-32 btn--black">취소</button>
+            <button class="btn btn--size-32 btn--black" @click="modalStore.setOperationRuleModal.closeModal()">취소</button>
             <button class="btn btn--size-32 btn--blue">저장</button>
         </div>
     </ModalSimple>
