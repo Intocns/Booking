@@ -203,7 +203,7 @@ const showClearIcon = computed(() => {
     }
     &.--disabled {
         background-color: $gray-50;
-        cursor: not-allowed;
+        pointer-events: none;
     }
     // 에러 발생 시 보더 색상 변경
     &.--is-error {

@@ -88,8 +88,13 @@ onBeforeUnmount(() => {
     position: relative;
 
     &.disabled {
-        opacity: 0.5;
         pointer-events: none;
+        background-color: $gray-50;
+
+        .select__box {
+            background-color: $gray-50;
+            color: $gray-500;
+        }
     }
 
     &__box {

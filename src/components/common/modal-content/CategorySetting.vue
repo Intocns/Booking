@@ -151,7 +151,14 @@ const handleDelete = async() => {
  * 수정/삭제가 불가능한 고정 카테고리인지 확인 (카테고리 미지정, 예약필수 메뉴)
  */
 const isFixedCategory = (category) => {
-    
+    if (category.requiredType < 2) {
+        // requiredType == 0 : 카테고리 미지정
+        // requiredType == 1 : 예약 필수
+        // requiredType == 2 : 사용자 생성
+        return true;
+    } else {
+        return false
+    }
 };
 </script>
 
@@ -171,7 +178,7 @@ const isFixedCategory = (category) => {
                             <p class="title-m">{{category.name}}</p>
         
                             <!-- 삭제버튼 -->
-                            <button class="btn btn--size-24 btn--black-outline" @click="openConfirmDeleteModal(category)">
+                            <button v-if="!isFixedCategory(category)" class="btn btn--size-24 btn--black-outline" @click="openConfirmDeleteModal(category)">
                                 <img :src="icDel" alt="삭제" width="14">
                                 <span>삭제</span>
                             </button>
@@ -186,6 +193,7 @@ const isFixedCategory = (category) => {
                                         :max-length="10"
                                         :is-error="!category.name || category.name.length > 10"
                                         :error-message="!category.name ? '카테고리명을 입력해주세요.' : '10자까지만 입력 가능합니다.'"
+                                        :disabled="isFixedCategory(category)"
                                     />
                                 </div>
                             </div>
@@ -196,6 +204,7 @@ const isFixedCategory = (category) => {
                                         v-model="category.selectionTypeCode"
                                         :options="CATEGORY_TYPE_OPTIONS"
                                         class="select"
+                                        :disabled="isFixedCategory(category)"
                                     />
                                 </div>
                             </div>
