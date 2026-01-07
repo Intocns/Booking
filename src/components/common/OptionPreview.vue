@@ -321,8 +321,8 @@ onUnmounted(() => {
                 
                 <!-- 옵션 선택 섹션 -->
                 <div v-else class="preview-options-wrapper">
-                    <!-- 수량형 옵션 섹션 -->
-                    <div class="preview-options-section">
+                    <!-- 수량형 옵션 섹션 (일반 옵션이 있을 때만 표시) -->
+                    <div v-if="quantityOptions.length > 0 || checkOptions.length > 0" class="preview-options-section">
                         <div class="preview-section-title">
                             <p class="title-m option-select-title">옵션을 선택해 주세요</p>
                             <p class="body-m">함께 예약가능한 옵션이니 필요한 경우 선택하세요.</p>
