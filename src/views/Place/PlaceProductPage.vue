@@ -20,7 +20,7 @@ import draggable from 'vuedraggable';
 import { useProductStore } from '@/stores/productStore';
 import { useModalStore } from '@/stores/modalStore';
 
-import { onMounted, ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 //util
@@ -71,8 +71,8 @@ const clickProductVisibleUpdateBtn = (() => {
     modalStore.productVisibleUpdateModal.openModal()
 })
 // 정보 일괄 변경
-const clickProductInfoUpdataAllBtn = (() => {
-    modalStore.productInfoUpdateAllModal.openModal()
+const clickProductInfoUpdataAllBtn = (async() => {
+    modalStore.productInfoUpdateAllModal.openModal();
 })
 // 인투펫 진료실 불러오기
 const clickIntoPetImportBtn = (() => {
@@ -179,7 +179,7 @@ onMounted(async () => {
             </button>
             <button class="btn btn--size-32 btn--black-outline" @click="clickProductVisibleUpdateBtn">
                 <img :src="icSetting" alt="설정 아이콘">
-                설정
+                노출 설정
             </button>
             <button class="btn btn--size-32 btn--black-outline" @click="clickProductInfoUpdataAllBtn">
                 <img :src="icEdit" alt="편집 아이콘">
@@ -291,11 +291,11 @@ onMounted(async () => {
     
                 <div class="segment-wrapper">
                     <label class="segment">
-                        <input type="radio" name="visibleStatus" v-model="isVisible" :value="1" @click="clickTotalProductImpUpdateBtn(1)"/>
+                        <input type="radio" name="visibleStatus" @click="clickTotalProductImpUpdateBtn(1)"/>
                         <span class="label">노출</span>
                     </label>
                     <label class="segment">
-                        <input type="radio" name="visibleStatus" v-model="isVisible" :value="0" @click="clickTotalProductImpUpdateBtn(0)"/>
+                        <input type="radio" name="visibleStatus" @click="clickTotalProductImpUpdateBtn(0)"/>
                         <span class="label">비노출</span>
                     </label>
                 </div>

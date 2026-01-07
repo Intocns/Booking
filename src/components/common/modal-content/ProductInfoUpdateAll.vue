@@ -12,7 +12,7 @@ import TextAreaBox from '@/components/common/TextAreaBox.vue';
 
 import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import InputTextBox from '../InputTextBox.vue';
 
 const modalStore = useModalStore();
@@ -20,17 +20,38 @@ const productStore = useProductStore();
 
 // 상태관리
 const mode = ref('CHOICE');
-const additionalItems = ref([]); 
+const updateProductList = ref([]); //상품 선택(1 페이지)
+const updateItemDesc = ref({
+    "desc" : "",
+    "bookingPrecautionJson" : {
+        "desc" : ""
+    }
+});
+const additionalItems = ref([]); //항목 추가(상세 페이지)
 
 /**
  * 이벤트 핸들러
  */
+
+// 모드 변경 감시 -> 스토어 타이틀 업데이트
+watch(mode, (newMode) => {
+    if (newMode === 'CHOICE') {
+        productStore.productList.forEach( item =>{
+            updateProductList.value.push({
+                'bizItemId' : item.bizItemId,
+                'name' : item.name,
+                'isChecked' : false
+            })
+        })
+    }
+}, { immediate: true });
+
 // 항목 추가
 const addSection = () => {
     additionalItems.value.push({
-        id: Date.now(), // 고유 키값
+        // id: Date.now(), // 고유 키값
         title: '',
-        content: '',
+        context: '',
         images: [] // 각 항목별 사진 리스트
     });
 };
@@ -39,6 +60,14 @@ const addSection = () => {
 const removeSection = (index) => {
     additionalItems.value.splice(index, 1);
 };
+
+// 정보 일괄 변경 상품 선택
+const isCheckedAll = (checked) => {
+    updateProductList.value.forEach(item => {
+        item.isChecked = checked
+    })
+}
+
 /**
  * 이미지 추가 핸들러
  * @param {Event} event - input change 이벤트
@@ -69,7 +98,35 @@ const removeImage = (itemIndex, imgIndex) => {
 };
 
 const goInfo = (() => {
-    mode.value = 'INFO'
+    let selectedList = updateProductList.value.filter( item => item.isChecked)
+
+    if(selectedList.length > 0){
+        mode.value = 'INFO'
+    }else{
+        alert('상품을 선택해주세요.'); //confirm모달로 변경 예정
+    }
+})
+
+//정보변경 일괄 저장
+const eventSave = (async() => {
+    //선택한 상품 리스트 bizItemIds string (,) 형식으로 가져옴
+    let itemList = updateProductList.value
+                    .filter( item => item.isChecked)
+                    .map(item => item.bizItemId)
+                    .join(',');
+
+    let params = {
+        "bizItemIds" : itemList,
+        "desc" : updateItemDesc.value.desc,
+        "bookingPrecautionJson" : updateItemDesc.value.bookingPrecautionJson,
+        "extraDescJson" : additionalItems.value
+    };
+
+    await productStore.setItemDesc(params);
+
+    if(productStore.responseCode == 200){
+        modalStore.productInfoUpdateAllModal.closeModal()
+    }
 })
 </script>
 
@@ -83,17 +140,22 @@ const goInfo = (() => {
             
             <div class="selection-control">
                 <label class="checkbox">
-                    <input type="checkbox" />
+                    <input type="checkbox" @click="isCheckedAll($event.target.checked)"/>
                     <span class="box"></span>
                     <span class="label">전체</span>
                 </label>
             </div>
     
             <ul class="modal-product-list">
-                <li v-for="product in productStore.productList" :key="product.id" class="modal-product-list__item">
+                <li v-for="product in updateProductList" :key="product.bizItemId" class="modal-product-list__item">
                     <span class="name body-m">{{ product.name }}</span>
                     <span class="item-check">
-                        <img :src="icCheckMarkOff" alt="체크안됨">
+                        <!-- <img :src="icCheckMarkOff" alt="체크안됨"> -->
+                        <!-- 아래 체크박스 임시 적용 >> 추후 다른 이미지로 css 통해서 변경 예정 -->
+                        <label class="checkbox">
+                            <input type="checkbox" v-model="product.isChecked"/>
+                            <span class="box"></span>
+                        </label>
                     </span>
                 </li>
             </ul>
@@ -118,12 +180,12 @@ const goInfo = (() => {
             <div class="update-form">
                 <div class="update-form__group">
                     <p class="title-s update-form__label">상품 소개 글을 적어주세요.</p>
-                    <TextAreaBox placeholder="상품 소개글을 적어주세요." :max-length="1000" />
+                    <TextAreaBox placeholder="상품 소개글을 적어주세요." :max-length="1000" v-model="updateItemDesc.desc" />
                 </div>
 
                 <div class="update-form__group">
                     <p class="title-s update-form__label">예약 및 방문 관련 유의사항을 적어주세요.</p>
-                    <TextAreaBox placeholder="예약 및 방문 관련 유의사항을 적어주세요." :max-length="1000" />
+                    <TextAreaBox placeholder="예약 및 방문 관련 유의사항을 적어주세요." :max-length="1000" v-model="updateItemDesc.bookingPrecautionJson.desc" />
                 </div>
 
                 <div class="update-form__section">
@@ -151,7 +213,7 @@ const goInfo = (() => {
                             :min-length="3"
                         />
                         <TextAreaBox 
-                            v-model="item.content"
+                            v-model="item.context"
                             placeholder="내용을 입력해주세요"
                             :max-length="1000" 
                         />
@@ -189,7 +251,7 @@ const goInfo = (() => {
         </div>
 
         <div class="modal-button-wrapper">
-            <button class="btn btn--size-32 btn--blue">저장</button>
+            <button class="btn btn--size-32 btn--blue" @click="eventSave()">저장</button>
         </div>
     </template>
 </template>
