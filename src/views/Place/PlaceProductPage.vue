@@ -97,9 +97,9 @@ const clickProductImpUpdateBtn = (async(itemId, isImp) => {
         }
     ]
 
-    await productStore.setItemShow(params);
+    let response = await productStore.setItemShow(params);
 
-    if(productStore.responseCode == 200){
+    if(response.status_code <= 300){
         if(isCheckImpType.value){//미노출 제외인 경우
             dragList.value = dragList.value.filter(item => item.isImp && item.bizItemId != itemId)
         }
@@ -118,9 +118,9 @@ const clickTotalProductImpUpdateBtn = (async(isImp) => {
         );
     });
 
-    await productStore.setItemShow(params);
+    let response = await productStore.setItemShow(params);
 
-    if(productStore.responseCode == 200){
+    if(response.status_code <= 300){
         await productStore.getProductList();//상품 관리 기존 화면 새로고침용
         modalStore.productVisibleUpdateModal.closeModal()
     }
@@ -140,9 +140,9 @@ const saveItemOrder = (async() => {
     });
 
     //상품 순서 변경 api 호출
-    await productStore.setItemOrder(params)
+    let response = await productStore.setItemOrder(params)
 
-    if(productStore.responseCode == 200){
+    if(response.status_code <= 300){
         await productStore.getProductList();//상품 관리 기존 화면 새로고침용
         modalStore.productOrderUpdateModal.closeModal()
     }

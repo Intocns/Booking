@@ -11,7 +11,6 @@ export const useProductStore = defineStore("product", () => {
     const itemRoomList = ref([]);
     const linkItemInfo = ref({});
     const itemDetailInfo = ref({});
-    const responseCode = ref("");
     
 
     // 상품 리스트
@@ -37,13 +36,8 @@ export const useProductStore = defineStore("product", () => {
         //임시 적용 end(사용 시 해당 params값 참고)
 
         const response = await api.post(`/api/${cocode}/item/set/order`, params);
-
-        if(response.data.status_code <= 300) {
-            responseCode.value = 200;
-            alert('저장이 완료되었습니다.');
-        }else{
-            alert('처리 중 오류가 발생했습니다.');
-        }
+        
+        return response.data;
     }
 
     //상품 정보 변경
@@ -70,13 +64,8 @@ export const useProductStore = defineStore("product", () => {
         //임시 적용 end(사용 시 해당 params값 참고)
 
         const response = await api.post(`/api/${cocode}/item/set/desc`, params);
-
-        if(response.data.status_code <= 300) {
-            responseCode.value = 200;
-            alert('저장이 완료되었습니다.');
-        }else{
-            alert('처리 중 오류가 발생했습니다.');
-        }
+        
+        return response.data;
     }
 
     //인투펫 진료실 불러오기
@@ -394,13 +383,8 @@ export const useProductStore = defineStore("product", () => {
         //임시 적용 end(사용 시 해당 params값 참고)
 
         const response = await api.post(`/api/${cocode}/item/show`, params);
-
-        if(response.data.status_code <= 300) {
-            responseCode.value = 200;
-            alert('저장이 완료되었습니다.');
-        }else{
-            alert('처리 중 오류가 발생했습니다.');
-        }
+        
+        return response.data;
     }
     
     return {
@@ -408,7 +392,6 @@ export const useProductStore = defineStore("product", () => {
         itemRoomList,
         linkItemInfo,
         itemDetailInfo,
-        responseCode,
 
         getProductList,
         setItemOrder,

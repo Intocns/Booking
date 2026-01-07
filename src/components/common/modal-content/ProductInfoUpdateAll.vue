@@ -122,9 +122,9 @@ const eventSave = (async() => {
         "extraDescJson" : additionalItems.value
     };
 
-    await productStore.setItemDesc(params);
+    let response = await productStore.setItemDesc(params);
 
-    if(productStore.responseCode == 200){
+    if(response.status_code <= 300){
         modalStore.productInfoUpdateAllModal.closeModal()
     }
 })

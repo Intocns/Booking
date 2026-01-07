@@ -74,9 +74,9 @@ const handleApply = async() => {
     })
 
     params = JSON.stringify(params);
-    await categoryStore.modifyCategory(params);
+    let response = await categoryStore.modifyCategory(params);
 
-    if(categoryStore.responseCode == 200){
+    if(response.status_code <= 300){
         modalStore.categorySettingModal.closeModal();
     }
 };
@@ -100,11 +100,10 @@ const handleSave = async() => {
         "selectionTypeCode": categoryRegisterData.type, //NUMBER, CHECK
     }
     
-    await categoryStore.addCategory(params);
+    let response = await categoryStore.addCategory(params);
 
     // 성공 시 다시 리스트 모드로 이동
-    
-    if(categoryStore.responseCode == 200){
+    if(response.status_code <= 300){
         categoryRegisterData.name = ''; // 데이터 초기화
         categoryRegisterData.type = '';
         goList();
@@ -138,10 +137,10 @@ const handleDelete = async() => {
     }
 
     //삭제 api todo
-    await categoryStore.deleteCategory(params);
+    let response = await categoryStore.deleteCategory(params);
 
     // 삭제 성공 시 다시 리스트 모드로 이동
-    if(categoryStore.responseCode == 200){
+    if(response.status_code <= 300){
         await categoryStore.getCategoryList();
         goList();
     }
