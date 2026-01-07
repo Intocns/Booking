@@ -40,6 +40,32 @@ const selectedProductModel = computed({
     set: (value) => emit('update:selectedProduct', value)
 });
 
+// 옵션 데이터 매핑 헬퍼 함수
+const mapOptionData = (option, includeQuantityFields = false) => {
+    const baseData = {
+        optionId: option.optionId,
+        idx: option.optionId,
+        price: option.optionPrice || null,
+        comment: option.optionComment || '',
+        categoryId: option.categoryId,
+        categoryName: option.categoryName
+    };
+    
+    if (includeQuantityFields) {
+        baseData.minBookingCount = option.minBookingCount || 0;
+        baseData.maxBookingCount = option.maxBookingCount || null;
+    }
+    
+    if (option.categoryType) {
+        baseData.categoryType = option.categoryType;
+    }
+    
+    return {
+        optionName: option.optionName || '',
+        rawData: baseData
+    };
+};
+
 // 미리보기: 수량형 옵션 (requiredType이 1이 아닌 카테고리만)
 const quantityOptions = computed(() => {
     if (!selectedProductModel.value || !previewOptions.value.length) {
@@ -56,19 +82,7 @@ const quantityOptions = computed(() => {
         filtered = filtered.filter(option => option.categoryId === selectedCategory.value);
     }
     
-    return filtered.map(option => ({
-        optionName: option.optionName || '',
-        rawData: {
-            optionId: option.optionId,
-            idx: option.optionId, // idx가 없으면 optionId 사용
-            desc: option.optionDesc || '',
-            price: option.optionPrice || null,
-            minBookingCount: option.minBookingCount || 0,
-            maxBookingCount: option.maxBookingCount || null,
-            categoryId: option.categoryId,
-            categoryName: option.categoryName
-        }
-    }));
+    return filtered.map(option => mapOptionData(option, true));
 });
 
 // 미리보기: 체크형 옵션 (requiredType이 1이 아닌 카테고리만)
@@ -87,17 +101,7 @@ const checkOptions = computed(() => {
         filtered = filtered.filter(option => option.categoryId === selectedCategory.value);
     }
     
-    return filtered.map(option => ({
-        optionName: option.optionName || '',
-        rawData: {
-            optionId: option.optionId,
-            idx: option.optionId, // idx가 없으면 optionId 사용
-            desc: option.optionDesc || '',
-            price: option.optionPrice || null,
-            categoryId: option.categoryId,
-            categoryName: option.categoryName
-        }
-    }));
+    return filtered.map(option => mapOptionData(option));
 });
 
 // 미리보기: 필수 항목 옵션 (requiredType이 1인 카테고리의 모든 옵션)
@@ -109,18 +113,7 @@ const requiredOptions = computed(() => {
     // requiredType이 1인 카테고리의 모든 옵션 (NUMBER, CHECK 모두 포함)
     return previewOptions.value
         .filter(option => option.requiredType === 1)
-        .map(option => ({
-            optionName: option.optionName || '',
-            rawData: {
-                optionId: option.optionId,
-                idx: option.optionId,
-                desc: option.optionDesc || '',
-                price: option.optionPrice || null,
-                categoryId: option.categoryId,
-                categoryName: option.categoryName,
-                categoryType: option.categoryType
-            }
-        }));
+        .map(option => mapOptionData(option));
 });
 
 // 선택된 카테고리 (NUMBER, CHECK 공통)
@@ -154,9 +147,14 @@ const hasRequiredOptions = computed(() => requiredOptions.value.length > 0);
 // 수량형 옵션의 선택 수량 관리
 const optionQuantities = ref({}); // { optionId: quantity }
 
+// 옵션 ID 가져오기 헬퍼 함수
+const getOptionId = (option) => {
+    return option.rawData?.optionId || option.idx;
+};
+
 // 수량 증가
 const increaseQuantity = (option) => {
-    const optionId = option.rawData?.optionId || option.idx;
+    const optionId = getOptionId(option);
     const currentQty = getQuantity(option);
     const maxCount = option.rawData?.maxBookingCount;
     
@@ -167,7 +165,7 @@ const increaseQuantity = (option) => {
 
 // 수량 감소
 const decreaseQuantity = (option) => {
-    const optionId = option.rawData?.optionId || option.idx;
+    const optionId = getOptionId(option);
     const currentQty = getQuantity(option);
     const minCount = option.rawData?.minBookingCount || 0;
     
@@ -178,7 +176,7 @@ const decreaseQuantity = (option) => {
 
 // 수량 가져오기
 const getQuantity = (option) => {
-    const optionId = option.rawData?.optionId || option.idx;
+    const optionId = getOptionId(option);
     // 이미 설정된 값이 있으면 그 값 사용
     if (optionQuantities.value[optionId] !== undefined) {
         return optionQuantities.value[optionId];
@@ -193,13 +191,13 @@ const checkedOptions = ref({}); // { optionId: boolean }
 
 // 체크박스 토글
 const toggleCheckOption = (option) => {
-    const optionId = option.rawData?.optionId || option.idx;
+    const optionId = getOptionId(option);
     checkedOptions.value[optionId] = !checkedOptions.value[optionId];
 };
 
 // 체크박스 상태 가져오기
 const isChecked = (option) => {
-    const optionId = option.rawData?.optionId || option.idx;
+    const optionId = getOptionId(option);
     return checkedOptions.value[optionId] || false;
 };
 
@@ -217,13 +215,8 @@ watch(selectedProductModel, async (newValue) => {
             // API 응답 구조: response.data.data 배열
             const data = response?.data?.data || response?.data || [];
             
-            console.log('=== 미리보기 API 응답 데이터 ===');
-            console.log('전체 응답:', response);
-            console.log('옵션 데이터:', data);
-            
             if (Array.isArray(data)) {
                 previewOptions.value = data;
-                console.log('previewOptions.value:', previewOptions.value);
                 
                 // 옵션이 있으면 첫 번째 카테고리 자동 선택 (NUMBER, CHECK 공통)
                 const categories = Array.from(
@@ -400,7 +393,7 @@ onUnmounted(() => {
                         <div v-if="checkOptions.length > 0" class="option-list check-list">
                             <div 
                                 v-for="option in checkOptions" 
-                                :key="option.rawData?.optionId || option.idx"
+                                :key="getOptionId(option)"
                                 class="option-item check-option"
                             >
                                 <label class="checkbox">
@@ -431,7 +424,7 @@ onUnmounted(() => {
                         <div class="option-list check-list">
                             <div 
                                 v-for="option in requiredOptions" 
-                                :key="option.rawData?.optionId || option.idx"
+                                :key="getOptionId(option)"
                                 class="option-item check-option"
                             >
                                 <label class="checkbox">
