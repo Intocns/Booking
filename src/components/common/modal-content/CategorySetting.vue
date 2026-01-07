@@ -148,16 +148,22 @@ const handleDelete = async() => {
 }
 
 /**
- * 수정/삭제가 불가능한 고정 카테고리인지 확인 (카테고리 미지정, 예약필수 메뉴)
+ * 고정 카테고리인지 확인
+ * @param {Object} category - 카테고리 객체
+ * @param {String} type - 'name' (카테고리명/삭제) 또는 'type' (유형)
+ * @returns {Boolean}
+ * 
+ * requiredType == 0 : 카테고리 미지정 (카테고리명/삭제만 고정, 유형 변경 가능)
+ * requiredType == 1 : 예약 필수 메뉴 (모두 고정, 유형은 체크형으로 고정)
+ * requiredType == 2 : 사용자 생성 (모두 수정 가능)
  */
-const isFixedCategory = (category) => {
-    if (category.requiredType < 2) {
-        // requiredType == 0 : 카테고리 미지정
-        // requiredType == 1 : 예약 필수
-        // requiredType == 2 : 사용자 생성
-        return true;
+const isFixedCategory = (category, type = 'name') => {
+    if (type === 'type') {
+        // 유형 변경 불가: 예약 필수 메뉴만 (requiredType === 1)
+        return category.requiredType === 1;
     } else {
-        return false
+        // 카테고리명/삭제 불가: 카테고리 미지정, 예약 필수 메뉴 (requiredType < 2)
+        return category.requiredType < 2;
     }
 };
 </script>
@@ -204,7 +210,7 @@ const isFixedCategory = (category) => {
                                         v-model="category.selectionTypeCode"
                                         :options="CATEGORY_TYPE_OPTIONS"
                                         class="select"
-                                        :disabled="isFixedCategory(category)"
+                                        :disabled="isFixedCategory(category, 'type')"
                                     />
                                 </div>
                             </div>
