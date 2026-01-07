@@ -47,11 +47,17 @@ const router = createRouter({
                     name: 'placeProduct', 
                     component: () => import('@/views/Place/PlaceProductPage.vue') 
                 },
-                // 2. 상품 관리
+                // 2. 상품 관리 > 등록
                 { 
                     path: 'product/detail', 
                     name: 'placeProductDetail', 
                     component: () => import('@/views/Place/PlaceProductDetail.vue') 
+                },
+                // 2. 상품 관리 > 수정 
+                { 
+                    path: 'product/edit/:id', // id를 파라미터로 받음
+                    name: 'placeProductEdit', 
+                    component: () => import('@/views/Place/PlaceProductEdit.vue') 
                 },
                 
                 // 3. 옵션 관리

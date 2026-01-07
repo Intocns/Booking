@@ -272,7 +272,7 @@ const toggleDayInGroup = (gIdx, dayValue) => {
                 <img :src="icPlusBlue">요일 추가
             </button>
 
-            <div v-for="(group, gIdx) in config.dailyGroups" :key="gIdx" class="d-flex align-start gap-16">
+            <div v-for="(group, gIdx) in config.dailyGroups" :key="gIdx" class="d-flex align-start gap-16 flex-wrap">
                 <!-- 요일 버튼 -->
                 <div class="day-button-group d-flex gap-4">
                     <button 

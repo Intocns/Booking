@@ -485,7 +485,6 @@
     
     // padding-right: 10px;
     // overflow-y: auto;
-
 }
 .modal-contents-title {
     @include typo($title-l-size, $title-l-weight, $title-l-spacing, $title-l-line); 
@@ -526,6 +525,24 @@
     }
 
 } 
+
+//  심플 모달
+.modal-container.simple {
+    width: auto;
+    min-width: auto;
+
+    .modal-contents-inner {
+        padding: 32px 24px;
+    }
+
+    .modal-button-wrapper {
+        padding: 10px;
+
+        button {
+            flex: 1;
+        }
+    }
+}
 
 // ======================================================================
 // datepicker 라이브러리 커스텀 스타일

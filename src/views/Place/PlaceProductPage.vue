@@ -362,6 +362,7 @@ onMounted(async () => {
         display: grid;
         grid-template-columns: repeat(6, 1fr); // 한 줄에 6개, 동일한 너비로
         gap: 16px;
+        align-items: start;
     }
 
     .item-box {

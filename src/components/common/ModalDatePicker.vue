@@ -11,6 +11,8 @@ import icBtnClose from '@/assets/icons/ic_btn_close_w.svg'
 
 const props = defineProps({
     isModalOpen: {type: Boolean, default: false},
+    showRepeatOptions: { type: Boolean, default: true }, // 주기 선택 영역 노출 여부
+    title: { type: String, default: '' },               // 모달 상단 타이틀
 })
 
 const emit = defineEmits(['close', 'add']);
@@ -92,6 +94,10 @@ const handleClose = () => {
             <div class="modal-container" @click.stop style="min-width: 240px;">
                 <div class="modal-header"></div>
                 <div class="modal-contents">
+                    <div v-if="title" class="modal-header-custom">
+                        <p class="title-s">{{ title }}</p>
+                    </div>
+
                     <div class="modal-contents-inner">
                         <VueDatePicker
                             v-model="selectedDate"
@@ -106,7 +112,7 @@ const handleClose = () => {
                         <div class="select-date-option">
 
                             <!-- 매년/매달/한번만 선택 -->
-                            <div class="segment-wrapper">
+                            <div v-if="showRepeatOptions" class="segment-wrapper">
                                 <label class="segment">
                                     <input type="radio" v-model="repeatType" value="yearly" />
                                     <span class="label">매년</span>
@@ -152,6 +158,9 @@ const handleClose = () => {
     }
     .modal-contents {
         border-radius: 4px;
+    }
+    .modal-header-custom {
+        padding: 20px 20px 0px 20px;
     }
     .modal-contents-inner {
         padding: 0;
