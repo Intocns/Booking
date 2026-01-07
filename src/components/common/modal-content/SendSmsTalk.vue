@@ -77,13 +77,6 @@ const hideTooltip = (type) => {
                     >
                     <label for="tab_sms" class="tab--radio_btn">
                         <span>SMS</span>
-                        <img 
-                            class="icon-img" 
-                            :src="icTooltip" 
-                            alt="툴팁"
-                            @mouseenter="handleMouseMove($event, 'sms')"
-                            @mouseleave="hideTooltip('sms')"
-                        >
                     </label>
                 </div>
             </div>
@@ -124,18 +117,17 @@ const hideTooltip = (type) => {
 
                 <div class="content-talk__form">
                     <div class="content-talk__form-row">
-                        <span class="title-s">
+                        <span class="title-s helper">
                             수신번호
-                            <img 
-                                class="icon-img" 
-                                :src="icTooltip" 
-                                alt="툴팁"
-                                @mouseenter="handleMouseMove($event,'talk')"
-                                @mouseleave="hideTooltip('talk')"
-                            >
                         </span>
                         <input class="input-text" type="text" name="" id="">
                     </div>
+                </div>
+
+                <div class="tooltip-box">
+                    <ul>
+                        <li>해당 알림톡은 인투링크 프로필로 발송됩니다.</li>
+                    </ul>
                 </div>
 
             </div>
@@ -204,17 +196,22 @@ const hideTooltip = (type) => {
                         <input class="input-text" type="text" name="" id="">
                     </div>
                     <div class="content-sms__form-row">
-                        <span class="title-s">문자 발신번호</span>
+                        <span class="title-s d-flex gap-4 helper">
+                            문자 발신번호
+                            <img :src="icTooltip" alt="툴팁아이콘">
+                            <div class="tooltip-content">
+                                ※ 전기통신사업법에 의거하여 거짓으로 표기된 전화번호로 인한 이용자 피해 예방을 위해서 발신번호 사전등록제가 시행  됩니다. 발신번호는 개인 또는 기업이 소유한 유효 전화번호를 사용해야하며, 사전등록이 안된 발신번호는 문자 메시지 발송이 차단됩니다.
+                            </div>
+                        </span>
                         <input class="input-text" type="text" name="" id="">
                     </div>
                 </div>
 
-                <div class="content-sms__notice">
-                    <p class="tooltip">
-                        ※ 전기통신사업법에 의거하여 거짓으로 표기된 전화번호로 인한 이용자 피해 예방을 위해서 발신번호 사전등록제가 
-                        시행  됩니다. 발신번호는 개인 또는 기업이 소유한 유효 전화번호를 사용해야하며, 사전등록이 안된 발신번호는 문자 
-                        메시지 발송이 차단됩니다.
-                    </p>
+                <div class="tooltip-box">
+                    <ul>
+                        <li>80Byte 이상 시 LMS로 발송되어 문자 건수가 2건씩 차감됩니다.</li>
+                        <li>문자 발송 상태 확인까지 시간이 소요될 수 있으며, 확인 전까지 ‘대기’ 상태로 표시됩니다. 발송 내역은 ‘SMS 발송내역’ 메뉴에서 확인할 수 있습니다.</li>
+                    </ul>
                 </div>
 
             </div>
@@ -432,6 +429,9 @@ const hideTooltip = (type) => {
             flex-direction: column;
             gap: 8px;
 
+            .title-s {
+                width: 100px;
+            }
             &-row {
                 display: flex;
                 align-items: center;

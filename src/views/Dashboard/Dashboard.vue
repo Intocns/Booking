@@ -204,7 +204,7 @@ onMounted(() => {
             
             <!-- 버튼 -->
             <template #actions="{ row, rowIndex }">
-                <button class="btn btn--size-24 btn--black-outline" @click="modalStore.reserveInfoModal.openModal()">
+                <button class="btn btn--size-24 btn--black-outline" @click="modalStore.reserveInfoModal.openModal(row)">
                     상세
                 </button>
                 <button class="btn btn--size-24 btn--black-outline" @click="modalStore.smsModal.openModal()">

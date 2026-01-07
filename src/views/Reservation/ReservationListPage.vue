@@ -135,6 +135,11 @@ const processedRows = computed(() => {
         };
     });
 });
+
+// 예약 상세보기 핸들러
+const handelReserveDetail = (reserveIdx) => {
+    reservationStore.getReserveInfo(reserveIdx)
+}
 </script>
 <template>
     <!-- 페이지 타이틀 -->
@@ -195,7 +200,7 @@ const processedRows = computed(() => {
                 </template>
                 <!-- 버튼 -->
                 <template #actions="{ row, rowIndex }">
-                        <button class="btn btn--size-24 btn--black-outline" @click="modalStore.reserveInfoModal.openModal()">상세</button>
+                        <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row.idx)">상세</button>
                         <button class="btn btn--size-24 btn--black-outline" @click="modalStore.smsModal.openModal()"><img :src="icSms" alt="SMS"></button>
                 </template>
             </CommonTable>
@@ -205,7 +210,7 @@ const processedRows = computed(() => {
     <!-- 예약 정보 안내 모달 -->
     <Modal
         v-if="modalStore.reserveInfoModal.isVisible"
-        size="m"
+        size="l"
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >

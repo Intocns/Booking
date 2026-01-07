@@ -77,6 +77,11 @@ const searchClear = () => { //초기화 버튼
     keyword.value = '';
 };
 
+// 예약 상세보기 핸들러
+const handelReserveDetail = (reserveIdx) => {
+    reservationStore.getReserveInfo(reserveIdx)
+}
+
 onMounted(() => {
     // 대기 예약 리스트 불러오기
     searchList();
@@ -123,7 +128,7 @@ onMounted(() => {
                 </template>
                 <!-- 버튼 -->
                 <template #actions="{ row, rowIndex }">
-                    <button class="btn btn--size-24 btn--black-outline" @click="modalStore.reserveInfoModal.openModal()">상세</button>
+                    <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row.idx)">상세</button>
                     <button class="btn btn--size-24 btn--black-outline" @click="modalStore.smsModal.openModal()"><img :src="icSms" alt="SMS"></button>
                 </template>
     
@@ -134,7 +139,7 @@ onMounted(() => {
     <!-- 예약 정보 안내 모달 -->
     <Modal
         v-if="modalStore.reserveInfoModal.isVisible"
-        size="m"
+        size="l"
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >

@@ -4,6 +4,8 @@ import { VueDatePicker } from '@vuepic/vue-datepicker';
 import { ko } from 'date-fns/locale'
 import { startOfDay, subDays, differenceInDays } from "date-fns";
 import { ref } from 'vue';
+import { PET_GENDER_MAP, RESERVE_ROUTE_MAP } from '@/utils/reservation';
+import { formatDate } from '@/utils/dateFormatter';
 
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import TimeSelect from '@/components/common/TimeSelect.vue';
@@ -17,6 +19,14 @@ import CommonTable from '@/components/common/CommonTable.vue';
 import { useModalStore } from '@/stores/modalStore';
 
 const modalStore = useModalStore();
+const modal = modalStore.reserveInfoModal;
+
+const reserveData = modal.data.reserve;
+const reserveClientList = modal.data.clientList.map((item) => ({
+    ...item,
+    lastStatusDateTxt: formatDate(item.lastStatusDate)
+}));
+const reserveClientPet = modal.data.clientPet;
 
 const startTime = ref(null);
 const endTime = ref(null);
@@ -26,18 +36,31 @@ const reserveDate = ref(null);
 
 // 고객정보 테이블 정의
 const customerInfoColumns = [
-    { key: 'idx', label: 'No.', width: '5%' },
-    { key: 'user_num', label: '고객번호', width: '15%' },
-    { key: 'user_name', label: '고객명', width: '15%' },
-    { key: 'phone', label: '전화번호', width: '15%' },
-    { key: 'pet_num', label: '동물번호', width: '15%' },
-    { key: 'pet_name', label: '동물명', width: '15%' },
-    { key: 'species_name', label: '종', width: '10%' },
+    { key: 'userSno', label: 'No.', width: '7%' },
+    { key: 'userNo', label: '고객번호', width: '12%' },
+    { key: 'userName', label: '고객명', width: '10%' },
+    { key: 'userTel', label: '전화번호', width: '15%' },
+    { key: 'petNo', label: '동물번호', width: '12%' },
+    { key: 'petName', label: '동물명', width: '10%' },
+    { key: 'speciesName', label: '종', width: '10%' },
     { key: 'breed', label: '품종', width: '10%'},
-    { key: 'gender', label: '성별', width: '10%'},
-    { key: 'last_visit_date', label: '최근방문일', width: '10%'},
+    { key: 'sex', label: '성별', width: '10%'},
+    { key: 'lastStatusDateTxt', label: '최근방문일', width: '17%'},
     { key: 'action', label: '고객매칭', width: '10%'},
 ]
+
+const RESERVE_STATUS_MAP = {
+    0: '대기',
+    1: '확정',
+    2: '취소',
+    3: '거절'
+}
+const RESERVE_STATUS_CLASS_MAP = {
+    0: 'flag--yellow',
+    1: 'flag--basic',
+    2: 'flag--warning',
+    3: 'flag--warning'
+}
 </script>
 
 <template>
@@ -52,7 +75,7 @@ const customerInfoColumns = [
                     
                     <div class="d-flex gap-4 align-center">
                         <p class="body-l">예약 상태</p>
-                        <span class="flag flag--basic">상태</span>
+                        <span class="flag" :class="RESERVE_STATUS_CLASS_MAP[reserveData.inState]">{{ RESERVE_STATUS_MAP[reserveData.inState] }}</span>
                     </div>
                 </div>
             </div>
@@ -64,54 +87,72 @@ const customerInfoColumns = [
                     <div class="info-item">
                         <p class="label">예약 고객명</p>
                         <InputTextBox 
+                            v-model="reserveClientPet.userName"
+                            :disabled="true"
                             placeholder="예약 고객명"
                         />
                     </div>
                     <div class="info-item">
                         <p class="label">고객 전화번호</p>
                         <InputTextBox 
+                            v-model="reserveClientPet.userTel"
+                            :disabled="true"
                             placeholder="고객 전화번호"
                         />
                     </div>
                     <div class="info-item">
                         <p class="label">주소</p>
                         <InputTextBox 
+                            v-model="reserveClientPet.address1"
+                            :disabled="true"
                             placeholder="주소"
                         />
                     </div>
                     <div class="info-item">
                         <p class="label">상세 주소</p>
                         <InputTextBox 
+                            v-model="reserveClientPet.address2"
+                            :disabled="true"
                             placeholder="상세 주소"
                         />
                     </div>
                     <div class="info-item">
                         <p class="label">동물명</p>
                         <InputTextBox 
+                            v-model="reserveClientPet.petName"
+                            :disabled="true"
                             placeholder="동물명"
                         />
                     </div>
                     <div class="info-item">
                         <p class="label">종</p>
                         <InputTextBox 
+                            v-model="reserveClientPet.speciesName"
+                            :disabled="true"
                             placeholder="종"
                         />
                     </div>
                     <div class="info-item">
                         <p class="label">품종</p>
                         <InputTextBox 
+                            v-model="reserveClientPet.breed"
+                            :disabled="true"
                             placeholder="품종"
                         />
                     </div>
                     <div class="info-item">
                         <p class="label">성별</p>
                         <InputTextBox 
+                            v-model="PET_GENDER_MAP[reserveClientPet.sex]"
+                            :disabled="true"
                             placeholder="성별"
                         />
                     </div>
                     <div class="info-item align-start">
                         <p class="label" style="padding-top: 10px;">고객 메모</p>
                         <TextAreaBox 
+                            v-model="reserveClientPet.clientMemo"
+                            :disabled="true"
                             placeholder="고객 메모"/>
                     </div>
                 </div>
@@ -121,17 +162,22 @@ const customerInfoColumns = [
                     <div class="info-item">
                         <p class="label">예약 경로</p>
                         <InputTextBox 
+                            v-model="RESERVE_ROUTE_MAP[reserveData.reRoute]"
+                            :disabled="true"
                             placeholder="예약 경로"
                         />
                     </div>
                     <div class="info-item">
                         <p class="label">상품명</p>
                         <InputTextBox 
+                            v-model="reserveData.roomName"
+                            :disabled="true"
                             placeholder="상품명"
                         />
                     </div>
                     <div class="info-item">
                         <p class="label">예약 방문일</p>
+                        <!-- TODO: reTime, reTimeEnd -->
                         <div class="d-flex gap-8" style="flex:2;">
                             <CustomDatePicker v-model="reserveDate" :range="false" />
 
@@ -144,6 +190,7 @@ const customerInfoColumns = [
                         </div>
                     </div>
                     <div class="info-item">
+                        <!-- TODO: 담당의 연결 -->
                         <p class="label">담당의</p>
                         <InputTextBox 
                             placeholder="담당의"
@@ -152,18 +199,23 @@ const customerInfoColumns = [
                     <div class="info-item">
                         <p class="label">접수 일시</p>
                         <InputTextBox 
+                            v-model="reserveData.createdAt"
+                            :disabled="true"
                             placeholder="접수 일시"
                         />
                     </div>
                     <div class="info-item">
                         <p class="label">확정 일시</p>
                         <InputTextBox 
+                            :disabled="true"
                             placeholder="확정 일시"
                         />
                     </div>
                     <div class="info-item align-start">
                         <p class="label" style="padding-top: 10px;">병원 메모</p>
                         <TextAreaBox 
+                            v-model="reserveData.geReMemo"
+                            :disabled="true"
                             placeholder="병원 메모"
                             height="160px"
                         />
@@ -199,7 +251,7 @@ const customerInfoColumns = [
             <div class="customer-info-table-wrapper">
                 <CommonTable
                     :columns="customerInfoColumns"
-                    :rows="[]"
+                    :rows="reserveClientList"
                     table-empty-sub-text="예약 확정 시, 신규 고객으로 등록되어 예약이 접수됩니다."
                 />
             </div>

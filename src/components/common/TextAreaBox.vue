@@ -137,7 +137,7 @@ const handleBlur = () => {
     }
 
     &.--disabled {
-        background-color: $gray-100;
+        background-color: $gray-50;
         cursor: not-allowed;
     }
 }

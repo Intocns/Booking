@@ -5,14 +5,19 @@ import { ref } from "vue";
 import { formatDate, formatDateTime, formatTime} from "@/utils/dateFormatter";
 import { formatPhone } from "@/utils/phoneFormatter";
 import { RESERVE_ROUTE_MAP, RESERVE_STATUS_MAP} from "@/utils/reservation";
+import { useModalStore } from "./modalStore";
 
 export const useReservationStore = defineStore("reservation", () => {
+    const modalStore = useModalStore();
+
     const cocode = '2592' // TODO: 임시
     // TODO: 프록시 설정도 임시
     let reserveList = ref([]); // 전체 예약 내역
     let reservePendingList = ref([]); // 대기 예약 리스트
     let reserveCount = ref({}) // 예약별 카운트
     let reserveScheduleList = ref([]); // 예약 일정 리스트
+    
+    let reserveInfo = ref({})
 
     const mapReserveRow = (row) => ({
         ...row,
@@ -86,7 +91,28 @@ export const useReservationStore = defineStore("reservation", () => {
                 reserveScheduleList.value = processedData;
             }
         } catch {
+        }
+    }
 
+    // 고객 매칭용 목록 및 예약 정보
+    async function getReserveInfo(reserveIdx) {
+        try {
+            const response = await api.get(`/api/${cocode}/reserve/${reserveIdx}/cm`)
+            if(response.status == 200) {
+                console.log(response.data)
+                if(response.data.status_code == 200) {
+                    let data = response.data.data
+                    reserveInfo.value = data;
+    
+                    modalStore.reserveInfoModal.openModal(reserveInfo.value)
+                } else {
+                    reserveInfo.value = '';
+                    alert(response.message)
+                }
+            }
+        } catch {
+            reserveInfo.value = '';
+            alert('오류가 발생했습니다.')
         }
     }
 
@@ -96,10 +122,12 @@ export const useReservationStore = defineStore("reservation", () => {
         reservePendingList, // 대기 예약 리스트
         reserveCount, // 예약별 카운트
         reserveScheduleList, // 예약 일정 리스트
+        reserveInfo,
         // 
         getReservationList,
         getPendingList, // 대기 예약 리스트 불러오기
         getReserveCount, // 예약별 카운트 불러오기
         getReserveSchedule, // 예약 일정 불러오기
+        getReserveInfo,
     };
 });
