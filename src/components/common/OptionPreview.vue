@@ -363,7 +363,7 @@ onUnmounted(() => {
                             >
                                 <div class="option-info">
                                     <p class="option-name title-m">{{ option.optionName }}</p>
-                                    <p v-if="option.rawData?.desc" class="option-desc body-xs">{{ option.rawData.desc }}</p>
+                                    <p v-if="option.rawData?.comment" class="option-desc body-xs">{{ option.rawData.comment }}</p>
                                     <p v-if="option.rawData?.price" class="option-price title-m">
                                         {{ option.rawData.price.toLocaleString() }}원
                                     </p>
@@ -407,7 +407,10 @@ onUnmounted(() => {
                                 
                                 <div class="option-info">
                                     <p class="option-name title-m">{{ option.optionName }}</p>
-                                    <p v-if="option.rawData?.desc" class="option-desc body-xs">{{ option.rawData.desc }}</p>
+                                    <p v-if="option.rawData?.comment" class="option-desc body-xs">{{ option.rawData.comment }}</p>
+                                    <p v-if="option.rawData?.price" class="option-price title-m">
+                                        {{ option.rawData.price.toLocaleString() }}원
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -438,7 +441,10 @@ onUnmounted(() => {
                                 
                                 <div class="option-info">
                                     <p class="option-name title-m">{{ option.optionName }}</p>
-                                    <p v-if="option.rawData?.desc" class="option-desc body-xs">{{ option.rawData.desc }}</p>
+                                    <p v-if="option.rawData?.comment" class="option-desc body-xs">{{ option.rawData.comment }}</p>
+                                    <p v-if="option.rawData?.price" class="option-price title-m">
+                                        {{ option.rawData.price.toLocaleString() }}원
+                                    </p>
                                 </div>
                             </div>
                         </div>

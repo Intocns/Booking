@@ -53,6 +53,13 @@ const categoryOptions = computed(() => {
     }));
 });
 
+// 선택된 카테고리가 체크형인지 확인
+const isCheckTypeCategory = computed(() => {
+    if (!selectedCategory.value) return false;
+    const category = optionStore.categoryList.find(cat => cat.categoryId === selectedCategory.value);
+    return category?.selectionTypeCode === 'CHECK';
+});
+
 // 입력 필드 데이터
 const optionName = ref(''); // 옵션명
 const optionDesc = ref(''); // 옵션 설명
@@ -211,11 +218,16 @@ const fillOptionData = (optionData) => {
     optionName.value = optionData.name || '';
     optionDesc.value = optionData.desc || '';
     
-    // 선택 가능 수량
-    minCount.value = optionData.minBookingCount !== null && optionData.minBookingCount !== undefined 
-        ? String(optionData.minBookingCount) : '';
-    maxCount.value = optionData.maxBookingCount !== null && optionData.maxBookingCount !== undefined 
-        ? String(optionData.maxBookingCount) : '';
+    // 선택 가능 수량 (체크형은 1로 고정)
+    if (isCheckTypeCategory.value) {
+        minCount.value = '1';
+        maxCount.value = '1';
+    } else {
+        minCount.value = optionData.minBookingCount !== null && optionData.minBookingCount !== undefined 
+            ? String(optionData.minBookingCount) : '';
+        maxCount.value = optionData.maxBookingCount !== null && optionData.maxBookingCount !== undefined 
+            ? String(optionData.maxBookingCount) : '';
+    }
     
     // 재고 설정
     if (optionData.stock !== null && optionData.stock !== undefined) {
@@ -333,8 +345,8 @@ const handleSave = async () => {
         name: optionName.value.trim(),
         serviceDuration: serviceDuration > 0 ? serviceDuration : null,
         desc: optionDesc.value.trim() || null,
-        minBookingCount: minCount.value ? parseInt(minCount.value) : null,
-        maxBookingCount: maxCount.value ? parseInt(maxCount.value) : null,
+        minBookingCount: isCheckTypeCategory.value ? 1 : (minCount.value ? parseInt(minCount.value) : null),
+        maxBookingCount: isCheckTypeCategory.value ? 1 : (maxCount.value ? parseInt(maxCount.value) : null),
         stock: isStockEnabled.value && stockCount.value ? parseInt(stockCount.value) : null,
         price: isPriceEnabled.value && price.value ? parseInt(parsePrice(price.value)) : null,
         normalPrice: isPriceEnabled.value && normalPrice.value ? parseInt(parsePrice(normalPrice.value)) : null,
@@ -428,8 +440,8 @@ const handleUpdate = async () => {
             name: optionName.value.trim(),
             serviceDuration: serviceDuration > 0 ? serviceDuration : null,
             desc: optionDesc.value.trim() || null,
-            minBookingCount: minCount.value ? parseInt(minCount.value) : null,
-            maxBookingCount: maxCount.value ? parseInt(maxCount.value) : null,
+            minBookingCount: isCheckTypeCategory.value ? 1 : (minCount.value ? parseInt(minCount.value) : null),
+            maxBookingCount: isCheckTypeCategory.value ? 1 : (maxCount.value ? parseInt(maxCount.value) : null),
             stock: isStockEnabled.value && stockCount.value ? parseInt(stockCount.value) : null,
             price: isPriceEnabled.value && price.value ? parseInt(parsePrice(price.value)) : null,
             normalPrice: isPriceEnabled.value && normalPrice.value ? parseInt(parsePrice(normalPrice.value)) : null,
@@ -545,8 +557,14 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                 selectedCategory.value = modalStore.optionSettingModal.data?.categoryId || '';
                 optionName.value = '';
                 optionDesc.value = '';
-                minCount.value = '';
-                maxCount.value = '';
+                // 체크형 카테고리면 1로 고정, 아니면 빈 값
+                if (isCheckTypeCategory.value) {
+                    minCount.value = '1';
+                    maxCount.value = '1';
+                } else {
+                    minCount.value = '';
+                    maxCount.value = '';
+                }
                 stockCount.value = '';
                 price.value = '';
                 normalPrice.value = '';
@@ -572,6 +590,14 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
         // 모달이 닫힐 때 mode와 초기 연결 상태 초기화
         mode.value = 'OPTION';
         initialConnectedProductIds.value = [];
+    }
+});
+
+// 카테고리가 변경되면 체크형인지 확인하고 수량 필드 조정
+watch(selectedCategory, () => {
+    if (isCheckTypeCategory.value) {
+        minCount.value = '1';
+        maxCount.value = '1';
     }
 });
 
@@ -738,6 +764,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                                         <InputTextBox 
                                             :model-value="minCount" 
                                             @update:model-value="handleNumberInput($event, 'minCount')"
+                                            :disabled="isCheckTypeCategory"
                                         />
                                         <span class="unit">개</span>
                                     </div>
@@ -750,6 +777,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                                         <InputTextBox 
                                             :model-value="maxCount" 
                                             @update:model-value="handleNumberInput($event, 'maxCount')"
+                                            :disabled="isCheckTypeCategory"
                                         />
                                         <span class="unit">개</span>
                                     </div>
