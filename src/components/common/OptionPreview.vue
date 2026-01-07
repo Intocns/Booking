@@ -40,14 +40,16 @@ const selectedProductModel = computed({
     set: (value) => emit('update:selectedProduct', value)
 });
 
-// 미리보기: 수량형 옵션
+// 미리보기: 수량형 옵션 (requiredType이 1이 아닌 카테고리만)
 const quantityOptions = computed(() => {
     if (!selectedProductModel.value || !previewOptions.value.length) {
         return [];
     }
     
-    // categoryType이 'NUMBER'인 옵션만 필터링
-    let filtered = previewOptions.value.filter(option => option.categoryType === 'NUMBER');
+    // categoryType이 'NUMBER'이고 requiredType이 1이 아닌 옵션만 필터링
+    let filtered = previewOptions.value.filter(option => 
+        option.categoryType === 'NUMBER' && option.requiredType !== 1
+    );
     
     // 선택된 카테고리가 있으면 해당 카테고리의 옵션만 표시
     if (selectedCategory.value) {
@@ -69,14 +71,16 @@ const quantityOptions = computed(() => {
     }));
 });
 
-// 미리보기: 체크형 옵션
+// 미리보기: 체크형 옵션 (requiredType이 1이 아닌 카테고리만)
 const checkOptions = computed(() => {
     if (!selectedProductModel.value || !previewOptions.value.length) {
         return [];
     }
     
-    // categoryType이 'CHECK'인 옵션만 필터링
-    let filtered = previewOptions.value.filter(option => option.categoryType === 'CHECK');
+    // categoryType이 'CHECK'이고 requiredType이 1이 아닌 옵션만 필터링
+    let filtered = previewOptions.value.filter(option => 
+        option.categoryType === 'CHECK' && option.requiredType !== 1
+    );
     
     // 선택된 카테고리가 있으면 해당 카테고리의 옵션만 표시
     if (selectedCategory.value) {
@@ -96,10 +100,33 @@ const checkOptions = computed(() => {
     }));
 });
 
+// 미리보기: 필수 항목 옵션 (requiredType이 1인 카테고리의 모든 옵션)
+const requiredOptions = computed(() => {
+    if (!selectedProductModel.value || !previewOptions.value.length) {
+        return [];
+    }
+    
+    // requiredType이 1인 카테고리의 모든 옵션 (NUMBER, CHECK 모두 포함)
+    return previewOptions.value
+        .filter(option => option.requiredType === 1)
+        .map(option => ({
+            optionName: option.optionName || '',
+            rawData: {
+                optionId: option.optionId,
+                idx: option.optionId,
+                desc: option.optionDesc || '',
+                price: option.optionPrice || null,
+                categoryId: option.categoryId,
+                categoryName: option.categoryName,
+                categoryType: option.categoryType
+            }
+        }));
+});
+
 // 선택된 카테고리 (NUMBER, CHECK 공통)
 const selectedCategory = ref(null);
 
-// 미리보기 옵션의 카테고리 목록 (NUMBER, CHECK 모두 포함, 중복 제거)
+// 미리보기 옵션의 카테고리 목록 (requiredType이 1이 아닌 카테고리만, 중복 제거)
 const previewCategories = computed(() => {
     if (!previewOptions.value.length) {
         return [];
@@ -107,11 +134,13 @@ const previewCategories = computed(() => {
     
     const categoryMap = new Map();
     previewOptions.value.forEach(option => {
-        if (!categoryMap.has(option.categoryId)) {
+        // requiredType이 1인 카테고리는 카테고리 버튼에서 제외
+        if (option.requiredType !== 1 && !categoryMap.has(option.categoryId)) {
             categoryMap.set(option.categoryId, {
                 category_id: option.categoryId,
                 name: option.categoryName || '',
-                categoryType: option.categoryType
+                categoryType: option.categoryType,
+                requiredType: option.requiredType
             });
         }
     });
@@ -119,8 +148,8 @@ const previewCategories = computed(() => {
     return Array.from(categoryMap.values());
 });
 
-// 향후 필수 카테고리 노출 시 사용할 안내 문구 표시 여부
-const showRequiredNotice = ref(false);
+// 필수 항목 섹션 표시 여부 (requiredType이 1인 옵션이 있을 때만)
+const hasRequiredOptions = computed(() => requiredOptions.value.length > 0);
 
 // 수량형 옵션의 선택 수량 관리
 const optionQuantities = ref({}); // { optionId: quantity }
@@ -188,8 +217,13 @@ watch(selectedProductModel, async (newValue) => {
             // API 응답 구조: response.data.data 배열
             const data = response?.data?.data || response?.data || [];
             
+            console.log('=== 미리보기 API 응답 데이터 ===');
+            console.log('전체 응답:', response);
+            console.log('옵션 데이터:', data);
+            
             if (Array.isArray(data)) {
                 previewOptions.value = data;
+                console.log('previewOptions.value:', previewOptions.value);
                 
                 // 옵션이 있으면 첫 번째 카테고리 자동 선택 (NUMBER, CHECK 공통)
                 const categories = Array.from(
@@ -295,7 +329,7 @@ onUnmounted(() => {
                         </div>
                         
                         <!-- 카테고리 버튼들 (NUMBER, CHECK 공통) -->
-                        <div v-if="previewCategories.length > 0" class="category-buttons-wrapper">
+                        <div v-if="previewCategories.length > 0" class="category-buttons-wrapper" :class="{ 'has-check-only': quantityOptions.length === 0 && checkOptions.length > 0 }">
                             <button 
                                 v-if="showCategoryNav"
                                 class="category-scroll-btn"
@@ -328,7 +362,7 @@ onUnmounted(() => {
                         </div>
                         
                         <!-- 수량형 옵션 리스트 -->
-                        <div class="option-list quantity-list">
+                        <div v-if="quantityOptions.length > 0" class="option-list quantity-list">
                             <div 
                                 v-for="option in quantityOptions" 
                                 :key="option.rawData?.optionId || option.idx"
@@ -361,20 +395,42 @@ onUnmounted(() => {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- 체크형 옵션 섹션 -->
-                    <div v-if="checkOptions.length > 0" class="preview-options-section">
-                        <div v-if="showRequiredNotice" class="preview-section-title">
-                            <!-- 추후 필수 여부가 있는 카테고리 전용 문구 -->
-                            <!-- <p class="body-m">필수 항목을 확인해 주세요.</p>
-                            <p class="body-xs">필수 메뉴는 예약 시 필수로 포함되는 메뉴입니다.</p> -->
-                        </div>
                         
-                        <!-- 체크형 옵션 리스트 -->
-                        <div class="option-list check-list">
+                        <!-- 체크형 옵션 리스트 (같은 섹션 내) -->
+                        <div v-if="checkOptions.length > 0" class="option-list check-list">
                             <div 
                                 v-for="option in checkOptions" 
+                                :key="option.rawData?.optionId || option.idx"
+                                class="option-item check-option"
+                            >
+                                <label class="checkbox">
+                                    <input 
+                                        type="checkbox" 
+                                        :checked="isChecked(option)"
+                                        @change="toggleCheckOption(option)"
+                                    />
+                                    <span class="box"></span>
+                                </label>
+                                
+                                <div class="option-info">
+                                    <p class="option-name title-m">{{ option.optionName }}</p>
+                                    <p v-if="option.rawData?.desc" class="option-desc body-xs">{{ option.rawData.desc }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 필수 항목 섹션 (requiredType이 1인 카테고리의 옵션들) -->
+                    <div v-if="hasRequiredOptions" class="preview-options-section">
+                        <div class="preview-section-title">
+                            <p class="title-m">필수 항목을 확인해 주세요.</p>
+                            <p class="body-xs">필수 메뉴는 예약 시 필수로 포함되는 메뉴입니다.</p>
+                        </div>
+                        
+                        <!-- 필수 항목 옵션 리스트 -->
+                        <div class="option-list check-list">
+                            <div 
+                                v-for="option in requiredOptions" 
                                 :key="option.rawData?.optionId || option.idx"
                                 class="option-item check-option"
                             >
@@ -454,24 +510,32 @@ onUnmounted(() => {
         .preview-options-wrapper {
             display: flex;
             flex-direction: column;
+            gap: 24px;
         }
         
-        .preview-options-section {
+            .preview-options-section {
             display: flex;
             flex-direction: column;
-            gap: 16px;
-                
-                .option-select-title {
-                    color: $gray-900;
-                }
+            gap: 12px;
             
             .preview-section-title {
                 display: flex;
                 flex-direction: column;
                 gap: 4px;
                 
+                .option-select-title,
+                p.title-m {
+                    color: $gray-900;
+                    font-weight: 600;
+                    margin-bottom: 0;
+                }
+                
                 p {
                     color: $gray-600;
+                    
+                    &.body-m {
+                        color: $gray-600;
+                    }
                     
                     &.body-xs {
                         color: $gray-500;
@@ -483,6 +547,12 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
                 gap: 4px;
+                margin-bottom: 0;
+                
+                // 체크형 옵션만 있을 때 간격 조정
+                &.has-check-only {
+                    margin-bottom: 0;
+                }
                 
                 .category-scroll-btn {
                     flex-shrink: 0;
@@ -564,6 +634,16 @@ onUnmounted(() => {
                 
                 &.check-list {
                     margin-top: 8px;
+                    
+                    // 수량형 옵션 다음에 오는 체크형 옵션의 경우 간격 더 줄임
+                    &:not(:first-child) {
+                        margin-top: 0;
+                    }
+                }
+                
+                // 카테고리 버튼 바로 다음에 오는 체크형 옵션 리스트 간격 조정 (수량형 옵션이 없을 때)
+                .category-buttons-wrapper.has-check-only + .option-list.check-list {
+                    margin-top: 4px;
                 }
                 
                 .option-item {
@@ -574,6 +654,11 @@ onUnmounted(() => {
                     border-radius: 8px;
                     border: 1px solid $gray-200;
                     background-color: $gray-00;
+                    transition: border-color 0.2s;
+                    
+                    &:hover {
+                        border-color: $gray-300;
+                    }
                     
                     &.quantity-option {
                         justify-content: space-between;
@@ -587,15 +672,18 @@ onUnmounted(() => {
                             
                             .option-name {
                                 color: $gray-900;
+                                font-weight: 500;
                             }
                             
                             .option-desc {
                                 color: $gray-600;
+                                line-height: 1.5;
                             }
                             
                             .option-price {
                                 color: $gray-900;
                                 margin-top: 4px;
+                                font-weight: 500;
                             }
                         }
                         
@@ -614,11 +702,14 @@ onUnmounted(() => {
                                 border-radius: 4px;
                                 background-color: #00c73c;
                                 cursor: pointer;
-                                color: $gray-900;
+                                color: $gray-00;
+                                font-size: 18px;
+                                font-weight: 500;
+                                transition: background-color 0.2s, border-color 0.2s;
                                 
                                 &:hover:not(:disabled) {
-                                    background-color: #00c73c;
-                                    border-color: #00c73c;
+                                    background-color: #00b035;
+                                    border-color: #00b035;
                                 }
                                 
                                 &:disabled {
@@ -626,24 +717,29 @@ onUnmounted(() => {
                                     cursor: not-allowed;
                                     background-color: $gray-200;
                                     border-color: $gray-300;
+                                    color: $gray-500;
                                 }
                             }
                             
                             .quantity-value {
-                                min-width: 24px;
+                                min-width: 32px;
                                 text-align: center;
                                 color: $gray-900;
+                                font-weight: 500;
                             }
                         }
                     }
                     
                     &.check-option {
+                        align-items: flex-start;
+                        
                         .checkbox {
                             margin-top: 2px;
+                            flex-shrink: 0;
                             
                             .box {
-                                width: 18px;
-                                height: 18px;
+                                width: 20px;
+                                height: 20px;
                                 border: 2px solid #00c73c;
                                 border-radius: 4px;
                                 background-color: $gray-00;
@@ -655,8 +751,8 @@ onUnmounted(() => {
                                     position: absolute;
                                     left: 50%;
                                     top: 50%;
-                                    width: 4px;
-                                    height: 8px;
+                                    width: 5px;
+                                    height: 10px;
                                     border: solid $gray-00;
                                     border-width: 0 2px 2px 0;
                                     transform: translate(-50%, -60%) rotate(45deg);
@@ -685,10 +781,12 @@ onUnmounted(() => {
                             
                             .option-name {
                                 color: $gray-900;
+                                font-weight: 500;
                             }
                             
                             .option-desc {
                                 color: $gray-600;
+                                line-height: 1.5;
                             }
                         }
                     }
