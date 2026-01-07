@@ -203,7 +203,11 @@ onMounted(async () => {
                 <div class="top">
                     <div class="item-box__img">
 
-                        <img v-if="product.imageUrls" src="" alt="상품이미지">
+                        <img
+                            v-if="JSON.parse(product.imageUrls)?.length"
+                            :src="JSON.parse(product.imageUrls)[0]"
+                            alt="상품이미지"
+                        />
 
                         <p class="item-box__name">{{ product.name }}</p>
                     </div>
