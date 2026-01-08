@@ -91,6 +91,16 @@ const openDatePicker = () => {
 };
 
 const onDateUpdate = (val) => {
+    // 단일 날짜 선택 모드 (range=false) - 클릭 시 즉시 적용
+    if (!props.range) {
+        if (val instanceof Date) {
+            emit('update:modelValue', startOfDay(val));
+            dpRef.value?.closeMenu();
+        }
+        return;
+    }
+
+    // 범위 선택 모드 (range=true)
     if (!val || !Array.isArray(val)) return;
 
     const [start, end] = val;
@@ -146,6 +156,7 @@ const onDateUpdate = (val) => {
             ref="dpRef"
             v-model="dateRange"
             :range="range"
+            :auto-apply="!range"
             partial-range
             :locale="ko"
             :time-config="{ enableTimePicker: false }"
@@ -154,7 +165,7 @@ const onDateUpdate = (val) => {
             class="hidden-datepicker-instance"
             @update:model-value="onDateUpdate"
         >
-            <template #action-row="{ selectDate, closeMenu }">
+            <template v-if="range" #action-row="{ selectDate, closeMenu }">
                 <button class="btn btn--size-24 btn--black-outline" @click="dpRef && dpRef.closeMenu()">취소</button>
                 <button class="btn btn--size-24 btn--black" @click="selectDate()">적용</button>
             </template>

@@ -8,6 +8,10 @@ const props = defineProps({
         type: String, // 'HH:mm' 형식
         default: '',
     },
+    autoApply: { // 시간 선택 시 즉시 적용 여부
+        type: Boolean,
+        default: true,
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -70,6 +74,23 @@ const cancelSelection = () => {
     // 그대로 두고 드롭다운만 닫음 (다음 오픈 시 '00:00'부터 시작)
 
     isDropdownVisible.value = false;
+};
+
+// 시간/분 클릭 시 즉시 적용 (autoApply=true인 경우)
+const handleHourClick = (hour) => {
+    tempSelectedHour.value = hour;
+    // autoApply가 true이고 시간과 분이 모두 선택된 경우에만 즉시 적용
+    if (props.autoApply && tempSelectedMinute.value !== null && tempSelectedMinute.value !== undefined) {
+        applySelection();
+    }
+};
+
+const handleMinuteClick = (minute) => {
+    tempSelectedMinute.value = minute;
+    // autoApply가 true이고 시간과 분이 모두 선택된 경우에만 즉시 적용
+    if (props.autoApply && tempSelectedHour.value !== null && tempSelectedHour.value !== undefined) {
+        applySelection();
+    }
 };
 
 // 입력 값 초기화 함수 
@@ -135,7 +156,7 @@ onUnmounted(() => {
                         v-for="hour in hourOptions"
                         :key="hour"
                         :class="{ 'selected': tempSelectedHour === hour }"
-                        @click="tempSelectedHour = hour"
+                        @click="handleHourClick(hour)"
                     >
                         {{ hour }}
                     </li>
@@ -146,14 +167,14 @@ onUnmounted(() => {
                         v-for="minute in minuteOptions"
                         :key="minute"
                         :class="{ 'selected': tempSelectedMinute === minute }"
-                        @click="tempSelectedMinute = minute"
+                        @click="handleMinuteClick(minute)"
                     >
                         {{ minute }}
                     </li>
                 </ul>
             </div>
 
-            <div class="picker-footer">
+            <div v-if="!props.autoApply" class="picker-footer">
                 <button class="btn btn--size-24 btn--black-outline" @click.stop="cancelSelection">취소</button>
                 <button class="btn btn--size-24 btn--black" @click.stop="applySelection">적용</button>
             </div>
@@ -250,7 +271,7 @@ onUnmounted(() => {
 
 .time-columns-container {
     display: flex;
-    height: 100px; /* 스크롤 영역의 높이 */
+    height: 300px; /* 스크롤 영역의 높이 */
     border-bottom: 1px solid $gray-200;
 }
 
