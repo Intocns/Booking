@@ -33,7 +33,7 @@ const currentTab = ref('basic');
                         :class="{ active: currentTab === 'booking' }" 
                         @click="currentTab = 'booking'"
                     >
-                        예약 정보
+                        일정 설정
                     </button>
                     <button 
                         class="tab-btn btn--size-32"
