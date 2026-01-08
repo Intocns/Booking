@@ -212,16 +212,18 @@ onMounted(async () => {
                         <p class="item-box__name">{{ product.name }}</p>
                     </div>
 
-                    <div class="d-flex align-center justify-between">
-                        <p class="body-l">{{ IS_IMP_TYPE[Number(product.isImp)].label }}</p>
-    
-                        <label class="toggle"> 
-                            <input type="checkbox" v-model="product.isImp" @change="clickProductImpUpdateBtn(product.bizItemId, product.isImp)" />
-                            <span class="toggle-img"></span>
-                        </label>
+                    <div class="item-box__content">
+                        <div class="d-flex align-center justify-between">
+                            <p class="body-l">{{ IS_IMP_TYPE[Number(product.isImp)].label }}</p>
+        
+                            <label class="toggle"> 
+                                <input type="checkbox" v-model="product.isImp" @change="clickProductImpUpdateBtn(product.bizItemId, product.isImp)" />
+                                <span class="toggle-img"></span>
+                            </label>
+                        </div>
+        
+                        <span class="item-box__sub-text body-xs">관리자 확인 후 확정</span>
                     </div>
-    
-                    <span class="item-box__sub-text body-xs">관리자 확인 후 확정</span>
                 </div>
 
                 <!-- bottom -->
@@ -275,11 +277,13 @@ onMounted(async () => {
         </div>
 
         <div class="modal-button-wrapper">
-            <button 
-                class="btn btn--size-32 btn--blue-outline" 
-                @click="modalStore.productOrderUpdateModal.closeModal()"
-            >취소</button>
-            <button class="btn btn--size-32 btn--blue" @click="saveItemOrder()">저장</button>
+            <div class="buttons">
+                <button 
+                    class="btn btn--size-32 btn--blue-outline" 
+                    @click="modalStore.productOrderUpdateModal.closeModal()"
+                >취소</button>
+                <button class="btn btn--size-32 btn--blue" @click="saveItemOrder()">저장</button>
+            </div>
         </div>
     </Modal>
 
@@ -363,13 +367,12 @@ onMounted(async () => {
         grid-template-columns: repeat(6, 1fr); // 한 줄에 6개, 동일한 너비로
         gap: 16px;
         align-items: start;
+        padding-right: 8px;
     }
 
     .item-box {
         display: flex;
         flex-direction: column;
-
-        padding: 16px;
 
         border: 1px solid $gray-200;
         border-radius: 8px;
@@ -382,25 +385,54 @@ onMounted(async () => {
 
         &__img {
             position: relative;
-            height: 168px;
+            height: 184px;
             @include flex-center;
             overflow: hidden;
-            margin-bottom: 8px;
 
-            border-radius: 4px;
-            border: 1px solid $gray-200;
-            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 8px 8px 0 0;
+
+            &::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                pointer-events: none;
+            }
+
+            img {
+                width: 100%;
+            }
         }
+
         &__name {
             position: absolute;
-            top: 16px;
+            bottom: 16px;
             left: 16px;
+            width: calc(100% - 32px);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            z-index: 1;
 
-            @include typo($title-m-size, $title-m-weight, $title-m-spacing, $title-m-line);
+            @include typo($title-l-size, $title-l-weight, $title-l-spacing, $title-l-line);
             color: $gray-00;
         }
+
+        &__content {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            
+            border-bottom: 1px solid $gray-200;
+        }
+
+
         &__sub-text {
-            margin: 4px 0;
+
             color: $gray-500;
         }
 
@@ -408,9 +440,7 @@ onMounted(async () => {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-
-            border-top: 1px solid $gray-200;
+            padding: 16px;
         }
     }
 

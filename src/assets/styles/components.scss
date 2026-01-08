@@ -157,6 +157,16 @@
         background-image: url('@/assets/icons/ic_checkbox_unChecked.svg');
         background-position: center;
         background-repeat: no-repeat;
+        cursor: pointer;
+    }
+
+    .checkMark {
+        width: 18px;
+        height: 18px;
+        background-image: url('@/assets/icons/ic_check_mark_off.svg');
+        background-position: center;
+        background-repeat: no-repeat;
+        cursor: pointer;
     }
 
     input:checked + .box {
@@ -164,6 +174,9 @@
     }
     input:checked + .box-naver {
         background-image: url('@/assets/icons/ic_checkbox_checked_naver.svg');
+    }
+    input:checked + .checkMark {
+        background-image: url('@/assets/icons/ic_check_mark_on.svg');
     }
 
     input:disabled + .box {
@@ -514,7 +527,7 @@
     display: flex;
     gap: 8px;
     padding: var(--modal-padding);
-    padding-top: 0;
+    padding-top: 10px;
 
     .buttons {
         flex: 2;

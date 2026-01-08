@@ -12,7 +12,7 @@ import TextAreaBox from '@/components/common/TextAreaBox.vue';
 
 import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import InputTextBox from '../InputTextBox.vue';
 
 const modalStore = useModalStore();
@@ -61,12 +61,18 @@ const removeSection = (index) => {
     additionalItems.value.splice(index, 1);
 };
 
+// 개별 리스트 클릭 시 토글 처리 함수 추가
+const toggleCheck = (product) => {
+    product.isChecked = !product.isChecked;
+};
+
 // 정보 일괄 변경 상품 선택
 const isCheckedAll = (checked) => {
     updateProductList.value.forEach(item => {
         item.isChecked = checked
     })
 }
+
 
 /**
  * 이미지 추가 핸들러
@@ -128,6 +134,11 @@ const eventSave = (async() => {
         modalStore.productInfoUpdateAllModal.closeModal()
     }
 })
+
+// 선택된 상품 개수 계산
+const selectedCount = computed(() => {
+    return updateProductList.value.filter(item => item.isChecked).length;
+});
 </script>
 
 <template>
@@ -147,26 +158,30 @@ const eventSave = (async() => {
             </div>
     
             <ul class="modal-product-list">
-                <li v-for="product in updateProductList" :key="product.bizItemId" class="modal-product-list__item">
+                <li 
+                    v-for="product in updateProductList" 
+                    :key="product.bizItemId" 
+                    class="modal-product-list__item"
+                    :class="{ 'is-selected': product.isChecked }" 
+                    @click="toggleCheck(product)"
+                >
                     <span class="name body-m">{{ product.name }}</span>
-                    <span class="item-check">
-                        <!-- <img :src="icCheckMarkOff" alt="체크안됨"> -->
-                        <!-- 아래 체크박스 임시 적용 >> 추후 다른 이미지로 css 통해서 변경 예정 -->
-                        <label class="checkbox">
-                            <input type="checkbox" v-model="product.isChecked"/>
-                            <span class="box"></span>
-                        </label>
-                    </span>
+                    <label class="checkbox" @click.stop>
+                        <input type="checkbox" v-model="product.isChecked"/>
+                        <span class="checkMark"></span>
+                    </label>
                 </li>
             </ul>
         </div>
     
         <div class="modal-button-wrapper">
-            <button 
-                class="btn btn--size-32 btn--blue-outline" 
-                @click="modalStore.productInfoUpdateAllModal.closeModal()"
-            >취소</button>
-            <button class="btn btn--size-32 btn--blue" @click="goInfo">다음</button>
+            <div class="buttons">
+                <button 
+                    class="btn btn--size-32 btn--blue-outline" 
+                    @click="modalStore.productInfoUpdateAllModal.closeModal()"
+                >취소</button>
+                <button class="btn btn--size-32 btn--blue"  @click="goInfo">다음</button>
+            </div>
         </div>
     </template>
 
@@ -174,7 +189,7 @@ const eventSave = (async() => {
     <template v-else-if="mode === 'INFO'">
         <div class="modal-contents-inner">
             <div class="modal-header-desc">
-                <p class="body-m">선택한 <span class="highlight-blue">6</span>개의 상품의 기본 정보가 아래 입력한 내용으로 모두 변경됩니다.</p>
+                <p class="body-m">선택한 <span class="highlight-blue">{{ selectedCount }}</span>개의 상품의 기본 정보가 아래 입력한 내용으로 모두 변경됩니다.</p>
             </div>
 
             <div class="update-form">
@@ -251,7 +266,9 @@ const eventSave = (async() => {
         </div>
 
         <div class="modal-button-wrapper">
-            <button class="btn btn--size-32 btn--blue" @click="eventSave()">저장</button>
+            <div class="buttons">
+                <button class="btn btn--size-32 btn--blue" @click="eventSave()">저장</button>
+            </div>
         </div>
     </template>
 </template>
@@ -294,6 +311,12 @@ const eventSave = (async() => {
 
         &:hover {
             background-color: $gray-50;
+        }
+
+        /* 선택되었을 때 클래스 추가 */
+        &.is-selected {
+            border-color: $primary-500;
+            background-color: $primary-50;
         }
 
         .name {

@@ -335,8 +335,8 @@ const onAddHoliday = (selectedData) => {
             border-radius: 8px;
             padding: 24px;
             
-            &.top {flex: 2;}
-            &.bottom {flex: 1l}
+            &.top {flex: 2; min-height:0;}
+            &.bottom {flex: 1;}
         }
     }
 </style>
