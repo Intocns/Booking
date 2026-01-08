@@ -43,18 +43,18 @@ const { reserveCount: count } = storeToRefs(reservationStore); // 'count'라는 
 
 // 대기중인 예약 테이블 col 정의
 const columns = [
-    { key: 'idx', label: 'No.', width: '5%' },
-    { key: 'reTimeTxt', label: '예약일자', width: '10%' },
-    { key: 'reTimeHisTxt', label: '예약시간', width: '6%' },
-    { key: 'roomName', label: '상품명/진료실명', width: '10%' },
-    { key: 'userName', label: '고객명', width: '9%' },
-    { key: 'phoneTxt', label: '전화번호', width: '15%' },
-    { key: 'petName', label: '동물명', width: '15%' },
-    { key: 'speciesName', label: '종', width: '10%' },
-    { key: 'reMemo', label: '고객 메모', width: '20%' },
-    { key: 'reRouteTxt', label: '예약경로', width: '10%' },
-    { key: 'createdAtTxt', label: '접수일시', width: '15%' },
-    { key: 'actions', label: '관리', width: '15%' }, // 커스텀 슬롯
+    { key: 'idx', label: 'No.', width: '6%' },
+    { key: 'reTimeTxt', label: '예약일자', width: '7%' },
+    { key: 'reTimeHisTxt', label: '예약시간', width: '5%' },
+    { key: 'roomName', label: '상품명/진료실명', width: '12%' },
+    { key: 'userName', label: '고객명', width: '7%' },
+    { key: 'phoneTxt', label: '전화번호', width: '10%' },
+    { key: 'petName', label: '동물명', width: '8%' },
+    { key: 'speciesName', label: '종', width: '6%' },
+    { key: 'reMemo', label: '고객 메모', width: '12%' },
+    { key: 'reRouteTxt', label: '예약경로', width: '7%' },
+    { key: 'createdAtTxt', label: '접수일시', width: '10%' },
+    { key: 'actions', label: '관리', width: '7%' }, // 커스텀 슬롯
 ]
 
 // 병원 정보 th col 정의
@@ -74,6 +74,12 @@ const noticeColumns = [
 const openNoticeDetail = (row) => {
   window.open('https://intolink.co.kr/cscenter/noticeDet/'+row.idx)
 }
+
+// 예약 상세보기 핸들러
+const handelReserveDetail = (reserveIdx) => {
+    reservationStore.getReserveInfo(reserveIdx)
+}
+
 onMounted(() => {
     // 예약별 카운트
     reservationStore.getReserveCount();
@@ -199,7 +205,7 @@ onMounted(() => {
             
             <!-- 버튼 -->
             <template #actions="{ row, rowIndex }">
-                <button class="btn btn--size-24 btn--black-outline" @click="modalStore.reserveInfoModal.openModal(row)">
+                <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row.idx)">
                     상세
                 </button>
                 <button class="btn btn--size-24 btn--black-outline" @click="modalStore.smsModal.openModal()">
