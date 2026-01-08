@@ -198,6 +198,10 @@ const statusLabels = {
     height: 100%;
     overflow: auto;
     position: relative;
+
+    &::-webkit-scrollbar {
+        height: 8px; /* 가로 스크롤바 두께 */
+    }
 }
 
 .weekly-table {
