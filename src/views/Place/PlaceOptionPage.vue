@@ -1,7 +1,6 @@
 <script setup>
 // 컴포넌트
 import PageTitle from '@/components/common/PageTitle.vue';
-import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
 import Modal from '@/components/common/Modal.vue';
 import CategorySetting from '@/components/common/modal-content/CategorySetting.vue';
@@ -13,7 +12,6 @@ import icSettingW from '@/assets/icons/ic_setting_w.svg'
 import icSetting from '@/assets/icons/ic_setting.svg'
 import icArrowLeft from '@/assets/icons/ic_arrow_left.svg'
 import icArrowRight from '@/assets/icons/ic_arrow_right.svg'
-import icEmpty from '@/assets/icons/ic_empty.svg'
 import icArrowRightBlue from '@/assets/icons/ic_arrow_right_blue.svg'
 import icEdit from '@/assets/icons/ic_edit.svg'
 import icCopy from '@/assets/icons/ic_copy.svg'
@@ -31,7 +29,7 @@ const optionStore = useOptionStore();
 const productStore = useProductStore();
 
 // 상태 관리
-const activeTab = ref('unassigned'); // 현재 선택된 카테고리
+const activeTab = ref(null); // 현재 선택된 카테고리
 const selectedProduct = ref(''); // 미리보기에서 선택된 상품 (단일 선택)
 // 드롭다운 상태 관리
 const activeMenuIndex = ref(null);
@@ -67,25 +65,19 @@ const nextTab = async () => {
 };
 
 
-// 테이블 key값 임시..
 const optionTableColumns = [ // th에 tooltip이 필요한 경우 여기서 추가
     { key: 'optionName', label: '옵션명' },
-    { key: 'price', label: '판매가', tooltip: '해당 옵션의 판매 가격을 의미합니다.' }, // 툴팁 있는 경우
+    { key: 'price', label: '판매가', tooltip: '해당 옵션의 판매 가격을 의미합니다.' },
     { key: 'count', label: '재고 수', tooltip: '하루 기준으로 옵션의 예약 가능한 수량을 의미합니다.\n해당 수량만큼 예약이 이루어지면 더이상 해당 옵션의 선택은 불가합니다.' },
-    { key: '1', label: '선택가능', tooltip: '고객은 해당 수량 안에서 선택 가능합니다.' },
-    { key: '2', label: '운영기간', tooltip: '운영기간이 설정되면 기간 내 날짜를 예약 할 경우에만 해당 옵션 선택이 가능합니다.', width: '18%' },
+    { key: 'selectable', label: '선택가능', tooltip: '고객은 해당 수량 안에서 선택 가능합니다.' },
+    { key: 'operatingPeriod', label: '운영기간', tooltip: '운영기간이 설정되면 기간 내 날짜를 예약 할 경우에만 해당 옵션 선택이 가능합니다.', width: '18%' },
     { key: 'visibleBtn', label: '노출설정' },
     { key: 'connect', label: '상품연결', width: '8%' },
     { key: 'settingBtn', label: '설정' },
 ]
 
 // 테이블 데이터 맵 (카테고리별 옵션 리스트 저장) - 반응형으로 생성
-const dataMap = ref({
-    required: [
-        { optionName: '기본 진료비', price: '10,000', count: '999', 1: '필수', 2: '상시운영', 3: '노출', 4: '연결됨' }
-    ],
-    new: [] // 비어있는 경우
-});
+const dataMap = ref({});
 
 // 선택된 카테고리에 따라 rows반환
 const currentRows = computed(() => {
@@ -568,9 +560,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
 
     // 테이블 > 관리 메뉴
     .setting-dropdown {
-        display: none;
         position: absolute;
-
         display: flex;
         flex-direction: column;
         padding: 10px;
