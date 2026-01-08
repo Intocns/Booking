@@ -233,23 +233,42 @@ const loadPreviewOptions = (data) => {
     }
 };
 
+// 미리보기 옵션 로드 함수
+const loadPreviewOptionsData = async (productId) => {
+    if (!productId) {
+        previewOptions.value = [];
+        optionQuantities.value = {};
+        checkedOptions.value = {};
+        return;
+    }
+    
+    try {
+        isLoading.value = true;
+        optionQuantities.value = {};
+        checkedOptions.value = {};
+        previewOptions.value = [];
+        
+        const response = await optionStore.getOptionPreviewByItemId(productId);
+        const data = response?.data?.data || response?.data || [];
+        loadPreviewOptions(data);
+    } catch (error) {
+        console.error('미리보기 옵션 로드 실패:', error);
+        previewOptions.value = [];
+    } finally {
+        isLoading.value = false;
+    }
+};
+
 // 선택된 상품이 변경되면 수량/체크 상태 초기화 및 옵션 데이터 로드
 watch(selectedProductModel, async (newValue) => {
-    optionQuantities.value = {};
-    checkedOptions.value = {};
-    previewOptions.value = [];
-    
-    if (newValue) {
-        try {
-            isLoading.value = true;
-            const response = await optionStore.getOptionPreviewByItemId(newValue);
-            const data = response?.data?.data || response?.data || [];
-            loadPreviewOptions(data);
-        } catch (error) {
-            console.error('미리보기 옵션 로드 실패:', error);
-            previewOptions.value = [];
-        } finally {
-            isLoading.value = false;
+    await loadPreviewOptionsData(newValue);
+});
+
+// 외부에서 리로드할 수 있도록 expose
+defineExpose({
+    reload: () => {
+        if (selectedProductModel.value) {
+            loadPreviewOptionsData(selectedProductModel.value);
         }
     }
 });

@@ -34,6 +34,8 @@ const selectedProduct = ref(''); // 미리보기에서 선택된 상품 (단일 
 // 드롭다운 상태 관리
 const activeMenuIndex = ref(null);
 const menuPosition = ref({ x: 0, y: 0 });
+// 미리보기 컴포넌트 참조
+const optionPreviewRef = ref(null);
 
 // 카테고리 스크롤 영역 드래그 스크롤 기능
 const { scrollRef: scrollViewport, handleMouseDown: handleCategoryMouseDown } = useDragScroll();
@@ -297,11 +299,16 @@ const handleProductConnectClick = (row) => {
     });
 };
 
-// 옵션 설정 모달이 닫힐 때 dataMap 업데이트 (등록/수정 후 OptionSetting에서 이미 리스트를 새로고침함)
+// 옵션 설정 모달이 닫힐 때 dataMap 업데이트 및 미리보기 리로드
 watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
     if (!isVisible && activeTab.value) {
         // OptionSetting에서 이미 getOptionListByCategoryId를 호출했으므로 dataMap만 업데이트
         dataMap.value[activeTab.value] = optionStore.optionList || [];
+        
+        // 미리보기에 상품이 선택되어 있으면 리로드 (상품 연결 변경사항 반영)
+        if (selectedProduct.value && optionPreviewRef.value) {
+            optionPreviewRef.value.reload();
+        }
     }
 });
 </script>
@@ -436,7 +443,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
 
         <!-- 미리보기 영역 -->
         <div class="right">
-            <OptionPreview v-model:selected-product="selectedProduct" />
+            <OptionPreview ref="optionPreviewRef" v-model:selected-product="selectedProduct" />
         </div>
     </div>
 
