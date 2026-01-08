@@ -9,11 +9,13 @@ import icAddBtn from '@/assets/icons/ic_add_btn.svg'
 import icClear from '@/assets/icons/ic_clear.svg'
 // 컴포넌트
 import TextAreaBox from '@/components/common/TextAreaBox.vue';
+import InputTextBox from '../InputTextBox.vue';
 
 import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
 import { ref, watch, computed } from 'vue';
-import InputTextBox from '../InputTextBox.vue';
+
+import { api } from '@/api/axios'
 
 const modalStore = useModalStore();
 const productStore = useProductStore();
@@ -76,13 +78,28 @@ const isCheckedAll = (checked) => {
 
 /**
  * 이미지 추가 핸들러
- * @param {Event} event - input change 이벤트
- * @param {number} itemIndex - 추가할 항목의 index
  */
-const handleImageUpload = (event, itemIndex) => {
+const handleImageUpload = async (event, itemIndex) => {
     const files = Array.from(event.target.files);
     
     if (!files.length) return;
+    
+    // ---- 이미지 업로드api test
+    const formData = new FormData();
+    formData.append('image', files[0]);
+
+    try {
+
+        const response = await api.post('/api/add/img', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        console.log(response);
+    } catch {
+
+    }
+    // ---- 이미지 업로드api test
 
     files.forEach(file => {
         // 미리보기용 임시 URL 생성
