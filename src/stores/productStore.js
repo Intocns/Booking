@@ -97,11 +97,13 @@ export const useProductStore = defineStore("product", () => {
     }
 
     //상품 삭제
-    async function delItem(cocode, itemId) {
+    async function delItem(itemId) {
         const response = await api.post(`/api/${cocode}/item/set/del/${itemId}`);
 
         if(response.data.status_code <= 300) {
             alert('삭제가 완료되었습니다.');
+
+            await getProductList();
         }else{
             alert('처리 중 오류가 발생했습니다.');
         }

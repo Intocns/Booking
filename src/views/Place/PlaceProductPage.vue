@@ -152,12 +152,14 @@ const saveItemOrder = (async() => {
 })
 
 // 상품 삭제 버튼 클릭 이벤트
-const clickDeleteItem = (() => {
+const clickDeleteItem = ((itemName, itemId) => {
     modalStore.confirmModal.openModal({
         title: '상품 삭제',
-        text: '상품 정보, 설정 등 모든 정보가 삭제되며\n다시 복원할 수 없습니다.',
+        text: `[${itemName}]\n상품 정보, 설정 등 모든 정보가 삭제되며\n다시 복원할 수 없습니다.`,
         confirmBtnText: '삭제',
-        onConfirm: '', // 여기에 삭제 이벤트 추가
+        onConfirm: (() => {
+            productStore.delItem(itemId)
+        })
     })
 })
 
@@ -295,7 +297,7 @@ onMounted(async () => {
                     <div class="d-flex gap-16">
                         <button title="수정" @click="goProductDetail(product.idx)"><img :src="icEdit" alt="수정아이콘" width="16"></button>
                         <button title="복사" @click="clickCopyItem(product.idx)"><img :src="icCopy" alt="복사아이콘"></button>
-                        <button title="삭제" @click="clickDeleteItem"><img :src="icDel" alt="삭제 아이콘"></button>
+                        <button title="삭제" @click="clickDeleteItem(product.name, product.bizItemId)"><img :src="icDel" alt="삭제 아이콘"></button>
                     </div>
 
                     <div>
