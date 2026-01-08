@@ -1,14 +1,12 @@
 <!-- 고객 예약 정보 -->
 <script setup>
-import { VueDatePicker } from '@vuepic/vue-datepicker';
-import { ko } from 'date-fns/locale'
-import { startOfDay, subDays, differenceInDays } from "date-fns";
 import { ref } from 'vue';
 import { PET_GENDER_MAP, RESERVE_ROUTE_MAP } from '@/utils/reservation';
-import { formatDate } from '@/utils/dateFormatter';
+import { formatDate, formatTime } from '@/utils/dateFormatter';
 
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import TimeSelect from '@/components/common/TimeSelect.vue';
+import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import icInformation from '@/assets/icons/ic_information_blue.svg'
 import icSearchW from '@/assets/icons/ic_search_w.svg'
 import TextAreaBox from '@/components/common/TextAreaBox.vue';
@@ -17,9 +15,12 @@ import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
 
 import { useModalStore } from '@/stores/modalStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
+import { computed, onMounted } from 'vue';
 
 const modalStore = useModalStore();
 const modal = modalStore.reserveInfoModal;
+const hospitalStore = useHospitalStore();
 
 const reserveData = modal.data.reserve;
 const reserveClientList = modal.data.clientList.map((item) => ({
@@ -33,6 +34,71 @@ const endTime = ref(null);
 
 // 예약 방문일 (단일 날짜)을 위한 ref 상태 정의
 const reserveDate = ref(null);
+
+// 담당의 ID와 이름을 위한 ref
+const selectedDoctorId = ref(null);
+const doctorName = ref('');
+
+// 예약 방문일과 시간 초기화
+if (reserveData.reTime) {
+    const startDate = new Date(reserveData.reTime);
+    if (!isNaN(startDate)) {
+        reserveDate.value = startDate;
+        startTime.value = formatTime(startDate);
+    }
+}
+
+// 종료 시간 설정
+const endSource = reserveData.reTimeEnd || reserveData.reTimeHis;
+if (endSource) {
+    const endDate = new Date(endSource);
+    if (!isNaN(endDate)) {
+        endTime.value = formatTime(endDate);
+    }
+}
+
+// 담당의 ID와 이름 설정
+if (reserveData.doctorId) {
+    selectedDoctorId.value = reserveData.doctorId;
+} else if (reserveData.docId) {
+    selectedDoctorId.value = reserveData.docId;
+}
+
+if (reserveData.doctorName) {
+    doctorName.value = reserveData.doctorName;
+} else if (reserveData.docName) {
+    doctorName.value = reserveData.docName;
+}
+
+// 담당의 옵션 (CustomSingleSelect용)
+const doctorOptions = computed(() => {
+    if (!hospitalStore.doctorList || hospitalStore.doctorList.length === 0) {
+        return [];
+    }
+    
+    return hospitalStore.doctorList.map(doc => ({
+        value: doc.id,
+        label: doc.userName || doc.name || ''
+    }));
+});
+
+// 담당의 선택 시 이름 업데이트
+const handleDoctorChange = (doctorId) => {
+    selectedDoctorId.value = doctorId;
+    const selectedDoctor = hospitalStore.doctorList.find(doc => doc.id === doctorId);
+    if (selectedDoctor) {
+        doctorName.value = selectedDoctor.userName || selectedDoctor.name || '';
+    } else {
+        doctorName.value = '';
+    }
+};
+
+// 모달이 열릴 때 담당의 리스트 로드
+onMounted(async () => {
+    if (hospitalStore.doctorList.length === 0) {
+        await hospitalStore.getDoctorList();
+    }
+});
 
 // 고객정보 테이블 정의
 const customerInfoColumns = [
@@ -190,11 +256,16 @@ const RESERVE_STATUS_CLASS_MAP = {
                         </div>
                     </div>
                     <div class="info-item">
-                        <!-- TODO: 담당의 연결 -->
                         <p class="label">담당의</p>
-                        <InputTextBox 
-                            placeholder="담당의"
-                        />
+                        <div class="select-wrapper">
+                            <CustomSingleSelect 
+                                :model-value="selectedDoctorId"
+                                @update:model-value="handleDoctorChange"
+                                :options="doctorOptions"
+                                placeholder="담당의 선택"
+                                select-width="100%"
+                            />
+                        </div>
                     </div>
                     <div class="info-item">
                         <p class="label">접수 일시</p>
@@ -318,6 +389,11 @@ const RESERVE_STATUS_CLASS_MAP = {
     // .date-picker-wrap {flex:1; height: 32px;}
     :deep(.dp__input_wrap) {height: 32px !important;}
     :deep(.dp__input) {height: 32px !important;}
+
+    .select-wrapper {
+        flex: 1;
+        min-width: 0;
+    }
 
     .customer-info-table-wrapper { height: 200px; }
 </style>

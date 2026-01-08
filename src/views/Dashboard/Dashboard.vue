@@ -21,6 +21,7 @@ import { useHospitalStore } from '@/stores/hospitalStore'
 import { useNoticeStore } from '@/stores/noticeStore'
 import { storeToRefs } from 'pinia'
 import { formatCount } from '@/utils/countFormatter'
+import { formatDateDot } from '@/utils/dateFormatter'
 
 // 스토어
 import { useModalStore } from '@/stores/modalStore'
@@ -30,13 +31,7 @@ const modalStore = useModalStore();
 const todayDate = ref(''); // 오늘 날짜 저장
 
 const getTodayDate = () => { // 날짜 형식 포맷팅
-    const date = new Date();
-
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-
-    return `${year}.${month}.${day}`
+    return formatDateDot(new Date());
 }
 
 const reservationStore = useReservationStore();

@@ -1,5 +1,5 @@
 /**
- * YY.MM.DD
+ * YYYY-MM-DD
  */
 export const formatDate = (value) => {
     if (!value) return ''
@@ -7,6 +7,17 @@ export const formatDate = (value) => {
     if (isNaN(d)) return ''
 
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/**
+ * YYYY.MM.DD
+ */
+export const formatDateDot = (value) => {
+    if (!value) return ''
+    const d = new Date(value)
+    if (isNaN(d)) return ''
+
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 }
 
 /**

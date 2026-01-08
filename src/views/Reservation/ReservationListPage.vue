@@ -19,12 +19,14 @@ import { startOfDay } from "date-fns";
 import { onMounted, ref, computed } from 'vue';
 // 스토어
 import { useReservationStore } from '@/stores/reservationStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
 import CommonTable from '@/components/common/CommonTable.vue';
 import { useModalStore } from '@/stores/modalStore';
 // 아이콘
 import icSms from '@/assets/icons/ic_sms.svg';
 import icReset from '@/assets/icons/ic_reset.svg';
 const reservationStore = useReservationStore();
+const hospitalStore = useHospitalStore();
 const modalStore = useModalStore();
 
 // 테이블 col 정의
@@ -52,13 +54,21 @@ const reserveStatusOptions = RESERVE_STATUS_OPTIONS;
 
 // 담당의 초기값
 const doctorList = ref(['all']);
-// 담당의 옵션 정의
-// TODO: 임시데이터 수집DB 접근 불가해서 추후 확인 다시 해야함
-const doctorOptions = [
-    { label: '전체', value: 'all' },
-    { label: '의료진1', value: 1 },
-    { label: '의료진2', value: 2 },
-];
+
+// 담당의 옵션 정의 (API에서 가져온 리스트 + 전체 옵션)
+const doctorOptions = computed(() => {
+    const options = [{ label: '전체', value: 'all' }];
+    
+    if (hospitalStore.doctorList && hospitalStore.doctorList.length > 0) {
+        const doctorList = hospitalStore.doctorList.map(doc => ({
+            label: doc.userName || doc.name || '',
+            value: doc.id
+        }));
+        options.push(...doctorList);
+    }
+    
+    return options;
+});
 const keyword = ref('');
 
 // 예약경로 초기값
@@ -118,7 +128,12 @@ const searchClear = () => { //초기화 버튼
     dateRange.value = [today, today];
 };
 
-onMounted(() => {
+onMounted(async () => {
+    // 담당의 리스트 로드
+    if (hospitalStore.doctorList.length === 0) {
+        await hospitalStore.getDoctorList();
+    }
+    // 예약 리스트 검색
     searchList();
 })
 
@@ -225,7 +240,7 @@ const handelReserveDetail = (reserveIdx) => {
         :modalState="modalStore.searchCustomerModal"
     >
         <SearchCustomer />
-    </Modal
+    </Modal>
 
     <!-- 문자 발송 모달 -->
     <Modal 
