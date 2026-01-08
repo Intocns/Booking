@@ -16,6 +16,11 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    // 최소 글자 수
+    minLength: {
+        type: Number,
+        default: 0
+    },
     // 최대 글자 수
     maxLength: {
         type: Number,
@@ -30,6 +35,14 @@ const props = defineProps({
         type: String,
         default: '80px',
     },
+    isError: {
+        type: Boolean,
+        default: false,
+    },
+    errorMessage: {
+        type: String,
+        default: '',
+    }
 });
 
 const emit = defineEmits(['update:modelValue', 'focus', 'blur']);
@@ -45,6 +58,12 @@ const currentLength = computed(() => {
 // 값이 있는지 여부 (스타일링용)
 const hasValue = computed(() => {
     return props.modelValue && props.modelValue.length > 0;
+});
+
+// 화면에 표시할 최종 메시지
+const displayMessage = computed(() => {
+    if (props.isError && props.errorMessage) return props.errorMessage;
+    return props.caption;
 });
 
 // --- 이벤트 핸들러 ---
@@ -81,6 +100,7 @@ const handleBlur = () => {
                 '--focused': isFocused,
                 '--disabled': disabled,
                 '--has-value': hasValue,
+                '--is-error': isError,
             }"
             :style="{ minHeight: height }"
         >
@@ -96,14 +116,21 @@ const handleBlur = () => {
             <!-- 글자 수 영역 -->
             <span 
                 class="text-area-box__char-count"
+                :class="{ '--error': isError }"
                 v-if="maxLength > 0"
             >
-                {{ currentLength }} / {{ maxLength }}
+                {{ currentLength }} / {{ maxLength }} {{ minLength > 0 ? '(최소' + minLength + '자)' : '' }}
             </span>
         </div>
 
         <!-- 힌트 메세지 -->
-        <span v-show="caption" class="caption">{{ caption }}</span>
+        <span 
+            v-show="displayMessage" 
+            class="caption"
+            :class="{ '--error': isError }"
+        >
+            {{ displayMessage }}
+        </span>
     </div>
 </template>
 
@@ -117,7 +144,7 @@ const handleBlur = () => {
 .text-area-box {
     display: flex;
     flex-direction: column; // 글자수 카운터가 아래에 위치하도록
-    gap:10px;
+    // gap:10px;
     position: relative;
     width: 100%;
     min-height: 80px; // 최소 높이 지정
@@ -138,7 +165,11 @@ const handleBlur = () => {
 
     &.--disabled {
         background-color: $gray-50;
-        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    &.--is-error {
+        border-color: $warning-500;
     }
 }
 
@@ -163,21 +194,32 @@ textarea {
     // 비활성화 시 텍스트 색상
     &:disabled {
         color: $gray-700;
-        cursor: not-allowed;
+        pointer-events: none;
     }
 }
 
 .text-area-box__char-count {
     align-self: flex-end; // 오른쪽 하단에 위치
-    margin-top: 4px;
+    // margin-top: 4px;
     
     @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line);
     color: $gray-500;
+
+    &.--error {
+        color: $warning-500;
+    }
 }
 
 .caption {
+    display: block;
+    width: 100%;
+    max-width: 280px;
     margin-top: 4px;
     @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line);
     color: $gray-600;
+
+    &.--error {
+        color: $warning-500;
+    }
 }
 </style>

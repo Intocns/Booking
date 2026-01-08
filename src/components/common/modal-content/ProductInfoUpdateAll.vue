@@ -14,7 +14,7 @@ import InputTextBox from '../InputTextBox.vue';
 import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
 import { ref, watch, computed } from 'vue';
-
+import { getFieldError } from '@/utils/common'
 import { api } from '@/api/axios'
 
 const modalStore = useModalStore();
@@ -132,6 +132,26 @@ const goInfo = (() => {
 
 //정보변경 일괄 저장
 const eventSave = (async() => {
+    // 1. 유효성 검사 대상들을 배열로 정리
+    const validations = [
+        getFieldError(updateItemDesc.value.desc, 0, 1000),
+        getFieldError(updateItemDesc.value.bookingPrecautionJson.desc, 0, 1000),
+    ];
+
+    // 2. 추가 항목(additionalItems)도 검사
+    additionalItems.value.forEach(item => {
+        validations.push(getFieldError(item.title, 3, 40));
+        validations.push(getFieldError(item.context, 4, 600));
+    });
+
+    // 3. 에러가 하나라도 있는지 확인
+    const hasError = validations.some(result => result.isError);
+
+    if (hasError) {
+        alert('입력 양식을 확인해 주세요.');
+        return;
+    }
+
     //선택한 상품 리스트 bizItemIds string (,) 형식으로 가져옴
     let itemList = updateProductList.value
                     .filter( item => item.isChecked)
@@ -212,12 +232,24 @@ const selectedCount = computed(() => {
             <div class="update-form">
                 <div class="update-form__group">
                     <p class="title-s update-form__label">상품 소개 글을 적어주세요.</p>
-                    <TextAreaBox placeholder="상품 소개글을 적어주세요." :max-length="1000" v-model="updateItemDesc.desc" />
+                    <TextAreaBox 
+                        placeholder="상품 소개글을 적어주세요." 
+                        v-model="updateItemDesc.desc" 
+                        :max-length="1000" 
+                        :is-error="getFieldError(updateItemDesc.desc, 0, 1000).isError"
+                        :error-message="getFieldError(updateItemDesc.desc, 0, 1000).message"
+                    />
                 </div>
 
                 <div class="update-form__group">
                     <p class="title-s update-form__label">예약 및 방문 관련 유의사항을 적어주세요.</p>
-                    <TextAreaBox placeholder="예약 및 방문 관련 유의사항을 적어주세요." :max-length="1000" v-model="updateItemDesc.bookingPrecautionJson.desc" />
+                    <TextAreaBox 
+                        v-model="updateItemDesc.bookingPrecautionJson.desc"
+                        placeholder="예약 및 방문 관련 유의사항을 적어주세요." 
+                        :max-length="1000" 
+                        :is-error="getFieldError(updateItemDesc.bookingPrecautionJson.desc, 0, 1000).isError"
+                        :error-message="getFieldError(updateItemDesc.bookingPrecautionJson.desc, 0, 1000).message"
+                    />
                 </div>
 
                 <div class="update-form__section">
@@ -243,11 +275,16 @@ const selectedCount = computed(() => {
                             placeholder="제목을 입력해주세요" 
                             :max-length="40"
                             :min-length="3"
+                            :is-error="getFieldError(item.title, 3, 40).isError"
+                            :error-message="getFieldError(item.title, 3, 40).message"
                         />
                         <TextAreaBox 
                             v-model="item.context"
                             placeholder="내용을 입력해주세요"
-                            :max-length="1000" 
+                            :max-length="600" 
+                            :min-length="4"
+                            :is-error="getFieldError(item.context, 4, 600).isError"
+                            :error-message="getFieldError(item.context, 4, 600).message"
                         />
 
                         <div class="photo-upload">
