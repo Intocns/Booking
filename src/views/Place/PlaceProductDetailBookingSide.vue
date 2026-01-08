@@ -287,6 +287,11 @@ const onAddHoliday = (selectedData) => {
                 </li>
             </ul>
         </section>
+
+        <div class="button-wrapper">
+            <button class="btn btn--size-40 btn--black">목록으로</button>
+            <button class="btn btn--size-40 btn--blue">저장</button>
+        </div>
     </div>
 
     <!-- 예약 오픈, 노출/미노출 설정 모달 -->
@@ -338,5 +343,13 @@ const onAddHoliday = (selectedData) => {
             &.top {flex: 2; min-height:0;}
             &.bottom {flex: 1;}
         }
+    }
+
+    .button-wrapper {
+        display: flex;
+        gap: 8px;
+        padding-top: 16px;
+
+        button {flex:1;}
     }
 </style>
