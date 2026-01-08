@@ -81,9 +81,6 @@ const optionTableColumns = [ // th에 tooltip이 필요한 경우 여기서 추�
 
 // 테이블 데이터 맵 (카테고리별 옵션 리스트 저장) - 반응형으로 생성
 const dataMap = ref({
-    unassigned: [
-        { optionName: '증명서 발급', price: '-', count: '제한 없음', 1: '1개!', 2: '상시운영', 3: '', is_connect: '연결하기' }
-    ],
     required: [
         { optionName: '기본 진료비', price: '10,000', count: '999', 1: '필수', 2: '상시운영', 3: '노출', 4: '연결됨' }
     ],
