@@ -165,6 +165,12 @@ onMounted(() => {
             width: auto !important;
             overflow: visible !important;
 
+            > div > table > tbody > tr > td:nth-child(1) {
+                position: sticky;
+                left: 0;
+                z-index: 1;
+            }
+
             table {
                 tbody tr td:nth-child(2) table {
                     td {

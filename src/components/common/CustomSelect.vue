@@ -177,6 +177,7 @@ onBeforeUnmount(() => {
 
             cursor: pointer;
             transition: 0.15s;
+            max-width: 120px;
 
             &.open {
                 border-color: $gray-900;

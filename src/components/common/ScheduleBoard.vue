@@ -12,7 +12,7 @@ import icNaver from '@/assets/icons/ic_res_naver.svg'
 import icIntoPet from '@/assets/icons/ic_res_intoPet.svg'
 import icIntoLink from '@/assets/icons/ic_res_intolink.svg'
 
-// 상태 아이콘 매핑
+// TODO: 상태 아이콘 매핑
 const statusIcons = {
     0: icHold,
     1: icConfirm,
@@ -24,7 +24,7 @@ const statusIcons = {
     // 2: '예약취소',
     // 3: '예약거절'??
 
-// 예약 경로 아이콘 매핑
+// TODO: 예약 경로 아이콘 매핑
 const pathIcons = {
     1: icIntoLink,
     2: icIntoPet,
@@ -86,6 +86,7 @@ const config = ref({
     // 시작 날짜 설정
     startDate: props.startDate,
     eventMoveHandling: "Disabled",
+    eventResizeHandling: "Disabled",
     
     onEventClick: (args) => {
         // 부모에게 클릭 이벤트 알림 (필요 시)
@@ -95,7 +96,7 @@ const config = ref({
     onBeforeEventRender: (args) => {
         const status = args.data.inState;
         
-        // 상태별 배경색
+        // TODO: 상태별 배경색
         const bgColors = {
             0: '#ffe9a5', // 대기
             1: '#cceaff', // 확정
@@ -106,7 +107,7 @@ const config = ref({
     },
     
     cellDuration: 30,
-    cellHeight: 40, 
+    cellHeight: 60, 
     businessBeginsHour: 9,                  
     businessEndsHour: 20,
 });
@@ -221,6 +222,11 @@ onMounted(() => {
             width: auto !important;
             overflow: visible !important;
 
+            > div > table > tbody > tr > td:nth-child(1) {
+                position: sticky;
+                left: 0;
+                z-index: 1;
+            }
             table {
                 tbody tr td:nth-child(2) table {
                     td {
@@ -236,7 +242,7 @@ onMounted(() => {
                     }
                 }
                 width: auto !important; 
-                // table-layout: fixed;
+                table-layout: fixed;
             }
         }
 

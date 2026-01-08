@@ -6,17 +6,17 @@ import FilterDate from '@/components/common/filters/FilterDate.vue';
 import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 import ScheduleBoard from '@/components/common/ScheduleBoard.vue';
 import ScheduleBoardWeekly from '@/components/common/ScheduleBoardWeekly.vue';
-import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
 import ScheduleBoardMonthly from '@/components/common/ScheduleBoardMonthly.vue';
 
 import { ref, computed, onMounted, watch } from 'vue';
 import { startOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from "date-fns";
-import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
-
+import { RESERVE_ROUTE_OPTIONS, RESERVE_STATUS_OPTIONS } from '@/utils/reservation';
 // 스토어
 import { useReservationStore } from '@/stores/reservationStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
 
 const reservationStore = useReservationStore()
+const hospitalStore = useHospitalStore();
 
 // 캘린더 뷰 상태 관리 (초기값: 'Resources')
 const currentView = ref('Resources');
@@ -31,17 +31,37 @@ const safeDayPilotDate = computed(() => {
     return format(currentDate.value, 'yyyy-MM-dd');
 });
 
-// 임시 담당의 데이터 (해당 컬럼 id 와 스케쥴 데이터의 resource가 같아야함)
-const staffResources = [
-    { id: 'hrshin', name: '신혜린' },
-    { id: 'IntoVet', name: '관리자' },
-    { id: '', name: '미지정' },
-    { id: 'choi', name: '최뽀삐' },
-    { id: 'go', name: '고뽀삐' },
-    { id: 'namgung', name: '남궁뽀삐' },
-    { id: 'test1', name: 'test1' },
-    // { id: 'test2', name: 'test2' },
-];
+// 담당의 데이터 (해당 컬럼 id 와 스케쥴 데이터의 resource가 같아야함)
+const staffResources = computed(() => {
+    if (!hospitalStore.doctorList) return [];
+    
+    // 선택된 값이 없거나 '전체('')'가 포함되어 있으면 전체 표시
+    if (selectedDoctorList.value.includes('all') || selectedDoctorList.value.length === 0) {
+        return hospitalStore.doctorList.map(doc => ({ id: doc.id, name: doc.userName }));
+    }
+    
+    // 필터링된 담당의만 표시
+    return hospitalStore.doctorList
+        .filter(doc => selectedDoctorList.value.includes(doc.id))
+        .map(doc => ({ id: doc.id, name: doc.userName }));
+});
+
+// 검색 필터용 담당의 옵션 초기값
+const selectedDoctorList = ref(['all']);
+// 검색필터용 담당의 옵션
+const doctorOptions = computed(() => {
+    if (!hospitalStore.doctorList) return [];
+
+    const list = hospitalStore.doctorList.map(doc => ({
+        value: doc.id, // 담당의 ID
+        label: doc.userName, // 담당의 이름
+    }));
+
+    return [
+        { value: 'all', label: '전체' }, 
+        ...list
+    ];
+})
 
 // 선택 날짜 값 (초기값: 오늘 날짜)
 const currentDate = ref(new Date());
@@ -68,6 +88,16 @@ const datePickerValue = computed({
     }
 });
 
+// 예약 상태 초기값
+const reservationStatus = ref(['all']);
+// 예약 상태 옵션 정의
+const reserveStatusOptions = RESERVE_STATUS_OPTIONS;
+
+// 예약경로 초기값
+const reservationChannel = ref(['all']);
+// 예약경로 옵션 정의
+const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
+
 // 검색 파라미터 생성 로직 (현재 뷰에 따라 시작/종료일 자동 계산)
 const fetchParams = computed(() => {
     let start, end;
@@ -84,24 +114,24 @@ const fetchParams = computed(() => {
     }
 
     return {
-        doctorId: [], // 필요한 경우 여기에 담당의 필터 추가
-        startDate: start,
+        status: reservationStatus.value, // 예약상태
+        doctorId: selectedDoctorList.value, // 담당의
+        startDate: start, 
         endDate: end,
+        reRoute: reservationChannel.value, // 예약 경로
     };
 });
 
-// 날짜나 뷰가 바뀔 때마다 실행
-watch([currentDate, currentView], () => {
+// [수정] 날짜, 뷰, 담당의 변경 시마다 호출
+watch([currentDate, currentView, selectedDoctorList, reservationStatus, reservationChannel], () => {
     reservationStore.getReserveSchedule(fetchParams.value);
-}, { immediate: false }); // onMounted에서 초기 호출하므로 false
+}, { deep: true });
 
-onMounted(() => {
-    const params = {
-        doctorId: [], // 담당의
-        startDate: currentDate,
-        endDate: currentDate,
-    }
-    reservationStore.getReserveSchedule(params)
+onMounted(async() => {
+    // 담당의 리스트 불러오기
+    await hospitalStore.getDoctorList();
+
+    reservationStore.getReserveSchedule(fetchParams.value);
 })
 </script>
 
@@ -139,9 +169,23 @@ onMounted(() => {
                 :is-range="currentView === 'Resources' ? false : true"
                 :default-select="currentView === 'Resources' ? 'today' : (currentView === 'Week' ? '7' : '30')"
             />
-            <FilterSelect label="담당의" />
-            <FilterSelect v-if="currentView != 'Month'" label="예약 상태" />
-            <FilterSelect v-if="currentView != 'Month'" label="예약 경로" />
+            <FilterSelect 
+                label="담당의" 
+                :options="doctorOptions" 
+                v-model="selectedDoctorList" 
+            />
+            <FilterSelect 
+                v-if="currentView != 'Month'" 
+                label="예약 상태"
+                :options="reserveStatusOptions"
+                v-model="reservationStatus"
+            />
+            <FilterSelect 
+                v-if="currentView != 'Month'" 
+                label="예약 경로" 
+                :options="reservationChannelOptions" 
+                v-model="reservationChannel" 
+            />
             <!--TODO: 초기화버튼 추가 -->
         </template>
 
