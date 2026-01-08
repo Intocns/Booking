@@ -488,6 +488,13 @@ onUnmounted(() => {
                         </div>
                     </div>
                 </div>
+
+                <!-- 연결된 옵션이 없는 경우  -->
+                <div v-else class="empty-box">
+                    <img :src="icEmpty" alt="비어있음 아이콘">
+                    <span class="title-s">연결된 옵션이 없습니다.</span>
+                    <p class="body-m">상품과 함께 예약 받을 옵션을 선택해 주세요.</p>
+                </div>
             </div>
         </div>
     </div>
