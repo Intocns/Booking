@@ -2,7 +2,7 @@
 <script setup>
 import { ref } from 'vue';
 import { PET_GENDER_MAP, RESERVE_ROUTE_MAP } from '@/utils/reservation';
-import { formatDate, formatTime } from '@/utils/dateFormatter';
+import { formatDate, formatTime, formatTimeToMinutes } from '@/utils/dateFormatter';
 
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import TimeSelect from '@/components/common/TimeSelect.vue';
@@ -57,34 +57,44 @@ if (endSource) {
     }
 }
 
-// 담당의 ID와 이름 설정
-if (reserveData.doctorId) {
-    selectedDoctorId.value = reserveData.doctorId;
-} else if (reserveData.docId) {
-    selectedDoctorId.value = reserveData.docId;
-}
-
+// 담당의 이름 설정
 if (reserveData.doctorName) {
     doctorName.value = reserveData.doctorName;
-} else if (reserveData.docName) {
-    doctorName.value = reserveData.docName;
-}
+} 
 
 // 담당의 옵션 (CustomSingleSelect용)
 const doctorOptions = computed(() => {
-    if (!hospitalStore.doctorList || hospitalStore.doctorList.length === 0) {
-        return [];
+    const options = [];
+    
+    // 기본 옵션 추가 (매칭 안된 경우를 대비)
+    options.push({
+        value: null,
+        label: '담당의 선택'
+    });
+    
+    // 담당의 리스트 옵션 추가
+    if (hospitalStore.doctorList && hospitalStore.doctorList.length > 0) {
+        hospitalStore.doctorList.forEach(doc => {
+            options.push({
+                value: doc.id,
+                label: doc.userName || doc.name || ''
+            });
+        });
     }
     
-    return hospitalStore.doctorList.map(doc => ({
-        value: doc.id,
-        label: doc.userName || doc.name || ''
-    }));
+    return options;
 });
 
 // 담당의 선택 시 이름 업데이트
 const handleDoctorChange = (doctorId) => {
     selectedDoctorId.value = doctorId;
+    // null이거나 빈 값이면 초기화
+    if (!doctorId || doctorId === null) {
+        doctorName.value = '';
+        selectedDoctorId.value = null;
+        return;
+    }
+    
     const selectedDoctor = hospitalStore.doctorList.find(doc => doc.id === doctorId);
     if (selectedDoctor) {
         doctorName.value = selectedDoctor.userName || selectedDoctor.name || '';
@@ -93,10 +103,61 @@ const handleDoctorChange = (doctorId) => {
     }
 };
 
-// 모달이 열릴 때 담당의 리스트 로드
+// 예약 확정 validation
+const validateReservation = () => {
+    // 1. 시간 검증: 시작 시간이 종료 시간보다 늦으면 안됨
+    if (startTime.value && endTime.value) {
+        const startMinutes = formatTimeToMinutes(startTime.value);
+        const endMinutes = formatTimeToMinutes(endTime.value);
+        
+        if (startMinutes !== null && endMinutes !== null && startMinutes >= endMinutes) {
+            alert('예약 종료 시간은 시작 시간보다 이후로 설정해야 합니다. 다시 확인해주세요.');
+            return false;
+        }
+    }
+    
+    // 2. 담당의 배정 검증
+    if (!selectedDoctorId.value || selectedDoctorId.value === null || selectedDoctorId.value === '') {
+        alert('담당의가 배정되지 않았습니다. 담당의를 배정한 뒤 예약을 확정해주세요.');
+        return false;
+    }
+    
+    return true;
+};
+
+// 예약 확정 버튼 클릭 핸들러
+const handleConfirmReservation = () => {
+    if (!validateReservation()) {
+        return;
+    }
+    
+    // TODO: 추후 작업 - 예약 확정 저장 로직
+    console.log('예약 확정 저장 로직 실행 예정');
+};
+
+// 초기 담당의 ID 저장 (리스트 로드 후 확인용)
+const initialDoctorId = ref(null);
+if (reserveData.doctorId) {
+    initialDoctorId.value = reserveData.doctorId;
+} else if (reserveData.docId) {
+    initialDoctorId.value = reserveData.docId;
+}
+
+// 모달이 열릴 때 담당의 리스트 로드 및 매칭 확인
 onMounted(async () => {
     if (hospitalStore.doctorList.length === 0) {
         await hospitalStore.getDoctorList();
+    }
+    
+    // 리스트 로드 후 초기 담당의 ID가 리스트에 있는지 확인
+    if (initialDoctorId.value) {
+        const doctorExists = hospitalStore.doctorList.some(doc => doc.id === initialDoctorId.value);
+        if (doctorExists) {
+            selectedDoctorId.value = initialDoctorId.value;
+        } else {
+            // 리스트에 없으면 null로 설정 (기본 옵션 선택 상태)
+            selectedDoctorId.value = null;
+        }
     }
 });
 
@@ -334,7 +395,7 @@ const RESERVE_STATUS_CLASS_MAP = {
     <div class="modal-button-wrapper">
         <div class="buttons">
             <button class="btn btn--size-40 btn--blue-outline">예약취소</button>
-            <button class="btn btn--size-40 btn--blue">예약 확정</button>
+            <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation">예약 확정</button>
         </div>
     </div>
 </template>

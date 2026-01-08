@@ -42,3 +42,14 @@ export const formatDateTime = (value) => {
 
     return `${formatDate(value)} ${formatTime(value)}`
 }
+
+/**
+ * 시간 문자열을 분 단위로 변환 (HH:mm -> 분)
+ * @param {string} timeStr - 'HH:mm' 형식의 시간 문자열
+ * @returns {number|null} 분 단위로 변환된 값, 유효하지 않으면 null
+ */
+export const formatTimeToMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+}
