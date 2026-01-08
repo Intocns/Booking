@@ -111,14 +111,14 @@ const validateReservation = () => {
         const endMinutes = formatTimeToMinutes(endTime.value);
         
         if (startMinutes !== null && endMinutes !== null && startMinutes >= endMinutes) {
-            alert('예약 종료 시간은 시작 시간보다 이후로 설정해야 합니다. 다시 확인해주세요.');
+            alert('예약 종료 시간은 시작 시간보다 이후로 설정해야 합니다. 다시 확인해주세요.'); //TODO : 모달로 변경해양함
             return false;
         }
     }
     
     // 2. 담당의 배정 검증
     if (!selectedDoctorId.value || selectedDoctorId.value === null || selectedDoctorId.value === '') {
-        alert('담당의가 배정되지 않았습니다. 담당의를 배정한 뒤 예약을 확정해주세요.');
+        alert('담당의가 배정되지 않았습니다. 담당의를 배정한 뒤 예약을 확정해주세요.'); //TODO : 모달로 변경해양함
         return false;
     }
     
