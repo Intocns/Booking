@@ -196,6 +196,10 @@ onMounted(() => {
         border-color: $gray-200;
         font-family: $font-family-base;
 
+        &::-webkit-scrollbar {
+            height: 8px; /* 가로 스크롤바 두께 */
+        }
+
         // /* 헤더 영역 */
         & > div:first-child {
             width: auto !important;

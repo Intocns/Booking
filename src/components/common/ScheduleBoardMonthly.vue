@@ -9,6 +9,10 @@ import icPersonal from '@/assets/icons/ic_res_personal.svg'
 import icCancel from '@/assets/icons/ic_res_canceled.svg'
 import icHold from '@/assets/icons/ic_res_hold.svg'
 import icPlusCircle from '@/assets/icons/ic_plus_circle.svg'
+// 스토어
+import { useHospitalStore } from "@/stores/hospitalStore";
+
+const hospitalStore = useHospitalStore();
 
 // 상태 아이콘 매핑
 const statusIcons = {
@@ -29,48 +33,22 @@ const selectedEvents = ref([]);
 const selectedDateStr = ref("");
 
 // props 데이터를 가공해서 '스태프별 요약 데이터'로 만듬
-// const summaryEvents = computed(() => {
-//     const dayGroups = {};
-
-//     props.events.forEach(ev => {
-//         // T를 기준으로 자르되, 데이터가 없을 경우를 대비
-//         const date = ev.start.includes('T') ? ev.start.split('T')[0] : ev.start;
-//         if (!dayGroups[date]) dayGroups[date] = {};
-        
-//         const rId = ev.resource;
-//         dayGroups[date][rId] = (dayGroups[date][rId] || 0) + 1;
-//     });
-
-//     const processed = [];
-
-//     Object.entries(dayGroups).forEach(([date, staffCounts]) => {
-//         Object.entries(staffCounts).forEach(([resId, count]) => {
-//             // staffs가 아직 비어있을 수 있으므로 체크
-//             const staff = props.staffs?.find(s => s.id === resId);
-//             const staffName = staff ? staff.name : resId;
-
-//             processed.push({
-//                 id: `summary-${date}-${resId}`,
-//                 start: `${date}T00:00:00`,
-//                 end: `${date}T23:59:59`,
-//                 text: `${staffName} ${count}`,
-//                 resourceId: resId,
-//                 tags: { isSummary: true }
-//             });
-//         });
-//     });
-
-//     return processed;
-// });
 const summaryEvents = computed(() => {
     const dayGroups = {};
 
+    // 현재 필터링된 스태프 ID 목록 (비교를 위해 Set 생성)
+    const allowedStaffIds = new Set(props.staffs?.map(s => s.id) || []);
+
     // 1. 데이터 그룹화 (날짜별 -> 직원별)
     props.events.forEach(ev => {
+        const rId = ev.resource;
+
+        // 프롭스로 받은 staffs에 없는 ID면 건너뜀
+        if (!allowedStaffIds.has(rId)) return;
+
         const date = ev.start.includes('T') ? ev.start.split('T')[0] : ev.start;
         if (!dayGroups[date]) dayGroups[date] = [];
         
-        const rId = ev.resource;
         let staffData = dayGroups[date].find(d => d.resourceId === rId);
         if (!staffData) {
             staffData = { resourceId: rId, count: 0 };
@@ -88,17 +66,19 @@ const summaryEvents = computed(() => {
 
         // 실제 표시할 직원 막대기 생성
         displayList.forEach((item) => {
-            const staffIndex = props.staffs?.findIndex(s => s.id === item.resourceId) ?? "";
-            const staff = props.staffs[staffIndex] ?? "";
-            // 💡 중요: staffs 배열의 인덱스를 사용하여 1, 2, 3, 4번 색상 고정 (0~3)
-            const colorIdx = (staffIndex !== -1 ? staffIndex % 4 : 0) + 1;
+            // const staffIndex = props.staffs?.findIndex(s => s.id === item.resourceId) ?? "";
+            const staffIndex = hospitalStore.doctorList.findIndex(s => s.id === item.resourceId);
+            // const staff = props.staffs[staffIndex] ?? "";
+            const staff = props.staffs.find(s => s.id === item.resourceId);
+            // staffs 배열의 인덱스를 사용하여 색상 고정 
+            const colorIdx = (staffIndex !== -1 ? staffIndex % 10 : 0) + 1;
 
             processed.push({
                 id: `summary-${date}-${item.resourceId}`,
                 start: `${date}T00:00:00`,
                 end: `${date}T23:59:59`,
                 text: `${staff ? staff.name : item.resourceId} ${item.count}`,
-                tags: { colorIdx, isSummary: true } // 💡 tags에 컬러 번호 저장
+                tags: { colorIdx, isSummary: true } // tags에 컬러 번호 저장
             });
         });
 
@@ -123,6 +103,8 @@ const config = ref({
     events: summaryEvents.value, // 가공된 요약 데이터 전달
     eventHeight: 28,
     heightSpec: "Fixed",
+    eventMoveHandling: "Disabled",
+    eventResizeHandling: "Disabled",
     
     //  캘린더 막대 
     onBeforeEventRender: (args) => {
@@ -215,9 +197,16 @@ const openStaffs = ref({});
 // 선택된 이벤트를 스태프별로 그룹화
 const groupedSelectedEvents = computed(() => {
     const groups = {};
+
+    // 현재 필터링된 스태프 ID 목록
+    const allowedStaffIds = new Set(props.staffs?.map(s => s.id) || []);
     
     selectedEvents.value.forEach(ev => {
         const staffId = ev.resource;
+
+        // 프롭스로 받은 staffs에 없는 ID면 사이드바에서도 제외
+        if (!allowedStaffIds.has(staffId)) return;
+
         if (!groups[staffId]) {
             const staff = props.staffs.find(s => s.id === staffId);
             groups[staffId] = {
@@ -388,6 +377,13 @@ onMounted(() => {
     :deep(.vet-color-2) { background-color: $vet2_bg; color: $vet2_bar; }
     :deep(.vet-color-3) { background-color: $vet3_bg; color: $vet3_bar; }
     :deep(.vet-color-4) { background-color: $vet4_bg; color: $vet4_bar; }
+
+    :deep(.vet-color-5) { background-color: $vet5_bg; color: $vet5_bar; }
+    :deep(.vet-color-6) { background-color: $vet6_bg; color: $vet6_bar; }
+    :deep(.vet-color-7) { background-color: $vet7_bg; color: $vet7_bar; }
+    :deep(.vet-color-8) { background-color: $vet8_bg; color: $vet8_bar; }
+    :deep(.vet-color-9) { background-color: $vet9_bg; color: $vet9_bar; }
+    :deep(.vet-color-10) { background-color: $vet10_bg; color: $vet10_bar; }
 
     /* 더보기 바 스타일 */
     :deep(.more-bar) {
