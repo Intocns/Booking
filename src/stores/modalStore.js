@@ -36,10 +36,6 @@ export const useModalStore = defineStore("modalStore", () => {
     const categorySettingModal = createModalState('카테고리 관리'); // 옵션관리 > 카테고리 관리 
     const optionSettingModal = createModalState('옵션 등록'); // 옵션 관리 > 옵션 등록,수정,복사
     const optionDeleteModal = createModalState('옵션 삭제'); // 옵션 관리 > 옵션삭제
-    const productVisibleUpdateModal = createModalState(); // 상품 관리 > 상품 일괄 설정
-    const productOrderUpdateModal = createModalState(); // 상품 관리 > 순서 변경
-    const productInfoUpdateAllModal = createModalState(); // 상품 관리 > 정보 일괄 변경
-    const intoPetImportModal = createModalState(); // 상품 관리 > 인투펫 불러오기
 
     // 네이버 연동 계정 관리
     const productRegistrationModal = createModalState(); // 상품 등록 필요 모달
@@ -51,6 +47,12 @@ export const useModalStore = defineStore("modalStore", () => {
     const addRequestModal = createModalState(); //  예약자 정보 요청 > 질문 추가
 
     // 상품 관리
+    const productVisibleUpdateModal = createModalState(); // 상품 관리 > 상품 일괄 설정
+    const productOrderUpdateModal = createModalState(); // 상품 관리 > 순서 변경
+    const productInfoUpdateAllModal = createModalState(); // 상품 관리 > 정보 일괄 변경
+    const intoPetImportModal = createModalState(); // 상품 관리 > 인투펫 불러오기
+    const productCopyModal = createModalState(); // 상품 관리 > 상품 복사
+    // 상품 관리 > 상품 수정
     const holidaySettingModal = createModalState() // 상품 수정 > 예약 정보 > 휴무일 수정
     const setDateSettingModal = createModalState() // 상품 수정 > 예약 정보 > 캘린더 운영/미운영 블록 클릭시
     const setOperationRuleModal = createModalState() // 상품 수정 > 예약 정보 > 운영 설정 모달 > 진료 가능 동물 수, 운영시간 변경하기
@@ -63,15 +65,20 @@ export const useModalStore = defineStore("modalStore", () => {
         categorySettingModal,
         optionSettingModal,
         optionDeleteModal,
+        // 네이버 연동 계정 관리
+        productRegistrationModal,
+        naverConnectNoticeModal,
+        // 플레이스 설정
+        bookingGuideModal,
+        bookingGuideTextModal,
+        addRequestModal,
+        // 상품 관리
         productVisibleUpdateModal,
         productOrderUpdateModal,
         productInfoUpdateAllModal,
         intoPetImportModal,
-        productRegistrationModal,
-        naverConnectNoticeModal,
-        bookingGuideModal,
-        bookingGuideTextModal,
-        addRequestModal,
+        productCopyModal,
+        // 상품 관리 > 상품 수정
         holidaySettingModal,
         setDateSettingModal,
         setOperationRuleModal,

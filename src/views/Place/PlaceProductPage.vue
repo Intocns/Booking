@@ -25,6 +25,7 @@ import { useRouter } from 'vue-router';
 
 //util
 import { IS_IMP_TYPE } from "@/utils/product";
+import InputTextBox from '@/components/common/InputTextBox.vue';
 
 const router = useRouter();
 const productStore = useProductStore();
@@ -33,9 +34,12 @@ const modalStore = useModalStore();
 
 // 상태관리
 const dragList = ref([...productStore.productList])
-const isVisible = ref('1')
 const isCheckImpType = ref(false) // 미노출 제외 체크 값
 const itemOrderList = ref([...productStore.productList])
+const copyProductName = ref(''); // 상품 복사 모달 > 복사할 새 상품명
+const currentCopyIdx = ref(null); // 상품 복사 모달 > 현재 복사 대상 상품의 ID(idx)
+const copyOptionBooking = ref(1) // 상품 복사 모달 > 복사 옵션 예약정보
+const copyOptionItem = ref(1) // 상품 복사 모달 > 복사 옵션 기본정보
 
 // 미노출 제외 체크박스 감시
 watch(
@@ -81,8 +85,7 @@ const clickIntoPetImportBtn = (() => {
 // 상품 등록 페이지로 이동
 const goProductDetail = (id = null) => {
     if (id) {
-        // 수정 모드: 쿼리나 파라미터로 id 전달
-        router.push({ name: 'placeProductDetail', query: { id: id } });
+        router.push({ name: 'placeProductEdit', params: { id: id } });
     } else {
         // 신규 등록 모드
         router.push({ name: 'placeProductDetail' });
@@ -147,6 +150,67 @@ const saveItemOrder = (async() => {
         modalStore.productOrderUpdateModal.closeModal()
     }
 })
+
+// 상품 삭제 버튼 클릭 이벤트
+const clickDeleteItem = (() => {
+    modalStore.confirmModal.openModal({
+        title: '상품 삭제',
+        text: '상품 정보, 설정 등 모든 정보가 삭제되며\n다시 복원할 수 없습니다.',
+        confirmBtnText: '삭제',
+        onConfirm: '', // 여기에 삭제 이벤트 추가
+    })
+})
+
+// 상품 복사 버튼 클릭 이벤트
+const clickCopyItem = ((idx) => {
+    currentCopyIdx.value = idx; // 대상 idx 저장
+    copyProductName.value = ''; // 상품명 입력필드 초기화
+    copyOptionItem.value = 1; // 열 때마다 초기화
+    copyOptionBooking.value = 1;
+    modalStore.productCopyModal.openModal();
+})
+
+// 상품 복사 > 옵션 클릭 토글 이벤트
+const toggleCopyOption = (target) => {
+    if (target === 'item') {
+        copyOptionItem.value = copyOptionItem.value === 1 ? 0 : 1;
+    } else if (target === 'booking') {
+        copyOptionBooking.value = copyOptionBooking.value === 1 ? 0 : 1;
+    }
+};
+
+// 상품 복사 실행 버튼 (모달 안의 '복사' 버튼)
+const submitCopyItem = () => {
+    // 1. 상품명 입력 확인 (공백 제거 후 체크)
+    if (!copyProductName.value || copyProductName.value.trim() === '') {
+        alert('새로운 상품명을 입력해주세요.');
+        return;
+    }
+
+    // 2. 상품명 글자수 체크 (30자 초과)
+    if (copyProductName.value.length > 30) {
+        alert('상품명은 최대 30자까지 입력 가능합니다.');
+        return;
+    }
+
+    // 3. 복사 옵션 선택 확인 (둘 다 체크 해제된 경우)
+    if (copyOptionItem.value === 0 && copyOptionBooking.value === 0) {
+        alert('복사할 정보(기본 정보 또는 예약 정보)를 최소 하나 이상 선택해주세요.');
+        return;
+    }
+
+    // 콘솔에 데이터 출력
+    console.log('--- 상품 복사 실행 데이터 ---');
+    console.log('대상 상품 IDX:', currentCopyIdx.value);
+    console.log('새 상품명:', copyProductName.value);
+    console.log('기본정보 복사 여부:', copyOptionItem.value);
+    console.log('예약정보 복사 여부:', copyOptionBooking.value);
+    
+    // 이후 로직 (API 호출 등)
+    // alert('복사가 완료되었습니다.');
+    // modalStore.productCopyModal.closeModal();
+};
+
 onMounted(async () => {
     await productStore.getProductList();
 })
@@ -229,9 +293,9 @@ onMounted(async () => {
                 <!-- bottom -->
                 <div class="bottom">
                     <div class="d-flex gap-16">
-                        <button><img :src="icEdit" alt="수정아이콘" width="16"></button>
-                        <button><img :src="icCopy" alt="복사아이콘"></button>
-                        <button><img :src="icDel" alt="삭제 아이콘"></button>
+                        <button title="수정" @click="goProductDetail(product.idx)"><img :src="icEdit" alt="수정아이콘" width="16"></button>
+                        <button title="복사" @click="clickCopyItem(product.idx)"><img :src="icCopy" alt="복사아이콘"></button>
+                        <button title="삭제" @click="clickDeleteItem"><img :src="icDel" alt="삭제 아이콘"></button>
                     </div>
 
                     <div>
@@ -342,6 +406,66 @@ onMounted(async () => {
             <button class="btn btn--size-24 btn--c btn--black">불러오기</button>
         </div>
     </Modal>
+
+    <!-- 상품 복사 모달 -->
+    <Modal
+        v-if="modalStore.productCopyModal.isVisible"
+        title="상품 복사"
+        size="xs"
+        :modal-state="modalStore.productCopyModal"
+    >
+        <div class="modal-contents-inner">
+            <div class="d-flex flex-col gap-6">
+                <span class="title-s">상품명</span>
+                <InputTextBox 
+                    v-model="copyProductName"
+                    :max-length="30" 
+                    placeholder="새로운 상품명을 입력해주세요" 
+                    :is-error="copyProductName.length > 30"
+                    :error-message="'30자까지만 입력 가능합니다.'"
+                />
+            </div>
+
+            <div class="d-flex flex-col gap-6" style="margin-top:16px;">
+                <span class="title-s">복사할 정보 선택</span>
+
+                <ul class="modal-product-list">
+                    <li 
+                        class="modal-product-list__item" 
+                        :class="{ 'is-active': copyOptionItem === 1 }"
+                        @click="toggleCopyOption('item')"
+                    >
+                        <span class="name body-m">기본 정보</span>
+                        <label class="checkbox" @click.stop>
+                            <input type="checkbox" :checked="copyOptionItem === 1" />
+                            <span class="checkMark"></span>
+                        </label>
+                    </li>
+                    <li 
+                        class="modal-product-list__item" 
+                        :class="{ 'is-active': copyOptionBooking === 1 }"
+                        @click="toggleCopyOption('booking')"
+                    >
+                        <span class="name body-m">예약 정보</span>
+                        <label class="checkbox" @click.stop>
+                            <input type="checkbox" :checked="copyOptionBooking === 1" />
+                            <span class="checkMark"></span>
+                        </label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="modal-button-wrapper">
+            <div class="buttons">
+                <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.productCopyModal.closeModal()">취소</button>
+                <button class="btn btn--size-32 btn--blue" @click="submitCopyItem">복사</button>
+            </div>
+        </div>
+    </Modal>
+
+    <!-- 상품 삭제 & 전체상품 노출 안내 모달 -->
+    <ConfirmModal v-if="modalStore.confirmModal.isVisible" />
 </template>
 
 <style lang="scss" scoped> 
@@ -516,6 +640,11 @@ onMounted(async () => {
         &:active {
             cursor: grabbing; // 잡았을 때 모양
         }
+    }
+
+    &.is-active {
+        border-color: $primary-700;
+        background-color: $primary-50;
     }
 }
 </style>
