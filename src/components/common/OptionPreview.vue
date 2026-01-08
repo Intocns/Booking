@@ -186,6 +186,16 @@ const getQuantity = (option) => {
     return minCount;
 };
 
+// 총액 계산 (가격 * 수량)
+const getTotalPrice = (option) => {
+    const quantity = getQuantity(option);
+    const price = option.rawData?.price;
+    if (price && quantity > 0) {
+        return price * quantity;
+    }
+    return 0;
+};
+
 // 체크형 옵션의 선택 상태 관리
 const checkedOptions = ref({}); // { optionId: boolean }
 
@@ -201,6 +211,28 @@ const isChecked = (option) => {
     return checkedOptions.value[optionId] || false;
 };
 
+// 옵션 데이터 로드 함수
+const loadPreviewOptions = (data) => {
+    if (Array.isArray(data)) {
+        previewOptions.value = data;
+        
+        // 옵션이 있으면 첫 번째 카테고리 자동 선택 (NUMBER, CHECK 공통)
+        const categories = Array.from(
+            new Map(
+                data.map(option => [option.categoryId, {
+                    category_id: option.categoryId,
+                    name: option.categoryName || '',
+                    categoryType: option.categoryType
+                }])
+            ).values()
+        );
+        
+        if (categories.length > 0) {
+            selectedCategory.value = categories[0].category_id;
+        }
+    }
+};
+
 // 선택된 상품이 변경되면 수량/체크 상태 초기화 및 옵션 데이터 로드
 watch(selectedProductModel, async (newValue) => {
     optionQuantities.value = {};
@@ -211,28 +243,8 @@ watch(selectedProductModel, async (newValue) => {
         try {
             isLoading.value = true;
             const response = await optionStore.getOptionPreviewByItemId(newValue);
-            
-            // API 응답 구조: response.data.data 배열
             const data = response?.data?.data || response?.data || [];
-            
-            if (Array.isArray(data)) {
-                previewOptions.value = data;
-                
-                // 옵션이 있으면 첫 번째 카테고리 자동 선택 (NUMBER, CHECK 공통)
-                const categories = Array.from(
-                    new Map(
-                        data.map(option => [option.categoryId, {
-                            category_id: option.categoryId,
-                            name: option.categoryName || '',
-                            categoryType: option.categoryType
-                        }])
-                    ).values()
-                );
-                
-                if (categories.length > 0) {
-                    selectedCategory.value = categories[0].category_id;
-                }
-            }
+            loadPreviewOptions(data);
         } catch (error) {
             console.error('미리보기 옵션 로드 실패:', error);
             previewOptions.value = [];
@@ -297,23 +309,25 @@ onUnmounted(() => {
         </div>
         <div class="preview-contents">
             <!-- 선택 -->
-            <CustomSingleSelect 
-                v-model="selectedProductModel"
-                :options="productOptions"
-                placeholder="상품을 선택해주세요"
-            />
+            <div class="select-wrapper">
+                <CustomSingleSelect 
+                    v-model="selectedProductModel"
+                    :options="productOptions"
+                    placeholder="상품을 선택해주세요"
+                />
+            </div>
 
             <!-- 미리보기 -->
             <div class="preview-section">
-                <!-- 상품이 선택되지 않은 경우 -->
-                <div v-if="!selectedProductModel" class="empty-box">
+                <!-- 상품이 선택되지 않고 옵션도 없는 경우 -->
+                <div v-if="!selectedProductModel && previewOptions.length === 0" class="empty-box">
                     <img :src="icEmpty" alt="비어있음 아이콘">
                     <span class="title-s">상품을 선택해주세요.</span>
                     <p class="body-m">상품을 선택하면 연결된 옵션을 확인할 수 있습니다.</p>
                 </div>
                 
                 <!-- 옵션 선택 섹션 -->
-                <div v-else class="preview-options-wrapper">
+                <div v-else-if="previewOptions.length > 0" class="preview-options-wrapper">
                     <!-- 수량형 옵션 섹션 (일반 옵션이 있을 때만 표시) -->
                     <div v-if="quantityOptions.length > 0 || checkOptions.length > 0" class="preview-options-section">
                         <div class="preview-section-title">
@@ -369,22 +383,27 @@ onUnmounted(() => {
                                     </p>
                                 </div>
                                 
-                                <div class="quantity-selector">
-                                    <button 
-                                        class="quantity-btn"
-                                        :disabled="getQuantity(option) <= (option.rawData?.minBookingCount || 0)"
-                                        @click="decreaseQuantity(option)"
-                                    >
-                                        -
-                                    </button>
-                                    <span class="quantity-value title-m">{{ getQuantity(option) }}</span>
-                                    <button 
-                                        class="quantity-btn"
-                                        :disabled="option.rawData?.maxBookingCount !== null && option.rawData?.maxBookingCount !== undefined && getQuantity(option) >= option.rawData.maxBookingCount"
-                                        @click="increaseQuantity(option)"
-                                    >
-                                        +
-                                    </button>
+                                <div class="quantity-selector-wrapper">
+                                    <div class="quantity-selector">
+                                        <button 
+                                            class="quantity-btn quantity-btn--minus"
+                                            :disabled="getQuantity(option) <= (option.rawData?.minBookingCount || 0)"
+                                            @click="decreaseQuantity(option)"
+                                        >
+                                            -
+                                        </button>
+                                        <span class="quantity-value title-m">{{ getQuantity(option) }}</span>
+                                        <button 
+                                            class="quantity-btn quantity-btn--plus"
+                                            :disabled="option.rawData?.maxBookingCount !== null && option.rawData?.maxBookingCount !== undefined && getQuantity(option) >= option.rawData.maxBookingCount"
+                                            @click="increaseQuantity(option)"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                    <p v-if="option.rawData?.price && getQuantity(option) > 0" class="total-price body-xs">
+                                        {{ getTotalPrice(option).toLocaleString() }}원
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -459,7 +478,7 @@ onUnmounted(() => {
 .preview-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 0;
     height: 100%;
     min-height: 0;
     max-height: 100%;
@@ -468,6 +487,11 @@ onUnmounted(() => {
     border: 1px solid $gray-200;
     background-color: $gray-00;
     overflow: hidden;
+}
+
+.preview-title {
+    flex-shrink: 0;
+    margin-bottom: 16px;
 }
 
 .preview-contents {
@@ -479,19 +503,28 @@ onUnmounted(() => {
     gap: 16px;
     overflow: hidden;
 
-    .select {
-        width: 100%;
+    .select-wrapper {
         flex-shrink: 0;
+        
+        .select {
+            width: 100%;
+        }
     }
 
     .preview-section {
         flex: 1;
         min-height: 0;
         max-height: 100%;
-        padding: 24px 16px;
+        padding: 0;
         overflow-y: auto;
         overflow-x: hidden;
         border-top: 1px solid $gray-200;
+        
+        /* 스크롤바 숨기기 */
+        scrollbar-width: none; // Firefox
+        &::-webkit-scrollbar {
+            display: none; // Chrome, Safari
+        }
 
         .empty-box {
             height: 100%;
@@ -510,6 +543,7 @@ onUnmounted(() => {
             display: flex;
             flex-direction: column;
             gap: 24px;
+            padding: 24px 12px;
         }
         
             .preview-options-section {
@@ -625,7 +659,7 @@ onUnmounted(() => {
             .option-list {
                 display: flex;
                 flex-direction: column;
-                gap: 12px;
+                gap: 0;
                 
                 &.quantity-list {
                     margin-top: 8px;
@@ -649,14 +683,13 @@ onUnmounted(() => {
                     display: flex;
                     align-items: flex-start;
                     gap: 12px;
-                    padding: 16px;
-                    border-radius: 8px;
-                    border: 1px solid $gray-200;
+                    padding: 16px 0;
+                    border-bottom: 1px solid $gray-200;
                     background-color: $gray-00;
-                    transition: border-color 0.2s;
+                    border-radius: 0;
                     
-                    &:hover {
-                        border-color: $gray-300;
+                    &:last-child {
+                        border-bottom: none;
                     }
                     
                     &.quantity-option {
@@ -688,8 +721,11 @@ onUnmounted(() => {
                         
                         .quantity-selector {
                             display: flex;
-                            align-items: center;
-                            gap: 12px;
+                            align-items: stretch;
+                            gap: 0;
+                            border: 1px solid $gray-200;
+                            border-right: none;
+                            border-radius: 0;
                             
                             .quantity-btn {
                                 width: 32px;
@@ -697,34 +733,72 @@ onUnmounted(() => {
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
-                                border: 1px solid #00c73c;
-                                border-radius: 4px;
-                                background-color: #00c73c;
+                                border: none;
+                                border-radius: 0;
                                 cursor: pointer;
-                                color: $gray-00;
-                                font-size: 18px;
+                                font-size: 20px;
                                 font-weight: 500;
-                                transition: background-color 0.2s, border-color 0.2s;
+                                transition: background-color 0.2s;
+                                flex-shrink: 0;
                                 
-                                &:hover:not(:disabled) {
-                                    background-color: #00b035;
-                                    border-color: #00b035;
+                                &--minus {
+                                    background-color: $gray-00;
+                                    color: $gray-700;
+                                    
+                                    &:hover:not(:disabled) {
+                                        background-color: $gray-50;
+                                    }
+                                    
+                                    &:disabled {
+                                        opacity: 0.5;
+                                        cursor: not-allowed;
+                                        background-color: $gray-00;
+                                        color: $gray-400;
+                                    }
                                 }
                                 
-                                &:disabled {
-                                    opacity: 0.5;
-                                    cursor: not-allowed;
-                                    background-color: $gray-200;
-                                    border-color: $gray-300;
-                                    color: $gray-500;
+                                &--plus {
+                                    background-color: #00c73c;
+                                    color: $gray-00;
+                                    border-top: none;
+                                    border-right: none;
+                                    border-bottom: none;
+                                    
+                                    &:hover:not(:disabled) {
+                                        background-color: #00b035;
+                                    }
+                                    
+                                    &:disabled {
+                                        opacity: 0.5;
+                                        cursor: not-allowed;
+                                        background-color: $gray-200;
+                                        color: $gray-500;
+                                    }
                                 }
                             }
                             
                             .quantity-value {
-                                min-width: 32px;
-                                text-align: center;
-                                color: $gray-900;
-                                font-weight: 500;
+                                min-width: 40px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                background-color: $gray-00;
+                                border-left: 1px solid $gray-200;
+                                border-right: 1px solid $gray-200;
+                                color: $gray-400;
+                                font-weight: 400;
+                            }
+                        }
+                        
+                        .quantity-selector-wrapper {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: flex-end;
+                            gap: 4px;
+                            
+                            .total-price {
+                                color: $gray-600;
+                                text-align: right;
                             }
                         }
                     }
