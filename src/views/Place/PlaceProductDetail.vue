@@ -10,6 +10,9 @@ import icInfo from '@/assets/icons/Ic_round_warning.svg'
 
 import { ref } from 'vue';
 
+//itemId값(저장, 수정 확인용)
+let savedItemId = ref("");
+
 const currentTab = ref('basic'); // 탭 버튼
 </script>
 
@@ -49,7 +52,10 @@ const currentTab = ref('basic'); // 탭 버튼
 
             <div class="contents-wrapper">
                 <keep-alive>
-                    <component :is="currentTab === 'basic' ? ProductTabBasic : currentTab === 'booking' ? ProductTabBooking : ProductTabOption" />
+                    <component 
+                        :is="currentTab === 'basic' ? ProductTabBasic : currentTab === 'booking' ? ProductTabBooking : ProductTabOption" 
+                        :savedItemId='savedItemId' 
+                    />
                 </keep-alive>
             </div>
         </div>

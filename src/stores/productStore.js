@@ -108,7 +108,7 @@ export const useProductStore = defineStore("product", () => {
     }
 
     //상품 등록
-    async function addItem(cocode, params) {
+    async function addItem(params) {
         //임시 적용 start(사용 시 해당 params값 참고)
         // let params = {
         //     "imp": true,
@@ -226,12 +226,8 @@ export const useProductStore = defineStore("product", () => {
         //임시 적용 end(사용 시 해당 params값 참고)
 
         const response = await api.post(`/api/${cocode}/item/add`, params);
-
-        if(response.data.status_code <= 300) {
-            alert('등록이 완료되었습니다.');
-        }else{
-            alert('처리 중 오류가 발생했습니다.');
-        }
+        console.log(response);
+        return response.data;
     }
 
     //상품 수정

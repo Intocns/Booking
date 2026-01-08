@@ -10,12 +10,34 @@ import icClear from '@/assets/icons/ic_clear.svg'
 import icAddBtn from '@/assets/icons/ic_add_btn.svg'
 import icDragHandel from '@/assets/icons/ic_drag_handel.svg'
 
+import { useProductStore } from '@/stores/productStore';
+import { parseJSON } from 'date-fns';
+
+const productStore = useProductStore();
+
 const doctorAssignType = ref('assign'); // 담당의 설정 타입 (default: 'assign' - 승인 시 배정)
 const selectedDoctor = ref([]); // 선택된 담당의 ID
 const doctorOptions = [ // 담당의 목록 (예시 데이터)
     { label: '김철수 원장', value: 'doc_01' },
     { label: '이영희 과장', value: 'doc_02' },
 ];
+
+//PlaceProductDetail.vue에서 선언한component 옵션 사용
+const props = defineProps({
+    savedItemId: Number,
+})
+
+// 상품 관련 입력 항목
+const basicInput = ref({
+    "name" : "",//상품명
+    // "isImp" : "",//상품 노출 여부 >> 
+    "imageUrls" : [],//상품 이미지
+    "desc" : "",//상품 소개
+    "bookingPrecautionJson" : [{"desc" : ""}],//유의 사항
+    "extraDescJson" : [],//상세 설명 추가 >> detailList값 > 다음 버튼 클릭 시 삽입
+    "doctor" : "현장데스크(관리자)",//담당의 설정
+    "doctorId" : ""//담당의 설정
+});
 
 // 상세 설명 항목 상태관리 (예시)
 const detailList = ref([]);
@@ -24,9 +46,8 @@ const detailList = ref([]);
 const addDetailItem = () => {
     detailList.value.push({
         title: '',
-        content: '',
-        image: null,
-        url: ''
+        context: '',
+        images: null
     });
 };
 
@@ -34,6 +55,31 @@ const addDetailItem = () => {
 const removeDetailItem = (index) => {
     detailList.value.splice(index, 1);
 };
+
+// 다음 버튼 클릭 -> 저장 및 다음 페이지(예약 정보 페이지로 이동)
+const clickNextBtn = (async() => {
+    let params = basicInput.value;
+    params.extraDescJson = detailList.value;
+
+    let response = '';
+
+    if(savedItemId > 0){
+        response = await productStore.addItem(params);
+    }else{
+        response = await productStore.modifyItem(params);
+    }
+
+    if(response != '' && response.status_code <= 300){
+        let reponseDecode = JSON.parse(response.data);
+
+        if(savedItemId == ''){
+            savedItemId = reponseDecode.bizItemId;
+        }
+        //다음 페이지로 이동
+    } else{
+        console.log('저장실패');
+    }
+})
 </script>
 
 <template>
@@ -42,12 +88,12 @@ const removeDetailItem = (index) => {
         <li class="form-item">
             <div class="form-label required">상품명</div>
             <div class="form-content">
-                <InputTextBox :max-length="50" />
+                <InputTextBox :max-length="50" v-model="basicInput.name" />
             </div>
         </li>
 
         <!-- 상품 노출 여부 -->
-        <li class="form-item">
+        <!-- <li class="form-item">
             <div class="form-label">상품 노출 여부</div>
             <div class="form-content">
                 <label class="toggle">
@@ -55,7 +101,7 @@ const removeDetailItem = (index) => {
                     <span class="toggle-img"></span>
                 </label>
             </div>
-        </li>
+        </li> -->
 
         <!-- 상품사진 -->
         <li class="form-item">
@@ -93,7 +139,7 @@ const removeDetailItem = (index) => {
         <li class="form-item">
             <div class="form-label">상품 소개</div>
             <div class="form-content">
-                <TextAreaBox :max-length="1000 " />
+                <TextAreaBox :max-length="1000" v-model="basicInput.desc" />
             </div>
         </li>
 
@@ -101,7 +147,7 @@ const removeDetailItem = (index) => {
         <li class="form-item">
             <div class="form-label">유의사항</div>
             <div class="form-content">
-                <TextAreaBox :max-length="1000 " />
+                <TextAreaBox :max-length="1000" v-model="basicInput.bookingPrecautionJson[0].desc" />
             </div>
         </li>
 
@@ -128,7 +174,7 @@ const removeDetailItem = (index) => {
                                 :max-length="40" 
                             />
                             <TextAreaBox 
-                                v-model="item.content"
+                                v-model="item.context"
                                 placeholder="내용을 입력해 주세요" 
                                 :max-length="1000" 
                             />
@@ -195,7 +241,7 @@ const removeDetailItem = (index) => {
 
     <div class="button-wrapper">
         <button class="btn btn--size-40 btn--black">목록으로</button>
-        <button class="btn btn--size-40 btn--blue">다음</button>
+        <button class="btn btn--size-40 btn--blue" @click="clickNextBtn()">다음</button>
     </div>
 </template>
 
