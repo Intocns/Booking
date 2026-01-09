@@ -7,8 +7,14 @@ import ProductTabOption from './PlaceProductDetailOption.vue';
 import PlaceProductDetailBookingSide from './PlaceProductDetailBookingSide.vue';
 
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
 
 const currentTab = ref('basic');
+
+const route = useRoute();
+
+const itemId = ref(route.params.id);
+
 </script>
 
 <template>
@@ -48,7 +54,10 @@ const currentTab = ref('basic');
             <!-- 콘텐츠 -->
             <div class="contents-wrapper">
                 <keep-alive>
-                    <component :is="currentTab === 'basic' ? ProductTabBasic : currentTab === 'booking' ? ProductTabBookingCalendar : ProductTabOption" />
+                    <component 
+                        :is="currentTab === 'basic' ? ProductTabBasic : currentTab === 'booking' ? ProductTabBookingCalendar : ProductTabOption"
+                        :saved-item-id="itemId"
+                    />
                 </keep-alive>
             </div>
         </div>
