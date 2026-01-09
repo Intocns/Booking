@@ -72,8 +72,7 @@ const config = ref({
     // columnWidth: 220,
 
     startDate: currentDate,
-    cellDuration: 64,
-    cellHeight: 80,
+    cellHeight: 40,
     headerHeight: 64,
 })
 
@@ -138,6 +137,10 @@ onMounted(() => {
 
         border-color: $gray-200;
         font-family: $font-family-base;
+
+        &::-webkit-scrollbar {
+            height: 8px; /* 가로 스크롤바 두께 */
+        }
 
         // /* 헤더 영역 */
         & > div:first-child {
