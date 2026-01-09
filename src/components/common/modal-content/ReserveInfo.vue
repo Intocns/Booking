@@ -45,7 +45,11 @@ const reserveClientList = ref(
             ...item,
             lastStatusDateTxt: formatDate(item.lastStatusDate),
             isMatched: matched, // 고객번호가 매칭된 경우에만 매칭 상태
-            rowClass: matched ? 'row-matched' : '' // 매칭된 행에 스타일 클래스 추가
+            rowClass: matched ? 'row-matched' : '', // 매칭된 행에 스타일 클래스 추가
+            // 품종: breedName 사용 (백엔드에서 br.Name2 AS breedName으로 제공)
+            breed: item.breedName || '',
+            // 성별: PET_GENDER_MAP으로 변환
+            sex: PET_GENDER_MAP[item.sex] || item.sex || '',
         };
     })
 );
@@ -359,7 +363,7 @@ const confirmedDateTime = computed(() =>
                     <div class="info-item">
                         <p class="label">품종</p>
                         <InputTextBox 
-                            v-model="reserveClientPet.breed"
+                            :model-value="reserveData.breed || ''"
                             :disabled="true"
                             placeholder="품종"
                         />

@@ -5,6 +5,7 @@ import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
 import { useReservationStore } from '@/stores/reservationStore';
+import { PET_GENDER_MAP } from '@/utils/reservation';
 
 const reservationStore = useReservationStore();
 
@@ -26,6 +27,26 @@ const searchKeyword = ref('');
 const customerList = ref([]);
 // 로딩 상태
 const isLoading = ref(false);
+
+// 고객 매칭 토글 함수 (단일 선택: 하나 선택 시 기존 선택 해제)
+const toggleCustomerMatch = (row) => {
+    const index = customerList.value.findIndex(item => item === row);
+    if (index !== -1) {
+        const wasMatched = customerList.value[index].isMatched;
+        
+        // 모든 고객의 매칭 상태 초기화
+        customerList.value.forEach(item => {
+            item.isMatched = false;
+            item.rowClass = '';
+        });
+        
+        // 클릭한 고객이 매칭되지 않았던 경우에만 매칭 (토글)
+        if (!wasMatched) {
+            customerList.value[index].isMatched = true;
+            customerList.value[index].rowClass = 'row-matched';
+        }
+    }
+};
 
 // 조회 버튼 활성화 여부 (무조건 검색어가 2글자 이상이어야 함)
 const isSearchEnabled = computed(() => {
@@ -60,7 +81,16 @@ const handleSearch = async () => {
         };
 
         const result = await reservationStore.searchClientMapping(searchData);
-        customerList.value = result || [];
+        // 검색 결과에 매칭 상태 초기화 및 데이터 포맷팅
+        customerList.value = (result || []).map(item => ({
+            ...item,
+            isMatched: false,
+            rowClass: '',
+            // 품종: breedName 사용 (백엔드에서 br.Name2 AS breedName으로 제공)
+            breed: item.breedName || '',
+            // 성별: PET_GENDER_MAP으로 변환
+            sex: PET_GENDER_MAP[item.sex] || item.sex || '',
+        }));
     } catch (error) {
         console.error('고객 검색 오류:', error);
     } finally {
@@ -75,24 +105,17 @@ const handleKeyPress = (event) => {
     }
 };
 
-// 고객 선택 함수
-const handleSelectCustomer = (customer) => {
-    // TODO: 선택한 고객 정보를 부모 컴포넌트로 전달하는 로직 구현
-    console.log('선택한 고객:', customer);
-    // 예: emit을 통해 부모 컴포넌트에 전달하거나, store에 저장
-};
-
 // 고객 테이블 col 정의
 const customerColumns = [
-    { key: 'userNo', label: '고객번호', width: '15%' },
-    { key: 'userName', label: '고객명', width: '15%' },
+    { key: 'userNo', label: '고객번호', width: '8%' },
+    { key: 'userName', label: '고객명', width: '12%' },
     { key: 'userTel', label: '전화번호', width: '15%' },
-    { key: 'petNo', label: '동물번호', width: '15%' },
-    { key: 'petName', label: '동물명', width: '15%' },
-    { key: 'speciesName', label: '종', width: '10%' },
-    { key: 'breed', label: '품종', width: '10%'},
-    { key: 'sex', label: '성별', width: '10%'},
-    { key: 'action', label: '고객매칭', width: '10%'},
+    { key: 'petNo', label: '동물번호', width: '12%' },
+    { key: 'petName', label: '동물명', width: '12%' },
+    { key: 'speciesName', label: '종', width: '12%' },
+    { key: 'breed', label: '품종', width: '8%'},
+    { key: 'sex', label: '성별', width: '8%'},
+    { key: 'action', label: '고객매칭', width: '13%'},
 ]
 
 </script>
@@ -138,13 +161,15 @@ const customerColumns = [
                     :columns="customerColumns"
                     :rows="customerList"
                     table-empty-text="검색 결과가 없습니다."
+                    @row-click="(row) => {}"
                 >
                     <template #action="{ row }">
                         <button 
-                            class="btn btn--size-24 btn--blue"
-                            @click.stop="handleSelectCustomer(row)"
+                            class="btn btn--size-24"
+                            :class="row.isMatched ? 'btn--blue' : 'btn--black-outline'"
+                            @click.stop="toggleCustomerMatch(row)"
                         >
-                            선택
+                            {{ row.isMatched ? '고객매칭 해제' : '고객매칭' }}
                         </button>
                     </template>
                 </CommonTable>
@@ -181,6 +206,11 @@ const customerColumns = [
 .customer-table-wrapper {
     width: 876px;
     height: 300px;
+    
+    // 매칭된 행 스타일
+    :deep(.row-matched) {
+        background-color: $primary-50;
+    }
 }
 
 // 조회 버튼 비활성화 스타일
