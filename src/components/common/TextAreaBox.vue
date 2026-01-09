@@ -78,7 +78,7 @@ const updateValue = (event) => {
     }
     
     // v-model 업데이트
-    emit('update:modelValue', value);
+    emit('update:modelValue', event.target.value);
 };
 
 const handleFocus = () => {

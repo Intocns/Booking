@@ -1,6 +1,6 @@
 <!-- 고객 예약 정보 -->
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { PET_GENDER_MAP, RESERVE_ROUTE_MAP } from '@/utils/reservation';
 import { formatDate, formatTime, formatDateTime, formatTimeToMinutes } from '@/utils/dateFormatter';
 
@@ -11,8 +11,9 @@ import icInformation from '@/assets/icons/ic_information_blue.svg'
 import icSearchW from '@/assets/icons/ic_search_w.svg'
 import TextAreaBox from '@/components/common/TextAreaBox.vue';
 import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
-
+import Modal from '@/components/common/Modal.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
+import SearchCustomer from '@/components/common/modal-content/SearchCustomer.vue';
 
 import { useModalStore } from '@/stores/modalStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
@@ -89,6 +90,10 @@ const reserveDateRef = ref(null);
 const startTimeRef = ref(null);
 const endTimeRef = ref(null);
 const doctorSelectRef = ref(null);
+
+// 예약 취소 관련 상태
+const cancelReasonType = ref(''); // 선택된 취소 사유 타입
+const cancelReasonDirect = ref(''); // 직접 입력 내용
 
 // 예약 방문일과 시간 초기화
 if (reserveData.reTime) {
@@ -177,21 +182,42 @@ const focusField = async (ref, selector) => {
 const validateReservation = async () => {
     // 1. 방문일 검증
     if (!reserveDate.value) {
-        alert('예약 방문일을 선택해주세요.');
+        // alert('예약 방문일을 선택해주세요.');
+        modalStore.confirmModal.openModal({
+            title: '예약 방문일 확인',
+            text: '예약 방문일을 선택해주세요.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => {modalStore.confirmModal.closeModal()}
+        })
         await focusField(reserveDateRef, '.fake-input');
         return false;
     }
     
     // 2. 시작 시간 검증
     if (!startTime.value) {
-        alert('예약 시작 시간을 선택해주세요.');
+        // alert('예약 시작 시간을 선택해주세요.');
+        modalStore.confirmModal.openModal({
+            title: '예약 시간 확인',
+            text: '예약 시작 시간을 선택해주세요.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => {modalStore.confirmModal.closeModal()}
+        })
         await focusField(startTimeRef, '.input-display');
         return false;
     }
     
     // 3. 종료 시간 검증
     if (!endTime.value) {
-        alert('예약 종료 시간을 선택해주세요.');
+        // alert('예약 종료 시간을 선택해주세요.');
+        modalStore.confirmModal.openModal({
+            title: '예약 시간 확인',
+            text: '예약 종료 시간을 선택해주세요.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => {modalStore.confirmModal.closeModal()}
+        })
         await focusField(endTimeRef, '.input-display');
         return false;
     }
@@ -201,14 +227,27 @@ const validateReservation = async () => {
     const endMinutes = formatTimeToMinutes(endTime.value);
     
     if (startMinutes !== null && endMinutes !== null && startMinutes >= endMinutes) {
-        alert('예약 종료 시간은 시작 시간보다 이후로 설정해야 합니다. 다시 확인해주세요.'); //TODO : 모달로 변경해양함
+        modalStore.confirmModal.openModal({
+            title: '예약시간 확인',
+            text: '예약 종료 시간은 시작 시간보다 이후로 설정해야 합니다.\n다시 확인해주세요.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => {modalStore.confirmModal.closeModal()}
+        })
         await focusField(endTimeRef, '.input-display');
         return false;
     }
     
     // 5. 담당의 배정 검증
     if (!selectedDoctorId.value) {
-        alert('담당의가 배정되지 않았습니다. 담당의를 배정한 뒤 예약을 확정해주세요.'); //TODO : 모달로 변경해양함
+        // alert('담당의가 배정되지 않았습니다. 담당의를 배정한 뒤 예약을 확정해주세요.'); //TODO : 모달로 변경해양함
+        modalStore.confirmModal.openModal({
+            title: '담당의 배정',
+            text: '담당의가 배정되지 않았습니다.\n담당의를 배정한 뒤 예약을 확정해주세요.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => {modalStore.confirmModal.closeModal()}
+        })
         await focusField(doctorSelectRef, '.select__box');
         return false;
     }
@@ -224,6 +263,62 @@ const handleConfirmReservation = () => {
     
     // TODO: 추후 작업 - 예약 확정 저장 로직
     console.log('예약 확정 저장 로직 실행 예정');
+};
+
+// 예약 취소 저장 로직
+const handleSaveCancel = () => {
+    // 1. 유효성 검사
+    if (!cancelReasonType.value) {
+        // alert('취소 사유를 선택해주세요.');
+        modalStore.confirmModal.openModal({
+            text: '취소 사유를 선택해주세요.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => {modalStore.confirmModal.closeModal()}
+        })
+        return;
+    }
+    
+    // 2. '직접 입력' 선택 시 내용 확인
+    if (cancelReasonType.value === '직접 입력') {
+        // 빈 값 체크
+        if (!cancelReasonDirect.value.trim()) {
+            // alert('취소 사유를 입력해주세요.');
+            modalStore.confirmModal.openModal({
+                text: '취소 사유를 입력해주세요.',
+                confirmBtnText: '확인',
+                noCancelBtn: true,
+                onConfirm: () => {modalStore.confirmModal.closeModal()}
+            })
+            return;
+        }
+        
+        // 3. 50자 초과 체크 추가
+        if (cancelReasonDirect.value.length > 50) {
+            // alert('취소 사유는 최대 50자까지 입력 가능합니다.');
+            modalStore.confirmModal.openModal({
+                text: '취소 사유는 최대 50자까지 입력 가능합니다.',
+                confirmBtnText: '확인',
+                noCancelBtn: true,
+                onConfirm: () => {modalStore.confirmModal.closeModal()}
+            })
+            return;
+        }
+    }
+
+    // 최종 전달될 사유 데이터
+    const finalReason = cancelReasonType.value === '직접 입력' 
+        ? cancelReasonDirect.value 
+        : cancelReasonType.value;
+
+    console.log('예약 취소 처리:', {
+        rejectIdx: reserveData.reserveIdx, // TODO: 이 값 맞는지 확인
+        rejectMsg: finalReason,
+        instate: reserveData.inState,
+    });
+
+    // TODO: 예약 취소 처리: 서버 API 호출 후 모달 닫기
+    modalStore.cancelReserveModal.closeModal();
 };
 
 // 초기 담당의 ID 저장 (리스트 로드 후 확인용)
@@ -289,6 +384,20 @@ const receivedDateTime = computed(() =>
 const confirmedDateTime = computed(() => 
     reserveData.inState === 1 ? formatDateTime(reserveData.updatedAt) : ''
 );
+
+// 모달이 열릴 때마다 값 초기화
+watch(() => modalStore.cancelReserveModal.isVisible, (newVal) => {
+    if (newVal) {
+        // 모달이 열리면(true) 데이터 초기화
+        cancelReasonType.value = '';
+        cancelReasonDirect.value = '';
+    }
+});
+watch(() => cancelReasonType.value, (newVal) => {
+    if (newVal) {
+        cancelReasonDirect.value = '';
+    }
+});
 </script>
 
 <template>
@@ -315,7 +424,7 @@ const confirmedDateTime = computed(() =>
                     <div class="info-item">
                         <p class="label">예약 고객명</p>
                         <InputTextBox 
-                            v-model="reserveClientPet.userName"
+                            v-model="reserveData.userName"
                             :disabled="true"
                             placeholder="예약 고객명"
                         />
@@ -323,7 +432,7 @@ const confirmedDateTime = computed(() =>
                     <div class="info-item">
                         <p class="label">고객 전화번호</p>
                         <InputTextBox 
-                            v-model="reserveClientPet.userTel"
+                            v-model="reserveData.userTel"
                             :disabled="true"
                             placeholder="고객 전화번호"
                         />
@@ -331,7 +440,7 @@ const confirmedDateTime = computed(() =>
                     <div class="info-item">
                         <p class="label">주소</p>
                         <InputTextBox 
-                            v-model="reserveClientPet.address1"
+                            v-model="reserveData.address1"
                             :disabled="true"
                             placeholder="주소"
                         />
@@ -339,7 +448,7 @@ const confirmedDateTime = computed(() =>
                     <div class="info-item">
                         <p class="label">상세 주소</p>
                         <InputTextBox 
-                            v-model="reserveClientPet.address2"
+                            v-model="reserveData.address2"
                             :disabled="true"
                             placeholder="상세 주소"
                         />
@@ -347,7 +456,7 @@ const confirmedDateTime = computed(() =>
                     <div class="info-item">
                         <p class="label">동물명</p>
                         <InputTextBox 
-                            v-model="reserveClientPet.petName"
+                            v-model="reserveData.petName"
                             :disabled="true"
                             placeholder="동물명"
                         />
@@ -355,7 +464,7 @@ const confirmedDateTime = computed(() =>
                     <div class="info-item">
                         <p class="label">종</p>
                         <InputTextBox 
-                            v-model="reserveClientPet.speciesName"
+                            v-model="reserveData.spesice"
                             :disabled="true"
                             placeholder="종"
                         />
@@ -371,7 +480,7 @@ const confirmedDateTime = computed(() =>
                     <div class="info-item">
                         <p class="label">성별</p>
                         <InputTextBox 
-                            v-model="PET_GENDER_MAP[reserveClientPet.sex]"
+                            v-model="PET_GENDER_MAP[reserveData.petSex]"
                             :disabled="true"
                             placeholder="성별"
                         />
@@ -405,7 +514,6 @@ const confirmedDateTime = computed(() =>
                     </div>
                     <div class="info-item">
                         <p class="label">예약 방문일</p>
-                        <!-- TODO: reTime, reTimeEnd -->
                         <div class="d-flex gap-8" style="flex:2;">
                             <CustomDatePicker ref="reserveDateRef" v-model="reserveDate" :range="false" />
 
@@ -508,10 +616,84 @@ const confirmedDateTime = computed(() =>
     <!-- 버튼 -->
     <div class="modal-button-wrapper">
         <div class="buttons">
-            <button class="btn btn--size-40 btn--blue-outline">예약취소</button>
+            <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.cancelReserveModal.openModal()">예약취소</button>
             <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation">예약 확정</button>
         </div>
     </div>
+
+    <!--  고객 예약 정보 > 고객 검색 모달 // 고객예약 정보 안으로 옮김 --> 
+    <Modal
+        v-if="modalStore.searchCustomerModal.isVisible"
+        size="m"
+        title="고객 검색"
+        :modalState="modalStore.searchCustomerModal"
+    >
+        <SearchCustomer />
+    </Modal>
+    
+    <!-- 고객 예약 정보 > 예약 취소 모달 -->
+    <Modal 
+        v-if="modalStore.cancelReserveModal.isVisible"
+        title="예약 취소" 
+        size="xs"
+        :modal-state="modalStore.cancelReserveModal"
+    >
+        <div class="modal-contents-inner">
+            <div class="d-flex flex-col gap-16">
+                <span class="title-s">{{ formatDateTime(reserveDate) }} {{ reserveData.userName }}-{{ reserveData.petName }}</span>
+    
+                <div class="d-flex flex-col gap-8">
+                    <span class="body-m" style="color: #494949;">예약을 취소하시려면 취소 사유 선택 후 저장 버튼을 클릭해주세요.</span>
+    
+                    <ul class="d-flex flex-col gap-8">
+                        <li>
+                            <label class="radio">
+                                <input type="radio" v-model="cancelReasonType" value="진료/예약 마감" />
+                                <span class="circle"></span>
+                                <span class="label">진료/예약 마감</span>
+                            </label>
+                        </li>
+                        <li>
+                            <label class="radio">
+                                <input type="radio" v-model="cancelReasonType" value="진료 불가한 질병/동물" />
+                                <span class="circle"></span>
+                                <span class="label">진료 불가한 질병/동물</span>
+                            </label>
+                        </li>
+                        <li>
+                            <label class="radio">
+                                <input type="radio" v-model="cancelReasonType" value="응급 진료" />
+                                <span class="circle"></span>
+                                <span class="label">응급 진료</span>
+                            </label>
+                        </li>
+                        <li>
+                            <label class="radio">
+                                <input type="radio" v-model="cancelReasonType" value="직접 입력" />
+                                <span class="circle"></span>
+                                <span class="label">직접 입력</span>
+                            </label>
+    
+                            <TextAreaBox 
+                                v-model="cancelReasonDirect"
+                                :disabled="cancelReasonType !== '직접 입력'"
+                                placeholder="최대 50자 입력 가능" 
+                                :max-length="50"
+                                :is-error="cancelReasonDirect.length > 50"
+                                :error-message="'50자까지 입력 가능합니다.'"
+                            />
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="modal-button-wrapper">
+            <div class="buttons">
+                <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.cancelReserveModal.closeModal()">닫기</button>
+                <button class="btn btn--size-32 btn--blue" @click="handleSaveCancel">예약 취소</button>
+            </div>
+        </div>
+    </Modal>
 </template>
 
 <style lang="scss" scoped>
