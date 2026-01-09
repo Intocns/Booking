@@ -1,22 +1,24 @@
 <!-- sideBar -->
 <script setup>
 import { menus } from '@/data/sidebarMenus'
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 import sidebarLogo from '@/assets/images/sidebar_logo.svg'
-
+// 아이콘
 import icDashboard from '@/assets/icons/ic_lnb_dashboard.svg'
 import icReservation from '@/assets/icons/ic_lnb_reservation.svg'
 import icNaver from '@/assets/icons/ic_lnb_naver.svg'
 import icIntoPet from '@/assets/icons/ic_lnb_intoPet.svg'
 import icHospital from '@/assets/icons/ic_lnb_hospital.svg'
-
 import icArrowDown from '@/assets/icons/ic_arrow_down.svg'
 import ic2depth from '@/assets/icons/ic_res_lnb_2depth.svg'
-
 import icCs from '@/assets/icons/ic_lnb_cs.svg'
 import icLogout from '@/assets/icons/ic_lnb_logout.svg'
+// 스토어
+import { useHospitalStore } from '@/stores/hospitalStore';
+
+const hospitalStore = useHospitalStore();
 
 const router = useRouter();
 const route = useRoute();
@@ -58,6 +60,10 @@ const isActiveMenu = (menu) => {
 const isActiveChild = (child) => {
     return route.path === child.path;
 };
+
+onMounted(() => {
+    hospitalStore.getHospitalInfo();
+})
 </script>
 
 <template>
@@ -81,8 +87,8 @@ const isActiveChild = (child) => {
                             <span class="title-xs">ON</span>
                         </div>
                         <div class="hospital-name-box">
-                            <span class="hospital-name heading-s">인투씨엔에스에스</span>
-                            <span class="heading-s">병원</span>
+                            <span class="hospital-name heading-s">{{ hospitalStore.hospitalInfo.name }}</span>
+                            <!-- <span class="heading-s">병원</span> -->
                         </div>
                     </div>
                     <div class="client-info">
