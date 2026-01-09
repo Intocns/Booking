@@ -21,7 +21,10 @@ export const useNoticeStore = defineStore("notice", () => {
         if(response.status == 200) {
             // console.log(response);
             let data = response.data.data.content;
-            noticeList.value = data;
+            noticeList.value = data.map((item) => ({
+                ...item,
+                createdAtTxt: item.createdAt.split('T')[0],
+            }))
         }
     }
 

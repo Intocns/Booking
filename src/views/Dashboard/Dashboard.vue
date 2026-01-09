@@ -67,7 +67,7 @@ const hospitalColumns = [
 // 공지사항 테이블 col (임시)
 const noticeColumns = [
     { key: 'title', label: '제목', width: '90%', text_align: 'left'},
-    { key: 'createdAt', label: '작성일', width: '10%'},
+    { key: 'createdAtTxt', label: '작성일', width: '10%'},
 ];
 
 //공지사항 클릭 이벤트 => 이동
