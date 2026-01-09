@@ -167,17 +167,5 @@ onMounted(() => {
     </Modal>
 
     <!-- 문자 발송 확인 모달 -->
-    <ConfirmModal
-        v-if="modalStore.confirmModal.isVisible" 
-        :modalState="modalStore.confirmModal"
-    >
-        <p>
-            야간시간대(오후9시~다음날 오전 8시) 광고/홍보성 문자 발송 시,<br/>
-            영리 목적의 광고성 문자 메시지 수신에 대한 일반적 사전 동의 외에<br/>
-            별도의 동의를 받지 않았을 경우,<br/>
-            3천만원 이하의 과태료가 부과될 수 있습니다.<br/>
-            <br/>
-            전송하시겠습니까?
-        </p>
-    </ConfirmModal>
+    <ConfirmModal />
 </template>

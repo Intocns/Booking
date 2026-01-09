@@ -2,6 +2,7 @@
 <script setup>
 import icBtnCloseB from '@/assets/icons/ic_btn_close_b.svg'
 import { useModalStore } from '@/stores/modalStore';
+import { Transition } from 'vue';
 
 const modalStore = useModalStore();
 const modal = modalStore.confirmModal;
@@ -18,34 +19,67 @@ const handleConfirm = () => {
 
 <template>
     <teleport to='#app'>
-        <div class="modal-backdrop" @click="modal.closeModal()">
-            <div class="modal-container confirm-modal"  @click.stop>
-                <!-- 모달 헤더 -->
-                <div class="modal-header">
-                    <p class="modal-header__title heading-s">{{ modal.data?.title }}</p>
-                    <button class="modal-close" @click="modal.closeModal()">
-                        <img :src="icBtnCloseB" alt="닫기 버튼">
-                    </button>
-                </div>
-                <div class="modal-contents">
-                    <!-- 각 모달 별 콘텐츠 들어감 -->
-                    <div class="contents-inner">
-                        {{ modal.data?.text }}
-                        <span v-if="modal.data?.subText" class="body-xs confirm-subText">{{ modal.data?.subText }}</span>
+        <Transition name="modal">
+            <div v-if="modalStore.confirmModal.isVisible" class="modal-backdrop" @click="modal.closeModal()" style="z-index: 999;">
+                <div class="modal-container confirm-modal"  @click.stop>
+                    <!-- 모달 헤더 -->
+                    <div class="modal-header">
+                        <p class="modal-header__title heading-s">{{ modal.data?.title }}</p>
+                        <button class="modal-close" @click="modal.closeModal()">
+                            <img :src="icBtnCloseB" alt="닫기 버튼">
+                        </button>
                     </div>
-
-                    <!-- 버튼 -->
-                    <div class="modal-footer">
-                        <button class="btn btn--size-40 btn--black" @click="modal.closeModal()">취소</button>
-                        <button class="btn btn--size-40 btn--blue" @click="handleConfirm">{{ modal.data?.confirmBtnText }}</button>
+                    <div class="modal-contents">
+                        <!-- 각 모달 별 콘텐츠 들어감 -->
+                        <div class="contents-inner">
+                            {{ modal.data?.text }}
+                            <span v-if="modal.data?.subText" class="body-xs confirm-subText">{{ modal.data?.subText }}</span>
+                        </div>
+    
+                        <!-- 버튼 -->
+                        <div class="modal-footer">
+                            <button v-if="!modal.data?.noCancelBtn" class="btn btn--size-40 btn--black" @click="modal.closeModal()">취소</button>
+                            <button class="btn btn--size-40 btn--blue" @click="handleConfirm">{{ modal.data?.confirmBtnText }}</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </Transition>
     </teleport>
 </template>
 
 <style lang="scss" scoped>
+    /* Transition 효과 */
+
+    // 1. 나타날 때와 사라질 때의 상태
+    .modal-enter-from,
+    .modal-leave-to {
+        opacity: 0;
+
+        .modal-container {
+            transform: scale(0.95) translateY(-20px); // 살짝 작아지고 위로 올라간 상태
+        }
+    }
+
+    // 2. 애니메이션 진행 중 (속도, 곡선)
+    .modal-enter-active,
+    .modal-leave-active {
+        transition: opacity 0.3s ease;
+
+        .modal-container {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); // 탄력 있는 효과
+        }
+    }
+
+    // 3. 완전히 나타났을 때의 상태 (생략 가능하지만 명시적)
+    .modal-enter-to,
+    .modal-leave-from {
+        opacity: 1;
+
+        .modal-container {
+            transform: scale(1) translateY(0);
+        }
+    }
     .confirm-modal {
         min-width: 400px;
         max-width: 500px;

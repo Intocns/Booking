@@ -467,7 +467,7 @@ onMounted(async () => {
     </Modal>
 
     <!-- 상품 삭제 & 전체상품 노출 안내 모달 -->
-    <ConfirmModal v-if="modalStore.confirmModal.isVisible" />
+    <ConfirmModal />
 </template>
 
 <style lang="scss" scoped> 

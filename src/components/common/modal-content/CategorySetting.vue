@@ -57,7 +57,12 @@ const handleApply = async() => {
     );
 
     if (hasError) {
-        alert('입력하신 카테고리 정보를 다시 확인해주세요.');
+        modalStore.confirmModal.openModal({
+            text: '입력하신 카테고리 명을 확인해주세요.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: (() => {modalStore.confirmModal.closeModal()})
+        })
         return;
     }
 
@@ -85,13 +90,27 @@ const handleSave = async() => {
     const name = categoryRegisterData.name;
     const type = categoryRegisterData.type;
 
+    const confirmMsg = ref(
+        !name || name.trim().length === 0 ? '카테고리명을 입력해 주세요.' : '카테고리명을 확인해 주세요.'
+    );
+    
     if (!name || name.trim().length === 0 || name.length > 10) {
-        alert('카테고리명을 다시 확인해주세요.');
+        modalStore.confirmModal.openModal({
+            text: confirmMsg,
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: (() => {modalStore.confirmModal.closeModal()})
+        })
         return;
     }
 
     if (!type) {
-        alert('유형을 선택해주세요.');
+        modalStore.confirmModal.openModal({
+            text: '유형을 선택해주세요.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: (() => {modalStore.confirmModal.closeModal()})
+        })
         return;
     }
 
@@ -240,8 +259,8 @@ const isFixedCategory = (category, type = 'name') => {
                                     v-model="categoryRegisterData.name" 
                                     placeholder="카테고리명을 입력해주세요."
                                     :max-length="10" 
-                                    :is-error="!categoryRegisterData.name || categoryRegisterData.name.length > 10"
-                                    :error-message="!categoryRegisterData.name ? '카테고리명을 입력해주세요.' : '10자까지만 입력 가능합니다.'"
+                                    :is-error="categoryRegisterData.name.length > 10"
+                                    :error-message="'10자까지만 입력 가능합니다.'"
                                 />
                             </div>
                         </div>
@@ -268,9 +287,6 @@ const isFixedCategory = (category, type = 'name') => {
             </div>
         </div>
     </template>
-
-    <!-- 옵션 삭제 -->
-    <ConfirmModal v-if="modalStore.confirmModal.isVisible" />
 </template>
 
 <style lang="scss" scoped>

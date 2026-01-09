@@ -252,6 +252,10 @@ const handleMenuAction = async (action, row) => {
     } else if (action === 'delete') {
         // 삭제 확인 모달 열기 (삭제할 옵션 데이터 저장)
         modalStore.confirmModal.openModal({ 
+            title: '옵션 삭제',
+            text: '옵션을 삭제하시겠습니까?<br/>삭제하면 옵션정보, 설정 등 모든 정보가 사라지고<br/>다시 복원할 수 없습니다.',
+            confirmBtnText: '삭제',
+            onConfirm: () => { handleDeleteOption() },
             optionData: row.rawData 
         });
     }
@@ -471,14 +475,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
     </Modal>
 
     <!-- 옵션 삭제 -->
-    <ConfirmModal
-        v-if="modalStore.confirmModal.isVisible"
-        title="옵션 삭제"
-        confirm-btn-text="삭제"
-        @confirm="handleDeleteOption"
-    >
-        <p>옵션을 삭제하시겠습니까?<br/>삭제하면 옵션정보, 설정 등 모든 정보가 사라지고<br/>다시 복원할 수 없습니다.</p>
-    </ConfirmModal>
+    <ConfirmModal />
 </template>
 
 <style lang="scss" scoped>
