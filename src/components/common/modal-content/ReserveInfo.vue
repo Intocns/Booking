@@ -1,6 +1,6 @@
 <!-- 고객 예약 정보 -->
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { PET_GENDER_MAP, RESERVE_ROUTE_MAP } from '@/utils/reservation';
 import { formatDate, formatTime, formatDateTime, formatTimeToMinutes } from '@/utils/dateFormatter';
 
@@ -16,7 +16,6 @@ import CommonTable from '@/components/common/CommonTable.vue';
 
 import { useModalStore } from '@/stores/modalStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
-import { computed, onMounted } from 'vue';
 
 const modalStore = useModalStore();
 const modal = modalStore.reserveInfoModal;
@@ -38,6 +37,12 @@ const reserveDate = ref(null);
 // 담당의 ID와 이름을 위한 ref
 const selectedDoctorId = ref(null);
 const doctorName = ref('');
+
+// 필드 ref
+const reserveDateRef = ref(null);
+const startTimeRef = ref(null);
+const endTimeRef = ref(null);
+const doctorSelectRef = ref(null);
 
 // 예약 방문일과 시간 초기화
 if (reserveData.reTime) {
@@ -103,23 +108,45 @@ const handleDoctorChange = (doctorId) => {
     }
 };
 
+// 필드에 focus를 주는 헬퍼 함수
+const focusField = async (ref, selector) => {
+    await nextTick();
+    try {
+        if (!ref.value) return;
+        
+        const componentInstance = ref.value;
+        // Vue 3 컴포넌트 ref에서 DOM 요소 접근
+        const rootElement = componentInstance.$el || componentInstance;
+        const element = rootElement?.querySelector?.(selector);
+        
+        if (element) {
+            element.click();
+        }
+    } catch (error) {
+        console.warn('필드 focus 실패:', error);
+    }
+};
+
 // 예약 확정 validation
-const validateReservation = () => {
+const validateReservation = async () => {
     // 1. 방문일 검증
     if (!reserveDate.value) {
         alert('예약 방문일을 선택해주세요.');
+        await focusField(reserveDateRef, '.fake-input');
         return false;
     }
     
     // 2. 시작 시간 검증
     if (!startTime.value) {
         alert('예약 시작 시간을 선택해주세요.');
+        await focusField(startTimeRef, '.input-display');
         return false;
     }
     
     // 3. 종료 시간 검증
     if (!endTime.value) {
         alert('예약 종료 시간을 선택해주세요.');
+        await focusField(endTimeRef, '.input-display');
         return false;
     }
     
@@ -129,12 +156,14 @@ const validateReservation = () => {
     
     if (startMinutes !== null && endMinutes !== null && startMinutes >= endMinutes) {
         alert('예약 종료 시간은 시작 시간보다 이후로 설정해야 합니다. 다시 확인해주세요.'); //TODO : 모달로 변경해양함
+        await focusField(endTimeRef, '.input-display');
         return false;
     }
     
     // 5. 담당의 배정 검증
-    if (!selectedDoctorId.value || selectedDoctorId.value === null || selectedDoctorId.value === '') {
+    if (!selectedDoctorId.value) {
         alert('담당의가 배정되지 않았습니다. 담당의를 배정한 뒤 예약을 확정해주세요.'); //TODO : 모달로 변경해양함
+        await focusField(doctorSelectRef, '.select__box');
         return false;
     }
     
@@ -332,13 +361,13 @@ const confirmedDateTime = computed(() =>
                         <p class="label">예약 방문일</p>
                         <!-- TODO: reTime, reTimeEnd -->
                         <div class="d-flex gap-8" style="flex:2;">
-                            <CustomDatePicker v-model="reserveDate" :range="false" />
+                            <CustomDatePicker ref="reserveDateRef" v-model="reserveDate" :range="false" />
 
                             <!-- 시간 선택 ( 00: 00 ~ 00: 00) -->
                             <div class="d-flex align-center gap-4" style="flex:2;">
-                                <TimeSelect v-model="startTime" class="time-select-wrap"/>
+                                <TimeSelect ref="startTimeRef" v-model="startTime" class="time-select-wrap"/>
                                 <span class="time-separator">-</span>
-                                <TimeSelect v-model="endTime" class="time-select-wrap"/>
+                                <TimeSelect ref="endTimeRef" v-model="endTime" class="time-select-wrap"/>
                             </div>
                         </div>
                     </div>
@@ -346,6 +375,7 @@ const confirmedDateTime = computed(() =>
                         <p class="label">담당의</p>
                         <div class="select-wrapper">
                             <CustomSingleSelect 
+                                ref="doctorSelectRef"
                                 :model-value="selectedDoctorId"
                                 @update:model-value="handleDoctorChange"
                                 :options="doctorOptions"
