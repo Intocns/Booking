@@ -1,36 +1,98 @@
 <!-- 고객 검색 모달 -->
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
+import { useReservationStore } from '@/stores/reservationStore';
+
+const reservationStore = useReservationStore();
 
 // 조회 조건 옵션
 const searchTypeOptions = [
     { label: '전체', value: 'all' },
-    { label: '고객번호', value: 'user_num' },
-    { label: '고객명', value: 'user_name' },
-    { label: '전화번호', value: 'phone' },
-    { label: '동물번호', value: 'pet_num' },
-    { label: '동물명', value: 'pet_name' },
+    { label: '고객번호', value: 'userNo' },
+    { label: '고객명', value: 'userName' },
+    { label: '전화번호', value: 'userTel' },
+    { label: '동물번호', value: 'petNo' },
+    { label: '동물명', value: 'petName' },
 ];
 
 // 선택된 조회 조건
 const selectedSearchType = ref('all');
 // 검색어
 const searchKeyword = ref('');
+// 검색 결과
+const customerList = ref([]);
+// 로딩 상태
+const isLoading = ref(false);
+
+// 조회 버튼 활성화 여부 (무조건 검색어가 2글자 이상이어야 함)
+const isSearchEnabled = computed(() => {
+    return searchKeyword.value.trim().length >= 2;
+});
+
+// searchType을 Int로 변환하는 함수
+const getSearchTypeInt = (searchType) => {
+    const typeMap = {
+        'all': 0, // 전체 검색
+        'userNo': 1, // 고객번호
+        'userName': 2, // 고객명
+        'userTel': 3, // 전화번호
+        'petNo': 4, // 동물번호
+        'petName': 5, // 동물명
+    };
+    return typeMap[searchType] ?? 0;
+};
+
+// 고객 검색 함수
+const handleSearch = async () => {
+    // 검색어가 2글자 미만이면 검색 불가 (버튼이 disabled되어 있어서 여기까지 오지 않지만 안전장치)
+    if (searchKeyword.value.trim().length < 2) {
+        return;
+    }
+
+    isLoading.value = true;
+    try {
+        const searchData = {
+            searchType: getSearchTypeInt(selectedSearchType.value),
+            keyword: searchKeyword.value.trim() || null,
+        };
+
+        const result = await reservationStore.searchClientMapping(searchData);
+        customerList.value = result || [];
+    } catch (error) {
+        console.error('고객 검색 오류:', error);
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+// 엔터키로 검색
+const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+        handleSearch();
+    }
+};
+
+// 고객 선택 함수
+const handleSelectCustomer = (customer) => {
+    // TODO: 선택한 고객 정보를 부모 컴포넌트로 전달하는 로직 구현
+    console.log('선택한 고객:', customer);
+    // 예: emit을 통해 부모 컴포넌트에 전달하거나, store에 저장
+};
 
 // 고객 테이블 col 정의
 const customerColumns = [
-    { key: 'user_num', label: '고객번호', width: '15%' },
-    { key: 'user_name', label: '고객명', width: '15%' },
-    { key: 'phone', label: '전화번호', width: '15%' },
-    { key: 'pet_num', label: '동물번호', width: '15%' },
-    { key: 'pet_name', label: '동물명', width: '15%' },
-    { key: 'species_name', label: '종', width: '10%' },
+    { key: 'userNo', label: '고객번호', width: '15%' },
+    { key: 'userName', label: '고객명', width: '15%' },
+    { key: 'userTel', label: '전화번호', width: '15%' },
+    { key: 'petNo', label: '동물번호', width: '15%' },
+    { key: 'petName', label: '동물명', width: '15%' },
+    { key: 'speciesName', label: '종', width: '10%' },
     { key: 'breed', label: '품종', width: '10%'},
-    { key: 'gender', label: '성별', width: '10%'},
-    { key: 'actions', label: '고객매칭', width: '10%'},
+    { key: 'sex', label: '성별', width: '10%'},
+    { key: 'action', label: '고객매칭', width: '10%'},
 ]
 
 </script>
@@ -53,8 +115,19 @@ const customerColumns = [
                     />
     
                     <div class="d-flex gap-4" style="flex:1;">
-                        <InputTextBox v-model="searchKeyword" placeholder="검색어 입력" />
-                        <button class="btn btn--size-32 btn--black">조회</button>
+                        <InputTextBox 
+                            v-model="searchKeyword" 
+                            placeholder="검색어 입력" 
+                            @keypress="handleKeyPress"
+                        />
+                        <button 
+                            class="btn btn--size-32"
+                            :class="isSearchEnabled && !isLoading ? 'btn--black' : 'is-disabled'"
+                            @click="handleSearch"
+                            :disabled="isLoading || !isSearchEnabled"
+                        >
+                            {{ isLoading ? '조회중...' : '조회' }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -63,8 +136,18 @@ const customerColumns = [
             <div class="customer-table-wrapper">
                 <CommonTable
                     :columns="customerColumns"
-                    :rows="[]"
-                />
+                    :rows="customerList"
+                    table-empty-text="검색 결과가 없습니다."
+                >
+                    <template #action="{ row }">
+                        <button 
+                            class="btn btn--size-24 btn--blue"
+                            @click.stop="handleSelectCustomer(row)"
+                        >
+                            선택
+                        </button>
+                    </template>
+                </CommonTable>
             </div>
         </div>
     </div>
@@ -98,5 +181,17 @@ const customerColumns = [
 .customer-table-wrapper {
     width: 876px;
     height: 300px;
+}
+
+// 조회 버튼 비활성화 스타일
+.btn.is-disabled {
+    background-color: $gray-200;
+    color: $gray-400;
+    cursor: not-allowed;
+    
+    &:hover {
+        background-color: $gray-200;
+        box-shadow: none;
+    }
 }
 </style>

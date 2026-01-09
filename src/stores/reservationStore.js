@@ -114,6 +114,26 @@ export const useReservationStore = defineStore("reservation", () => {
         }
     }
 
+    // 고객 검색 (고객 매칭용)
+    async function searchClientMapping(searchData) {
+        try {
+            const response = await api.post(`/api/${cocode}/reserve/search`, searchData);
+            if(response.status == 200) {
+                if(response.data.status_code == 200) {
+                    return response.data.data;
+                } else {
+                    alert(response.data.message || '검색 중 오류가 발생했습니다.');
+                    return [];
+                }
+            }
+            return [];
+        } catch (error) {
+            console.error('고객 검색 오류:', error);
+            alert('고객 검색 중 오류가 발생했습니다.');
+            return [];
+        }
+    }
+
     return {
         // 
         reserveList,
@@ -127,5 +147,6 @@ export const useReservationStore = defineStore("reservation", () => {
         getReserveCount, // 예약별 카운트 불러오기
         getReserveSchedule, // 예약 일정 불러오기
         getReserveInfo,
+        searchClientMapping, // 고객 검색
     };
 });
