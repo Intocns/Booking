@@ -10,9 +10,6 @@ import icInfo from '@/assets/icons/Ic_round_warning.svg'
 
 import { ref } from 'vue';
 
-//itemId값(저장, 수정 확인용)
-let savedItemId = ref("");
-
 const currentTab = ref('basic'); // 탭 버튼
 </script>
 
@@ -51,10 +48,11 @@ const currentTab = ref('basic'); // 탭 버튼
             </div>
 
             <div class="contents-wrapper">
+                <!-- 등록화면의 경우 savedItemId의 초기값을 0으로 설정 -->
                 <keep-alive>
                     <component 
                         :is="currentTab === 'basic' ? ProductTabBasic : currentTab === 'booking' ? ProductTabBooking : ProductTabOption" 
-                        :savedItemId='savedItemId' 
+                        :saved-item-id="''"
                     />
                 </keep-alive>
             </div>

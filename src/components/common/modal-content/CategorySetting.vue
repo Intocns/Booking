@@ -129,7 +129,7 @@ const handleSave = async() => {
     }
 };
 
-let deleteCategoryData = ref({});//삭제 아이콘 클릭 시 해당 데이터 저장
+const deleteCategoryData = ref({});//삭제 아이콘 클릭 시 해당 데이터 저장
 
 const openConfirmDeleteModal = (category) => {
     deleteCategoryData.value = category;

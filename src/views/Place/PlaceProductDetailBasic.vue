@@ -1,6 +1,6 @@
 <!-- 상품등록/수정 페이지  > 기본 정보 탭 -->
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import TextAreaBox from '@/components/common/TextAreaBox.vue';
 import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
@@ -11,20 +11,45 @@ import icAddBtn from '@/assets/icons/ic_add_btn.svg'
 import icDragHandel from '@/assets/icons/ic_drag_handel.svg'
 
 import { useProductStore } from '@/stores/productStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
 import { parseJSON } from 'date-fns';
+import { useRouter } from 'vue-router';
 
 const productStore = useProductStore();
+const hospitalStore = useHospitalStore();
+const router = useRouter();
 
-const doctorAssignType = ref('assign'); // 담당의 설정 타입 (default: 'assign' - 승인 시 배정)
-const selectedDoctor = ref([]); // 선택된 담당의 ID
-const doctorOptions = [ // 담당의 목록 (예시 데이터)
-    { label: '김철수 원장', value: 'doc_01' },
-    { label: '이영희 과장', value: 'doc_02' },
-];
+const doctorAssignType = ref(""); // 담당의 설정 타입 (default: 'assign' - 승인 시 배정)
+const selectedDoctor = ref(""); // 선택된 담당의 ID
+const currentTab = ref('basic');
+
+// 담당의 옵션 (CustomSingleSelect용)
+const doctorOptions = computed(() => {
+    const options = [];
+    
+    // 기본 옵션 추가 (매칭 안된 경우를 대비)
+    options.push({
+        value: null,
+        label: '담당의 선택'
+    });
+    
+    // 담당의 리스트 옵션 추가
+    if (hospitalStore.doctorList && hospitalStore.doctorList.length > 0) {
+        hospitalStore.doctorList.forEach(doc => {
+            options.push({
+                value: doc.id,
+                label: doc.userName || doc.name || ''
+            });
+        });
+    }
+    
+    return options;
+});
 
 //PlaceProductDetail.vue에서 선언한component 옵션 사용
 const props = defineProps({
-    savedItemId: Number,
+    savedItemId: {type: String},
+    viewType: {type: String, default:null}
 })
 
 // 상품 관련 입력 항목
@@ -35,7 +60,7 @@ const basicInput = ref({
     "desc" : "",//상품 소개
     "bookingPrecautionJson" : [{"desc" : ""}],//유의 사항
     "extraDescJson" : [],//상세 설명 추가 >> detailList값 > 다음 버튼 클릭 시 삽입
-    "doctor" : "현장데스크(관리자)",//담당의 설정
+    "doctor" : "",//담당의 설정
     "doctorId" : ""//담당의 설정
 });
 
@@ -58,27 +83,105 @@ const removeDetailItem = (index) => {
 
 // 다음 버튼 클릭 -> 저장 및 다음 페이지(예약 정보 페이지로 이동)
 const clickNextBtn = (async() => {
-    let params = basicInput.value;
-    params.extraDescJson = detailList.value;
+    let params = basicInput.value;//기본 정보
+    //params.imageUrls = '';//이미지 추가
+    params.extraDescJson = detailList.value;//상세 설명 추가
+
+    if(await checkedRequired(params) == false){
+        return false;
+    }
+
+    if(doctorAssignType === 'assign'){//승인 시 배정일 경우 doctor는 현장데스크(관리자), doctorId는 없음
+        params.doctorId ="";
+        params.doctor = "현장데스크(관리자)";
+    }
 
     let response = '';
 
-    if(savedItemId > 0){
-        response = await productStore.addItem(params);
+    //저장, 수정 체크
+    if(props.savedItemId != ""){
+        //수정
+        response = await productStore.modifyItem(props.savedItemId, params);
     }else{
-        response = await productStore.modifyItem(params);
+        //등록
+        response = await productStore.addItem(params);
     }
 
     if(response != '' && response.status_code <= 300){
-        let reponseDecode = JSON.parse(response.data);
-
-        if(savedItemId == ''){
-            savedItemId = reponseDecode.bizItemId;
-        }
         //다음 페이지로 이동
+        if(props.viewType == 'update'){
+            //수정
+            alert('수정이 완료되었습니다.');
+            //수정 완료 시 이동
+            router.push({ name: 'placeProduct' });
+        }else{
+            //등록
+            let reponseDecode = JSON.parse(response.data);//등록 api를 탄 경우 bizmItemId를 넘겨줌
+
+            if(props.savedItemId == ""){//첫 등록인 경우에만 삽입
+                props.savedItemId = reponseDecode.bizItemId;
+            }
+
+            currentTab.value = 'booking'//등록 완료 시 다음 탭으로 이동
+        }
+        
     } else{
-        console.log('저장실패');
+        alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
     }
+})
+
+const checkedRequired = (async(params) => {
+    //상품명 체크
+    if(params.name == ""){
+        alert('예약 상품명을 입력해주세요.');
+        return false;
+    }
+
+    //상품 사진 체크
+    // if(params.images != ""){
+    //     alert('사진을 추가해주세요');
+    //     return false;
+    // }
+
+    return true;
+})
+
+//화면에 데이터 전달 JSON 파싱할 항목 리스트
+const JSON_FIELDS = [
+  "bookingPrecautionJson",
+  "extraDescJson",
+  "imageUrls"
+];
+
+//상품 정보가 있는 경우 화면에 데이터 전달
+const setInputData = (async() => {
+    Object.keys(basicInput.value).forEach((key) => {
+        const value = productStore.itemDetailInfo[key];
+        if (value === undefined) return;
+
+        if (JSON_FIELDS.includes(key)) {
+            basicInput.value[key] = JSON.parse(value);
+        } else {
+            basicInput.value[key] = value;
+        }
+    });
+    
+    //상세 설명 추가 세팅
+    detailList.value = basicInput.value.extraDescJson;
+
+    //담당의 세팅
+    doctorAssignType.value = (basicInput.value.doctorId == "") ? "assign" : "select";
+    selectedDoctor.value = basicInput.value.doctorId??"";
+})
+
+//초기 세팅
+onMounted(async() => {
+    if(props.savedItemId != ""){
+        await productStore.getItemDetailInfo(props.savedItemId);
+        await hospitalStore.getDoctorList();
+        setInputData();
+    }
+    
 })
 </script>
 
@@ -240,7 +343,7 @@ const clickNextBtn = (async() => {
     </ul>
 
     <div class="button-wrapper">
-        <button class="btn btn--size-40 btn--black">목록으로</button>
+        <button class="btn btn--size-40 btn--black" @click="router.push({ name: 'placeProduct'})">목록으로</button>
         <button class="btn btn--size-40 btn--blue" @click="clickNextBtn()">다음</button>
     </div>
 </template>

@@ -228,7 +228,6 @@ export const useProductStore = defineStore("product", () => {
         //임시 적용 end(사용 시 해당 params값 참고)
 
         const response = await api.post(`/api/${cocode}/item/add`, params);
-        console.log(response);
         return response.data;
     }
 
@@ -352,15 +351,11 @@ export const useProductStore = defineStore("product", () => {
 
         const response = await api.post(`/api/${cocode}/item/modify/${itemId}`, params);
 
-        if(response.data.status_code <= 300) {
-            alert('수정이 완료되었습니다.');
-        }else{
-            alert('처리 중 오류가 발생했습니다.');
-        }
+        return response.data;
     }
 
     //상품 기본정보 확인
-    async function getItemDetailInfo(cocode, itemId) {
+    async function getItemDetailInfo(itemId) {
         const response = await api.get(`/api/${cocode}/item/detail/${itemId}`);
 
         if(response.data.status_code <= 300) {

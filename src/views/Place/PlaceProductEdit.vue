@@ -57,6 +57,7 @@ const itemId = ref(route.params.id);
                     <component 
                         :is="currentTab === 'basic' ? ProductTabBasic : currentTab === 'booking' ? ProductTabBookingCalendar : ProductTabOption"
                         :saved-item-id="itemId"
+                        view-type="update"
                     />
                 </keep-alive>
             </div>
