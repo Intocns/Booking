@@ -1,8 +1,24 @@
 <!-- 고객 검색 모달 -->
 <script setup>
-import CustomSelect from '@/components/common/CustomSelect.vue';
+import { ref } from 'vue';
+import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
+
+// 조회 조건 옵션
+const searchTypeOptions = [
+    { label: '전체', value: 'all' },
+    { label: '고객번호', value: 'user_num' },
+    { label: '고객명', value: 'user_name' },
+    { label: '전화번호', value: 'phone' },
+    { label: '동물번호', value: 'pet_num' },
+    { label: '동물명', value: 'pet_name' },
+];
+
+// 선택된 조회 조건
+const selectedSearchType = ref('all');
+// 검색어
+const searchKeyword = ref('');
 
 // 고객 테이블 col 정의
 const customerColumns = [
@@ -29,10 +45,15 @@ const customerColumns = [
                 <p class="title-l mb-16">검색</p>
                 
                 <div class="search-box">
-                    <CustomSelect />
+                    <CustomSingleSelect 
+                        v-model="selectedSearchType"
+                        :options="searchTypeOptions"
+                        placeholder="선택"
+                        select-width="120px"
+                    />
     
                     <div class="d-flex gap-4" style="flex:1;">
-                        <InputTextBox placeholder="검색어 입력" />
+                        <InputTextBox v-model="searchKeyword" placeholder="검색어 입력" />
                         <button class="btn btn--size-32 btn--black">조회</button>
                     </div>
                 </div>

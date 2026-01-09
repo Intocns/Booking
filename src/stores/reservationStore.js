@@ -99,11 +99,9 @@ export const useReservationStore = defineStore("reservation", () => {
         try {
             const response = await api.get(`/api/${cocode}/reserve/${reserveIdx}/cm`)
             if(response.status == 200) {
-                console.log(response.data)
                 if(response.data.status_code == 200) {
                     let data = response.data.data
                     reserveInfo.value = data;
-    
                     modalStore.reserveInfoModal.openModal(reserveInfo.value)
                 } else {
                     reserveInfo.value = '';
