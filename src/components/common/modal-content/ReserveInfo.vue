@@ -2,7 +2,7 @@
 <script setup>
 import { ref } from 'vue';
 import { PET_GENDER_MAP, RESERVE_ROUTE_MAP } from '@/utils/reservation';
-import { formatDate, formatTime, formatTimeToMinutes } from '@/utils/dateFormatter';
+import { formatDate, formatTime, formatDateTime, formatTimeToMinutes } from '@/utils/dateFormatter';
 
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import TimeSelect from '@/components/common/TimeSelect.vue';
@@ -105,18 +105,34 @@ const handleDoctorChange = (doctorId) => {
 
 // 예약 확정 validation
 const validateReservation = () => {
-    // 1. 시간 검증: 시작 시간이 종료 시간보다 늦으면 안됨
-    if (startTime.value && endTime.value) {
-        const startMinutes = formatTimeToMinutes(startTime.value);
-        const endMinutes = formatTimeToMinutes(endTime.value);
-        
-        if (startMinutes !== null && endMinutes !== null && startMinutes >= endMinutes) {
-            alert('예약 종료 시간은 시작 시간보다 이후로 설정해야 합니다. 다시 확인해주세요.'); //TODO : 모달로 변경해양함
-            return false;
-        }
+    // 1. 방문일 검증
+    if (!reserveDate.value) {
+        alert('예약 방문일을 선택해주세요.');
+        return false;
     }
     
-    // 2. 담당의 배정 검증
+    // 2. 시작 시간 검증
+    if (!startTime.value) {
+        alert('예약 시작 시간을 선택해주세요.');
+        return false;
+    }
+    
+    // 3. 종료 시간 검증
+    if (!endTime.value) {
+        alert('예약 종료 시간을 선택해주세요.');
+        return false;
+    }
+    
+    // 4. 시간 검증: 시작 시간이 종료 시간보다 늦으면 안됨
+    const startMinutes = formatTimeToMinutes(startTime.value);
+    const endMinutes = formatTimeToMinutes(endTime.value);
+    
+    if (startMinutes !== null && endMinutes !== null && startMinutes >= endMinutes) {
+        alert('예약 종료 시간은 시작 시간보다 이후로 설정해야 합니다. 다시 확인해주세요.'); //TODO : 모달로 변경해양함
+        return false;
+    }
+    
+    // 5. 담당의 배정 검증
     if (!selectedDoctorId.value || selectedDoctorId.value === null || selectedDoctorId.value === '') {
         alert('담당의가 배정되지 않았습니다. 담당의를 배정한 뒤 예약을 확정해주세요.'); //TODO : 모달로 변경해양함
         return false;
@@ -188,6 +204,16 @@ const RESERVE_STATUS_CLASS_MAP = {
     2: 'flag--warning',
     3: 'flag--warning'
 }
+
+// 접수 일시 계산
+const receivedDateTime = computed(() => 
+    formatDateTime(reserveData.createdAt)
+);
+
+// 확정 일시 계산 (inState가 1일 때만 표시)
+const confirmedDateTime = computed(() => 
+    reserveData.inState === 1 ? formatDateTime(reserveData.updatedAt) : ''
+);
 </script>
 
 <template>
@@ -331,7 +357,7 @@ const RESERVE_STATUS_CLASS_MAP = {
                     <div class="info-item">
                         <p class="label">접수 일시</p>
                         <InputTextBox 
-                            v-model="reserveData.createdAt"
+                            :model-value="receivedDateTime"
                             :disabled="true"
                             placeholder="접수 일시"
                         />
@@ -339,6 +365,7 @@ const RESERVE_STATUS_CLASS_MAP = {
                     <div class="info-item">
                         <p class="label">확정 일시</p>
                         <InputTextBox 
+                            :model-value="confirmedDateTime"
                             :disabled="true"
                             placeholder="확정 일시"
                         />
