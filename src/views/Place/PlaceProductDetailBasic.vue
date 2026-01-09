@@ -19,7 +19,7 @@ const productStore = useProductStore();
 const hospitalStore = useHospitalStore();
 const router = useRouter();
 
-const doctorAssignType = ref(""); // 담당의 설정 타입 (default: 'assign' - 승인 시 배정)
+const doctorAssignType = ref("assign"); // 담당의 설정 타입 (default: 'assign' - 승인 시 배정)
 const selectedDoctor = ref(""); // 선택된 담당의 ID
 const currentTab = ref('basic');
 
@@ -176,9 +176,10 @@ const setInputData = (async() => {
 
 //초기 세팅
 onMounted(async() => {
+    await hospitalStore.getDoctorList();
+
     if(props.savedItemId != ""){
         await productStore.getItemDetailInfo(props.savedItemId);
-        await hospitalStore.getDoctorList();
         setInputData();
     }
     
