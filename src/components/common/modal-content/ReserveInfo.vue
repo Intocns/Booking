@@ -22,11 +22,53 @@ const modal = modalStore.reserveInfoModal;
 const hospitalStore = useHospitalStore();
 
 const reserveData = modal.data.reserve;
-const reserveClientList = modal.data.clientList.map((item) => ({
-    ...item,
-    lastStatusDateTxt: formatDate(item.lastStatusDate)
-}));
 const reserveClientPet = modal.data.clientPet;
+
+// 고객번호가 매칭되어 있는지 확인하는 함수
+const isCustomerMatched = (clientItem) => {
+    // reserveClientPet의 고객번호나 동물번호와 일치하는지 확인
+    const petUserNo = reserveClientPet?.userNo || reserveClientPet?.user_num;
+    const petPetNo = reserveClientPet?.petNo || reserveClientPet?.pet_num;
+    
+    const clientUserNo = clientItem?.userNo || clientItem?.user_num;
+    const clientPetNo = clientItem?.petNo || clientItem?.pet_num;
+    
+    // 고객번호와 동물번호가 모두 일치하면 매칭된 것으로 간주
+    return (petUserNo && clientUserNo && String(petUserNo) === String(clientUserNo)) ||
+           (petPetNo && clientPetNo && String(petPetNo) === String(clientPetNo));
+};
+
+const reserveClientList = ref(
+    modal.data.clientList.map((item) => {
+        const matched = isCustomerMatched(item);
+        return {
+            ...item,
+            lastStatusDateTxt: formatDate(item.lastStatusDate),
+            isMatched: matched, // 고객번호가 매칭된 경우에만 매칭 상태
+            rowClass: matched ? 'row-matched' : '' // 매칭된 행에 스타일 클래스 추가
+        };
+    })
+);
+
+// 고객 매칭 토글 함수 (단일 선택: 하나 선택 시 기존 선택 해제)
+const toggleCustomerMatch = (row) => {
+    const index = reserveClientList.value.findIndex(item => item === row);
+    if (index !== -1) {
+        const wasMatched = reserveClientList.value[index].isMatched;
+        
+        // 모든 고객의 매칭 상태 초기화
+        reserveClientList.value.forEach(item => {
+            item.isMatched = false;
+            item.rowClass = '';
+        });
+        
+        // 클릭한 고객이 매칭되지 않았던 경우에만 매칭 (토글)
+        if (!wasMatched) {
+            reserveClientList.value[index].isMatched = true;
+            reserveClientList.value[index].rowClass = 'row-matched';
+        }
+    }
+};
 
 const startTime = ref(null);
 const endTime = ref(null);
@@ -415,7 +457,7 @@ const confirmedDateTime = computed(() =>
         </div>
 
         <!--고객정보 -->
-        <div class="d-flex flex-col gap-8">
+        <div class="d-flex flex-col gap-6 customer-info-section">
 
             <!-- 타이틀 -->
             <div class="modal-content-title-wrapper">
@@ -442,7 +484,18 @@ const confirmedDateTime = computed(() =>
                     :columns="customerInfoColumns"
                     :rows="reserveClientList"
                     table-empty-sub-text="예약 확정 시, 신규 고객으로 등록되어 예약이 접수됩니다."
-                />
+                >
+                    <!-- 고객매칭 버튼 슬롯 -->
+                    <template #action="{ row, rowIndex }">
+                        <button 
+                            class="btn btn--size-24"
+                            :class="row.isMatched ? 'btn--blue' : 'btn--black-outline'"
+                            @click.stop="toggleCustomerMatch(row)"
+                        >
+                            {{ row.isMatched ? '고객매칭 해제' : '고객매칭' }}
+                        </button>
+                    </template>
+                </CommonTable>
             </div>
         </div>
 
@@ -461,10 +514,10 @@ const confirmedDateTime = computed(() =>
     .modal-contents-inner {
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 16px; // 24px -> 16px로 줄임
 
         flex-grow: 1;
-        overflow-y: auto;
+        overflow: hidden; // 전체 스크롤 제거
         min-height: 0;
     }
 
@@ -483,8 +536,8 @@ const confirmedDateTime = computed(() =>
         flex:1;
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        padding: 20px 16px;
+        gap: 6px; // 8px -> 6px로 줄임
+        padding: 16px 12px; // 20px 16px -> 16px 12px로 줄임
 
         border-radius: 8px;
         border: 1px solid $gray-200;
@@ -495,7 +548,7 @@ const confirmedDateTime = computed(() =>
     .info-item {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px; // 8px -> 6px로 줄임
 
         .label {
             width: 80px;
@@ -513,5 +566,42 @@ const confirmedDateTime = computed(() =>
         min-width: 0;
     }
 
-    .customer-info-table-wrapper { height: 200px; }
+    // 고객정보 섹션 스타일
+    .customer-info-section {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 200px; // 최소 2명의 고객 정보가 보이도록 최소 높이 설정 (헤더 40px + 행 2개 72px + 여유공간)
+    }
+
+    .customer-info-table-wrapper { 
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        
+        // CommonTable의 table-section 스타일 조정 (박스는 유지하되 높이 제어)
+        :deep(.table-section) {
+            height: 100%;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        // CommonTable의 table-wrapper가 스크롤 담당
+        :deep(.table-wrapper) {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+        
+        // 매칭된 행 스타일
+        :deep(.row-matched) {
+            background-color: $primary-50;
+        }
+    }
 </style>
