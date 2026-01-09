@@ -295,7 +295,7 @@ onMounted(async () => {
                 <!-- bottom -->
                 <div class="bottom">
                     <div class="d-flex gap-16">
-                        <button title="수정" @click="goProductDetail(product.idx)"><img :src="icEdit" alt="수정아이콘" width="16"></button>
+                        <button title="수정" @click="goProductDetail(product.bizItemId)"><img :src="icEdit" alt="수정아이콘" width="16"></button>
                         <button title="복사" @click="clickCopyItem(product.idx)"><img :src="icCopy" alt="복사아이콘"></button>
                         <button title="삭제" @click="clickDeleteItem(product.name, product.bizItemId)"><img :src="icDel" alt="삭제 아이콘"></button>
                     </div>
