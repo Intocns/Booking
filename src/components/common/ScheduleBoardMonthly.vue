@@ -11,8 +11,10 @@ import icHold from '@/assets/icons/ic_res_hold.svg'
 import icPlusCircle from '@/assets/icons/ic_plus_circle.svg'
 // 스토어
 import { useHospitalStore } from "@/stores/hospitalStore";
+import { useReservationStore } from "@/stores/reservationStore";
 
 const hospitalStore = useHospitalStore();
+const reservationStore = useReservationStore();
 
 // 상태 아이콘 매핑
 const statusIcons = {
@@ -78,7 +80,8 @@ const summaryEvents = computed(() => {
                 start: `${date}T00:00:00`,
                 end: `${date}T23:59:59`,
                 text: `${staff ? staff.name : item.resourceId} ${item.count}`,
-                tags: { colorIdx, isSummary: true } // tags에 컬러 번호 저장
+                tags: { colorIdx, isSummary: true }, // tags에 컬러 번호 저장
+
             });
         });
 
@@ -191,6 +194,11 @@ const handleDateSelection = (clickedDateStr) => {
     }
 };
 
+// 예약 상세보기 핸들러
+const handelReserveDetail = (reserveIdx) => {
+    reservationStore.getReserveInfo(reserveIdx)
+}
+
 // 스태프별로 열림/닫힘 상태를 관리할 객체 (기본적으로 모두 열어두려면 초기값 설정)
 const openStaffs = ref({});
 
@@ -275,11 +283,17 @@ onMounted(() => {
                     </div>
                     
                     <div class="staff-content" v-show="openStaffs[staffId]">
-                        <div v-for="ev in group.events" :key="ev.id" class="detail-item" :class="`detail-item__${ev.inState}`">
+                        <div 
+                            v-for="ev in group.events" 
+                            :key="ev.id" 
+                            class="detail-item" 
+                            :class="`detail-item__${ev.inState}`"
+                            @click="handelReserveDetail(ev.reserveIdx)"
+                        >
                             <div class="d-flex gap-6">
                                 <div class="d-flex gap-4">
                                     <img 
-                                        :src="statusIcons[ev.inState || '']" 
+                                        :src="statusIcons[ev.inState]" 
                                         alt="" 
                                         class="status-icon"
                                     />
@@ -497,6 +511,10 @@ onMounted(() => {
             &__0 { background: $status-onHold_bg; color: $status-onHold_text; } // 대기
             &__2 { background: $status-canceled_bg; color: $status-canceled_text; } // 취소
             &__3 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
+
+            &:hover {
+                filter: brightness(96%);
+            }
         }
     }
     

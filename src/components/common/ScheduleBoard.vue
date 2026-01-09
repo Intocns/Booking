@@ -11,6 +11,10 @@ import icHold from '@/assets/icons/ic_res_hold.svg'
 import icNaver from '@/assets/icons/ic_res_naver.svg'
 import icIntoPet from '@/assets/icons/ic_res_intoPet.svg'
 import icIntoLink from '@/assets/icons/ic_res_intolink.svg'
+// 스토어
+import { useReservationStore } from "@/stores/reservationStore";
+
+const reservationStore = useReservationStore();
 
 // TODO: 상태 아이콘 매핑
 const statusIcons = {
@@ -90,7 +94,8 @@ const config = ref({
     
     onEventClick: (args) => {
         // 부모에게 클릭 이벤트 알림 (필요 시)
-        console.log("선택된 스케줄:", args.e.data);
+        // console.log("선택된 스케줄:", args.e.data);
+        handelReserveDetail(args.e.data.reserveIdx)
     },
 
     onBeforeEventRender: (args) => {
@@ -108,8 +113,8 @@ const config = ref({
     
     cellDuration: 30,
     cellHeight: 60, 
-    businessBeginsHour: 9,                  
-    businessEndsHour: 20,
+    // businessBeginsHour: 0,                  
+    // businessEndsHour: 0,
 });
 
 // ---------------------------------------------
@@ -126,8 +131,23 @@ watch(() => [props.viewType, props.events, props.staffs, props.startDate], ([new
             events: newEvents,
             columns: newView === 'Resources' ? columns.value : null,
         });
+
+        scrollToWorkTime()
     }
 }, { deep: true });
+
+// 예약 상세보기 핸들러
+const handelReserveDetail = (reserveIdx) => {
+    reservationStore.getReserveInfo(reserveIdx)
+}
+
+const scrollToWorkTime = () => {
+    const calendarEl = document.querySelector('.calendar_default_main');
+    if (calendarEl) {
+        // 30분당 60px 기준 -> 1시간 120px -> 9시 = 1080px
+        calendarEl.scrollTop = 1080;
+    }
+};
 
 onMounted(() => {
     // 초기 로드 시 업데이트
@@ -137,6 +157,8 @@ onMounted(() => {
             events: props.events,
             columns: props.viewType === 'Resources' ? columns.value : null,
         });
+
+        scrollToWorkTime()
     }
 });
 </script>
@@ -166,7 +188,7 @@ onMounted(() => {
 
                     <!-- 예약경로 아이콘(네이버/인투펫/링크) -->
                     <div class="reserve-icon">
-                        <img v-if="event.data.reRoute" :src="pathIcons[event.data.reRoute] || ''" alt="예약경로 아이콘">
+                        <img v-if="event.data.reRoute" :src="pathIcons[event.data.reRoute] || ''" alt="예약경로 아이콘" width="16">
                     </div>
                 </div>
                 <div class="event-content">
@@ -295,11 +317,16 @@ onMounted(() => {
         border: none;
         padding: 8px;
         background: $gray-50; // 기본
+        box-shadow: -1px 0 3px rgba($color: #000000, $alpha: 0.2);
 
         &.confirm {background: $status-confirmed_bg;}
         &.hold {background: $status-onHold_bg;}
         &.canceled {background: $status-canceled_bg;}
         &.personal {background: $status-personal_bg;}
+
+        &:hover {
+            filter: brightness(96%);
+        }
     }
     :deep(.calendar_default_event_bar) {display: none;} // 왼쪽 색상바 안보이도록
     :deep(.calendar_default_shadow) {display: none;}
@@ -316,6 +343,7 @@ onMounted(() => {
             display:flex;
             align-items:center;
             gap:4px;
+            overflow: hidden;
 
             .title {
                 overflow: hidden;
@@ -330,6 +358,8 @@ onMounted(() => {
                 &__3 {color: $status-personal_text} // 개인(불가)
             }
         }
+
+        .reserve-icon {flex-shrink: 0;}
     }
 
     .event-content {

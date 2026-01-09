@@ -1,5 +1,6 @@
 <!-- 예약 일정 확인 -->
 <script setup>
+// 컴포넌트
 import PageTitle from '@/components/common/PageTitle.vue'
 import TableLayout from '@/components/common/TableLayout.vue';
 import FilterDate from '@/components/common/filters/FilterDate.vue';
@@ -7,16 +8,22 @@ import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 import ScheduleBoard from '@/components/common/ScheduleBoard.vue';
 import ScheduleBoardWeekly from '@/components/common/ScheduleBoardWeekly.vue';
 import ScheduleBoardMonthly from '@/components/common/ScheduleBoardMonthly.vue';
+import Modal from '@/components/common/Modal.vue';
+import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
 
 import { ref, computed, onMounted, watch } from 'vue';
 import { startOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from "date-fns";
 import { RESERVE_ROUTE_OPTIONS, RESERVE_STATUS_OPTIONS } from '@/utils/reservation';
+// 아이콘
+import icReset from '@/assets/icons/ic_reset.svg'
 // 스토어
 import { useReservationStore } from '@/stores/reservationStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
+import { useModalStore } from '@/stores/modalStore';
 
 const reservationStore = useReservationStore()
 const hospitalStore = useHospitalStore();
+const modalStore = useModalStore();
 
 // 캘린더 뷰 상태 관리 (초기값: 'Resources')
 const currentView = ref('Resources');
@@ -127,6 +134,14 @@ watch([currentDate, currentView, selectedDoctorList, reservationStatus, reservat
     reservationStore.getReserveSchedule(fetchParams.value);
 }, { deep: true });
 
+const searchClear = () => { //초기화 버튼
+    currentView.value = 'Resources';
+    currentDate.value = new Date();
+    selectedDoctorList.value = ['all'];
+    reservationStatus.value = ['all'];
+    reservationChannel.value = ['all'];
+};
+
 onMounted(async() => {
     // 담당의 리스트 불러오기
     await hospitalStore.getDoctorList();
@@ -186,7 +201,9 @@ onMounted(async() => {
                 :options="reservationChannelOptions" 
                 v-model="reservationChannel" 
             />
-            <!--TODO: 초기화버튼 추가 -->
+            <button class="btn btn--size-32 btn--black-outline" @click="searchClear()" style="width: 40px;">
+                <img :src="icReset" alt="초기화아이콘">
+            </button>
         </template>
 
         <template #table>
@@ -218,6 +235,16 @@ onMounted(async() => {
             </div>
         </template>
     </TableLayout>
+
+    <!-- 예약 정보 안내 모달 -->
+    <Modal
+        v-if="modalStore.reserveInfoModal.isVisible"
+        size="l"
+        title="고객 예약 정보"
+        :modalState="modalStore.reserveInfoModal"
+    >
+        <ReserveInfo />
+    </Modal>
 </template>
 
 <style lang="scss" scoped>

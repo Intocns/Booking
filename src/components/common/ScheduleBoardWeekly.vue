@@ -2,12 +2,15 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { startOfWeek, addDays, format, isSameDay } from "date-fns";
-
 // 예약 상태 아이콘
 import icConfirm from '@/assets/icons/ic_res_confirm.svg'
 import icPersonal from '@/assets/icons/ic_res_personal.svg'
 import icCancel from '@/assets/icons/ic_res_canceled.svg'
 import icHold from '@/assets/icons/ic_res_hold.svg'
+// 스토어
+import { useReservationStore } from '@/stores/reservationStore';
+
+const reservationStore = useReservationStore();
 
 // 상태 아이콘 매핑
 const statusIcons = {
@@ -109,6 +112,11 @@ const statusLabels = {
     2: '예약취소',
     3: '개인일정'
 };
+
+// 예약 상세보기 핸들러
+const handelReserveDetail = (reserveIdx) => {
+    reservationStore.getReserveInfo(reserveIdx)
+}
 </script>
 
 <template>
@@ -164,21 +172,26 @@ const statusLabels = {
                 </div>
                 
                 <div class="detail-list">
-                <div v-for="event in selectedEvents" :key="event.id" :class="['detail-item', `detail-item__${event.inState}`]">
-                    <div class="time-box">
-                        <img 
-                            :src="statusIcons[event.inState ?? '']" 
-                            alt="" 
-                            class="status-icon"
-                        />
-                        {{ formatTime(event.start) }}
+                    <div 
+                        v-for="event in selectedEvents" 
+                        :key="event.id" 
+                        :class="['detail-item', `detail-item__${event.inState}`]"
+                        @click="handelReserveDetail(event.reserveIdx)"
+                    >
+                        <div class="time-box">
+                            <img 
+                                :src="statusIcons[event.inState ?? '']" 
+                                alt="" 
+                                class="status-icon"
+                            />
+                            {{ formatTime(event.start) }}
+                        </div>
+                        <div class="event-info">
+                            <span class="patient">{{ event.userName }}{{ event.petName ? '(' + event.petName + ')' : '' }}</span>
+                            <span class="memo">{{ event.roomName }}</span>
+                        </div>
                     </div>
-                    <div class="event-info">
-                        <span class="patient">{{ event.userName }}{{ event.petName ? '(' + event.petName + ')' : '' }}</span>
-                        <span class="memo">{{ event.roomName }}</span>
-                    </div>
-                </div>
-                <div v-if="selectedEvents.length === 0" class="no-data">일정이 없습니다.</div>
+                    <div v-if="selectedEvents.length === 0" class="no-data">일정이 없습니다.</div>
                 </div>
             </div>
         </div>
@@ -334,6 +347,7 @@ const statusLabels = {
         gap: 6px;
         margin-bottom: 8px;
         border-radius: 4px;
+        cursor: pointer;
 
         @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
         
@@ -377,6 +391,10 @@ const statusLabels = {
         &__0 { background: $status-onHold_bg; color: $status-onHold_text; } // 대기
         &__2 { background: $status-canceled_bg; color: $status-canceled_text; } // 취소
         &__3 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
+
+        &:hover {
+            filter: brightness(96%);
+        }
     }
 }
 
