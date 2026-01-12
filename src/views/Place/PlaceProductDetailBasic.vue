@@ -12,6 +12,8 @@ import icClear from '@/assets/icons/ic_clear.svg'
 import icAddBtn from '@/assets/icons/ic_add_btn.svg'
 import icDragHandel from '@/assets/icons/ic_drag_handel.svg'
 import icDel from '@/assets/icons/ic_del.svg'
+// 라이브러리
+import draggable from 'vuedraggable'; 
 
 import { useProductStore } from '@/stores/productStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
@@ -95,7 +97,7 @@ watch(detailList, (newVal) => emit('update:previewDetails', newVal), { deep: tru
 watch(() => basicInput.value.bookingPrecautionJson[0].desc, (newVal) => {emit('update:previewNotice', newVal);});
 
 /**
- * 메인 상품 사진 업로드 핸들러
+ * 상품 사진 업로드 핸들러
  */
 const handleMainImageUpload = async (event) => {
     const files = Array.from(event.target.files);
@@ -299,10 +301,10 @@ const checkedRequired = (async(params) => {
     }
 
     //상품 사진 체크
-    // if(params.images != ""){
-    //     alert('사진을 추가해주세요');
-    //     return false;
-    // }
+    if(params.images != ""){
+        openErrorModal(`상품 사진을 추가해주세요.`);
+        return false;
+    }
 
     if (doctorAssignType.value === 'select' && !selectedDoctor.value) {
         openErrorModal('담당의를 선택해주세요.');
@@ -418,23 +420,36 @@ onMounted(async() => {
                         <img :src="icAddBtn" alt="추가" class="icon-plus" width="32">
                     </label>
 
-                    <div
-                        v-for="(imgUrl, index) in basicInput.imageUrls" 
-                        :key="index"
-                        class="photo-upload__item"
+                    <draggable
+                        v-model="basicInput.imageUrls"
+                        item-key="index"
+                        class="draggable-container"
+                        handle=".drag-handle"
+                        ghost-class="ghost"
+                        drag-class="drag-item-moving" 
+                        :force-fallback="true"
+                        :scroll="true"
+                        :scroll-sensitivity="100"
+                        :animation="200"
                     >
-                        <img :src="imgUrl" alt="상품 이미지" class="preview-img">
-                        <!-- 드래그핸들 -->
-                        <div class="drag-handle"><img :src="icDragHandel" alt="드래그아이콘"></div>
-                        <!-- 삭제 버튼 -->
-                        <button class="delete-btn" @click="removeMainImage(index)">
-                            <img :src="icClear" alt="삭제" width="20">
-                        </button>
-                        <!-- 대표 이미지의 경우 -->
-                        <div v-if="index === 0" class="main-badge">
-                            <span class="caption">대표이미지</span>
-                        </div>
-                    </div>
+                        <template #item="{element, index}">
+                            <div
+                                class="photo-upload__item"
+                            >
+                                <img :src="element" alt="상품 이미지" class="preview-img">
+                                <!-- 드래그핸들 -->
+                                <div class="drag-handle"><img :src="icDragHandel" alt="드래그아이콘"></div>
+                                <!-- 삭제 버튼 -->
+                                <button class="delete-btn" @click="removeMainImage(index)">
+                                    <img :src="icClear" alt="삭제" width="20">
+                                </button>
+                                <!-- 대표 이미지의 경우 -->
+                                <div v-if="index === 0" class="main-badge">
+                                    <span class="caption">대표이미지</span>
+                                </div>
+                            </div>
+                        </template>
+                    </draggable>
                 </div>
             </div>
         </li>
@@ -576,6 +591,25 @@ onMounted(async() => {
 </template>
 
 <style lang="scss" scoped>
+    .draggable-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px; // 아이템 간 간격
+    }
+    .ghost {
+        opacity: 0.5;
+        background: $primary-50 !important;
+        border: 1px dashed $primary-500 !important;
+    }
+    /* 실제로 마우스에 붙어 움직이는 요소 */
+    .drag-item-moving {
+        opacity: 1 !important; // 투명도 방지
+        background-color: $gray-00 !important;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        border: 1px solid $primary-500 !important;
+        z-index: 9999;
+    }
+    
     .button-wrapper {
         padding-top: 16px;
         // padding-top: 40px;
@@ -654,10 +688,18 @@ onMounted(async() => {
                     justify-content: center;
                     background-color: #fff;
 
+                    img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+
                     .img-del-btn {
                         position: absolute;
-                        top: 0;
-                        right: 0;
+                        top: 2px;
+                        right: 2px;
+
+                        img {width:20px;}
                     }
                 }
 

@@ -6,13 +6,12 @@ import ProductTabBasic from './PlaceProductDetailBasic.vue';
 import ProductTabBooking from './PlaceProductDetailBooking.vue';
 import ProductTabOption from './PlaceProductDetailOption.vue';
 import PlaceProductPreview from './PlaceProductPreview.vue';
+import ConfirmModal from '@/components/common/ConfirmModal.vue';
 // 아이콘
 import icInfo from '@/assets/icons/Ic_round_warning.svg'
 import icImg from '@/assets/icons/ic_image.svg'
 
 import { ref, reactive } from 'vue';
-import ConfirmModal from '@/components/common/ConfirmModal.vue';
-
 const currentTab = ref('basic'); // 탭 버튼
 const savedItemId = ref(''); // 등록 후 서버에서 받은 ID를 저장할 변수
 
