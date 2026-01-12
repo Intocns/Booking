@@ -13,6 +13,15 @@ import TimeSelect from "@/components/common/TimeSelect.vue";
 
 const modalStore = useModalStore();
 
+const props = defineProps({
+    savedItemId: {type: String},
+    viewType: {type: String, default:null},
+    previewName: { type: String },
+    previewDesc: { type: String },
+    previewDetails: { type: Array },
+    previewNotice: { type: String }
+})
+
 // 캘린더 데이터 (예시 데이터)
 const events = ref([
     {

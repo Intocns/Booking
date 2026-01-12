@@ -5,9 +5,11 @@ import ProductTabBasic from './PlaceProductDetailBasic.vue';
 import ProductTabBookingCalendar from './PlaceProductDetailBookingCalendar.vue';
 import ProductTabOption from './PlaceProductDetailOption.vue';
 import PlaceProductDetailBookingSide from './PlaceProductDetailBookingSide.vue';
+import PlaceProductPreview from './PlaceProductPreview.vue';
 
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 import { useRoute } from 'vue-router';
+import ConfirmModal from '@/components/common/ConfirmModal.vue';
 
 const currentTab = ref('basic');
 
@@ -15,6 +17,13 @@ const route = useRoute();
 
 const itemId = ref(route.params.id);
 
+// 미리보기 데이터 통합 관리
+const previewData = reactive({
+    name: '',
+    desc: '',
+    details: [],
+    notice: ''
+});
 </script>
 
 <template>
@@ -56,6 +65,10 @@ const itemId = ref(route.params.id);
                 <keep-alive>
                     <component 
                         :is="currentTab === 'basic' ? ProductTabBasic : currentTab === 'booking' ? ProductTabBookingCalendar : ProductTabOption"
+                        v-model:preview-name="previewData.name"
+                        v-model:preview-desc="previewData.desc"
+                        v-model:preview-details="previewData.details"
+                        v-model:preview-notice="previewData.notice"
                         :saved-item-id="itemId"
                         view-type="update"
                     />
@@ -66,14 +79,12 @@ const itemId = ref(route.params.id);
         <!-- right -->
         <div class="right">
             <PlaceProductDetailBookingSide v-if="currentTab === 'booking'" />
-
-            <template v-else>
-                <div class="preview-wrapper">
-                <p class="heading-s">미리보기</p>
-                </div>
-            </template>
+            <PlaceProductPreview v-else :preview-data="previewData" />
         </div>
     </div>
+
+    <!-- confirmModal -->
+    <ConfirmModal />
 </template>
 
 <style lang="scss" scoped>

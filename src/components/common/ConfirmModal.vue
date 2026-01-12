@@ -39,7 +39,7 @@ const handleConfirm = () => {
                         <!-- 버튼 -->
                         <div class="modal-footer">
                             <button v-if="!modal.data?.noCancelBtn" class="btn btn--size-40 btn--black" @click="modal.closeModal()">취소</button>
-                            <button class="btn btn--size-40 btn--blue" @click="handleConfirm">{{ modal.data?.confirmBtnText }}</button>
+                            <button class="btn btn--size-40 btn--blue" @click="handleConfirm">{{ modal.data?.confirmBtnText || '확인' }}</button>
                         </div>
                     </div>
                 </div>

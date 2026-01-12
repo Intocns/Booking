@@ -12,6 +12,17 @@ import icDel from '@/assets/icons/ic_del.svg';
 // 예약 가능 동물 수 (임시 1~10)
 const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
 
+const props = defineProps({
+    savedItemId: {type: String},
+    viewType: {type: String, default:null},
+    previewName: { type: String },
+    previewDesc: { type: String },
+    previewDetails: { type: Array },
+    previewNotice: { type: String }
+})
+
+const emit = defineEmits(['update:nextTab'])
+
 // 상태 관리
 const selectedAnimalCount = ref(null); // 예약 가능 동물 수 선택
 const scheduleMode = ref('regular'); // 운영 일정 : 'regular', 'event'
@@ -46,6 +57,11 @@ const removeEventPeriod = (idx) => {
     eventDates.value.splice(idx, 1);
     periodConfigs.value.splice(idx, 1);
 };
+
+// 다음 버튼
+const clickNextBtn = () => {
+    emit('update:nextTab', 'option');
+}
 </script>
 
 <template>
@@ -187,7 +203,7 @@ const removeEventPeriod = (idx) => {
 
     <div class="button-wrapper">
         <button class="btn btn--size-40 btn--black">이전으로</button>
-        <button class="btn btn--size-40 btn--blue">다음</button>
+        <button class="btn btn--size-40 btn--blue" @click="clickNextBtn()">다음</button>
     </div>
 </template>
 

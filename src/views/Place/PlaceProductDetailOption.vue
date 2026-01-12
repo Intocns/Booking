@@ -16,7 +16,12 @@ const router = useRouter();
 
 //PlaceProductDetail.vue에서 선언한component 옵션 사용
 const props = defineProps({
-    savedItemId: String
+    savedItemId: {type: String},
+    viewType: {type: String, default:null},
+    previewName: { type: String },
+    previewDesc: { type: String },
+    previewDetails: { type: Array },
+    previewNotice: { type: String }
 })
 
 // 현재 어떤 카테고리가 열려있는지 index를 저장 (null이면 모두 닫힘)

@@ -1,6 +1,8 @@
 <!-- 상품등록/수정 페이지  > 기본 정보 탭 -->
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
+import { getFieldError } from '@/utils/common';
+// 컴포넌트
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import TextAreaBox from '@/components/common/TextAreaBox.vue';
 import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
@@ -12,16 +14,20 @@ import icDragHandel from '@/assets/icons/ic_drag_handel.svg'
 
 import { useProductStore } from '@/stores/productStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
+import { useModalStore } from '@/stores/modalStore';
 import { parseJSON } from 'date-fns';
 import { useRouter } from 'vue-router';
 
 const productStore = useProductStore();
 const hospitalStore = useHospitalStore();
+const modalStore = useModalStore();
 const router = useRouter();
 
 const doctorAssignType = ref("assign"); // 담당의 설정 타입 (default: 'assign' - 승인 시 배정)
 const selectedDoctor = ref(""); // 선택된 담당의 ID
-const currentTab = ref('basic');
+// const currentTab = ref('basic');
+// 저장 버튼이 한 번이라도 눌렸는지 확인하는 상태
+const isSubmitted = ref(false);
 
 // 담당의 옵션 (CustomSingleSelect용)
 const doctorOptions = computed(() => {
@@ -49,8 +55,20 @@ const doctorOptions = computed(() => {
 //PlaceProductDetail.vue에서 선언한component 옵션 사용
 const props = defineProps({
     savedItemId: {type: String},
-    viewType: {type: String, default:null}
+    viewType: {type: String, default:null},
+    previewName: { type: String },
+    previewDesc: { type: String },
+    previewDetails: { type: Array },
+    previewNotice: { type: String }
 })
+
+const emit = defineEmits([
+    'update:previewName', 
+    'update:previewDesc', 
+    'update:previewDetails', 
+    'update:previewNotice',
+    'update:nextTab'
+]);
 
 // 상품 관련 입력 항목
 const basicInput = ref({
@@ -66,6 +84,36 @@ const basicInput = ref({
 
 // 상세 설명 항목 상태관리 (예시)
 const detailList = ref([]);
+
+// 값이 바뀔 때마다 부모의 미리보기 데이터 업데이트
+watch(() => basicInput.value.name, (newVal) => emit('update:previewName', newVal));
+watch(() => basicInput.value.desc, (newVal) => emit('update:previewDesc', newVal));
+watch(detailList, (newVal) => emit('update:previewDetails', newVal), { deep: true });
+watch(() => basicInput.value.bookingPrecautionJson[0].desc, (newVal) => {emit('update:previewNotice', newVal);});
+
+// 담당의 선택 시 basicInput 업데이트
+watch(selectedDoctor, (newId) => {
+    // 1. ID 저장
+    basicInput.value.doctorId = newId;
+
+    // 2. 이름 저장
+    if (!newId) {
+        basicInput.value.doctor = ""; // 선택 해제 시
+    } else {
+        // doctorOptions에서 현재 선택된 ID와 일치하는 label(이름) 찾기
+        const selectedOpt = doctorOptions.value.find(opt => opt.value === newId);
+        basicInput.value.doctor = selectedOpt ? selectedOpt.label : "";
+    }
+});
+
+// 만약 라디오 버튼이 '승인 시 배정'으로 돌아가면 값 초기화
+watch(doctorAssignType, (newType) => {
+    if (newType === 'assign') {
+        selectedDoctor.value = "";
+        basicInput.value.doctorId = "";
+        basicInput.value.doctor = "현장데스크(관리자)";
+    }
+});
 
 // 항목 추가 함수 (예시)
 const addDetailItem = () => {
@@ -91,10 +139,10 @@ const clickNextBtn = (async() => {
         return false;
     }
 
-    if(doctorAssignType === 'assign'){//승인 시 배정일 경우 doctor는 현장데스크(관리자), doctorId는 없음
-        params.doctorId ="";
-        params.doctor = "현장데스크(관리자)";
-    }
+    // if(doctorAssignType === 'assign'){//승인 시 배정일 경우 doctor는 현장데스크(관리자), doctorId는 없음
+    //     params.doctorId ="";
+    //     params.doctor = "현장데스크(관리자)";
+    // }
 
     let response = '';
 
@@ -111,9 +159,14 @@ const clickNextBtn = (async() => {
         //다음 페이지로 이동
         if(props.viewType == 'update'){
             //수정
-            alert('수정이 완료되었습니다.');
-            //수정 완료 시 이동
-            router.push({ name: 'placeProduct' });
+            modalStore.confirmModal.openModal({
+                text: '수정이 완료되었습니다.',
+                noCancelBtn: true,
+                onConfirm: () => {
+                    //수정 완료 시 이동
+                    router.push({ name: 'placeProduct' });
+                }
+            })
         }else{
             //등록
             let reponseDecode = JSON.parse(response.data);//등록 api를 탄 경우 bizmItemId를 넘겨줌
@@ -122,7 +175,7 @@ const clickNextBtn = (async() => {
                 props.savedItemId = reponseDecode.bizItemId;
             }
 
-            currentTab.value = 'booking'//등록 완료 시 다음 탭으로 이동
+            emit('update:nextTab', 'booking', reponseDecode.bizItemId); //등록 완료 시 다음 탭으로 이동
         }
         
     } else{
@@ -130,10 +183,35 @@ const clickNextBtn = (async() => {
     }
 })
 
+// 목록으로 이동 버튼
+const goToList = () => {
+    if(props.savedItemId == "") {
+        modalStore.confirmModal.openModal({
+            title: '목록으로 이동',
+            text: '목록으로 이동하시겠습니까?\n목록으로 이동 시 입력한 정보는 모두 사라집니다.',
+            confirmBtnText: '목록으로',
+            onConfirm: () => {
+                router.push({ name: 'placeProduct'});
+            }
+        })
+    } else {
+        router.push({ name: 'placeProduct'});
+    }
+    
+}
+
 const checkedRequired = (async(params) => {
-    //상품명 체크
-    if(params.name == ""){
-        alert('예약 상품명을 입력해주세요.');
+    isSubmitted.value = true;
+    
+    // 상품명 체크
+    if(!params.name || params.name.trim() === ""){
+        openErrorModal('예약 상품명을 입력해주세요.');
+        return false;
+    }
+
+    const nameError = getFieldError(params.name, 0, 50);
+    if (nameError.isError) {
+        openErrorModal(`입력하신 상품명을 확인해주세요.`);
         return false;
     }
 
@@ -143,8 +221,22 @@ const checkedRequired = (async(params) => {
     //     return false;
     // }
 
+    if (doctorAssignType.value === 'select' && !selectedDoctor.value) {
+        openErrorModal('담당의를 선택해주세요.');
+        return false;
+    }
+
     return true;
 })
+
+// 모달 오픈 공통 함수
+const openErrorModal = (text) => {
+    modalStore.confirmModal.openModal({
+        text: text,
+        noCancelBtn: true,
+        onConfirm: () => { modalStore.confirmModal.closeModal(); }
+    });
+};
 
 //화면에 데이터 전달 JSON 파싱할 항목 리스트
 const JSON_FIELDS = [
@@ -160,12 +252,22 @@ const setInputData = (async() => {
         if (value === undefined) return;
 
         if (JSON_FIELDS.includes(key)) {
-            basicInput.value[key] = JSON.parse(value);
+            let decodeValue = JSON.parse(value);
+
+            switch (key) {
+                case 'bookingPrecautionJson':
+                    if (!Array.isArray(decodeValue) || decodeValue.length === 0) {
+                        decodeValue = [{ desc: '' }]
+                    }
+                    break
+            }
+
+            basicInput.value[key] = decodeValue
         } else {
             basicInput.value[key] = value;
         }
     });
-    
+
     //상세 설명 추가 세팅
     detailList.value = basicInput.value.extraDescJson;
 
@@ -187,17 +289,22 @@ onMounted(async() => {
 </script>
 
 <template>
-    <ul class="form-container">
+    <ul class="form-container" style="margin-bottom: 40px;">
         <!-- 상품명 -->
         <li class="form-item">
             <div class="form-label required">상품명</div>
             <div class="form-content">
-                <InputTextBox :max-length="50" v-model="basicInput.name" />
+                <InputTextBox 
+                    :max-length="50"
+                    v-model="basicInput.name"
+                    :is-error="isSubmitted && !basicInput.name ? true : getFieldError(basicInput.name, 0, 50).isError"
+                    :error-message="isSubmitted && !basicInput.name ? '필수 입력 항목입니다.' : getFieldError(basicInput.name, 0, 50).message"
+                />
             </div>
         </li>
 
         <!-- 상품 노출 여부 -->
-        <!-- <li class="form-item">
+        <li v-if="savedItemId" class="form-item">
             <div class="form-label">상품 노출 여부</div>
             <div class="form-content">
                 <label class="toggle">
@@ -205,7 +312,7 @@ onMounted(async() => {
                     <span class="toggle-img"></span>
                 </label>
             </div>
-        </li> -->
+        </li>
 
         <!-- 상품사진 -->
         <li class="form-item">
@@ -267,7 +374,7 @@ onMounted(async() => {
                 <div class="detail-item-list">
                     <div v-for="(item, index) in detailList" :key="index" class="detail-item">
                         
-                        <button class="detail-item__remove-btn" @click="removeDetailItem(index)" v-if="detailList.length > 1">
+                        <button class="detail-item__remove-btn" @click="removeDetailItem(index)" v-if="detailList.length > 0">
                             <img :src="icClear" alt="항목 삭제" width="16">
                         </button>
 
@@ -333,9 +440,9 @@ onMounted(async() => {
 
                 <div v-if="doctorAssignType === 'select'" class="doctor-select-area">
                     <CustomSingleSelect 
-                    v-model="selectedDoctor" 
-                    :options="doctorOptions" 
-                    placeholder="담당의를 선택해 주세요"
+                        v-model="selectedDoctor" 
+                        :options="doctorOptions" 
+                        placeholder="담당의를 선택해 주세요"
                     />
                     </div>
                 </div>
@@ -343,9 +450,10 @@ onMounted(async() => {
             </li>
     </ul>
 
+    
     <div class="button-wrapper">
-        <button class="btn btn--size-40 btn--black" @click="router.push({ name: 'placeProduct'})">목록으로</button>
-        <button class="btn btn--size-40 btn--blue" @click="clickNextBtn()">다음</button>
+        <button class="btn btn--size-40 btn--black" @click="goToList()">목록으로</button>
+        <button class="btn btn--size-40 btn--blue" @click="clickNextBtn()">{{ savedItemId == "" ? "다음" : "저장"}}</button>
     </div>
 </template>
 
@@ -396,13 +504,12 @@ onMounted(async() => {
 
             background-color: $gray-00;
 
-            // &__remove-btn {
-            //     position: absolute;
-            //     top: 12px;
-            //     right: 12px;
-            //     padding: 4px;
-            //     cursor: pointer;
-            // }
+            &__remove-btn {
+                cursor: pointer;
+                width: 100%;
+                display: flex;
+                justify-content: flex-end;
+            }
 
             &__fields {
                 display: flex;

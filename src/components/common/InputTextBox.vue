@@ -247,7 +247,7 @@ const showClearIcon = computed(() => {
         padding: 0 10px;
 
         .caption {
-            width: 220px;
+            // width: 220px;
             @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line);
             color: $gray-700;
             word-break: keep-all;
