@@ -70,7 +70,7 @@ const previewData = reactive({
                         v-model:preview-details="previewData.details"
                         v-model:preview-notice="previewData.notice"
                         :saved-item-id="itemId"
-                        view-type="update"
+                        :view-type="'update'"
                     />
                 </keep-alive>
             </div>

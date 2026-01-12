@@ -47,40 +47,50 @@ const isOpen = (index) => expandedIndexes.value.includes(index);
 const saveItemOption = (async() => {
     let params = optionStore.optionList.flatMap(category =>
                 category.options
-                .filter(option => option.checked)
+                // .filter(option => option.checked)
                 .map(option => ({
                     categoryId : category.categoryId,
                     optionId : option.optionId,
-                    useFlag : 1,
+                    useFlag : option.checked ? 1 : 0,
                     itemIds : props.savedItemId
                 })
             )
     )
+    console.log(params);
 
     let response = await optionStore.addOptionMapping(params);
 
     if(response.status_code <= 300){
-        alert('성공');
+        alert('저장이 완료되었습니다.');
+        router.push({ name: 'placeProduct' });
     }else{
-        alert('실패');
+        alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
     }
-    
-    console.log(response);
 })
 
 onMounted(async() => {
-    // await optionStore.getCategoryList()
+    const selectedData =  await optionStore.getOptionListByItemId(props.savedItemId);
     await optionStore.getOptionList()
 
+    const selectedOptionMap = {};
+
+    //선택한 옵션값 가져오기
+    selectedData.data.forEach(({ categoryId, optionId }) => {
+        selectedOptionMap[categoryId] ??= []
+        selectedOptionMap[categoryId].push(optionId)
+    })
+
+    //카테고리/옵션 구성 및 선택한 옵션 check 값 true로 변경
     optionStore.optionList = (optionStore.optionList ?? []).map(item => ({
         ...item,
         options : item.options.map(detail => ({
             ...detail,
-            checked : false
+            checked : selectedOptionMap[item.categoryId]?.includes(detail.optionId) ?? false
         }))
     }))
 
-    expandedIndexes.value = (optionStore.optionList ?? []).map((_, index) => index)//아코디언 토글 디폴트로 열어주기 위함
+    //아코디언 토글 디폴트로 열어주기 위함
+    expandedIndexes.value = (optionStore.optionList ?? []).map((_, index) => index)
 })
 
 //옵션이 하나라도 선택되면 카테고리도 선택

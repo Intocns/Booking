@@ -256,13 +256,13 @@ const setInputData = (async() => {
 
             switch (key) {
                 case 'bookingPrecautionJson':
-                    if (!Array.isArray(decodeValue) || decodeValue.length === 0) {
-                        decodeValue = [{ desc: '' }]
+                    if (decodeValue?.[0]?.desc !== undefined) {
+                        basicInput.value[key] = decodeValue
                     }
                     break
+                default :
+                    basicInput.value[key] = decodeValue
             }
-
-            basicInput.value[key] = decodeValue
         } else {
             basicInput.value[key] = value;
         }
