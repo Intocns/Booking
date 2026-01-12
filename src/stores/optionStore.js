@@ -201,13 +201,13 @@ export const useOptionStore = defineStore("option", () => {
         }
     }
 
-    // 미리보기
-    async function getOptionPreviewByItemId(itemId) {
+    // 옵션 상품 목록 api
+    async function getOptionListByItemId(itemId) {
         const response = await api.get(`/api/${cocode}/option/item/${itemId}`);
         if(response.status == 200) {
             return response.data;
         } else {
-            throw new Error('미리보기 실패');
+            throw new Error('옵션 상품 목록 조회 실패');
         }
     }
 
@@ -224,6 +224,6 @@ export const useOptionStore = defineStore("option", () => {
         addOptionMapping,
         updateOption,
         deleteOption,
-        getOptionPreviewByItemId,
+        getOptionListByItemId,
     }
 })

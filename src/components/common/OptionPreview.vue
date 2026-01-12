@@ -248,7 +248,7 @@ const loadPreviewOptionsData = async (productId) => {
         checkedOptions.value = {};
         previewOptions.value = [];
         
-        const response = await optionStore.getOptionPreviewByItemId(productId);
+        const response = await optionStore.getOptionListByItemId(productId);//미리보기 조회
         const data = response?.data?.data || response?.data || [];
         loadPreviewOptions(data);
     } catch (error) {
