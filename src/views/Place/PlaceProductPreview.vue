@@ -99,6 +99,7 @@ const props = defineProps({
                 .product-summary {
                     @include typo($body-l-size, $body-l-weight, $body-l-spacing, $body-l-line);
                     color: $gray-600;
+                    white-space: pre-wrap;
                 }
                 .header-image {
                     width: 96px;
