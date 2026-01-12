@@ -53,3 +53,16 @@ export const formatTimeToMinutes = (timeStr) => {
     const [hours, minutes] = timeStr.split(':').map(Number);
     return hours * 60 + minutes;
 }
+
+/**
+ * 날짜와 시간을 합쳐서 API 전송용 형식으로 변환 (yyyy-MM-dd HH:mm:ss.S)
+ * @param {Date|string} date - Date 객체 또는 날짜 문자열
+ * @param {string} time - 'HH:mm' 형식의 시간 문자열
+ * @returns {string|null} 'yyyy-MM-dd HH:mm:ss.0' 형식의 문자열, 유효하지 않으면 null
+ */
+export const formatDateTimeForAPI = (date, time) => {
+    if (!date || !time) return null;
+    const dateStr = formatDate(date);
+    const [hours, minutes] = time.split(':');
+    return `${dateStr} ${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}:00.0`;
+}

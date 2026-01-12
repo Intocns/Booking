@@ -2,7 +2,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { PET_GENDER_MAP, RESERVE_ROUTE_MAP } from '@/utils/reservation';
-import { formatDate, formatTime, formatDateTime, formatTimeToMinutes } from '@/utils/dateFormatter';
+import { formatDate, formatTime, formatDateTime, formatTimeToMinutes, formatDateTimeForAPI } from '@/utils/dateFormatter';
 
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import TimeSelect from '@/components/common/TimeSelect.vue';
@@ -17,16 +17,37 @@ import SearchCustomer from '@/components/common/modal-content/SearchCustomer.vue
 
 import { useModalStore } from '@/stores/modalStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
+import { useReservationStore } from '@/stores/reservationStore';
+
+const emit = defineEmits(['refresh-list']);
 
 const modalStore = useModalStore();
 const modal = modalStore.reserveInfoModal;
 const hospitalStore = useHospitalStore();
+const reservationStore = useReservationStore();
 
 const reserveData = modal.data.reserve;
 const reserveClientPet = modal.data.clientPet;
 
 // 고객번호가 매칭되어 있는지 확인하는 함수
 const isCustomerMatched = (clientItem) => {
+    // 예약 상태가 확정(inState === 1)인 경우, reserveData의 geUserIdx와 gePetNo를 우선 확인
+    if (reserveData?.inState === 1) {
+        if (reserveData.geUserIdx && clientItem?.userSno) {
+            if (String(reserveData.geUserIdx) === String(clientItem.userSno)) {
+                // gePetNo도 확인 (있는 경우)
+                if (reserveData.gePetNo) {
+                    return String(reserveData.gePetNo) === String(clientItem.petSno);
+                }
+                return true; // geUserIdx만 매칭되어도 OK
+            }
+        }
+        if (reserveData.gePetNo && clientItem?.petSno) {
+            return String(reserveData.gePetNo) === String(clientItem.petSno);
+        }
+    }
+    
+    // 확정 상태가 아니거나 geUserIdx/gePetNo가 없는 경우, 기존 로직 사용
     // reserveClientPet의 고객번호나 동물번호와 일치하는지 확인
     const petUserNo = reserveClientPet?.userNo || reserveClientPet?.user_num;
     const petPetNo = reserveClientPet?.petNo || reserveClientPet?.pet_num;
@@ -39,9 +60,21 @@ const isCustomerMatched = (clientItem) => {
            (petPetNo && clientPetNo && String(petPetNo) === String(clientPetNo));
 };
 
-const reserveClientList = ref(
-    modal.data.clientList.map((item) => {
-        const matched = isCustomerMatched(item);
+// 고객 정보 리스트 초기화 및 자동 매칭 처리
+const initializeClientList = () => {
+    const clientList = modal.data.clientList || [];
+    
+    // 예약 상태가 확정인 경우, geUserIdx/gePetNo를 기준으로 매칭 확인
+    const isConfirmed = reserveData?.inState === 1;
+    
+    // 매칭 조건을 만족하는 정보가 1개만 있는 경우 자동 매칭 (확정 상태가 아닐 때만)
+    let autoMatched = false;
+    if (!isConfirmed && clientList.length === 1) {
+        autoMatched = true;
+    }
+    
+    return clientList.map((item) => {
+        const matched = autoMatched || isCustomerMatched(item);
         return {
             ...item,
             lastStatusDateTxt: formatDate(item.lastStatusDate),
@@ -52,8 +85,10 @@ const reserveClientList = ref(
             // 성별: PET_GENDER_MAP으로 변환
             sex: PET_GENDER_MAP[item.sex] || item.sex || '',
         };
-    })
-);
+    });
+};
+
+const reserveClientList = ref(initializeClientList());
 
 // 고객 매칭 토글 함수 (단일 선택: 하나 선택 시 기존 선택 해제)
 const toggleCustomerMatch = (row) => {
@@ -85,15 +120,18 @@ const reserveDate = ref(null);
 const selectedDoctorId = ref(null);
 const doctorName = ref('');
 
+// 예약 취소 관련 상태
+const cancelReasonType = ref(''); // 선택된 취소 사유 타입
+const cancelReasonDirect = ref(''); // 직접 입력 내용
+
+// 예약 확정 관련 상태
+const sendNotification = ref(false); // 고객에게 예약 확정 알림 발송 여부
+
 // 필드 ref
 const reserveDateRef = ref(null);
 const startTimeRef = ref(null);
 const endTimeRef = ref(null);
 const doctorSelectRef = ref(null);
-
-// 예약 취소 관련 상태
-const cancelReasonType = ref(''); // 선택된 취소 사유 타입
-const cancelReasonDirect = ref(''); // 직접 입력 내용
 
 // 예약 방문일과 시간 초기화
 if (reserveData.reTime) {
@@ -252,24 +290,139 @@ const validateReservation = async () => {
         return false;
     }
     
+    // 6. 고객 매칭 검증 (고객 정보가 있는 경우 반드시 매칭되어야 함)
+    if (reserveClientList.value.length > 0) {
+        const hasMatchedCustomer = reserveClientList.value.some(item => item.isMatched);
+        if (!hasMatchedCustomer) {
+            modalStore.confirmModal.openModal({
+                title: '고객 매칭 확인',
+                text: '고객 정보가 있습니다. 고객을 매칭한 뒤 예약을 확정해주세요.',
+                confirmBtnText: '확인',
+                noCancelBtn: true,
+                onConfirm: () => {modalStore.confirmModal.closeModal()}
+            })
+            return false;
+        }
+    }
+    
     return true;
 };
 
 // 예약 확정 버튼 클릭 핸들러
-const handleConfirmReservation = () => {
-    if (!validateReservation()) {
+const handleConfirmReservation = async () => {
+    if (!await validateReservation()) {
         return;
     }
     
-    // TODO: 추후 작업 - 예약 확정 저장 로직
-    console.log('예약 확정 저장 로직 실행 예정');
+    // 예약 확정 확인 모달 열기
+    modalStore.confirmReserveModal.openModal();
+};
+
+// 예약 확정 실행 함수
+const handleConfirmReservationSave = async () => {
+    // 선택된 담당의 정보 찾기
+    const selectedDoctor = selectedDoctorId.value 
+        ? hospitalStore.doctorList.find(doc => doc.id === selectedDoctorId.value)
+        : null;
+    
+    const confirmData = {
+        inState: 1, // 예약 확정 상태
+        reTime: formatDateTimeForAPI(reserveDate.value, startTime.value),
+        reTimeEnd: formatDateTimeForAPI(reserveDate.value, endTime.value),
+        doctorId: selectedDoctorId.value,
+        doctor: selectedDoctor ? (selectedDoctor.userName) : null, // 담당의 이름
+        geReMemo: reserveData.geReMemo, // 병원 메모
+        sendNotification: sendNotification.value,
+    };
+
+    // 매칭된 고객 정보 추가 (있는 경우)
+    const matchedCustomer = reserveClientList.value.find(item => item.isMatched);
+    if (matchedCustomer) {
+        if (matchedCustomer.userSno) {
+            confirmData.userSno = matchedCustomer.userSno;
+        }
+        if (matchedCustomer.petSno) {
+            confirmData.petSno = matchedCustomer.petSno;
+        }
+    }
+
+    const result = await reservationStore.confirmReservation(reserveData.reserveIdx, confirmData);
+    
+    if (result.success) {
+        // 성공 시 모달 닫기
+        modalStore.confirmReserveModal.closeModal();
+        modalStore.reserveInfoModal.closeModal();
+        
+        // 검색 조건 유지한 채로 리스트 새로고침
+        emit('refresh-list');
+        
+        // 성공 메시지 표시
+        modalStore.confirmModal.openModal({
+            title: '예약 확정',
+            text: '예약이 확정되었습니다.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => {
+                modalStore.confirmModal.closeModal();
+            }
+        });
+    } else {
+        // 실패 시 에러 메시지 표시
+        modalStore.confirmModal.openModal({
+            title: '예약 확정 실패',
+            text: result.message || '예약 확정 중 오류가 발생했습니다.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => modalStore.confirmModal.closeModal()
+        });
+    }
+};
+
+// 고객 검색에서 고객 선택 시 처리
+const handleCustomerSelected = (customer) => {
+    // 선택한 고객 정보를 reserveClientList에 반영
+    const index = reserveClientList.value.findIndex(item => 
+        item.userNo === customer.userNo && item.petNo === customer.petNo
+    );
+    
+    if (index !== -1) {
+        // 모든 고객의 매칭 상태 초기화
+        reserveClientList.value.forEach(item => {
+            item.isMatched = false;
+            item.rowClass = '';
+        });
+        
+        // 선택한 고객 매칭
+        reserveClientList.value[index].isMatched = true;
+        reserveClientList.value[index].rowClass = 'row-matched';
+    } else {
+        // 새로운 고객인 경우 리스트에 추가
+        const newCustomer = {
+            ...customer,
+            lastStatusDateTxt: formatDate(customer.lastStatusDate),
+            isMatched: true,
+            rowClass: 'row-matched',
+            breed: customer.breedName || '',
+            sex: PET_GENDER_MAP[customer.sex] || customer.sex || '',
+        };
+        
+        // 기존 매칭 해제
+        reserveClientList.value.forEach(item => {
+            item.isMatched = false;
+            item.rowClass = '';
+        });
+        
+        reserveClientList.value.push(newCustomer);
+    }
+    
+    // 고객 검색 모달 닫기
+    modalStore.searchCustomerModal.closeModal();
 };
 
 // 예약 취소 저장 로직
-const handleSaveCancel = () => {
+const handleSaveCancel = async () => {
     // 1. 유효성 검사
     if (!cancelReasonType.value) {
-        // alert('취소 사유를 선택해주세요.');
         modalStore.confirmModal.openModal({
             text: '취소 사유를 선택해주세요.',
             confirmBtnText: '확인',
@@ -283,7 +436,6 @@ const handleSaveCancel = () => {
     if (cancelReasonType.value === '직접 입력') {
         // 빈 값 체크
         if (!cancelReasonDirect.value.trim()) {
-            // alert('취소 사유를 입력해주세요.');
             modalStore.confirmModal.openModal({
                 text: '취소 사유를 입력해주세요.',
                 confirmBtnText: '확인',
@@ -295,7 +447,6 @@ const handleSaveCancel = () => {
         
         // 3. 50자 초과 체크 추가
         if (cancelReasonDirect.value.length > 50) {
-            // alert('취소 사유는 최대 50자까지 입력 가능합니다.');
             modalStore.confirmModal.openModal({
                 text: '취소 사유는 최대 50자까지 입력 가능합니다.',
                 confirmBtnText: '확인',
@@ -311,14 +462,40 @@ const handleSaveCancel = () => {
         ? cancelReasonDirect.value 
         : cancelReasonType.value;
 
-    console.log('예약 취소 처리:', {
-        rejectIdx: reserveData.reserveIdx, // TODO: 이 값 맞는지 확인
+    const cancelData = {
         rejectMsg: finalReason,
-        instate: reserveData.inState,
-    });
+    };
 
-    // TODO: 예약 취소 처리: 서버 API 호출 후 모달 닫기
-    modalStore.cancelReserveModal.closeModal();
+    const result = await reservationStore.cancelReservation(reserveData.reserveIdx, cancelData);
+    
+    if (result.success) {
+        // 성공 시 모달 닫기
+        modalStore.cancelReserveModal.closeModal();
+        modalStore.reserveInfoModal.closeModal();
+        
+        // 검색 조건 유지한 채로 리스트 새로고침
+        emit('refresh-list');
+        
+        // 성공 메시지 표시
+        modalStore.confirmModal.openModal({
+            title: '예약 취소',
+            text: '예약이 취소되었습니다.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => {
+                modalStore.confirmModal.closeModal();
+            }
+        });
+    } else {
+        // 실패 시 에러 메시지 표시
+        modalStore.confirmModal.openModal({
+            title: '예약 취소 실패',
+            text: result.message || '예약 취소 중 오류가 발생했습니다.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => modalStore.confirmModal.closeModal()
+        });
+    }
 };
 
 // 초기 담당의 ID 저장 (리스트 로드 후 확인용)
@@ -628,7 +805,7 @@ watch(() => cancelReasonType.value, (newVal) => {
         title="고객 검색"
         :modalState="modalStore.searchCustomerModal"
     >
-        <SearchCustomer />
+        <SearchCustomer @customer-selected="handleCustomerSelected" />
     </Modal>
     
     <!-- 고객 예약 정보 > 예약 취소 모달 -->
@@ -690,7 +867,33 @@ watch(() => cancelReasonType.value, (newVal) => {
         <div class="modal-button-wrapper">
             <div class="buttons">
                 <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.cancelReserveModal.closeModal()">닫기</button>
-                <button class="btn btn--size-32 btn--blue" @click="handleSaveCancel">예약 취소</button>
+                <button class="btn btn--size-32 btn--blue" @click="handleSaveCancel">저장</button>
+            </div>
+        </div>
+    </Modal>
+    
+    <!-- 고객 예약 정보 > 예약 확정 모달 -->
+    <Modal 
+        v-if="modalStore.confirmReserveModal.isVisible"
+        title="예약 확정" 
+        size="xs"
+        :modal-state="modalStore.confirmReserveModal"
+    >
+        <div class="modal-contents-inner">
+            <div class="d-flex flex-col gap-16">
+                <span class="body-m">예약을 확정하시겠습니까?</span>
+                
+                <label class="checkbox">
+                    <input type="checkbox" v-model="sendNotification" />
+                    <span class="box"></span>
+                    <span class="label">고객에게 예약 확정 알림 발송</span>
+                </label>
+            </div>
+        </div>
+        <div class="modal-button-wrapper">
+            <div class="buttons">
+                <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.confirmReserveModal.closeModal()">닫기</button>
+                <button class="btn btn--size-32 btn--blue" @click="handleConfirmReservationSave">예약 확정</button>
             </div>
         </div>
     </Modal>

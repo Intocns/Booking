@@ -10,11 +10,10 @@ import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
-import SearchCustomer from '@/components/common/modal-content/SearchCustomer.vue';
 
 import { formatDate } from "@/utils/dateFormatter";
 import { RESERVE_STATUS_OPTIONS, RESERVE_ROUTE_OPTIONS } from "@/utils/reservation";
-import { startOfDay } from "date-fns";
+import { startOfDay, subDays } from "date-fns";
 
 import { onMounted, ref, computed } from 'vue';
 // 스토어
@@ -124,8 +123,10 @@ const searchClear = () => { //초기화 버튼
     doctorList.value = ['all'];
     reservationChannel.value = ['all'];
     keyword.value = '';
+    // 기본값 7일 범위로 설정 (오늘 기준 7일 전 ~ 오늘)
     const today = startOfDay(new Date());
-    dateRange.value = [today, today];
+    const sevenDaysAgo = subDays(today, 7);
+    dateRange.value = [sevenDaysAgo, today];
 };
 
 onMounted(async () => {
@@ -229,7 +230,7 @@ const handelReserveDetail = (reserveIdx) => {
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >
-        <ReserveInfo />
+        <ReserveInfo @refresh-list="searchList" />
     </Modal>
 
     <!-- 문자 발송 모달 -->

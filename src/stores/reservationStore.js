@@ -40,7 +40,7 @@ export const useReservationStore = defineStore("reservation", () => {
         // const cocode = params.cocode || '2592' // TODO: 임시 병원 코드 추후삭제
          try {
             const response = await api.post(`/api/${cocode}/reserve/list`, params);
-            if(response.status == 200){
+            if(response.status <= 300){
                 console.log(response);
                 let data = response.data.data;
                 reserveList.value = data.list.map(mapReserveRow);
@@ -55,7 +55,7 @@ export const useReservationStore = defineStore("reservation", () => {
     async function getReserveCount() {
         const response = await api.get(`/api/${cocode}/reserve/cnt`);
 
-        if(response.status == 200) {
+        if(response.status <= 300) {
             // console.log(response);
             let data = response.data.data;
             reserveCount.value = data;
@@ -66,7 +66,7 @@ export const useReservationStore = defineStore("reservation", () => {
     async function getPendingList(params) {
         const response = await api.get(`/api/${cocode}/reserve/pendinglist`, {params: params});
 
-        if(response.status == 200) {
+        if(response.status <= 300) {
             // console.log(response)
             let data = response.data.data;
             reservePendingList.value = data.map(mapReserveRow);
@@ -77,7 +77,7 @@ export const useReservationStore = defineStore("reservation", () => {
     async function getReserveSchedule(params) {
         try {
             const response = await api.post(`/api/${cocode}/reserve/sche`, params)
-            if(response.status == 200) {
+            if(response.status <= 300) {
                 let data = response.data.data;
 
                 const processedData = data.map((item, idx) => ({
@@ -98,8 +98,8 @@ export const useReservationStore = defineStore("reservation", () => {
     async function getReserveInfo(reserveIdx) {
         try {
             const response = await api.get(`/api/${cocode}/reserve/${reserveIdx}/cm`)
-            if(response.status == 200) {
-                if(response.data.status_code == 200) {
+            if(response.status <= 300) {
+                if(response.data.status_code <= 300) {
                     let data = response.data.data
                     reserveInfo.value = data;
                     modalStore.reserveInfoModal.openModal(reserveInfo.value)
@@ -118,8 +118,8 @@ export const useReservationStore = defineStore("reservation", () => {
     async function searchClientMapping(searchData) {
         try {
             const response = await api.post(`/api/${cocode}/reserve/search`, searchData);
-            if(response.status == 200) {
-                if(response.data.status_code == 200) {
+            if(response.status <= 300) {
+                if(response.data.status_code <= 300) {
                     return response.data.data;
                 } else {
                     alert(response.data.message || '검색 중 오류가 발생했습니다.');
@@ -131,6 +131,44 @@ export const useReservationStore = defineStore("reservation", () => {
             console.error('고객 검색 오류:', error);
             alert('고객 검색 중 오류가 발생했습니다.');
             return [];
+        }
+    }
+
+    // 예약 확정
+    async function confirmReservation(reserveIdx, confirmData) {
+        try {
+            const response = await api.post(`/api/${cocode}/reserve/${reserveIdx}/set`, confirmData);
+            
+            if(response.status <= 300 && response.data?.status_code <= 300) {
+                return { success: true, data: response.data.data || null };
+            }
+            
+            return { 
+                success: false, 
+                message: response.data?.message || '예약 확정 중 오류가 발생했습니다.' 
+            };
+        } catch (error) {
+            console.error('예약 확정 오류:', error);
+            return { success: false, message: '예약 확정 중 오류가 발생했습니다.' };
+        }
+    }
+
+    // 예약 취소
+    async function cancelReservation(reserveIdx, cancelData) {
+        try {
+            const response = await api.post(`/api/${cocode}/reserve/${reserveIdx}/reject`, cancelData);
+            
+            if(response.status <= 300 && response.data?.status_code <= 300) {
+                return { success: true, data: response.data.data || null };
+            }
+            
+            return { 
+                success: false, 
+                message: response.data?.message || '예약 취소 중 오류가 발생했습니다.' 
+            };
+        } catch (error) {
+            console.error('예약 취소 오류:', error);
+            return { success: false, message: '예약 취소 중 오류가 발생했습니다.' };
         }
     }
 
@@ -148,5 +186,7 @@ export const useReservationStore = defineStore("reservation", () => {
         getReserveSchedule, // 예약 일정 불러오기
         getReserveInfo,
         searchClientMapping, // 고객 검색
+        confirmReservation, // 예약 확정
+        cancelReservation, // 예약 취소
     };
 });

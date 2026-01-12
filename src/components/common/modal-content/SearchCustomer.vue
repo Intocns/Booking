@@ -6,6 +6,10 @@ import InputTextBox from '@/components/common/InputTextBox.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
 import { useReservationStore } from '@/stores/reservationStore';
 import { PET_GENDER_MAP } from '@/utils/reservation';
+import { useModalStore } from '@/stores/modalStore';
+
+const emit = defineEmits(['customer-selected']);
+const modalStore = useModalStore();
 
 const reservationStore = useReservationStore();
 
@@ -105,6 +109,28 @@ const handleKeyPress = (event) => {
     }
 };
 
+// 선택된 고객 (매칭된 고객)
+const selectedCustomer = computed(() => {
+    return customerList.value.find(item => item.isMatched) || null;
+});
+
+// 선택 동물로 접수 버튼 클릭
+const handleSelectPet = () => {
+    if (!selectedCustomer.value) {
+        return;
+    }
+    
+    // 부모 컴포넌트에 선택한 고객 정보 전달
+    emit('customer-selected', selectedCustomer.value);
+};
+
+// 신규 동물 등록 버튼 클릭
+const handleNewPetRegistration = () => {
+    // 고객 검색 모달 닫기 (신규 등록은 예약 확정 시 처리)
+    modalStore.searchCustomerModal.closeModal();
+    // TODO: 신규 동물 등록 로직 (필요시 추가)
+};
+
 // 고객 테이블 col 정의
 const customerColumns = [
     { key: 'userNo', label: '고객번호', width: '8%' },
@@ -180,8 +206,19 @@ const customerColumns = [
     <!-- 버튼 -->
     <div class="modal-button-wrapper">
         <div class="buttons">
-            <button class="btn btn--size-40 btn--blue-outline">신규 동물 등록</button>
-            <button class="btn btn--size-40 btn--blue">선택 동물로 접수</button>
+            <button 
+                class="btn btn--size-40 btn--blue-outline"
+                @click="handleNewPetRegistration"
+            >
+                신규 동물 등록
+            </button>
+            <button 
+                class="btn btn--size-40 btn--blue"
+                @click="handleSelectPet"
+                :disabled="!selectedCustomer"
+            >
+                선택 동물로 접수
+            </button>
         </div>
     </div>
 </template>

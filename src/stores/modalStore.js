@@ -34,6 +34,7 @@ export const useModalStore = defineStore("modalStore", () => {
     const reserveInfoModal = createModalState(); // 예약 정보
     const searchCustomerModal = createModalState(); // 예약 정보 > 고객검색
     const cancelReserveModal = createModalState(); // 예약 정보  > 예약 취소
+    const confirmReserveModal = createModalState(); // 예약 정보 > 예약 확정
 
     // 옵션 관리
     const categorySettingModal = createModalState('카테고리 관리'); // 옵션관리 > 카테고리 관리 
@@ -66,6 +67,7 @@ export const useModalStore = defineStore("modalStore", () => {
         reserveInfoModal,
         searchCustomerModal,
         cancelReserveModal,
+        confirmReserveModal,
         // 옵션관리
         categorySettingModal,
         optionSettingModal,
