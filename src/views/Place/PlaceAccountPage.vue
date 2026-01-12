@@ -67,13 +67,13 @@ const hasNaverAccount = ref(false); // TODO: 네이버 계정 연동 값 임시
                     <div class="form-row">
                         <label class="form-row__label title-s">네이버 ID</label>
                         <div class="form-row__input">
-                            <InputTextBox disabled="true" />
+                            <InputTextBox :disabled="true"  />
                         </div>
                     </div>
                     <div class="form-row">
                         <label class="form-row__label title-s">네이버 스마트 플레이스 비즈니스 ID</label>
                         <div class="form-row__input">
-                            <InputTextBox disabled="true" />
+                            <InputTextBox :disabled="true" />
                         </div>
                     </div>
                 </section>

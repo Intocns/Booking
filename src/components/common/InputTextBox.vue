@@ -241,7 +241,8 @@ const showClearIcon = computed(() => {
 
     &__bottom {
         display: flex;
-        align-items: center;
+        gap: 5px;
+        align-items: flex-start;
         justify-content: space-between;
 
         padding: 0 10px;
@@ -254,13 +255,15 @@ const showClearIcon = computed(() => {
 
             // 에러 상태일 때 메시지 빨갛게
             &.--error {
+                flex:2;
                 color: $warning-500; // 혹은 $red-500
             }
         }
     }
 
     &__char-count {
-        align-self: flex-end; // 오른쪽 하단에 위치
+        flex: 1;
+        text-align: right;
         margin-top: 4px;
         
         @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line);

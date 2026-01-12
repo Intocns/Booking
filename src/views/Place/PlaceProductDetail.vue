@@ -26,6 +26,7 @@ const handleNextStep = (nextTab, bizItemId) => {
 
 // 미리보기에 노출할 데이터 통합 관리
 const previewData = reactive({
+    mainImage: '', // 대표이미지
     name: '',    // 상품명
     desc: '',    // 상품소개
     details: [],  // 상세 설명 리스트
@@ -81,6 +82,7 @@ const previewData = reactive({
                         v-model:preview-notice="previewData.notice"
                         :saved-item-id="''"
                         @update:next-tab="handleNextStep"
+                        @update:preview-main-image="previewData.mainImage = $event"
                     />
                 </keep-alive>
             </div>

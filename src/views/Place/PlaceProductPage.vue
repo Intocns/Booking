@@ -382,6 +382,7 @@ onMounted(async () => {
         v-if="modalStore.productInfoUpdateAllModal.isVisible"
         title="정보 일괄 변경"
         :modal-state="modalStore.productInfoUpdateAllModal"
+        modal-width="400px"
     >
         <ProductInfoUpdateAll />
     </Modal>

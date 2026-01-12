@@ -69,7 +69,8 @@ const emit = defineEmits([
     'update:previewDesc', 
     'update:previewDetails', 
     'update:previewNotice',
-    'update:nextTab'
+    'update:nextTab',
+    'update:previewMainImage'
 ]);
 
 // 상품 관련 입력 항목
@@ -92,6 +93,44 @@ watch(() => basicInput.value.name, (newVal) => emit('update:previewName', newVal
 watch(() => basicInput.value.desc, (newVal) => emit('update:previewDesc', newVal));
 watch(detailList, (newVal) => emit('update:previewDetails', newVal), { deep: true });
 watch(() => basicInput.value.bookingPrecautionJson[0].desc, (newVal) => {emit('update:previewNotice', newVal);});
+
+/**
+ * 메인 상품 사진 업로드 핸들러
+ */
+const handleMainImageUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+
+    try {
+        for (const file of files) {
+            const uploadedUrl = await uploadImage(file);
+            if (uploadedUrl) {
+                basicInput.value.imageUrls.push(uploadedUrl);
+            }
+        }
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        event.target.value = '';
+    }
+};
+
+/**
+ * 메인 상품 사진 삭제
+ */
+const removeMainImage = (index) => {
+    basicInput.value.imageUrls.splice(index, 1);
+};
+
+// 첫 번째 이미지를 대표 이미지로 추출하는 computed
+const representImage = computed(() => {
+    return basicInput.value.imageUrls.length > 0 ? basicInput.value.imageUrls[0] : '';
+});
+
+// 대표 이미지가 바뀔 때마다 부모(미리보기)에게 알림
+watch(representImage, (newImg) => {
+    emit('update:previewMainImage', newImg); 
+}, { deep: true });
 
 // 담당의 선택 시 basicInput 업데이트
 watch(selectedDoctor, (newId) => {
@@ -315,6 +354,11 @@ const setInputData = (async() => {
     //상세 설명 추가 세팅
     detailList.value = basicInput.value.extraDescJson;
 
+    // 로드된 첫 번째 이미지를 부모에게 즉시 전달
+    if (basicInput.value.imageUrls.length > 0) {
+        emit('update:previewMainImage', basicInput.value.imageUrls[0]);
+    }
+
     //담당의 세팅
     doctorAssignType.value = (basicInput.value.doctorId == "") ? "assign" : "select";
     selectedDoctor.value = basicInput.value.doctorId??"";
@@ -369,20 +413,25 @@ onMounted(async() => {
                             hidden 
                             multiple 
                             accept="image/*"
+                            @change="handleMainImageUpload"
                         >
                         <img :src="icAddBtn" alt="추가" class="icon-plus" width="32">
                     </label>
 
-                    <div class="photo-upload__item">
-                        <img src="" alt="업로드 이미지" class="preview-img"> 
+                    <div
+                        v-for="(imgUrl, index) in basicInput.imageUrls" 
+                        :key="index"
+                        class="photo-upload__item"
+                    >
+                        <img :src="imgUrl" alt="상품 이미지" class="preview-img">
                         <!-- 드래그핸들 -->
                         <div class="drag-handle"><img :src="icDragHandel" alt="드래그아이콘"></div>
                         <!-- 삭제 버튼 -->
-                        <button class="delete-btn">
+                        <button class="delete-btn" @click="removeMainImage(index)">
                             <img :src="icClear" alt="삭제" width="20">
                         </button>
                         <!-- 대표 이미지의 경우 -->
-                        <div class="main-badge">
+                        <div v-if="index === 0" class="main-badge">
                             <span class="caption">대표이미지</span>
                         </div>
                     </div>
@@ -455,7 +504,7 @@ onMounted(async() => {
                             </div>
 
                             <div v-if="!item.images || item.images.length < 3" class="detail-item__media-group">
-                                <div class="photo-upload-single">
+                                <div>
                                     <label class="photo-upload__btn">
                                         <input 
                                             type="file" 
@@ -599,6 +648,7 @@ onMounted(async() => {
                     position: relative;
 
                     border-radius: 4px;
+                    border: 1px solid $gray-200;
                     display: flex;
                     align-items: center;
                     justify-content: center;

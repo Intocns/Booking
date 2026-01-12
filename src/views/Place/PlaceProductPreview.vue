@@ -26,7 +26,8 @@ const props = defineProps({
                         <p class="product-summary">{{ previewData.desc }}</p>
                     </div>
                     <div class="header-image">
-                        <img :src="icImg" alt="이미지" class="img-ic">
+                        <img v-if="previewData.mainImage" class="img-obj" :src="previewData.mainImage" alt="대표이미지">
+                        <img v-else :src="icImg" alt="이미지" class="img-ic">
                     </div>
                 </div>
 

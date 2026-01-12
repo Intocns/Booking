@@ -19,6 +19,7 @@ const itemId = ref(route.params.id);
 
 // 미리보기 데이터 통합 관리
 const previewData = reactive({
+    mainImage: '', // 대표이미지
     name: '',
     desc: '',
     details: [],
@@ -71,6 +72,7 @@ const previewData = reactive({
                         v-model:preview-notice="previewData.notice"
                         :saved-item-id="itemId"
                         :view-type="'update'"
+                        @update:preview-main-image="previewData.mainImage = $event"
                     />
                 </keep-alive>
             </div>
