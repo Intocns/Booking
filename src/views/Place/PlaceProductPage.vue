@@ -109,7 +109,27 @@ const clickProductImpUpdateBtn = (async(itemId, isImp) => {
     }
 })
 // 상품별 일괄 노출/미노출 체크 변경
-const clickTotalProductImpUpdateBtn = (async(isImp) => {
+const clickTotalProductImpUpdateBtn = (isImp) => {
+    modalStore.productVisibleUpdateModal.closeModal();
+
+    const config = isImp === 1 
+        ? { title: '전체상품 노출', text: '전체 상품을 노출 하시겠습니까?', subText: '노출된 상품은 고객이 직접 예약할 수 있습니다.', btn: '노출' }
+        : { title: '전체상품 미노출', text: '전체 상품을 미노출 하시겠습니까?', subText: '미노출된 상품은 예약할 수 없습니다.', btn: '미노출' };
+
+    
+    modalStore.confirmModal.openModal({
+        title: config.title,
+        text: config.text,
+        subText: config.subText,
+        confirmBtnText: config.btn,
+        onConfirm: () => {
+            totalProductImpUpdate(isImp);
+        }
+    });
+    
+}
+// 노출/미노출 체크 변경 
+const totalProductImpUpdate = (async(isImp) => {
     let params = [];
 
     dragList.value.forEach((item, key)  => {
@@ -370,7 +390,7 @@ onMounted(async () => {
                     </label>
                     <label class="segment">
                         <input type="radio" name="visibleStatus" @click="clickTotalProductImpUpdateBtn(0)"/>
-                        <span class="label">비노출</span>
+                        <span class="label">미노출</span>
                     </label>
                 </div>
             </div>
