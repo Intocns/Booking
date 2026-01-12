@@ -11,12 +11,14 @@ import icPlus from '@/assets/icons/ic_plus_blue.svg'
 import icClear from '@/assets/icons/ic_clear.svg'
 import icAddBtn from '@/assets/icons/ic_add_btn.svg'
 import icDragHandel from '@/assets/icons/ic_drag_handel.svg'
+import icDel from '@/assets/icons/ic_del.svg'
 
 import { useProductStore } from '@/stores/productStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
 import { useModalStore } from '@/stores/modalStore';
 import { parseJSON } from 'date-fns';
 import { useRouter } from 'vue-router';
+import { uploadImage } from '@/utils/fileUpload';
 
 const productStore = useProductStore();
 const hospitalStore = useHospitalStore();
@@ -120,13 +122,55 @@ const addDetailItem = () => {
     detailList.value.push({
         title: '',
         context: '',
-        images: null
+        images: [],
     });
 };
 
 // 항목 삭제 함수 (임시로 넣음)
 const removeDetailItem = (index) => {
     detailList.value.splice(index, 1);
+};
+
+/**
+ * 상세 설명 항목의 이미지 업로드 핸들러
+ */
+const handleDetailImageUpload = async (event, itemIndex) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // 최대 3장
+    if (detailList.value[itemIndex].images && detailList.value[itemIndex].images.length >= 3) {
+        alert('이미지는 최대 3장까지 추가할 수 있습니다.');
+        event.target.value = '';
+        return;
+    }
+
+    try {
+        const uploadedUrl = await uploadImage(file);
+
+        if (uploadedUrl) {
+            // 3. 해당 항목의 images 배열이 없으면 초기화 후 push
+            if (!detailList.value[itemIndex].images) {
+                detailList.value[itemIndex].images = [];
+            }
+            
+            detailList.value[itemIndex].images.push({
+                src: uploadedUrl, // 서버에서 받은 주소
+                url: '' // 사용자가 입력할 연결 URL(선택사항)
+            });
+        }
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        event.target.value = ''; // 같은 파일 재업로드 가능하게 초기화
+    }
+};
+
+/**
+ * 상세 설명 이미지 삭제
+ */
+const removeDetailImage = (itemIndex, imgIndex) => {
+    detailList.value[itemIndex].images.splice(imgIndex, 1);
 };
 
 // 다음 버튼 클릭 -> 저장 및 다음 페이지(예약 정보 페이지로 이동)
@@ -374,9 +418,14 @@ onMounted(async() => {
                 <div class="detail-item-list">
                     <div v-for="(item, index) in detailList" :key="index" class="detail-item">
                         
-                        <button class="detail-item__remove-btn" @click="removeDetailItem(index)" v-if="detailList.length > 0">
-                            <img :src="icClear" alt="항목 삭제" width="16">
-                        </button>
+                        <div class="detail-item__remove-btn">
+                            <button 
+                                class="btn btn--size-24 btn--black-outline" 
+                                @click="removeDetailItem(index)" 
+                            >
+                                <img :src="icDel" alt="항목 삭제" width="16">항목 삭제
+                            </button>
+                        </div>
 
                         <div class="detail-item__fields">
                             <InputTextBox 
@@ -390,13 +439,33 @@ onMounted(async() => {
                                 :max-length="1000" 
                             />
 
-                            <div class="detail-item__media-group">
+                            <div v-for="(image, imgIndex) in item.images" :key="imgIndex" class="detail-item__media-group">
+                                <div class="photo-upload-single">
+                                    <img :src="image.src" alt="상세 이미지">
+                                    <button class="img-del-btn" @click="removeDetailImage(index, imgIndex)">
+                                        <img :src="icClear" alt="삭제" width="20">
+                                    </button>
+                                </div>
+
+                                <InputTextBox 
+                                    v-model="image.url"
+                                    class="url-input"
+                                    placeholder="연결 URL 입력(선택)" 
+                                />
+                            </div>
+
+                            <div v-if="!item.images || item.images.length < 3" class="detail-item__media-group">
                                 <div class="photo-upload-single">
                                     <label class="photo-upload__btn">
-                                        <input type="file" hidden accept="image/*">
+                                        <input 
+                                            type="file" 
+                                            hidden 
+                                            accept="image/*"
+                                            @change="handleDetailImageUpload($event, index)"
+                                        >
                                         <img :src="icAddBtn" alt="추가" width="24">
                                     </label>
-                                    </div>
+                                </div>
 
                                 <InputTextBox 
                                     v-model="item.url"
@@ -526,12 +595,20 @@ onMounted(async() => {
                     flex-shrink: 0;
                     width: 96px;
                     height: 96px;
+                    overflow: hidden;
+                    position: relative;
 
                     border-radius: 4px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     background-color: #fff;
+
+                    .img-del-btn {
+                        position: absolute;
+                        top: 0;
+                        right: 0;
+                    }
                 }
 
                 .url-input {

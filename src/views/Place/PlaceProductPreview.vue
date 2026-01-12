@@ -31,10 +31,16 @@ const props = defineProps({
                 </div>
 
                 <div class="preview-card__body">
-                    <p v-if="previewData.details.length > 0" class="title-l">상세정보</p>
-                    <div v-for="(item, idx) in previewData.details.slice(0, 3)" :key="idx" class="detail-row">
+                    <div v-for="(item, idx) in previewData.details" :key="idx" class="detail-row">
+                        <p class="title-l">상세정보</p>
                         <span class="detail-label">{{ item.title }}</span>
                         <p class="detail-value">{{ item.context }}</p>
+
+                        <div class="detail-image-wrapper">
+                            <div v-for="(image, imageIndex) in item.images" :key="imageIndex" class="detail-image">
+                                <img :src="image.src" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -71,6 +77,7 @@ const props = defineProps({
         display: flex;
         flex-direction: column;
         gap: 12px;
+        overflow-y: auto;
 
         .preview-card {
             padding: 24px;
@@ -121,7 +128,7 @@ const props = defineProps({
 
             // 바디: Key-Value 리스트
             &__body {
-                margin-top: 20px;
+                // margin-top: 20px;
 
                 .detail-row {
                     padding: 16px 0;
@@ -129,6 +136,7 @@ const props = defineProps({
                     
                     .detail-label {
                         display: block;
+                        margin-top: 8px;
                         margin-bottom: 2px;
 
                         @include typo($body-l-size, $body-l-weight, $body-l-spacing, $body-l-line);
@@ -138,6 +146,24 @@ const props = defineProps({
                         @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
                         color: $gray-500;
                         white-space: pre-wrap;
+                    }
+                    .detail-image-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        margin-top: 16px;
+                    }
+                    .detail-image {
+                        width: 250px;
+                        height: 250px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        overflow: hidden;
+
+                        img {
+                            width: 100%;
+                        }
                     }
                 }
             }

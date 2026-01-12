@@ -16,6 +16,7 @@ import { useProductStore } from '@/stores/productStore';
 import { ref, watch, computed } from 'vue';
 import { getFieldError } from '@/utils/common'
 import { api } from '@/api/axios'
+import { uploadImage } from '@/utils/fileUpload'
 
 const modalStore = useModalStore();
 const productStore = useProductStore();
@@ -80,40 +81,32 @@ const isCheckedAll = (checked) => {
  * 이미지 추가 핸들러
  */
 const handleImageUpload = async (event, itemIndex) => {
-    const files = Array.from(event.target.files);
-    
-    if (!files.length) return;
-    
-    // ---- 이미지 업로드api test
-    const formData = new FormData();
-    formData.append('image', files[0]);
+    const file = event.target.files[0]; 
+
+    if (!file) return;
+
+    const currentImages = additionalItems.value[itemIndex].images;
+    if (currentImages && currentImages.length >= 3) {
+        alert('이미지는 항목당 최대 3장까지 추가할 수 있습니다.');
+        event.target.value = ''; // input 초기화
+        return;
+    }
 
     try {
-
-        const response = await api.post('/api/add/img', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        console.log(response);
-    } catch {
-
+        const uploadedUrl = await uploadImage(file);
+        if (uploadedUrl) {
+            additionalItems.value[itemIndex].images.push({
+                url: '',
+                src: uploadedUrl,
+                // file: file,
+                // originalName: file.name
+            });
+        }
+    } catch (error) {
+        alert(error.message);
     }
-    // ---- 이미지 업로드api test
 
-    files.forEach(file => {
-        // 미리보기용 임시 URL 생성
-        const imageUrl = URL.createObjectURL(file);
-        
-        // 해당 섹션의 images 배열 마지막에 추가
-        additionalItems.value[itemIndex].images.push({
-            file: file, // 서버 전송 시 필요
-            url: imageUrl // 미리보기용
-        });
-    });
-
-    // 동일한 파일 재업로드 가능하도록 input 초기화
-    event.target.value = '';
+    event.target.value = ''; // 초기화
 };
 // 사진 삭제 (예시)
 const removeImage = (itemIndex, imgIndex) => {
@@ -290,11 +283,10 @@ const selectedCount = computed(() => {
                         <div class="photo-upload">
                             <p class="photo-upload__title title-s">사진 추가</p>
                             <div class="photo-upload__grid">
-                                <label class="photo-upload__btn">
+                                <label v-if="item.images.length < 3" class="photo-upload__btn">
                                     <input 
                                         type="file" 
                                         hidden 
-                                        multiple 
                                         accept="image/*"
                                         @change="handleImageUpload($event, index)"
                                     >
@@ -302,7 +294,7 @@ const selectedCount = computed(() => {
                                 </label>
 
                                 <div v-for="(img, imgIdx) in item.images" :key="imgIdx" class="photo-upload__item">
-                                    <img :src="img.url" alt="업로드 이미지" class="preview-img">
+                                    <img :src="img.src" alt="업로드 이미지" class="preview-img">
                                     <button class="delete-btn" @click="removeImage(index, imgIdx)">
                                         <img :src="icClear" alt="삭제" width="20">
                                     </button>
