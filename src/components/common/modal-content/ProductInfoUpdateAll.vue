@@ -154,7 +154,7 @@ const eventSave = (async() => {
     let params = {
         "bizItemIds" : itemList,
         "desc" : updateItemDesc.value.desc,
-        "bookingPrecautionJson" : updateItemDesc.value.bookingPrecautionJson,
+        "bookingPrecautionJson" : [updateItemDesc.value.bookingPrecautionJson],
         "extraDescJson" : additionalItems.value
     };
 
