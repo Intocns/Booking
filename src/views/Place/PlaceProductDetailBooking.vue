@@ -9,6 +9,9 @@ import HolidayForm from './HolidayForm.vue';
 import icPlus from '@/assets/icons/ic_plus_black.svg';
 import icDel from '@/assets/icons/ic_del.svg';
 
+//공통함수
+import { dateViewFormat } from '@/utils/common'
+
 // 예약 가능 동물 수 (임시 1~10)
 const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
 
@@ -58,9 +61,75 @@ const removeEventPeriod = (idx) => {
     periodConfigs.value.splice(idx, 1);
 };
 
+//저장 전 일정 계산
+const setScheduleForSave = () => {
+    let scheduleInfo = [];
+
+    //선택한 운영일자에 따른 데이터가 저장된 객체 선택
+    const selectedArr = (scheduleMode.value === 'regular' || (scheduleMode.value === 'event' && applyMode.value === 'all')) 
+                        ? [regularConfig.value] : periodConfigs.value;
+
+    //기간 만큼 생성
+    scheduleInfo = eventDates.value.flatMap((event, idx) =>
+                        calOperatingObject(event, selectedArr[idx], idx)
+                    )
+    
+    return scheduleInfo;
+}
+
+//운영일정, 운영시간 계산 작업
+const calOperatingObject = (event, object, idx) => {
+    //평일/주말 구분 리스트
+    const weekdaysList = {
+        'sat' : ['sat'],
+        'sun' : ['sun'],
+        'weekend' : ['sat', 'sun'],
+        'weekday' : ['mon','tue','wed','thu','fri'],
+        'all' : ['mon','tue','wed','thu','fri','sat','sun']
+    }
+
+    //공통 return 데이터
+    const baseSchedule = {
+        startDate: event?.[0] ?? null,
+        endDate: event?.[1] ?? null,
+        isBasicSchedule: scheduleMode.value !== 'event',
+    };
+
+    //운영 시간 라디오 버튼 선택에 따른 분기처리
+    switch(object.operatingMode){
+        case 'all' : //모든 영업일 동일
+            return {
+                ...baseSchedule,
+                weekdays : weekdaysList['all'],
+                time : object.allDaysTime
+            };
+        case 'split' : //평일/주말 운영 시간 구분
+            return Object.entries(object.splitTime)
+            .filter(([key]) => 
+                (object.splitMode === 'weekend_all' && ['weekday','weekend'].includes(key)) ||
+                (object.splitMode === 'weekend_split' && ['weekday','sat','sun'].includes(key))
+            ).map(([key,data]) => ({
+                ...baseSchedule,
+                weekdays: weekdaysList[key],
+                time: data,
+            }));
+        case 'daily' : //요일별 설정
+            return Object.values(object.dailyGroups).map(data => ({
+                ...baseSchedule,
+                weekdays : data.selectedDays,
+                time : data.times
+            }));
+        default : 
+            return false;
+    }
+}
+
 // 다음 버튼
 const clickNextBtn = () => {
-    emit('update:nextTab', 'option');
+    const scheduleInfo = setScheduleForSave();
+    console.log(scheduleInfo);
+
+    // emit('update:nextTab', 'option');//다음 페이지 이동
 }
 </script>
 
@@ -111,7 +180,7 @@ const clickNextBtn = () => {
                     <div v-for="(date, idx) in eventDates" :key="idx" class="d-flex align-center gap-8">
                         <div class="d-flex align-center gap-8">
                             <span class="title-s">기간</span>
-                            <CustomDatePicker />
+                            <CustomDatePicker v-model="eventDates[idx]" />
                         </div>
 
                         <button 
@@ -171,7 +240,7 @@ const clickNextBtn = () => {
                         class="d-flex flex-col gap-8 period-item"
                     >
                         <!-- TODO: 기간 선택한 값으로 날짜 보여주어야함 -->
-                        <div class="title-s">기간 {{ idx + 1 }}</div>
+                        <div class="title-s"> {{ dateViewFormat(eventDates[idx][0]) }} ~ {{ dateViewFormat(eventDates[idx][1]) }}</div>
                         <OperatingTimeForm v-model="periodConfigs[idx]" :idx="idx" />
                     </div>
                 </div>

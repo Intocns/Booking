@@ -28,3 +28,22 @@ export const getFieldError = (value, min, max) => {
 
     return { isError: false, message: '' };
 };
+
+export const dateViewFormat = (value) => {
+    const date = new Date(value);
+
+    if (isNaN(date.getTime())) {
+        return ''; // 유효하지 않은 날짜
+    }
+
+    const formatter = new Intl.DateTimeFormat('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        weekday: 'short',
+    });
+
+    const parts = formatter.formatToParts(date);
+
+    return `${parts[0].value}.${parts[2].value}.${parts[4].value}(${parts[6].value})`;
+};
