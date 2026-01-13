@@ -102,6 +102,19 @@ export const useProductStore = defineStore("product", () => {
             alert('처리 중 오류가 발생했습니다.');
         }
     }
+    
+    // 상품 복사
+    const copyItem = async(itemId, params) => {
+        try {
+            const response = await api.post(`/api/${cocode}/item/add/${itemId}/cp`, params);
+
+            if(response.data.status_code <= 300) {
+                await getProductList();
+            }
+        } catch {
+            alert('처리 중 오류가 발생했습니다.');
+        }
+    }
 
     //상품 등록
     async function addItem(params) {
@@ -386,6 +399,7 @@ export const useProductStore = defineStore("product", () => {
         getItemRoomList,
         getLinkItemInfo,
         delItem,
+        copyItem,
         addItem,
         modifyItem,
         getItemDetailInfo,
