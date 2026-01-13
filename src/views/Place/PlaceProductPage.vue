@@ -37,7 +37,7 @@ const dragList = ref([...productStore.productList])
 const isCheckImpType = ref(false) // 미노출 제외 체크 값
 const itemOrderList = ref([...productStore.productList])
 const copyProductName = ref(''); // 상품 복사 모달 > 복사할 새 상품명
-const currentCopyIdx = ref(null); // 상품 복사 모달 > 현재 복사 대상 상품의 ID(idx)
+const currentCopyId = ref(null); // 상품 복사 모달 > 현재 복사 대상 상품의 ID(idx)
 const copyOptionBooking = ref(1) // 상품 복사 모달 > 복사 옵션 예약정보
 const copyOptionItem = ref(1) // 상품 복사 모달 > 복사 옵션 기본정보
 const importIntoPetRoomIdx = ref(null) // 인투펫 진료실 불러오기 > 불러올 진료실 idx
@@ -209,8 +209,8 @@ const clickDeleteItem = ((itemName, itemId) => {
 })
 
 // 상품 복사 버튼 클릭 이벤트
-const clickCopyItem = ((idx) => {
-    currentCopyIdx.value = idx; // 대상 idx 저장
+const clickCopyItem = ((id) => {
+    currentCopyId.value = id; // 대상 id 저장
     copyProductName.value = ''; // 상품명 입력필드 초기화
     copyOptionItem.value = 1; // 열 때마다 초기화
     copyOptionBooking.value = 1;
@@ -241,21 +241,19 @@ const submitCopyItem = () => {
     }
 
     // 3. 복사 옵션 선택 확인 (둘 다 체크 해제된 경우)
-    if (copyOptionItem.value === 0 && copyOptionBooking.value === 0) {
+    if (copyOptionItem.value == 0 && copyOptionBooking.value == 0) {
         alert('복사할 정보(기본 정보 또는 예약 정보)를 최소 하나 이상 선택해주세요.');
         return;
     }
 
-    // 콘솔에 데이터 출력
-    console.log('--- 상품 복사 실행 데이터 ---');
-    console.log('대상 상품 IDX:', currentCopyIdx.value);
-    console.log('새 상품명:', copyProductName.value);
-    console.log('기본정보 복사 여부:', copyOptionItem.value);
-    console.log('예약정보 복사 여부:', copyOptionBooking.value);
-    
-    // 이후 로직 (API 호출 등)
-    // alert('복사가 완료되었습니다.');
-    // modalStore.productCopyModal.closeModal();
+    const params = {
+        'itemName': copyProductName.value,
+        'bookingYn': copyOptionBooking.value == 1 ? 'y' : 'n',
+        'itemYn': copyOptionItem.value == 1 ? 'y' : 'n',
+    }
+
+    productStore.copyItem(currentCopyId.value, params)
+    modalStore.productCopyModal.closeModal(); 
 };
 
 onMounted(async () => {
@@ -341,7 +339,7 @@ onMounted(async () => {
                 <div class="bottom">
                     <div class="d-flex gap-16">
                         <button title="수정" @click="goProductDetail(product.bizItemId)"><img :src="icEdit" alt="수정아이콘" width="16"></button>
-                        <button title="복사" @click="clickCopyItem(product.idx)"><img :src="icCopy" alt="복사아이콘"></button>
+                        <button title="복사" @click="clickCopyItem(product.bizItemId)"><img :src="icCopy" alt="복사아이콘"></button>
                         <button title="삭제" @click="clickDeleteItem(product.name, product.bizItemId)"><img :src="icDel" alt="삭제 아이콘"></button>
                     </div>
 
