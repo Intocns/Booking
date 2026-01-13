@@ -773,7 +773,7 @@ watch(() => cancelReasonType.value, (newVal) => {
         <div class="d-flex flex-col gap-6 customer-info-section">
             <!-- 조회 결과가 1건인 경우: 고객 정보와 동물 정보를 별도 섹션으로 표시 -->
             <template v-if="isSingleResult">
-                <!-- 타이틀 -->
+                <!-- 타이틀 --> 
                 <div class="modal-content-title-wrapper">
                     <div class="d-flex gap-4 align-items-center">
                         <p class="title-l">고객 정보</p>
@@ -794,164 +794,98 @@ watch(() => cancelReasonType.value, (newVal) => {
 
                 <div class="info-lists-wrapper">
                     <!-- 고객 정보 (왼쪽) - 테이블 형태 -->
-                    <div class="customer-info-table">
-                        <table class="customer-info-table-inner">
-                            <tbody>
-                                <tr>
-                                    <td class="label-cell">고객번호</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singleCustomerData?.userNo || ''"
-                                            :disabled="true"
-                                            placeholder="고객번호"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="label-cell">고객명</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singleCustomerData?.userName || ''"
-                                            :disabled="true"
-                                            placeholder="고객명"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="label-cell">연락처</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singleCustomerData?.userTel || ''"
-                                            :disabled="true"
-                                            placeholder="연락처"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="label-cell">주소</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singleCustomerData?.userAddr || ''"
-                                            :disabled="true"
-                                            placeholder="주소"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="label-cell">상세주소</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singleCustomerData?.userAddr2 || ''"
-                                            :disabled="true"
-                                            placeholder="상세주소"
-                                        />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <ul class="form-container">
+                        <li class="form-item">
+                            <div class="form-label">고객번호</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singleCustomerData?.userNo || '' }}</span>
+                            </div>
+                        </li>
+                        <li class="form-item">
+                            <div class="form-label">고객명</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singleCustomerData?.userName || '' }}</span>
+                            </div>
+                        </li>
+                        <li class="form-item">
+                            <div class="form-label">연락처</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singleCustomerData?.userTel || '' }}</span>
+
+                            </div>
+                        </li>
+                        <li class="form-item">
+                            <div class="form-label">주소</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singleCustomerData?.userAddr || '' }}</span>
+                            </div>
+                        </li>
+                        <li class="form-item">
+                            <div class="form-label">상세주소</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singleCustomerData?.userAddr2 || '' }}</span>
+                            </div>
+                        </li>
+                    </ul>
 
                     <!-- 동물 정보 (오른쪽) - 2열 테이블 형태 -->
-                    <div class="pet-info-table">
-                        <table class="pet-info-table-inner">
-                            <tbody>
-                                <tr>
-                                    <td class="label-cell">동물번호</td>
-                                    <td class="value-cell">
-                                        <div class="d-flex gap-4 align-items-center">
-                                            <InputTextBox 
-                                                :model-value="singlePetData?.petSno || singleCustomerData?.petNo || ''"
-                                                :disabled="true"
-                                                placeholder="동물번호"
-                                                style="flex: 1;"
-                                            />
-                                            <button class="btn btn--size-24 btn--black-outline">차트보기</button>
-                                        </div>
-                                    </td>
-                                    <td class="label-cell">체중</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singlePetData?.petBw ? `${singlePetData.petBw}kg` : ''"
-                                            :disabled="true"
-                                            placeholder="체중"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="label-cell">동물이름</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singlePetData?.petName || singleCustomerData?.petName || ''"
-                                            :disabled="true"
-                                            placeholder="동물이름"
-                                        />
-                                    </td>
-                                    <td class="label-cell">동물등록번호</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singlePetData?.rfid ? singlePetData.rfid : '-'"
-                                            :disabled="true"
-                                            placeholder="동물등록번호"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="label-cell">종</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singlePetData?.speciesName || singleCustomerData?.speciesName || ''"
-                                            :disabled="true"
-                                            placeholder="종"
-                                        />
-                                    </td>
-                                    <td class="label-cell">등록일</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singlePetData?.petInsertDate ? formatDateDot(singlePetData.petInsertDate) : (singleCustomerData?.regDateTxt || '')"
-                                            :disabled="true"
-                                            placeholder="등록일"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="label-cell">품종</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singlePetData?.breedName || singleCustomerData?.breed || ''"
-                                            :disabled="true"
-                                            placeholder="품종"
-                                        />
-                                    </td>
-                                    <td class="label-cell">최근방문일</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singlePetData?.lastVisitDate ? formatDateDot(singlePetData.lastVisitDate) : (singleCustomerData?.lastStatusDateTxt || '')"
-                                            :disabled="true"
-                                            placeholder="최근방문일"
-                                        />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="label-cell">성별</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singlePetData?.sex ? (PET_GENDER_MAP[singlePetData.sex] || singlePetData.sex) : (singleCustomerData?.sex || 'unknown')"
-                                            :disabled="true"
-                                            placeholder="성별"
-                                        />
-                                    </td>
-                                    <td class="label-cell">담당의사</td>
-                                    <td class="value-cell">
-                                        <InputTextBox 
-                                            :model-value="singlePetData?.petDoctor || '관리자'"
-                                            :disabled="true"
-                                            placeholder="담당의사"
-                                        />
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <ul class="form-container">
+                        <li class="form-item">
+                            <div class="form-label">동물번호</div>
+                            <div class="form-content">
+                                <div class="d-flex align-center justify-between">
+                                    <span class="body-s">{{ singlePetData?.petSno || singleCustomerData?.petNo || '' }}</span>
+
+                                    <button class="btn btn--size-24 btn--black-outline">차트보기</button>
+                                </div>
+                            </div>
+                            <div class="form-label" style="width:92px;">체중</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singlePetData?.petBw ? `${singlePetData.petBw}kg` : '' }}</span>
+                            </div>
+                        </li>
+
+                        <li class="form-item">
+                            <div class="form-label">동물이름</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singlePetData?.petName || singleCustomerData?.petName || '' }}</span>
+                            </div>
+                            <div class="form-label" style="width:92px;">동물등록번호</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singlePetData?.rfid ? singlePetData.rfid : '-' }}</span>
+                            </div>
+                        </li>
+                        <li class="form-item">
+                            <div class="form-label">종</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singlePetData?.speciesName || singleCustomerData?.speciesName || '' }}</span>
+                            </div>
+                            <div class="form-label" style="width:92px;">등록일</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singlePetData?.petInsertDate ? formatDateDot(singlePetData.petInsertDate) : (singleCustomerData?.regDateTxt || '') }}</span>
+                            </div>
+                        </li>
+                        <li class="form-item">
+                            <div class="form-label">품종</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singlePetData?.breedName || singleCustomerData?.breed || '' }}</span>
+                            </div>
+                            <div class="form-label" style="width:92px;">최근방문일</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singlePetData?.lastVisitDate ? formatDateDot(singlePetData.lastVisitDate) : (singleCustomerData?.lastStatusDateTxt || '') }}</span>
+                            </div>
+                        </li>
+                        <li class="form-item">
+                            <div class="form-label">성별</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singlePetData?.sex ? (PET_GENDER_MAP[singlePetData.sex] || singlePetData.sex) : (singleCustomerData?.sex || 'unknown') }}</span>
+                            </div>
+                            <div class="form-label" style="width:92px;">담당의사</div>
+                            <div class="form-content">
+                                <span class="body-s">{{ singlePetData?.petDoctor || '관리자' }}</span>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </template>
 
@@ -1129,7 +1063,11 @@ watch(() => cancelReasonType.value, (newVal) => {
 
     .helper__text {color: $primary-700;}
 
-    .info-lists-wrapper {display:flex; gap:8px;}
+    .info-lists-wrapper {
+        display:flex;
+        gap:8px;
+        overflow-y: auto;
+    }
 
     .info-list {
         flex:1;
@@ -1152,103 +1090,7 @@ watch(() => cancelReasonType.value, (newVal) => {
         background-color: $gray-00;
         padding: 0;
         overflow: hidden;
-        
-        .customer-info-table-inner {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            
-            tbody tr {
-                border-bottom: 1px solid $gray-200;
-                
-                &:last-child {
-                    border-bottom: none;
-                }
-            }
-            
-            .label-cell {
-                width: 30%;
-                padding: 12px 16px;
-                background-color: #F5F5F5;
-                font-size: 14px;
-                font-weight: 500;
-                color: #494949;
-                text-align: left;
-                vertical-align: middle;
-                border-right: 1px solid $gray-200;
-                white-space: nowrap;
-            }
-            
-            .value-cell {
-                width: 70%;
-                padding: 12px 16px;
-                background-color: $gray-00;
-                vertical-align: middle;
-                
-                :deep(.input-text-box) {
-                    border: none;
-                    background: transparent;
-                    padding: 0;
-                }
-            }
-        }
     }
-
-    // 동물 정보 테이블 (2열 형태)
-    .pet-info-table {
-        flex: 1;
-        border-radius: 8px;
-        border: 1px solid $gray-200;
-        background-color: $gray-00;
-        padding: 0;
-        overflow: hidden;
-        
-        .pet-info-table-inner {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            
-            tbody tr {
-                border-bottom: 1px solid $gray-200;
-                
-                &:last-child {
-                    border-bottom: none;
-                }
-            }
-            
-            .label-cell {
-                width: 20%;
-                padding: 12px 16px;
-                background-color: #F5F5F5;
-                font-size: 14px;
-                font-weight: 500;
-                color: #494949;
-                text-align: left;
-                vertical-align: middle;
-                border-right: 1px solid $gray-200;
-                white-space: nowrap;
-            }
-            
-            .value-cell {
-                width: 30%;
-                padding: 12px 16px;
-                background-color: $gray-00;
-                vertical-align: middle;
-                border-right: 1px solid $gray-200;
-                
-                &:last-child {
-                    border-right: none;
-                }
-                
-                :deep(.input-text-box) {
-                    border: none;
-                    background: transparent;
-                    padding: 0;
-                }
-            }
-        }
-    }
-
     .info-item {
         display: flex;
         align-items: center;
@@ -1261,7 +1103,6 @@ watch(() => cancelReasonType.value, (newVal) => {
         }
     }
 
-    // .date-picker-wrap {flex:1; height: 32px;}
     :deep(.dp__input_wrap) {height: 32px !important;}
     :deep(.dp__input) {height: 32px !important;}
 
@@ -1278,6 +1119,13 @@ watch(() => cancelReasonType.value, (newVal) => {
         flex-direction: column;
         overflow: hidden;
         min-height: 200px; // 최소 2명의 고객 정보가 보이도록 최소 높이 설정 (헤더 40px + 행 2개 72px + 여유공간)
+
+        .info-lists-wrapper {
+            padding: 16px 12px;
+
+            border: 1px solid $gray-200;
+            border-radius: 8px;
+        }
     }
 
     .customer-info-table-wrapper { 
@@ -1306,6 +1154,23 @@ watch(() => cancelReasonType.value, (newVal) => {
         // 매칭된 행 스타일
         :deep(.row-matched) {
             background-color: $primary-50;
+        }
+    }
+
+    :deep(.form-item) {min-height: 36px; height: 36px;}
+    :deep(.form-label) {min-width: 70px;}
+    :deep(.form-content) {
+        .d-flex {
+            .body-s {
+                flex:1;
+            }
+        }
+        min-width: 0;
+        .body-s {
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
     }
 </style>

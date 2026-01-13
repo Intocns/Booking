@@ -271,7 +271,7 @@ onUnmounted(() => {
 
 .time-columns-container {
     display: flex;
-    height: 300px; /* 스크롤 영역의 높이 */
+    height: 200px; /* 스크롤 영역의 높이 */
     border-bottom: 1px solid $gray-200;
 }
 
