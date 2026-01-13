@@ -126,7 +126,7 @@ const removeMainImage = (index) => {
 
 // 첫 번째 이미지를 대표 이미지로 추출하는 computed
 const representImage = computed(() => {
-    return basicInput.value.imageUrls.length > 0 ? basicInput.value.imageUrls[0] : '';
+    return basicInput.value.imageUrls?.length > 0 ? basicInput.value.imageUrls[0] : '';
 });
 
 // 대표 이미지가 바뀔 때마다 부모(미리보기)에게 알림
@@ -386,7 +386,7 @@ const setInputData = (async() => {
     detailList.value = basicInput.value.extraDescJson;
 
     // 로드된 첫 번째 이미지를 부모에게 즉시 전달
-    if (basicInput.value.imageUrls.length > 0) {
+    if (basicInput.value.imageUrls?.length > 0) {
         emit('update:previewMainImage', basicInput.value.imageUrls[0]);
     }
 
