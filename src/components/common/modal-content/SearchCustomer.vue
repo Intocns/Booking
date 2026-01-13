@@ -6,6 +6,7 @@ import InputTextBox from '@/components/common/InputTextBox.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
 import { useReservationStore } from '@/stores/reservationStore';
 import { PET_GENDER_MAP } from '@/utils/reservation';
+import { CUSTOMER_SEARCH_TYPE_OPTIONS, getSearchTypeInt, toggleCustomerMatch as toggleCustomerMatchUtil } from '@/utils/customer';
 import { useModalStore } from '@/stores/modalStore';
 
 const emit = defineEmits(['customer-selected']);
@@ -14,14 +15,7 @@ const modalStore = useModalStore();
 const reservationStore = useReservationStore();
 
 // 조회 조건 옵션
-const searchTypeOptions = [
-    { label: '전체', value: 'all' },
-    { label: '고객번호', value: 'userNo' },
-    { label: '고객명', value: 'userName' },
-    { label: '전화번호', value: 'userTel' },
-    { label: '동물번호', value: 'petNo' },
-    { label: '동물명', value: 'petName' },
-];
+const searchTypeOptions = CUSTOMER_SEARCH_TYPE_OPTIONS;
 
 // 선택된 조회 조건
 const selectedSearchType = ref('all');
@@ -34,22 +28,7 @@ const isLoading = ref(false);
 
 // 고객 매칭 토글 함수 (단일 선택: 하나 선택 시 기존 선택 해제)
 const toggleCustomerMatch = (row) => {
-    const index = customerList.value.findIndex(item => item === row);
-    if (index !== -1) {
-        const wasMatched = customerList.value[index].isMatched;
-        
-        // 모든 고객의 매칭 상태 초기화
-        customerList.value.forEach(item => {
-            item.isMatched = false;
-            item.rowClass = '';
-        });
-        
-        // 클릭한 고객이 매칭되지 않았던 경우에만 매칭 (토글)
-        if (!wasMatched) {
-            customerList.value[index].isMatched = true;
-            customerList.value[index].rowClass = 'row-matched';
-        }
-    }
+    toggleCustomerMatchUtil(customerList.value, row);
 };
 
 // 조회 버튼 활성화 여부 (무조건 검색어가 2글자 이상이어야 함)
@@ -57,18 +36,6 @@ const isSearchEnabled = computed(() => {
     return searchKeyword.value.trim().length >= 2;
 });
 
-// searchType을 Int로 변환하는 함수
-const getSearchTypeInt = (searchType) => {
-    const typeMap = {
-        'all': 0, // 전체 검색
-        'userNo': 1, // 고객번호
-        'userName': 2, // 고객명
-        'userTel': 3, // 전화번호
-        'petNo': 4, // 동물번호
-        'petName': 5, // 동물명
-    };
-    return typeMap[searchType] ?? 0;
-};
 
 // 고객 검색 함수
 const handleSearch = async () => {

@@ -2,6 +2,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { PET_GENDER_MAP, RESERVE_ROUTE_MAP, RESERVE_STATUS_MAP, RESERVE_STATUS_CLASS_MAP } from '@/utils/reservation';
+import { toggleCustomerMatch as toggleCustomerMatchUtil } from '@/utils/customer';
 import { formatDate, formatTime, formatDateTime, formatTimeToMinutes, formatDateTimeForAPI, formatDateDot } from '@/utils/dateFormatter';
 
 import InputTextBox from '@/components/common/InputTextBox.vue';
@@ -100,22 +101,7 @@ const reserveClientList = ref(initializeClientList());
 
 // 고객 매칭 토글 함수 (단일 선택: 하나 선택 시 기존 선택 해제)
 const toggleCustomerMatch = (row) => {
-    const index = reserveClientList.value.findIndex(item => item === row);
-    if (index !== -1) {
-        const wasMatched = reserveClientList.value[index].isMatched;
-        
-        // 모든 고객의 매칭 상태 초기화
-        reserveClientList.value.forEach(item => {
-            item.isMatched = false;
-            item.rowClass = '';
-        });
-        
-        // 클릭한 고객이 매칭되지 않았던 경우에만 매칭 (토글)
-        if (!wasMatched) {
-            reserveClientList.value[index].isMatched = true;
-            reserveClientList.value[index].rowClass = 'row-matched';
-        }
-    }
+    toggleCustomerMatchUtil(reserveClientList.value, row);
 };
 
 const startTime = ref(null);
