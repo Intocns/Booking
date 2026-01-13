@@ -2,7 +2,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { PET_GENDER_MAP, RESERVE_ROUTE_MAP } from '@/utils/reservation';
-import { formatDate, formatTime, formatDateTime, formatTimeToMinutes, formatDateTimeForAPI } from '@/utils/dateFormatter';
+import { formatDate, formatTime, formatDateTime, formatTimeToMinutes, formatDateTimeForAPI, formatDateDot } from '@/utils/dateFormatter';
 
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import TimeSelect from '@/components/common/TimeSelect.vue';
@@ -77,13 +77,21 @@ const initializeClientList = () => {
         const matched = autoMatched || isCustomerMatched(item);
         return {
             ...item,
-            lastStatusDateTxt: formatDate(item.lastStatusDate),
+            lastStatusDateTxt: item.lastStatusDate ? formatDate(item.lastStatusDate) : '',
+            regDateTxt: item.regDate ? formatDate(item.regDate) : '',
             isMatched: matched, // 고객번호가 매칭된 경우에만 매칭 상태
             rowClass: matched ? 'row-matched' : '', // 매칭된 행에 스타일 클래스 추가
             // 품종: breedName 사용 (백엔드에서 br.Name2 AS breedName으로 제공)
             breed: item.breedName || '',
             // 성별: PET_GENDER_MAP으로 변환
             sex: PET_GENDER_MAP[item.sex] || item.sex || '',
+            // 주소 정보 (1건인 경우 사용)
+            userAddr: item.userAddr || '',
+            userAddr2: item.userAddr2 || '',
+            // 담당의사 (1건인 경우 사용)
+            petDoctor: item.petDoctor || 'unknown',
+            // 관리자 (1건인 경우 사용)
+            manager: '관리자',
         };
     });
 };
@@ -524,7 +532,7 @@ onMounted(async () => {
     }
 });
 
-// 고객정보 테이블 정의
+// 고객정보 테이블 정의 (여러 건인 경우)
 const customerInfoColumns = [
     { key: 'userSno', label: 'No.', width: '7%' },
     { key: 'userNo', label: '고객번호', width: '12%' },
@@ -538,6 +546,22 @@ const customerInfoColumns = [
     { key: 'lastStatusDateTxt', label: '최근방문일', width: '17%'},
     { key: 'action', label: '고객매칭', width: '10%'},
 ]
+
+// 조회 결과가 1건인지 확인
+const isSingleResult = computed(() => reserveClientList.value.length === 1)
+
+// 1건인 경우 고객 정보 데이터
+const singleCustomerData = computed(() => {
+    if (isSingleResult.value && reserveClientList.value.length > 0) {
+        return reserveClientList.value[0];
+    }
+    return null;
+})
+
+// 1건인 경우 동물 정보 데이터 (reserveClientPet에서 가져옴)
+const singlePetData = computed(() => {
+    return reserveClientPet || null;
+})
 
 const RESERVE_STATUS_MAP = {
     0: '대기',
@@ -747,45 +771,231 @@ watch(() => cancelReasonType.value, (newVal) => {
 
         <!--고객정보 -->
         <div class="d-flex flex-col gap-6 customer-info-section">
-
-            <!-- 타이틀 -->
-            <div class="modal-content-title-wrapper">
-                <div class="d-flex gap-4 align-items-center">
-                    <p class="title-l">고객 정보</p>
-                    <div class="d-flex gap-4 align-center">
-                        <img :src="icInformation" alt="안내아이콘" class="helper__icon">
-                        <span class="body-s helper__text">
-                            예약 고객 정보를 기준으로 검색했어요. 우리병원 차트에 등록된 고객과 매칭해주세요. 신규로 등록하는 경우 매칭없이 예약을 확정해주세요.
-                        </span>
+            <!-- 조회 결과가 1건인 경우: 고객 정보와 동물 정보를 별도 섹션으로 표시 -->
+            <template v-if="isSingleResult">
+                <!-- 타이틀 -->
+                <div class="modal-content-title-wrapper">
+                    <div class="d-flex gap-4 align-items-center">
+                        <p class="title-l">고객 정보</p>
+                        <div class="d-flex gap-4 align-center">
+                            <img :src="icInformation" alt="안내아이콘" class="helper__icon">
+                            <span class="body-s helper__text">
+                                예약 고객 정보를 기준으로 검색했어요. 우리병원 차트에 등록된 고객과 매칭해주세요. 신규로 등록하는 경우 매칭없이 예약을 확정해주세요.
+                            </span>
+                        </div>
                     </div>
+
+                    <!-- 고객 검색 버튼 -->
+                    <button class="btn btn--size-24 btn--black" @click="modalStore.searchCustomerModal.openModal()">
+                        <img :src="icSearchW" alt="아이콘">
+                        고객 검색
+                    </button>
                 </div>
 
-                <!-- 고객 검색 버튼 -->
-                <button class="btn btn--size-24 btn--black" @click="modalStore.searchCustomerModal.openModal()">
-                    <img :src="icSearchW" alt="아이콘">
-                    고객 검색
-                </button>
-            </div>
+                <div class="info-lists-wrapper">
+                    <!-- 고객 정보 (왼쪽) - 테이블 형태 -->
+                    <div class="customer-info-table">
+                        <table class="customer-info-table-inner">
+                            <tbody>
+                                <tr>
+                                    <td class="label-cell">고객번호</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singleCustomerData?.userNo || ''"
+                                            :disabled="true"
+                                            placeholder="고객번호"
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-cell">고객명</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singleCustomerData?.userName || ''"
+                                            :disabled="true"
+                                            placeholder="고객명"
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-cell">연락처</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singleCustomerData?.userTel || ''"
+                                            :disabled="true"
+                                            placeholder="연락처"
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-cell">주소</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singleCustomerData?.userAddr || ''"
+                                            :disabled="true"
+                                            placeholder="주소"
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-cell">상세주소</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singleCustomerData?.userAddr2 || ''"
+                                            :disabled="true"
+                                            placeholder="상세주소"
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
-            <!-- 테이블 -->
-            <div class="customer-info-table-wrapper">
-                <CommonTable
-                    :columns="customerInfoColumns"
-                    :rows="reserveClientList"
-                    table-empty-sub-text="예약 확정 시, 신규 고객으로 등록되어 예약이 접수됩니다."
-                >
-                    <!-- 고객매칭 버튼 슬롯 -->
-                    <template #action="{ row, rowIndex }">
-                        <button 
-                            class="btn btn--size-24"
-                            :class="row.isMatched ? 'btn--blue' : 'btn--black-outline'"
-                            @click.stop="toggleCustomerMatch(row)"
-                        >
-                            {{ row.isMatched ? '고객매칭 해제' : '고객매칭' }}
-                        </button>
-                    </template>
-                </CommonTable>
-            </div>
+                    <!-- 동물 정보 (오른쪽) - 2열 테이블 형태 -->
+                    <div class="pet-info-table">
+                        <table class="pet-info-table-inner">
+                            <tbody>
+                                <tr>
+                                    <td class="label-cell">동물번호</td>
+                                    <td class="value-cell">
+                                        <div class="d-flex gap-4 align-items-center">
+                                            <InputTextBox 
+                                                :model-value="singlePetData?.petSno || singleCustomerData?.petNo || ''"
+                                                :disabled="true"
+                                                placeholder="동물번호"
+                                                style="flex: 1;"
+                                            />
+                                            <button class="btn btn--size-24 btn--black-outline">차트보기</button>
+                                        </div>
+                                    </td>
+                                    <td class="label-cell">체중</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singlePetData?.petBw ? `${singlePetData.petBw}kg` : ''"
+                                            :disabled="true"
+                                            placeholder="체중"
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-cell">동물이름</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singlePetData?.petName || singleCustomerData?.petName || ''"
+                                            :disabled="true"
+                                            placeholder="동물이름"
+                                        />
+                                    </td>
+                                    <td class="label-cell">동물등록번호</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singlePetData?.rfid ? singlePetData.rfid : '-'"
+                                            :disabled="true"
+                                            placeholder="동물등록번호"
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-cell">종</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singlePetData?.speciesName || singleCustomerData?.speciesName || ''"
+                                            :disabled="true"
+                                            placeholder="종"
+                                        />
+                                    </td>
+                                    <td class="label-cell">등록일</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singlePetData?.petInsertDate ? formatDateDot(singlePetData.petInsertDate) : (singleCustomerData?.regDateTxt || '')"
+                                            :disabled="true"
+                                            placeholder="등록일"
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-cell">품종</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singlePetData?.breedName || singleCustomerData?.breed || ''"
+                                            :disabled="true"
+                                            placeholder="품종"
+                                        />
+                                    </td>
+                                    <td class="label-cell">최근방문일</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singlePetData?.lastVisitDate ? formatDateDot(singlePetData.lastVisitDate) : (singleCustomerData?.lastStatusDateTxt || '')"
+                                            :disabled="true"
+                                            placeholder="최근방문일"
+                                        />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-cell">성별</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singlePetData?.sex ? (PET_GENDER_MAP[singlePetData.sex] || singlePetData.sex) : (singleCustomerData?.sex || 'unknown')"
+                                            :disabled="true"
+                                            placeholder="성별"
+                                        />
+                                    </td>
+                                    <td class="label-cell">담당의사</td>
+                                    <td class="value-cell">
+                                        <InputTextBox 
+                                            :model-value="singlePetData?.petDoctor || '관리자'"
+                                            :disabled="true"
+                                            placeholder="담당의사"
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </template>
+
+            <!-- 조회 결과가 여러 건인 경우: 기존처럼 하나의 테이블 -->
+            <template v-else>
+                <!-- 타이틀 -->
+                <div class="modal-content-title-wrapper">
+                    <div class="d-flex gap-4 align-items-center">
+                        <p class="title-l">고객 정보</p>
+                        <div class="d-flex gap-4 align-center">
+                            <img :src="icInformation" alt="안내아이콘" class="helper__icon">
+                            <span class="body-s helper__text">
+                                예약 고객 정보를 기준으로 검색했어요. 우리병원 차트에 등록된 고객과 매칭해주세요. 신규로 등록하는 경우 매칭없이 예약을 확정해주세요.
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 고객 검색 버튼 -->
+                    <button class="btn btn--size-24 btn--black" @click="modalStore.searchCustomerModal.openModal()">
+                        <img :src="icSearchW" alt="아이콘">
+                        고객 검색
+                    </button>
+                </div>
+
+                <!-- 테이블 -->
+                <div class="customer-info-table-wrapper">
+                    <CommonTable
+                        :columns="customerInfoColumns"
+                        :rows="reserveClientList"
+                        table-empty-sub-text="예약 확정 시, 신규 고객으로 등록되어 예약이 접수됩니다."
+                    >
+                        <!-- 고객매칭 버튼 슬롯 -->
+                        <template #action="{ row, rowIndex }">
+                            <button 
+                                class="btn btn--size-24"
+                                :class="row.isMatched ? 'btn--blue' : 'btn--black-outline'"
+                                @click.stop="toggleCustomerMatch(row)"
+                            >
+                                {{ row.isMatched ? '고객매칭 해제' : '고객매칭' }}
+                            </button>
+                        </template>
+                    </CommonTable>
+                </div>
+            </template>
         </div>
 
     </div>
@@ -932,6 +1142,111 @@ watch(() => cancelReasonType.value, (newVal) => {
         border: 1px solid $gray-200;
         background-color: $gray-00;
 
+    }
+
+    // 고객 정보 테이블 (1열 형태)
+    .customer-info-table {
+        flex: 1;
+        border-radius: 8px;
+        border: 1px solid $gray-200;
+        background-color: $gray-00;
+        padding: 0;
+        overflow: hidden;
+        
+        .customer-info-table-inner {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            
+            tbody tr {
+                border-bottom: 1px solid $gray-200;
+                
+                &:last-child {
+                    border-bottom: none;
+                }
+            }
+            
+            .label-cell {
+                width: 30%;
+                padding: 12px 16px;
+                background-color: #F5F5F5;
+                font-size: 14px;
+                font-weight: 500;
+                color: #494949;
+                text-align: left;
+                vertical-align: middle;
+                border-right: 1px solid $gray-200;
+                white-space: nowrap;
+            }
+            
+            .value-cell {
+                width: 70%;
+                padding: 12px 16px;
+                background-color: $gray-00;
+                vertical-align: middle;
+                
+                :deep(.input-text-box) {
+                    border: none;
+                    background: transparent;
+                    padding: 0;
+                }
+            }
+        }
+    }
+
+    // 동물 정보 테이블 (2열 형태)
+    .pet-info-table {
+        flex: 1;
+        border-radius: 8px;
+        border: 1px solid $gray-200;
+        background-color: $gray-00;
+        padding: 0;
+        overflow: hidden;
+        
+        .pet-info-table-inner {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            
+            tbody tr {
+                border-bottom: 1px solid $gray-200;
+                
+                &:last-child {
+                    border-bottom: none;
+                }
+            }
+            
+            .label-cell {
+                width: 20%;
+                padding: 12px 16px;
+                background-color: #F5F5F5;
+                font-size: 14px;
+                font-weight: 500;
+                color: #494949;
+                text-align: left;
+                vertical-align: middle;
+                border-right: 1px solid $gray-200;
+                white-space: nowrap;
+            }
+            
+            .value-cell {
+                width: 30%;
+                padding: 12px 16px;
+                background-color: $gray-00;
+                vertical-align: middle;
+                border-right: 1px solid $gray-200;
+                
+                &:last-child {
+                    border-right: none;
+                }
+                
+                :deep(.input-text-box) {
+                    border: none;
+                    background: transparent;
+                    padding: 0;
+                }
+            }
+        }
     }
 
     .info-item {

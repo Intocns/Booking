@@ -41,7 +41,6 @@ export const useReservationStore = defineStore("reservation", () => {
          try {
             const response = await api.post(`/api/${cocode}/reserve/list`, params);
             if(response.status <= 300){
-                console.log(response);
                 let data = response.data.data;
                 reserveList.value = data.list.map(mapReserveRow);
             }
