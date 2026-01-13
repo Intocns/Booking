@@ -142,8 +142,8 @@ onMounted(async () => {
 const processedRows = computed(() => {
     return reservationStore.reserveList.map(row => {
         let className = '';
-        if (row.inState === 0) className = 'row-pending';  // 대기
-        if (row.inState === 2) className = 'row-canceled'; // 취소
+        if (row.inState == 0) className = 'row-pending';  // 대기
+        if (row.inState == 2 || row.inState == 3) className = 'row-canceled'; // 취소 || 거절
         
         return {
             ...row,
@@ -252,7 +252,7 @@ const handelReserveDetail = (reserveIdx) => {
     :deep(.row-pending) {
         background-color: $status-onHold_table_bg !important; // 연한 노란색
     }
-    // 예약 취소 tr 연하게
+    // 예약 취소/거절 tr 연하게
     :deep(.row-canceled) {
         // pointer-events: none;
         td {color: $gray-400}
