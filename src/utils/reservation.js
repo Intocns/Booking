@@ -14,6 +14,13 @@ export const RESERVE_STATUS_MAP = {
     3: '예약거절'
 }
 
+export const RESERVE_STATUS_CLASS_MAP = {
+    0: 'flag--yellow',
+    1: 'flag--basic',
+    2: 'flag--warning',
+    3: 'flag--warning'
+}
+
 //예약경로 define
 export const RESERVE_ROUTE_OPTIONS = [
     { label: '전체', value: 'all' },

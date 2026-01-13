@@ -1,7 +1,7 @@
 <!-- 고객 예약 정보 -->
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
-import { PET_GENDER_MAP, RESERVE_ROUTE_MAP } from '@/utils/reservation';
+import { PET_GENDER_MAP, RESERVE_ROUTE_MAP, RESERVE_STATUS_MAP, RESERVE_STATUS_CLASS_MAP } from '@/utils/reservation';
 import { formatDate, formatTime, formatDateTime, formatTimeToMinutes, formatDateTimeForAPI, formatDateDot } from '@/utils/dateFormatter';
 
 import InputTextBox from '@/components/common/InputTextBox.vue';
@@ -547,34 +547,36 @@ const customerInfoColumns = [
     { key: 'action', label: '고객매칭', width: '10%'},
 ]
 
-// 조회 결과가 1건인지 확인
-const isSingleResult = computed(() => reserveClientList.value.length === 1)
+// 예약 확정 상태일 때는 매칭된 고객만 필터링
+const matchedClientList = computed(() => {
+    if (reserveData.inState === 1) {
+        // 예약 확정 상태: 매칭된 고객만 반환
+        return reserveClientList.value.filter(item => item.isMatched);
+    }
+    // 예약 확정 전: 전체 리스트 반환
+    return reserveClientList.value;
+});
+
+// 조회 결과가 1건인지 확인 (예약 확정 상태일 때는 매칭된 고객만 고려)
+const isSingleResult = computed(() => matchedClientList.value.length === 1)
 
 // 1건인 경우 고객 정보 데이터
 const singleCustomerData = computed(() => {
-    if (isSingleResult.value && reserveClientList.value.length > 0) {
-        return reserveClientList.value[0];
+    if (isSingleResult.value && matchedClientList.value.length > 0) {
+        return matchedClientList.value[0];
     }
     return null;
 })
 
 // 1건인 경우 동물 정보 데이터 (reserveClientPet에서 가져옴)
 const singlePetData = computed(() => {
-    return reserveClientPet || null;
+    if (isSingleResult.value && singleCustomerData.value) {
+        // reserveClientPet는 객체이므로 직접 반환
+        return reserveClientPet || null;
+    }
+    return null;
 })
 
-const RESERVE_STATUS_MAP = {
-    0: '대기',
-    1: '확정',
-    2: '취소',
-    3: '거절'
-}
-const RESERVE_STATUS_CLASS_MAP = {
-    0: 'flag--yellow',
-    1: 'flag--basic',
-    2: 'flag--warning',
-    3: 'flag--warning'
-}
 
 // 접수 일시 계산
 const receivedDateTime = computed(() => 
@@ -882,7 +884,7 @@ watch(() => cancelReasonType.value, (newVal) => {
                             </div>
                             <div class="form-label" style="width:92px;">담당의사</div>
                             <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.petDoctor || '관리자' }}</span>
+                                <span class="body-s">{{ singlePetData?.petDoctor || '' }}</span>
                             </div>
                         </li>
                     </ul>
@@ -914,7 +916,7 @@ watch(() => cancelReasonType.value, (newVal) => {
                 <div class="customer-info-table-wrapper">
                     <CommonTable
                         :columns="customerInfoColumns"
-                        :rows="reserveClientList"
+                        :rows="matchedClientList"
                         table-empty-sub-text="예약 확정 시, 신규 고객으로 등록되어 예약이 접수됩니다."
                     >
                         <!-- 고객매칭 버튼 슬롯 -->
