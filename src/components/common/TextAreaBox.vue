@@ -52,7 +52,7 @@ const isFocused = ref(false);
 
 // 현재 값 길이 계산
 const currentLength = computed(() => {
-    return props.modelValue.length;
+    return props.modelValue ? props.modelValue.length : 0;
 });
 
 // 값이 있는지 여부 (스타일링용)
