@@ -98,8 +98,13 @@ const isCategoryChecked = (category) => computed(() => category.options.some(c =
 
 //카테고리 체크박스 선택 시
 const changeCategoryChecked = (category) => {
-  const newVal = !isCategoryChecked(category).value
-  category.options.forEach(c => c.checked = newVal)
+    const newVal = !isCategoryChecked(category).value
+    category.options.forEach(c => c.checked = newVal)
+}
+
+// 옵션 아이템 클릭 시 토글 함수 추가
+const toggleOption = (optionDetail) => {
+    optionDetail.checked = !optionDetail.checked;
 }
 </script>
 
@@ -117,6 +122,7 @@ const changeCategoryChecked = (category) => {
                         v-for="(option, cIdx) in optionStore.optionList" 
                         :key="option.categoryId"
                         class="category-item"
+                        :class="{ 'is-active': isCategoryChecked(option).value }"
                     >
                         <div class="category-header" @click="toggleAccordion(cIdx)">
                             <div class="d-flex align-center gap-8">
@@ -138,8 +144,14 @@ const changeCategoryChecked = (category) => {
         
                         <div v-show="isOpen(cIdx)" class="category-contents">
                             <ul class="option-list">
-                                <li v-for="optionDetail in option.options" :key="optionDetail.optionId" class="option-item">
-                                    <div class="drag-handle">
+                                <li 
+                                    v-for="optionDetail in option.options"
+                                    :key="optionDetail.optionId"
+                                    class="option-item"
+                                    :class="{ 'is-selected': optionDetail.checked }"
+                                    @click="toggleOption(optionDetail)"
+                                >
+                                    <div class="drag-handle" @click.stop>
                                         <img :src="icDragHandel" alt="정렬" />
                                     </div>
                                     
@@ -151,9 +163,8 @@ const changeCategoryChecked = (category) => {
                                     <div class="option-status">
                                         <label class="checkbox" @click.stop>
                                             <input type="checkbox" v-model="optionDetail.checked" />
-                                            <span class="box"></span>
+                                            <span class="checkMark"></span>
                                         </label>
-                                        <!-- <img :src="icCheckOff" v-if="option.selected" /> -->
                                     </div>
                                 </li>
                             </ul>
@@ -215,6 +226,9 @@ const changeCategoryChecked = (category) => {
     border-radius: 8px;
     background-color: $gray-00;
 
+    &.is-active {
+        border-color: $primary-700;
+    }
     .category-header {
         display: flex;
         justify-content: space-between;
@@ -262,6 +276,13 @@ const changeCategoryChecked = (category) => {
             flex: 1;
 
             .option-desc { color: $gray-700; }
+        }
+
+        &.is-selected {
+            border-color: $primary-700;
+            background-color: $primary-50;
+
+            color: $primary-700;
         }
     }
 }
