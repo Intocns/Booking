@@ -78,7 +78,7 @@ const emit = defineEmits([
 // 상품 관련 입력 항목
 const basicInput = ref({
     "name" : "",//상품명
-    // "isImp" : "",//상품 노출 여부 >> 
+    "isImp" : "",//상품 노출 여부
     "imageUrls" : [],//상품 이미지
     "desc" : "",//상품 소개
     "bookingPrecautionJson" : [{"desc" : ""}],//유의 사항
@@ -300,10 +300,39 @@ const checkedRequired = (async(params) => {
         return false;
     }
 
-    //상품 사진 체크
-    if(params.images != ""){
-        openErrorModal(`상품 사진을 추가해주세요.`);
+    const descError = getFieldError(params.desc, 0, 1000);
+    if(descError.isError) {
+        openErrorModal('입력하신 상품 소개를 확인해주세요.');
         return false;
+    }
+
+    const precautionError = getFieldError(params.bookingPrecautionJson[0].desc, 0, 1000);
+    if(precautionError.isError) {
+        openErrorModal('입력하신 유의사항을 확인해주세요.');
+        return false;
+    }
+
+    //상품 사진 체크
+    if(!params.imageUrls || params.imageUrls.length === 0){
+        openErrorModal(`상품 사진을 최소 1장 이상 추가해주세요.`);
+        return false;
+    }
+
+    // 상세 설명
+    if (detailList.value && detailList.value.length > 0) {
+        for (let i = 0; i < detailList.value.length; i++) {
+            const item = detailList.value[i];
+            
+            // 상세 설명 내 제목/내용 길이 체크
+            if (getFieldError(item.title, 0, 40).isError) {
+                openErrorModal(`상세 설명 ${i + 1}번째 제목 형식을 확인해주세요.`);
+                return false;
+            }
+            if (getFieldError(item.context, 0, 1000).isError) {
+                openErrorModal(`상세 설명 ${i + 1}번째 내용 형식을 확인해주세요.`);
+                return false;
+            }
+        }
     }
 
     if (doctorAssignType.value === 'select' && !selectedDoctor.value) {
@@ -398,7 +427,7 @@ onMounted(async() => {
             <div class="form-label">상품 노출 여부</div>
             <div class="form-content">
                 <label class="toggle">
-                    <input type="checkbox" />
+                    <input type="checkbox" v-model="basicInput.isImp" />
                     <span class="toggle-img"></span>
                 </label>
             </div>
@@ -458,7 +487,12 @@ onMounted(async() => {
         <li class="form-item">
             <div class="form-label">상품 소개</div>
             <div class="form-content">
-                <TextAreaBox :max-length="1000" v-model="basicInput.desc" />
+                <TextAreaBox 
+                    :max-length="1000" 
+                    v-model="basicInput.desc"
+                    :is-error="getFieldError(basicInput.desc, 0, 1000).isError"
+                    :error-message="getFieldError(basicInput.desc, 0, 1000).message"
+                />
             </div>
         </li>
 
@@ -466,7 +500,12 @@ onMounted(async() => {
         <li class="form-item">
             <div class="form-label">유의사항</div>
             <div class="form-content">
-                <TextAreaBox :max-length="1000" v-model="basicInput.bookingPrecautionJson[0].desc" />
+                <TextAreaBox 
+                    :max-length="1000" 
+                    v-model="basicInput.bookingPrecautionJson[0].desc"
+                    :is-error="getFieldError(basicInput.bookingPrecautionJson[0].desc, 0, 1000).isError"
+                    :error-message="getFieldError(basicInput.bookingPrecautionJson[0].desc, 0, 1000).message"
+                />
             </div>
         </li>
 
@@ -475,10 +514,6 @@ onMounted(async() => {
             <div class="form-label">상세 설명 추가</div>
             
             <div class="form-content detail-explanation-section">
-                <button type="button" class="text-button text-button--blue add-item-btn" @click="addDetailItem">
-                    <img :src="icPlus" alt="">항목 추가
-                </button>
-
                 <div class="detail-item-list">
                     <div v-for="(item, index) in detailList" :key="index" class="detail-item">
                         
@@ -496,11 +531,15 @@ onMounted(async() => {
                                 v-model="item.title"
                                 placeholder="제목을 입력해 주세요" 
                                 :max-length="40" 
+                                :is-error="getFieldError(item.title, 0, 40).isError"
+                                :error-message="getFieldError(item.title, 0, 40).message"
                             />
                             <TextAreaBox 
                                 v-model="item.context"
                                 placeholder="내용을 입력해 주세요" 
                                 :max-length="1000" 
+                                :is-error="getFieldError(item.context, 0, 1000).isError"
+                                :error-message="getFieldError(item.context, 0, 1000).message"
                             />
 
                             <div v-for="(image, imgIndex) in item.images" :key="imgIndex" class="detail-item__media-group">
@@ -541,6 +580,10 @@ onMounted(async() => {
                         </div>
                     </div>
                 </div>
+
+                <button type="button" class="text-button text-button--blue add-item-btn" @click="addDetailItem">
+                    <img :src="icPlus" alt="">항목 추가
+                </button>
             </div>
         </li>
 
@@ -646,6 +689,7 @@ onMounted(async() => {
             display: flex;
             flex-direction: column;
             gap: 20px; // 항목 간의 간격
+            margin-top: 5px;
         }
 
         .detail-item {

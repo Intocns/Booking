@@ -213,7 +213,7 @@ textarea {
 .caption {
     display: block;
     width: 100%;
-    max-width: 280px;
+    // max-width: 280px;
     margin-top: 4px;
     @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line);
     color: $gray-600;
