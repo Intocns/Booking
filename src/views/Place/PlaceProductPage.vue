@@ -4,7 +4,7 @@
 import PageTitle from '@/components/common/PageTitle.vue';
 import Modal from '@/components/common/Modal.vue';
 import ProductInfoUpdateAll from '@/components/common/modal-content/ProductInfoUpdateAll.vue';
-import CustomSelect from '@/components/common/CustomSelect.vue';
+import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 // 아이콘
 import icList from '@/assets/icons/ic_list.svg';
@@ -40,6 +40,7 @@ const copyProductName = ref(''); // 상품 복사 모달 > 복사할 새 상품�
 const currentCopyIdx = ref(null); // 상품 복사 모달 > 현재 복사 대상 상품의 ID(idx)
 const copyOptionBooking = ref(1) // 상품 복사 모달 > 복사 옵션 예약정보
 const copyOptionItem = ref(1) // 상품 복사 모달 > 복사 옵션 기본정보
+const importIntoPetRoomIdx = ref(null) // 인투펫 진료실 불러오기 > 불러올 진료실 idx
 
 // 미노출 제외 체크박스 감시
 watch(
@@ -78,10 +79,34 @@ const clickProductVisibleUpdateBtn = (() => {
 const clickProductInfoUpdataAllBtn = (async() => {
     modalStore.productInfoUpdateAllModal.openModal();
 })
-// 인투펫 진료실 불러오기
-const clickIntoPetImportBtn = (() => {
-    modalStore.intoPetImportModal.openModal()
-})
+// 인투펫 진료실 목록 불러오기
+const clickIntoPetImportBtn = (async () => {
+    importIntoPetRoomIdx.value = null;
+
+    try {
+        await productStore.getItemRoomList();
+
+        modalStore.intoPetImportModal.openModal({
+            roomList: productStore.itemRoomList.map(room => {
+                return {
+                    label: room.name,
+                    value: room.idx,
+                }
+            })
+        });
+    } catch (error) {
+        console.error(error);
+    }
+});
+// 인투펫 진료실 불러오기(선택한 진료실을 불러옴)
+const importIntoPetRoom = async() => {
+    try {
+        await productStore.getLinkItemInfo(importIntoPetRoomIdx.value);
+        modalStore.intoPetImportModal.closeModal();
+    } catch(error) {
+        console.log(error)
+    }
+}
 // 상품 등록 페이지로 이동
 const goProductDetail = (id = null) => {
     if (id) {
@@ -412,21 +437,29 @@ onMounted(async () => {
         v-if="modalStore.intoPetImportModal.isVisible"
         title="인투펫 진료실 불러오기"
         :modal-state="modalStore.intoPetImportModal"
+        size="xs"
+        modal-height="410px"
     >
         <div class="modal-contents-inner">
             <div class="d-flex gap-8">
                 <p class="title-s modal-label">진료실 선택</p>
 
-                <CustomSelect caption="등록되어 있는 정보 그대로 불러오기 됩니다." />
+                <CustomSingleSelect 
+                    v-model="importIntoPetRoomIdx"
+                    :options="modalStore.intoPetImportModal.data.roomList"
+                    caption="등록되어 있는 정보 그대로 불러오기 됩니다."
+                />
             </div>
         </div>
 
         <div class="modal-button-wrapper">
-            <button 
-                class="btn btn--size-24 btn--c btn--black-outline" 
-                @click="modalStore.intoPetImportModal.closeModal()"
-            >취소</button>
-            <button class="btn btn--size-24 btn--c btn--black">불러오기</button>
+            <div class="buttons">
+                <button 
+                    class="btn btn--size-32 btn--blue-outline" 
+                    @click="modalStore.intoPetImportModal.closeModal()"
+                >취소</button>
+                <button class="btn btn--size-32 btn--blue"  @click="importIntoPetRoom()">불러오기</button>
+            </div>
         </div>
     </Modal>
 

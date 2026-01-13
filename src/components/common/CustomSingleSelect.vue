@@ -23,7 +23,7 @@ const toggle = () => {
 
 // 현재 선택된 옵션의 라벨 찾기
 const selectedLabel = computed(() => {
-    const selectedOption = props.options.find(opt => opt.value === props.modelValue);
+    const selectedOption = props.options.find(opt => opt.value == props.modelValue);
     return selectedOption ? selectedOption.label : '';
 });
 
@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
         border-radius: 4px;
         box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.06);
         padding: 5px;
-        max-height: 120px;
+        max-height: 220px;
         overflow-y: auto;
         z-index: 50;
     }

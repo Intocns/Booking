@@ -79,20 +79,16 @@ export const useProductStore = defineStore("product", () => {
     }
 
     //인투펫 진료실 불러오기
-    async function getLinkItemInfo(cocode, roomIdx, params) {
-        //임시 적용 start(사용 시 해당 params값 참고)
-        // let params = {
-        //     "roomIdx": 0,
-        //     "itemYn":  "y", //해당 정보 response 여부
-        //     "bookingYn": "y" //해당 정보 response 여부
-        // }
-        //임시 적용 end(사용 시 해당 params값 참고)
-
-        const response = await api.post(`/api/${cocode}/item/linkItem/${roomIdx}`, params);
+    async function getLinkItemInfo(roomIdx) {
+        const response = await api.get(`/api/${cocode}/item/linkItem/${roomIdx}`);
 
         if(response.data.status_code <= 300) {
             const data = response.data.data;
             linkItemInfo.value = data;
+
+            await getProductList();
+        } else {
+            alert('처리 중 오류가 발생했습니다.');
         }
     }
 
@@ -101,8 +97,6 @@ export const useProductStore = defineStore("product", () => {
         const response = await api.post(`/api/${cocode}/item/set/del/${itemId}`);
 
         if(response.data.status_code <= 300) {
-            alert('삭제가 완료되었습니다.');
-
             await getProductList();
         }else{
             alert('처리 중 오류가 발생했습니다.');
