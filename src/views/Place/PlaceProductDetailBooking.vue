@@ -9,8 +9,7 @@ import HolidayForm from './HolidayForm.vue';
 import icPlus from '@/assets/icons/ic_plus_black.svg';
 import icDel from '@/assets/icons/ic_del.svg';
 
-//공통함수
-import { dateViewFormat } from '@/utils/common'
+import { formatDate, formatTime, formatDateTime, formatTimeToMinutes, formatDateTimeForAPI, formatDateDot } from '@/utils/dateFormatter';
 
 // 예약 가능 동물 수 (임시 1~10)
 const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
@@ -71,14 +70,14 @@ const setScheduleForSave = () => {
 
     //기간 만큼 생성
     scheduleInfo = eventDates.value.flatMap((event, idx) =>
-                        calOperatingObject(event, selectedArr[idx], idx)
+                        setOperatingObject(event, selectedArr[idx])
                     )
     
     return scheduleInfo;
 }
 
 //운영일정, 운영시간 계산 작업
-const calOperatingObject = (event, object, idx) => {
+const setOperatingObject = (event, object) => {
     //평일/주말 구분 리스트
     const weekdaysList = {
         'sat' : ['sat'],
@@ -90,8 +89,8 @@ const calOperatingObject = (event, object, idx) => {
 
     //공통 return 데이터
     const baseSchedule = {
-        startDate: event?.[0] ?? null,
-        endDate: event?.[1] ?? null,
+        startDate: event?.[0] ? formatDate(event?.[0]) : null,
+        endDate: event?.[1] ? formatDate(event?.[1]) : null,
         isBasicSchedule: scheduleMode.value !== 'event',
     };
 
@@ -240,7 +239,7 @@ const clickNextBtn = () => {
                         class="d-flex flex-col gap-8 period-item"
                     >
                         <!-- TODO: 기간 선택한 값으로 날짜 보여주어야함 -->
-                        <div class="title-s"> {{ dateViewFormat(eventDates[idx][0]) }} ~ {{ dateViewFormat(eventDates[idx][1]) }}</div>
+                        <div class="title-s"> {{ formatDate(eventDates[idx][0]) }} ~ {{ formatDate(eventDates[idx][1]) }}</div>
                         <OperatingTimeForm v-model="periodConfigs[idx]" :idx="idx" />
                     </div>
                 </div>
