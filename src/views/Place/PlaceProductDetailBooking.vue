@@ -64,14 +64,16 @@ const removeEventPeriod = (idx) => {
 const setScheduleForSave = () => {
     let scheduleInfo = [];
 
+    const isRegular = (scheduleMode.value === 'regular' || (scheduleMode.value === 'event' && applyMode.value === 'all'));
+
     //선택한 운영일자에 따른 데이터가 저장된 객체 선택
-    const selectedArr = (scheduleMode.value === 'regular' || (scheduleMode.value === 'event' && applyMode.value === 'all')) 
-                        ? [regularConfig.value] : periodConfigs.value;
+    const selectedArr = isRegular ? [regularConfig.value] : periodConfigs.value;
 
     //기간 만큼 생성
-    scheduleInfo = eventDates.value.flatMap((event, idx) =>
-                        setOperatingObject(event, selectedArr[idx])
-                    )
+    scheduleInfo = eventDates.value.flatMap((event, idx) => {
+                        const fixedIdx = isRegular ? 0 : idx
+                        return setOperatingObject(event, selectedArr[fixedIdx])
+                    })
     
     return scheduleInfo;
 }
