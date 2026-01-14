@@ -89,7 +89,9 @@ export const useReservationStore = defineStore("reservation", () => {
 
                 reserveScheduleList.value = processedData;
             }
-        } catch {
+        } catch (error) {
+            console.error(error);
+            alert('오류가 발생했습니다.')
         }
     }
 
@@ -107,7 +109,8 @@ export const useReservationStore = defineStore("reservation", () => {
                     alert(response.message)
                 }
             }
-        } catch {
+        } catch (error) {
+            console.error(error);
             reserveInfo.value = '';
             alert('오류가 발생했습니다.')
         }
