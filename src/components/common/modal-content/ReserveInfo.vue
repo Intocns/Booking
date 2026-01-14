@@ -607,6 +607,14 @@ watch(() => cancelReasonType.value, (newVal) => {
         cancelReasonDirect.value = '';
     }
 });
+
+// 차트보기 버튼 클릭 핸들러
+const handleViewChart = () => {
+    if (singlePetData.value?.petSno) {
+        const url = `https://intolink.co.kr/plus/main?pet_no=${singlePetData.value.petSno}`;
+        window.open(url, '_blank');
+    }
+};
 </script>
 
 <template>
@@ -848,7 +856,7 @@ watch(() => cancelReasonType.value, (newVal) => {
                                 <div class="d-flex align-center justify-between">
                                     <span class="body-s">{{ singlePetData?.petSno || '' }}</span>
 
-                                    <button class="btn btn--size-24 btn--black-outline">차트보기</button>
+                                    <button class="btn btn--size-24 btn--black-outline" @click="handleViewChart">차트보기</button>
                                 </div>
                             </div>
                             <div class="form-label" style="width:92px;">체중</div>
