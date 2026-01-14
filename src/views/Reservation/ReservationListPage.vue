@@ -1,27 +1,22 @@
 <!-- 전체예약 조회 -->
 <script setup>
-// 컴포넌트
+import { onMounted, ref, computed, watch, nextTick } from 'vue';
+import { startOfDay, subDays } from "date-fns";
+import { formatDate } from "@/utils/dateFormatter";
+import { RESERVE_STATUS_OPTIONS, RESERVE_ROUTE_OPTIONS } from "@/utils/reservation";
+import { useReservationStore } from '@/stores/reservationStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
+import { useModalStore } from '@/stores/modalStore';
 import PageTitle from '@/components/common/PageTitle.vue';
 import TableLayout from '@/components/common/TableLayout.vue';
+import CommonTable from '@/components/common/CommonTable.vue';
 import Modal from '@/components/common/Modal.vue';
-import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
 import FilterDate from '@/components/common/filters/FilterDate.vue';
 import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
-import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
-
-import { formatDate } from "@/utils/dateFormatter";
-import { RESERVE_STATUS_OPTIONS, RESERVE_ROUTE_OPTIONS } from "@/utils/reservation";
-import { startOfDay, subDays } from "date-fns";
-
-import { onMounted, ref, computed } from 'vue';
-// 스토어
-import { useReservationStore } from '@/stores/reservationStore';
-import { useHospitalStore } from '@/stores/hospitalStore';
-import CommonTable from '@/components/common/CommonTable.vue';
-import { useModalStore } from '@/stores/modalStore';
-// 아이콘
+import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
+import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import icSms from '@/assets/icons/ic_sms.svg';
 import icReset from '@/assets/icons/ic_reset.svg';
 const reservationStore = useReservationStore();
@@ -46,116 +41,111 @@ const columns = [
     { key: 'actions', label: '관리', width: '7%' },
 ]
 
-// 예약 상태 초기값
 const reservationStatus = ref(['all']);
-// 예약 상태 옵션 정의
-const reserveStatusOptions = RESERVE_STATUS_OPTIONS;
-
-// 담당의 초기값
 const doctorList = ref(['all']);
+const reservationChannel = ref(['all']);
+const keyword = ref('');
+const dateRange = ref([]);
 
-// 담당의 옵션 정의 (API에서 가져온 리스트 + 전체 옵션)
+const reserveStatusOptions = RESERVE_STATUS_OPTIONS;
+const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
+
 const doctorOptions = computed(() => {
     const options = [{ label: '전체', value: 'all' }];
-    
-    if (hospitalStore.doctorList && hospitalStore.doctorList.length > 0) {
-        const doctorList = hospitalStore.doctorList.map(doc => ({
+    if (hospitalStore.doctorList?.length > 0) {
+        const doctors = hospitalStore.doctorList.map(doc => ({
             label: doc.userName || doc.name || '',
             value: doc.id
         }));
-        options.push(...doctorList);
+        options.push(...doctors);
     }
-    
     return options;
 });
-const keyword = ref('');
 
-// 예약경로 초기값
-const reservationChannel = ref(['all']);
-// 예약경로 옵션 정의
-const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
-
-const dateRange = ref([]); 
 const startDate = computed(() => formatDate(dateRange.value?.[0]));
-const endDate   = computed(() => formatDate(dateRange.value?.[1]));
+const endDate = computed(() => formatDate(dateRange.value?.[1]));
 const totalCount = computed(() => reservationStore.reserveList.length);
-const reserveSummary = computed(() => {
-    let confirmed = 0;
-    let pending = 0;
-    let canceled = 0;
 
+const reserveSummary = computed(() => {
+    const counts = { confirmed: 0, pending: 0, canceled: 0 };
+    
     reservationStore.reserveList.forEach(row => {
-        switch (row.inState) {
-            case 1: // 승인
-                confirmed++;
-                break;
-            case 0: // 대기
-                pending++;
-                break;
-            case 2: // 취소
-            case 3: // 거절
-                canceled++;
-                break;
-        }
+        if (row.inState === 1) counts.confirmed++;
+        else if (row.inState === 0) counts.pending++;
+        else if (row.inState === 2 || row.inState === 3) counts.canceled++;
     });
 
     return [
-        { label: '확정', value: confirmed.toString().padStart(2, '0') },
-        { label: '대기', value: pending.toString().padStart(2, '0') },
-        { label: '취소 · 거절', value: canceled.toString().padStart(2, '0'), warning: true },
+        { label: '확정', value: counts.confirmed.toString().padStart(2, '0') },
+        { label: '대기', value: counts.pending.toString().padStart(2, '0') },
+        { label: '취소 · 거절', value: counts.canceled.toString().padStart(2, '0'), warning: true },
     ];
 });
 
+// 필터 값 변환 헬퍼 함수 ('all'이 포함되어 있으면 null로 변환)
+const convertFilterParam = (value) => {
+    if (!value || value.length === 0 || value.includes('all')) return null;
+    return value;
+};
+
 const searchList = async () => {
+    const isStatusEmpty = !reservationStatus.value?.length;
+    const isDoctorEmpty = !doctorList.value?.length;
+    const isRouteEmpty = !reservationChannel.value?.length;
+    
+    if (isStatusEmpty || isDoctorEmpty || isRouteEmpty) {
+        reservationStore.reserveList = [];
+        return;
+    }
+    
     reservationStore.getReservationList({
         cocode: 2592, //TODO: 임시 데이터 추후 삭제
-        status: reservationStatus.value || null,
-        doctorId: doctorList.value || null,
-        keyword: keyword.value || null,
-        startDate: startDate.value ,
-        endDate: endDate.value ,
-        reRoute: reservationChannel.value || null,
+        status: convertFilterParam(reservationStatus.value),
+        doctorId: convertFilterParam(doctorList.value),
+        keyword: keyword.value?.trim() || null,
+        startDate: startDate.value,
+        endDate: endDate.value,
+        reRoute: convertFilterParam(reservationChannel.value),
     });
 };
 
-const searchClear = () => { //초기화 버튼
+const searchClear = () => {
     reservationStatus.value = ['all'];
     doctorList.value = ['all'];
     reservationChannel.value = ['all'];
     keyword.value = '';
-    // 기본값 7일 범위로 설정 (오늘 기준 7일 전 ~ 오늘)
     const today = startOfDay(new Date());
-    const sevenDaysAgo = subDays(today, 7);
-    dateRange.value = [sevenDaysAgo, today];
+    dateRange.value = [subDays(today, 7), today];
 };
 
-onMounted(async () => {
-    // 담당의 리스트 로드
-    if (hospitalStore.doctorList.length === 0) {
-        await hospitalStore.getDoctorList();
-    }
-    // 예약 리스트 검색
-    searchList();
-})
+let isInitialMount = true;
 
-// 검색 결과 리스트에 클래스 주입 
+watch([reservationStatus, doctorList, reservationChannel, dateRange], () => {
+    if (isInitialMount) return;
+    nextTick(() => searchList());
+}, { deep: true });
+
 const processedRows = computed(() => {
     return reservationStore.reserveList.map(row => {
         let className = '';
-        if (row.inState == 0) className = 'row-pending';  // 대기
-        if (row.inState == 2 || row.inState == 3) className = 'row-canceled'; // 취소 || 거절
+        if (row.inState === 0) className = 'row-pending';
+        if (row.inState === 2 || row.inState === 3) className = 'row-canceled';
         
-        return {
-            ...row,
-            rowClass: className // CommonTable의 tr :class와 연결됨
-        };
+        return { ...row, rowClass: className };
     });
 });
 
-// 예약 상세보기 핸들러
 const handelReserveDetail = (reserveIdx) => {
-    reservationStore.getReserveInfo(reserveIdx)
-}
+    reservationStore.getReserveInfo(reserveIdx);
+};
+
+onMounted(async () => {
+    if (hospitalStore.doctorList.length === 0) {
+        await hospitalStore.getDoctorList();
+    }
+    searchList();
+    isInitialMount = false;
+});
 </script>
 <template>
     <!-- 페이지 타이틀 -->

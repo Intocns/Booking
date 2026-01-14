@@ -14,8 +14,22 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const localValue = computed({
-    get: () => props.modelValue,
-    set: (v) => emit('update:modelValue', v)
+    get: () => {
+        // modelValue가 없거나 undefined/null인 경우에만 빈 배열 반환
+        // 빈 배열 자체는 그대로 반환
+        if (Array.isArray(props.modelValue)) {
+            return props.modelValue;
+        }
+        return [];
+    },
+    set: (v) => {
+        // 빈 배열도 정상적으로 전달
+        if (Array.isArray(v)) {
+            emit('update:modelValue', v);
+        } else {
+            emit('update:modelValue', []);
+        }
+    }
 })
 </script>
 

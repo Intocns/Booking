@@ -1,34 +1,28 @@
 <!-- 대기 예약 관리 -->
 <script setup>
+import { computed, ref, onMounted, watch, nextTick } from 'vue';
+import { RESERVE_ROUTE_OPTIONS, RESERVE_ROUTE_MAP } from "@/utils/reservation";
+import { useReservationStore } from '@/stores/reservationStore';
+import { useModalStore } from '@/stores/modalStore';
 import PageTitle from '@/components/common/PageTitle.vue';
 import TableLayout from '@/components/common/TableLayout.vue';
-import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
 import Modal from '@/components/common/Modal.vue';
+import FilterSelect from '@/components/common/filters/FilterSelect.vue';
+import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
 import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
 import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import SearchCustomer from '@/components/common/modal-content/SearchCustomer.vue';
-import FilterSelect from '@/components/common/filters/FilterSelect.vue';
-
 import icSms from '@/assets/icons/ic_sms.svg';
-import icReset from '@/assets/icons/ic_reset.svg'
-
-import { useReservationStore } from '@/stores/reservationStore';
-import { useModalStore } from '@/stores/modalStore';
-
-import { RESERVE_ROUTE_OPTIONS, RESERVE_ROUTE_MAP } from "@/utils/reservation";
-import { computed, ref, onMounted } from 'vue';
+import icReset from '@/assets/icons/ic_reset.svg';
 
 const reservationStore = useReservationStore();
 const modalStore = useModalStore();
 
-// 예약경로 초기값
 const reservationChannel = ref(['all']);
-// 예약경로 옵션 정의
-const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
 const keyword = ref('');
-// 테이블 col 정의
+const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
 const columns = [
     { key: 'idx', label: 'No.', width: '6%' },
     { key: 'reTimeTxt', label: '예약일자', width: '7%' },
@@ -41,22 +35,21 @@ const columns = [
     { key: 'reMemo', label: '고객 메모', width: '12%' },
     { key: 'reRouteTxt', label: '예약경로', width: '7%' },
     { key: 'createdAtTxt', label: '접수일시', width: '10%' },
-    { key: 'actions', label: '관리', width: '7%' }, // 커스텀 슬롯
+    { key: 'actions', label: '관리', width: '7%' },
 ]
 
 const totalCount = computed(() => reservationStore.reservePendingList.length);
 const reserveSummary = computed(() => {
-    const counts = {};
+    const counts = Object.keys(RESERVE_ROUTE_MAP).reduce((acc, key) => {
+        acc[key] = 0;
+        return acc;
+    }, {});
 
-    for (const key in RESERVE_ROUTE_MAP) {
-        counts[key] = 0;
-    }
-
-    for (const row of reservationStore.reservePendingList) {
+    reservationStore.reservePendingList.forEach(row => {
         if (counts[row.reRoute] !== undefined) {
             counts[row.reRoute]++;
         }
-    }
+    });
 
     return Object.keys(RESERVE_ROUTE_MAP).map(key => ({
         label: RESERVE_ROUTE_MAP[key],
@@ -64,29 +57,45 @@ const reserveSummary = computed(() => {
     }));
 });
 
+// 필터 값 변환 헬퍼 함수 ('all'이 포함되어 있으면 null로 변환)
+const convertFilterParam = (value) => {
+    if (!value || value.length === 0 || value.includes('all')) return null;
+    return value;
+};
+
 const searchList = async () => {
+    if (!reservationChannel.value?.length) {
+        reservationStore.reservePendingList = [];
+        return;
+    }
+    
     reservationStore.getPendingList({
         cocode: 2592, //TODO: 임시 데이터 추후 삭제
-        keyword: keyword.value,
-        reRoute: reservationChannel.value,
+        keyword: keyword.value?.trim() || null,
+        reRoute: convertFilterParam(reservationChannel.value),
     });
 };
 
-const searchClear = () => { //초기화 버튼
+const searchClear = () => {
     reservationChannel.value = ['all'];
     keyword.value = '';
 };
 
-// 예약 상세보기 핸들러
+let isInitialMount = true;
+
+watch([reservationChannel], () => {
+    if (isInitialMount) return;
+    nextTick(() => searchList());
+}, { deep: true });
+
 const handelReserveDetail = (reserveIdx) => {
-    reservationStore.getReserveInfo(reserveIdx)
-}
+    reservationStore.getReserveInfo(reserveIdx);
+};
 
 onMounted(() => {
-    // 대기 예약 리스트 불러오기
     searchList();
-    // reservationStore.getPendingList();
-})
+    isInitialMount = false;
+});
 </script>
 
 <template>

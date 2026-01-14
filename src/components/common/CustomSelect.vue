@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
-
+import { formatSelectedLabels } from '@/utils/selectFormatter';
 import icSelectBoxOpenClosed from '@/assets/icons/Ic_selectbox_OpenClosed.svg';
 
 
@@ -32,6 +32,11 @@ const toggle = () => {
 
 // select box에 표시할 라벨 계산 
 const selectedLabels = computed(() => {
+    // modelValue가 없거나 빈 배열인 경우
+    if (!props.modelValue || props.modelValue.length === 0) {
+        return [];
+    }
+    
     // 1. modelValue가 ['all']인 경우, '전체' 옵션의 라벨을 찾아 반환
     if (props.modelValue.includes('all') && props.modelValue.length === 1) {
         const allOption = props.options.find(opt => opt.value === 'all');
@@ -40,15 +45,23 @@ const selectedLabels = computed(() => {
     }
 
     // 2. 그 외의 경우 (개별 선택)
-    return props.options
-        .filter(opt => props.modelValue.includes(opt.value))
+    const labels = props.options
+        .filter(opt => props.modelValue && props.modelValue.includes(opt.value))
         .map(opt => opt.label);
+    
+    return labels;
 })
+
+const displayText = computed(() => {
+    return formatSelectedLabels(selectedLabels.value, props.placeholder);
+});
 
 
 /* 🔹 옵션 선택 */
 const selectOption = (value) => {
-    let newValue = [...props.modelValue];
+    // modelValue가 없거나 undefined인 경우 빈 배열로 초기화
+    const currentValue = props.modelValue || [];
+    let newValue = [...currentValue];
 
     if (value === 'all') {
         // --- 'all' 옵션을 클릭한 경우 ---
@@ -56,6 +69,7 @@ const selectOption = (value) => {
 
         if (isAllCurrentlySelected) {
             // 현재 'all'이 선택되어 있으면 -> 전부 해제 (['all'] 제거)
+            // 빈 배열 대신 최소한 빈 배열을 유지 (null 방지)
             newValue = [];
         } else {
             // 현재 'all'이 선택되어 있지 않으면 -> 'all'만 선택 (다른 모든 개별 항목을 대체)
@@ -82,6 +96,7 @@ const selectOption = (value) => {
         
         // 3. 개별 옵션 선택/해제 후, 모든 개별 옵션이 선택되었는지 확인
         const isAllIndividualSelected = individualOptionValues.value.length > 0 &&
+                                       newValue.length > 0 &&
                                        individualOptionValues.value.every(val => newValue.includes(val));
 
         // 모든 개별 옵션이 선택되었다면, 'all'로 대체하여 값을 통일
@@ -90,6 +105,7 @@ const selectOption = (value) => {
         }
     }
 
+    // 빈 배열도 정상적으로 emit (null이 아닌 빈 배열)
     emit("update:modelValue", newValue);
 };
 
@@ -118,7 +134,7 @@ onBeforeUnmount(() => {
                 class="select__text"
                 :class="{'is-placeholder' : !selectedLabels.length }"
             >
-                {{ selectedLabels.length ? selectedLabels.join(', ') : placeholder }}
+                {{ displayText }}
             </span>
 
             <span class="select__icon" :class="{'rotate': isOpen}">
