@@ -6,6 +6,9 @@ import CustomSelect from '../CustomSelect.vue';
 import TalkPreview from '../TalkPreview.vue';
 
 import { ref } from 'vue';
+import { useModalStore } from '@/stores/modalStore';
+
+const modalStore = useModalStore();
 
 const activeTab = ref('sms');
 
@@ -218,7 +221,7 @@ const hideTooltip = (type) => {
             
             <!-- 버튼영역 -->
             <div class="content-talk__buttons">
-                <button class="btn btn--size-40 btn--blue-outline modal-btn">취소</button>
+                <button class="btn btn--size-40 btn--blue-outline modal-btn" @click="modalStore.smsModal.closeModal()">취소</button>
                 <button class="btn btn--size-40 btn--blue modal-btn">발송</button>
             </div>
         </div>
