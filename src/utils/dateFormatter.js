@@ -66,3 +66,21 @@ export const formatDateTimeForAPI = (date, time) => {
     const [hours, minutes] = time.split(':');
     return `${dateStr} ${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}:00.0`;
 }
+
+// 요일 합친 형식으로 return
+// Y.MM.DD(day)
+export function formatDateToDay(date) {
+    const d = new Date(date);
+
+    // 유효하지 않은 날짜 처리
+    if (isNaN(d.getTime())) return '';
+
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+
+    // "YYYY.MM.DD(요일)"
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    const weekday = weekdays[d.getDay()];
+    return `${year}.${month}.${day}(${weekday})`;
+};

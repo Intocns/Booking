@@ -9,7 +9,7 @@ import HolidayForm from './HolidayForm.vue';
 import icPlus from '@/assets/icons/ic_plus_black.svg';
 import icDel from '@/assets/icons/ic_del.svg';
 
-import { formatDate, formatTime, formatDateTime, formatTimeToMinutes, formatDateTimeForAPI, formatDateDot } from '@/utils/dateFormatter';
+import { formatDate,  formatDateToDay } from '@/utils/dateFormatter';
 
 // 예약 가능 동물 수 (임시 1~10)
 const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
@@ -241,7 +241,7 @@ const clickNextBtn = () => {
                         class="d-flex flex-col gap-8 period-item"
                     >
                         <!-- TODO: 기간 선택한 값으로 날짜 보여주어야함 -->
-                        <div class="title-s"> {{ formatDate(eventDates[idx][0]) }} ~ {{ formatDate(eventDates[idx][1]) }}</div>
+                        <div class="title-s"> {{ formatDateToDay(eventDates[idx][0]) }} ~ {{ formatDateToDay(eventDates[idx][1]) }}</div>
                         <OperatingTimeForm v-model="periodConfigs[idx]" :idx="idx" />
                     </div>
                 </div>
