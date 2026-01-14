@@ -374,40 +374,34 @@ const handleConfirmReservationSave = async () => {
 
 // 고객 검색에서 고객 선택 시 처리
 const handleCustomerSelected = (customer) => {
-    // 선택한 고객 정보를 reserveClientList에 반영
-    const index = reserveClientList.value.findIndex(item => 
-        item.userNo === customer.userNo && item.petNo === customer.petNo
-    );
+    // 선택한 고객만 리스트에 남기고 나머지는 제거 (단일 결과 화면으로 표시)
+    const newCustomer = {
+        ...customer,
+        lastStatusDateTxt: customer.lastStatusDate ? formatDate(customer.lastStatusDate) : '',
+        regDateTxt: customer.regDate ? formatDate(customer.regDate) : '',
+        isMatched: true,
+        rowClass: 'row-matched',
+        breed: customer.breedName || '',
+        sex: PET_GENDER_MAP[customer.sex] || '',
+        // 고객/동물 번호 (예약 확정 시 필요)
+        userSno: customer.userSno || null,
+        petSno: customer.petSno || null,
+        // 주소 정보 (1건인 경우 사용)
+        userAddr: customer.userAddr || '',
+        userAddr2: customer.userAddr2 || '',
+        // 담당의사 (1건인 경우 사용)
+        petDoctor: customer.petDoctor || '',
+        petName: customer.petName || '',
+        petBw: customer.petBw || '',
+        rfid: customer.rfid || '',
+        speciesName: customer.speciesName || '',
+        breedName: customer.breedName || '',
+        lastStatusDate: customer.lastStatusDate || '',
+        regDate: customer.regDate || '',
+    };
     
-    if (index !== -1) {
-        // 모든 고객의 매칭 상태 초기화
-        reserveClientList.value.forEach(item => {
-            item.isMatched = false;
-            item.rowClass = '';
-        });
-        
-        // 선택한 고객 매칭
-        reserveClientList.value[index].isMatched = true;
-        reserveClientList.value[index].rowClass = 'row-matched';
-    } else {
-        // 새로운 고객인 경우 리스트에 추가
-        const newCustomer = {
-            ...customer,
-            lastStatusDateTxt: formatDate(customer.lastStatusDate),
-            isMatched: true,
-            rowClass: 'row-matched',
-            breed: customer.breedName || '',
-            sex: PET_GENDER_MAP[customer.sex] || customer.sex || '',
-        };
-        
-        // 기존 매칭 해제
-        reserveClientList.value.forEach(item => {
-            item.isMatched = false;
-            item.rowClass = '';
-        });
-        
-        reserveClientList.value.push(newCustomer);
-    }
+    // 선택한 고객만 리스트에 남김 (단일 결과 화면으로 표시)
+    reserveClientList.value = [newCustomer];
     
     // 고객 검색 모달 닫기
     modalStore.searchCustomerModal.closeModal();
@@ -546,6 +540,19 @@ const matchedClientList = computed(() => {
 // 조회 결과가 1건인지 확인 (예약 확정 상태일 때는 매칭된 고객만 고려)
 const isSingleResult = computed(() => matchedClientList.value.length === 1)
 
+// 예약 확정 상태 여부
+const isConfirmed = computed(() => reserveData.inState === 1);
+
+// 예약 취소 상태 확인 (inState === 2 또는 3)
+const isCancelled = computed(() => {
+    return reserveData.inState === 2 || reserveData.inState === 3;
+});
+
+// 매칭된 고객 정보 (SearchCustomer에 전달)
+const matchedCustomerForSearch = computed(() => {
+    return reserveClientList.value?.find(item => item.isMatched) || null;
+});
+
 // 1건인 경우 고객 정보 데이터
 const singleCustomerData = computed(() => {
     if (isSingleResult.value && matchedClientList.value.length > 0) {
@@ -554,11 +561,24 @@ const singleCustomerData = computed(() => {
     return null;
 })
 
-// 1건인 경우 동물 정보 데이터 (reserveClientPet에서 가져옴)
+// 1건인 경우 동물 정보 데이터 (singleCustomerData에서 가져옴)
 const singlePetData = computed(() => {
     if (isSingleResult.value && singleCustomerData.value) {
-        // reserveClientPet는 객체이므로 직접 반환
-        return reserveClientPet || null;
+        const customer = singleCustomerData.value;
+        // singleCustomerData에 동물 정보가 포함되어 있으므로 해당 정보 반환
+        // reserveClientPet는 초기 데이터이므로, 선택한 고객의 정보를 우선 사용
+        return {
+            petSno: customer.petSno || '',
+            petName: customer.petName || '',
+            petBw: customer.petBw || '',
+            rfid: customer.rfid || '',
+            speciesName: customer.speciesName || '',
+            breedName: customer.breedName || '',
+            sex: customer.sex || '',
+            petInsertDate: customer.petInsertDate || customer.regDate || '',
+            lastVisitDate: customer.lastVisitDate || customer.lastStatusDate || '',
+            petDoctor: customer.petDoctor || '',
+        };
     }
     return null;
 })
@@ -774,7 +794,11 @@ watch(() => cancelReasonType.value, (newVal) => {
                     </div>
 
                     <!-- 고객 검색 버튼 -->
-                    <button class="btn btn--size-24 btn--black" @click="modalStore.searchCustomerModal.openModal()">
+                    <button 
+                        v-if="!isCancelled"
+                        class="btn btn--size-24 btn--black" 
+                        @click="modalStore.searchCustomerModal.openModal()"
+                    >
                         <img :src="icSearchW" alt="아이콘">
                         고객 검색
                     </button>
@@ -822,7 +846,7 @@ watch(() => cancelReasonType.value, (newVal) => {
                             <div class="form-label">동물번호</div>
                             <div class="form-content">
                                 <div class="d-flex align-center justify-between">
-                                    <span class="body-s">{{ singlePetData?.petSno || singleCustomerData?.petNo || '' }}</span>
+                                    <span class="body-s">{{ singlePetData?.petSno || '' }}</span>
 
                                     <button class="btn btn--size-24 btn--black-outline">차트보기</button>
                                 </div>
@@ -836,7 +860,7 @@ watch(() => cancelReasonType.value, (newVal) => {
                         <li class="form-item">
                             <div class="form-label">동물이름</div>
                             <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.petName || singleCustomerData?.petName || '' }}</span>
+                                <span class="body-s">{{ singlePetData?.petName || '' }}</span>
                             </div>
                             <div class="form-label" style="width:92px;">동물등록번호</div>
                             <div class="form-content">
@@ -846,27 +870,27 @@ watch(() => cancelReasonType.value, (newVal) => {
                         <li class="form-item">
                             <div class="form-label">종</div>
                             <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.speciesName || singleCustomerData?.speciesName || '' }}</span>
+                                <span class="body-s">{{ singlePetData?.speciesName || '' }}</span>
                             </div>
                             <div class="form-label" style="width:92px;">등록일</div>
                             <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.petInsertDate ? formatDateDot(singlePetData.petInsertDate) : (singleCustomerData?.regDateTxt || '') }}</span>
+                                <span class="body-s">{{ singlePetData?.petInsertDate ? formatDateDot(singlePetData.petInsertDate) : '' }}</span>
                             </div>
                         </li>
                         <li class="form-item">
                             <div class="form-label">품종</div>
                             <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.breedName || singleCustomerData?.breed || '' }}</span>
+                                <span class="body-s">{{ singlePetData?.breedName || '' }}</span>
                             </div>
                             <div class="form-label" style="width:92px;">최근방문일</div>
                             <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.lastVisitDate ? formatDateDot(singlePetData.lastVisitDate) : (singleCustomerData?.lastStatusDateTxt || '') }}</span>
+                                <span class="body-s">{{ singlePetData?.lastVisitDate ? formatDateDot(singlePetData.lastVisitDate) : '' }}</span>
                             </div>
                         </li>
                         <li class="form-item">
                             <div class="form-label">성별</div>
                             <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.sex ? (PET_GENDER_MAP[singlePetData.sex] || singlePetData.sex) : (singleCustomerData?.sex || 'unknown') }}</span>
+                                <span class="body-s">{{ singlePetData?.sex ? (PET_GENDER_MAP[singlePetData.sex] || '') : '' }}</span>
                             </div>
                             <div class="form-label" style="width:92px;">담당의사</div>
                             <div class="form-content">
@@ -892,7 +916,11 @@ watch(() => cancelReasonType.value, (newVal) => {
                     </div>
 
                     <!-- 고객 검색 버튼 -->
-                    <button class="btn btn--size-24 btn--black" @click="modalStore.searchCustomerModal.openModal()">
+                    <button 
+                        v-if="!isCancelled"
+                        class="btn btn--size-24 btn--black" 
+                        @click="modalStore.searchCustomerModal.openModal()"
+                    >
                         <img :src="icSearchW" alt="아이콘">
                         고객 검색
                     </button>
@@ -923,10 +951,10 @@ watch(() => cancelReasonType.value, (newVal) => {
     </div>
 
     <!-- 버튼 -->
-    <div class="modal-button-wrapper">
+    <div v-if="!isCancelled" class="modal-button-wrapper">
         <div class="buttons">
             <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.cancelReserveModal.openModal()">예약취소</button>
-            <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation">예약 확정</button>
+            <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation">{{ isConfirmed ? '저장' : '예약 확정' }}</button>
         </div>
     </div>
 
@@ -937,7 +965,10 @@ watch(() => cancelReasonType.value, (newVal) => {
         title="고객 검색"
         :modalState="modalStore.searchCustomerModal"
     >
-        <SearchCustomer @customer-selected="handleCustomerSelected" />
+        <SearchCustomer 
+            :matched-customer="matchedCustomerForSearch"
+            @customer-selected="handleCustomerSelected" 
+        />
     </Modal>
     
     <!-- 고객 예약 정보 > 예약 취소 모달 -->
@@ -1025,7 +1056,7 @@ watch(() => cancelReasonType.value, (newVal) => {
         <div class="modal-button-wrapper">
             <div class="buttons">
                 <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.confirmReserveModal.closeModal()">닫기</button>
-                <button class="btn btn--size-32 btn--blue" @click="handleConfirmReservationSave">예약 확정</button>
+                <button class="btn btn--size-32 btn--blue" @click="handleConfirmReservationSave">{{ isConfirmed ? '저장' : '예약 확정' }}</button>
             </div>
         </div>
     </Modal>

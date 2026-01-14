@@ -14,6 +14,14 @@ const modalStore = useModalStore();
 
 const reservationStore = useReservationStore();
 
+// props: 매칭된 고객 정보 (ReserveInfo에서 전달)
+const props = defineProps({
+    matchedCustomer: {
+        type: Object,
+        default: null
+    }
+});
+
 // 조회 조건 옵션
 const searchTypeOptions = CUSTOMER_SEARCH_TYPE_OPTIONS;
 
@@ -53,15 +61,36 @@ const handleSearch = async () => {
 
         const result = await reservationStore.searchClientMapping(searchData);
         // 검색 결과에 매칭 상태 초기화 및 데이터 포맷팅
-        customerList.value = (result || []).map(item => ({
-            ...item,
-            isMatched: false,
-            rowClass: '',
-            // 품종: breedName 사용 (백엔드에서 br.Name2 AS breedName으로 제공)
-            breed: item.breedName || '',
-            // 성별: PET_GENDER_MAP으로 변환
-            sex: PET_GENDER_MAP[item.sex] || item.sex || '',
-        }));
+        customerList.value = (result || []).map(item => {
+            // 매칭된 고객과 비교하여 자동 선택
+            let isMatched = false;
+            if (props.matchedCustomer) {
+                // userSno와 petSno로 비교
+                const matchedUserSno = props.matchedCustomer.userSno || props.matchedCustomer.userNo;
+                const matchedPetSno = props.matchedCustomer.petSno || props.matchedCustomer.petNo;
+                const itemUserSno = item.userSno || item.userNo;
+                const itemPetSno = item.petSno || item.petNo;
+                
+                if (matchedUserSno && itemUserSno && String(matchedUserSno) === String(itemUserSno)) {
+                    // petSno도 있으면 둘 다 일치해야 함
+                    if (matchedPetSno && itemPetSno) {
+                        isMatched = String(matchedPetSno) === String(itemPetSno);
+                    } else {
+                        isMatched = true; // userSno만 일치해도 매칭
+                    }
+                } else if (matchedPetSno && itemPetSno && String(matchedPetSno) === String(itemPetSno)) {
+                    isMatched = true; // petSno만 일치해도 매칭
+                }
+            }
+            
+            return {
+                ...item,
+                isMatched: isMatched,
+                rowClass: isMatched ? 'row-matched' : '',
+                breed: item.breedName || '',
+                sex: PET_GENDER_MAP[item.sex] || item.sex || '',
+            };
+        });
     } catch (error) {
         console.error('고객 검색 오류:', error);
     } finally {
