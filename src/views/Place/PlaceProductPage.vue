@@ -256,6 +256,10 @@ const submitCopyItem = () => {
     modalStore.productCopyModal.closeModal(); 
 };
 
+// 상품 미리보기 페이지 이동
+const goToPreviewPage = (businessId, itemId) => {
+    window.open(`https://m.booking.naver.com/booking/13/bizes/${businessId}/items/${itemId}`)
+}
 onMounted(async () => {
     await productStore.getProductList();
 })
@@ -344,7 +348,7 @@ onMounted(async () => {
                     </div>
 
                     <div>
-                        <button class="btn btn--size-24 btn--black-outline">미리보기</button>
+                        <button class="btn btn--size-24 btn--black-outline" @click="goToPreviewPage(product.businessId, product.bizItemId )">미리보기</button>
                     </div>
                 </div>
             </div>
