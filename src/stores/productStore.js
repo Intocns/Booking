@@ -6,14 +6,13 @@ import { ref } from "vue";
 export const useProductStore = defineStore("product", () => {
     const cocode = '2592' // TODO: 임시
 
-    // 상품 전체 리스트
-    const productList = ref([]);
-    const itemRoomList = ref([]);
+    const productList = ref([]);     // 상품 전체 리스트
+    const itemRoomList = ref([]);    // 인투펫 진료실 리스트
     const linkItemInfo = ref({});
     const itemDetailInfo = ref({});
-    
+    const productScheduleDataList = ref([]); // 간단예약 관리 > 상품별 운영시간 데이터
 
-    // 상품 리스트
+    // 상품 리스트 불러오기
     async function getProductList() {
 
         const response = await api.get(`/api/${cocode}/item/list`)
@@ -24,7 +23,7 @@ export const useProductStore = defineStore("product", () => {
         }
     }
 
-    //상품 순서 변경
+    // 상품 순서 변경
     async function setItemOrder(params) {
         //임시 적용 start(사용 시 해당 params값 참고)
         // let params = [
@@ -40,7 +39,7 @@ export const useProductStore = defineStore("product", () => {
         return response.data;
     }
 
-    //상품 정보 변경
+    // 상품 정보 변경
     async function setItemDesc(params) {
         //임시 적용 start(사용 시 해당 params값 참고)
         // let params = {
@@ -68,7 +67,7 @@ export const useProductStore = defineStore("product", () => {
         return response.data;
     }
 
-    //인투펫 진료실 불러오기
+    // 인투펫 진료실 리스트 불러오기
     async function getItemRoomList() {
         const response = await api.get(`/api/${cocode}/item/room/list`);
 
@@ -78,7 +77,7 @@ export const useProductStore = defineStore("product", () => {
         }
     }
 
-    //인투펫 진료실 불러오기
+    // 인투펫 진료실 불러오기(import)
     async function getLinkItemInfo(roomIdx) {
         const response = await api.get(`/api/${cocode}/item/linkItem/${roomIdx}`);
 
@@ -92,7 +91,7 @@ export const useProductStore = defineStore("product", () => {
         }
     }
 
-    //상품 삭제
+    // 상품 삭제
     async function delItem(itemId) {
         const response = await api.post(`/api/${cocode}/item/set/del/${itemId}`);
 
@@ -116,7 +115,7 @@ export const useProductStore = defineStore("product", () => {
         }
     }
 
-    //상품 등록
+    // 상품 등록
     async function addItem(params) {
         //임시 적용 start(사용 시 해당 params값 참고)
         // let params = {
@@ -238,7 +237,7 @@ export const useProductStore = defineStore("product", () => {
         return response.data;
     }
 
-    //상품 수정
+    // 상품 수정
     async function modifyItem(itemId, params) {
         //임시 적용 start(사용 시 해당 params값 참고)
         // let params = {
@@ -361,7 +360,7 @@ export const useProductStore = defineStore("product", () => {
         return response.data;
     }
 
-    //상품 기본정보 확인
+    // 상품 기본정보 확인
     async function getItemDetailInfo(itemId) {
         const response = await api.get(`/api/${cocode}/item/detail/${itemId}`);
 
@@ -386,23 +385,64 @@ export const useProductStore = defineStore("product", () => {
         
         return response.data;
     }
+
+    // 간단 예약 관리 데이터 불러오기 (상품별 예약 운영시간 데이터)
+    const getBusinessSchedule = async(params) => {
+        try {
+            const response = await api.post(`/api/businesses/${cocode}/sche`, params);
+            
+            if(response.data.status_code <= 300) {
+                const data = response.data.data;
+                productScheduleDataList.value = data;
+            }
+        } catch {
+            alert('처리 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 상품 운영시간 변경
+    const setScheduleTime = async(itemId, schId, params) => {
+        // {
+        //     "scheduleId": 0,
+        //     "day": "string",
+        //     "times": [
+        //         {
+        //         "startTime": "string",
+        //         "endTime": "string"
+        //         }
+        //     ]
+        // }
+        try {
+            const response = await api.post(`api/${cocode}/item/${itemId}/schedule/modify/a/${schId}`, params);
+
+            if(response.data.status_code <= 300) {
+                
+            }
+        } catch {
+            
+        }
+    }
     
     return {
-        productList,
-        itemRoomList,
+        // 
+        productList, // 상품 전체 리스트
+        itemRoomList, // 인투펫 진료실 리스트
         linkItemInfo,
         itemDetailInfo,
-
-        getProductList,
-        setItemOrder,
-        setItemDesc,
-        getItemRoomList,
-        getLinkItemInfo,
-        delItem,
-        copyItem,
-        addItem,
-        modifyItem,
-        getItemDetailInfo,
-        setItemShow
+        productScheduleDataList, // 간단예약 관리 > 상품별 운영시간 데이터
+        // 
+        getProductList, // 상품 리스트 불러오기
+        setItemOrder, // 상품 순서 변경
+        setItemDesc, // 상품 정보 변경
+        getItemRoomList, // 인투펫 진료실 리스트 불러오기
+        getLinkItemInfo, // 인투펫 진료실 불러오기(import)
+        delItem, // 상품 삭제
+        copyItem, // 상품 복사
+        addItem, // 상품 등록
+        modifyItem, // 상품 수정
+        getItemDetailInfo, // 상품 기본정보 확인
+        setItemShow, //상품 노출 변경(단건/ 일괄)
+        getBusinessSchedule, // 간단 예약 관리 데이터 불러오기 (상품별 예약 운영시간 데이터)
+        setScheduleTime, // 상품 운영시간 변경
     }
 })
