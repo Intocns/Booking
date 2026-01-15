@@ -11,7 +11,7 @@ import { api } from '@/api/axios';
 
 const modalStore = useModalStore();
 
-const activeTab = ref('sms');
+const activeTab = ref('talk');
 const smsRemainingCount = ref(null);
 const isLoadingSmsPoint = ref(false);
 const cocode = '2592'; // TODO: 임시
