@@ -21,7 +21,7 @@ const emit = defineEmits(['close', 'add']);
  * 상태 관리
  */
 const selectedDate = ref(null); // 데이트피커 선택 값
-const repeatType = ref('once'); // 'yearly', 'monthly', 'once'
+const repeatType = ref('DAILY'); // 'YEARLY', 'MONTHLY', 'DAILY'
 
 // 1. 과거 날짜 선택 방지 (오늘 이전 날짜 비활성화)
 const disabledDates = (date) => {
@@ -35,15 +35,15 @@ const formattedDisplayText = computed(() => {
     const d = selectedDate.value;
     
     // 기간 선택(Range)일 경우를 대비한 로직 (현재는 단일 선택 기준)
-    if (repeatType.value === 'yearly') {
+    if (repeatType.value === 'YEARLY') {
         return `매년 ${format(d, 'M월 d일')}`;
     } 
     
-    if (repeatType.value === 'monthly') {
+    if (repeatType.value === 'MONTHLY') {
         return `매달 ${format(d, 'd일')}`;
     }
     
-    if (repeatType.value === 'once') {
+    if (repeatType.value === 'DAILY') {
         // 만약 DatePicker가 range 모드라면 여기서 분기 처리가 필요합니다.
         // 현재는 단일 날짜 선택 기준으로 작성합니다.
         return format(d, 'yyyy년 MM월 dd일');
@@ -77,7 +77,7 @@ const handleClose = () => {
     emit('close');
     // 닫을 때 초기화
     selectedDate.ref = null;
-    repeatType.value = 'once';
+    repeatType.value = 'DAILY';
 };
 
 // 모달이 열릴 때 오늘 날짜 기본 선택 (선택 사항)
@@ -114,15 +114,15 @@ const handleClose = () => {
                             <!-- 매년/매달/한번만 선택 -->
                             <div v-if="showRepeatOptions" class="segment-wrapper">
                                 <label class="segment">
-                                    <input type="radio" v-model="repeatType" value="yearly" />
+                                    <input type="radio" v-model="repeatType" value="YEARLY" />
                                     <span class="label">매년</span>
                                 </label>
                                 <label class="segment">
-                                    <input type="radio" v-model="repeatType" value="monthly" />
+                                    <input type="radio" v-model="repeatType" value="MONTHLY" />
                                     <span class="label">매달</span>
                                 </label>
                                 <label class="segment">
-                                    <input type="radio" v-model="repeatType" value="once" />
+                                    <input type="radio" v-model="repeatType" value="DAILY" />
                                     <span class="label">한번만</span>
                                 </label>
                             </div>

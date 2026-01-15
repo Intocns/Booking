@@ -10,6 +10,9 @@ import icPlus from '@/assets/icons/ic_plus_black.svg';
 import icDel from '@/assets/icons/ic_del.svg';
 
 import { formatDate,  formatDateToDay } from '@/utils/dateFormatter';
+import { useProductStore } from '@/stores/productStore';
+
+const productStore = useProductStore();
 
 // 예약 가능 동물 수 (임시 1~10)
 const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
@@ -24,6 +27,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:nextTab'])
+const holidayFormRef = ref(null)//저장 시 api에 맞춰 request형식으로 format하는 함수를 호출
 
 // 상태 관리
 const selectedAnimalCount = ref(null); // 예약 가능 동물 수 선택
@@ -126,12 +130,26 @@ const setOperatingObject = (event, object) => {
 }
 
 // 다음 버튼
-const clickNextBtn = () => {
-    const scheduleInfo = setScheduleForSave();
-    console.log(scheduleInfo);
+const clickNextBtn = (async() => {
+    const reserveCnt = selectedAnimalCount;
+    const pos = setScheduleForSave();
+    const impos = isHolidayEnabled ? holidayFormRef.value.setSaveFormat() : null;
 
-    // emit('update:nextTab', 'option');//다음 페이지 이동
-}
+    const params = {
+        reserveCnt : reserveCnt.value,
+        pos : pos,
+        impos : impos
+    }
+    
+    const response = await productStore.setItemReservationInfo(props.savedItemId, params);
+
+    if(response.status_code <= 300){
+        alert('저장이 완료되었습니다.');
+        emit('update:nextTab', 'option');//다음 페이지 이동
+    }else{
+        alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
+    }
+})
 </script>
 
 <template>
@@ -263,7 +281,7 @@ const clickNextBtn = () => {
         <li class="form-item" v-if="isHolidayEnabled">
             <div class="form-label"></div>
             <div class="form-content">
-                <HolidayForm />
+                <HolidayForm ref="holidayFormRef" />
                 <!-- 정기휴무 -->
                 <!-- 공휴일휴무 -->
                 <!-- 날짜로 휴무일 지정 -->

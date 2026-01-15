@@ -79,7 +79,7 @@ const previewData = reactive({
                         v-model:preview-desc="previewData.desc"
                         v-model:preview-details="previewData.details"
                         v-model:preview-notice="previewData.notice"
-                        :saved-item-id="''"
+                        :saved-item-id="savedItemId"
                         @update:next-tab="handleNextStep"
                         @update:preview-main-image="previewData.mainImage = $event"
                     />

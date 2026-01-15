@@ -9,7 +9,8 @@ import icPlus from '@/assets/icons/ic_plus_black.svg';
 import icDel from '@/assets/icons/ic_del.svg';
 import icClear from '@/assets/icons/ic_clear.svg'
 // utils
-import { formatDate } from 'date-fns';
+// import { formatDate } from 'date-fns';
+import { formatDate,  formatDateSplit } from '@/utils/dateFormatter';
 
 // 요일옵션 데이터 (임시)
 const daysOptions = [
@@ -34,24 +35,29 @@ const weeksOptions = [
 // 공휴일 데이터 (임시)
 const publicHolidayOptions = [
     { label: '신정', value: 0 },
-    { label: '설 연휴', value: 1 },
+
+    { label: '설 연휴', value: 1, apiValue: '설 연휴1' },
     { label: '설날 당일', value: 2 },
-    { label: '삼일절', value: 3 },
-    { label: '석가탄신일', value: 4 },
-    { label: '어린이날', value: 5 },
-    { label: '현충일', value: 6 },
-    { label: '광복절', value: 7 },
-    { label: '개천절', value: 8 },
-    { label: '한글날', value: 9 },
-    { label: '추석 연휴', value: 10 },
-    { label: '추석 당일', value: 11 },
-    { label: '크리스마스', value: 12 }
+    { label: '설 연휴', value: 3, apiValue: '설 연휴2' },
+
+    { label: '삼일절', value: 4 },
+    { label: '석가탄신일', value: 5 },
+    { label: '어린이날', value: 6 },
+    { label: '현충일', value: 7 },
+    { label: '광복절', value: 8 },
+    { label: '개천절', value: 9 },
+    { label: '한글날', value: 10 },
+    { label: '크리스마스', value: 11 },
+
+    { label: '추석 연휴', value: 12, apiValue: '추석 연휴1' },
+    { label: '추석 당일', value: 13 },
+    { label: '추석 연휴', value: 14, apiValue: '추석 연휴2' }
 ]
 
 /**
  * 상태관리
  */
-const holidayType = ref('weekly'); // 'weekly', 'biweekly', 'monthly' 연결용
+const holidayType = ref('WEEKLY'); // 'WEEKLY', 'BI_WEEKLY', 'MONTHLY' 연결용
 const selectedDays = ref([]); // 매주/격주용 요일
 const startDate = ref(null); // 격주 선택 시 시작일 저장
 const monthlyRules = ref([ // 매달 선택 시 규칙 초기값 세팅
@@ -66,7 +72,7 @@ const customHolidays = ref([]); // 선택된 날짜 리스트 ['2023-12-25', '20
 // 요일 버튼 클릭 이벤트
 const toggleDay = (dayValue) => {
     // 격주일 때 시작일이 없으면 클릭 방지 
-    if (holidayType.value === 'biweekly' && !startDate.value) return
+    if (holidayType.value === 'BI_WEEKLY' && !startDate.value) return
 
     const index = selectedDays.value.indexOf(dayValue);
     if (index > -1) {
@@ -81,7 +87,7 @@ const toggleDay = (dayValue) => {
 // 요일 선택 가능 여부 계산
 const isDaySelectionDisabled = computed(() => {
     // 격주인데 시작일이 없으면 비활성화
-    return holidayType.value === 'biweekly' && !startDate.value;
+    return holidayType.value === 'BI_WEEKLY' && !startDate.value;
 });
 
 // 매달 > 규칙 추가
@@ -164,6 +170,97 @@ const onAddHoliday = (data) => {
 const removeCustomHoliday = (idx) => {  
     customHolidays.value.splice(idx, 1)
 }
+
+//저장 시 api로 보낼 response형식으로 세팅
+const setSaveFormat = () => {
+    //정규 휴무 - 공통 return 데이터
+    const baseHoliday = {
+        holidayType : "REGULAR",
+        repetitionType : holidayType.value
+    };
+
+    //정규 휴무 세팅
+    let regularHoliday = [];
+
+    switch(holidayType.value){
+        case "WEEKLY" :
+            regularHoliday.push({
+                week : {
+                    ...baseHoliday,
+                    weekdays : selectedDays.value
+                }
+            });
+            break;
+        case "BI_WEEKLY" :
+            regularHoliday.push({
+                week : {
+                    ...baseHoliday,
+                    weekdays : selectedDays.value,
+                    startDate : formatDate(startDate.value)
+                }
+            });
+            break;
+        case "MONTHLY" :
+            regularHoliday.push({
+                mon: monthlyRules.value.map(data => ({
+                    ...baseHoliday,
+                    weekdays: data.selectedDays,
+                    weekNumbers: data.selectedWeeks
+                }))
+            });
+            break;
+        default :
+            break;     
+    }
+
+    //날짜로 휴무일 지정
+    const spDayResult = customHolidays.value.map(data => {
+        //정규 휴무 - 공통 return 데이터
+        const baseCustomHoliday = {
+            holidayType : "CUSTOM",
+            repetitionType : data.type
+        };
+
+        let customHolydayResult = [];
+
+        switch(data.type){
+            case "DAILY" :
+                customHolydayResult.push({
+                    ...baseCustomHoliday,
+                    startDate : formatDate(data.date),
+                    endDate : formatDate(data.date)
+                });
+                break;
+            case "MONTHLY" :
+                customHolydayResult.push({
+                    ...baseCustomHoliday,
+                    repetitionDay : formatDateSplit(data.date).month
+                });
+                break;
+            case "YEARLY" :
+                customHolydayResult.push({
+                    ...baseCustomHoliday,
+                    repetitionMonth : formatDateSplit(data.date).month,
+                    repetitionDay : formatDateSplit(data.date).day
+                });
+                break;
+            default :
+                break;
+        }
+
+        return customHolydayResult;
+    })
+
+    const result = {
+        ...regularHoliday,
+        spDay : spDayResult,
+        hoDay : selectedPublicHolidays.value.map(i => publicHolidayOptions[i].apiValue ?? publicHolidayOptions[i].label ?? '')
+    };
+
+    return result;
+}
+
+defineExpose({ setSaveFormat })//부모 화면에서 사용하기 위해서 선언
 </script>
 
 <template>
@@ -174,17 +271,17 @@ const removeCustomHoliday = (idx) => {
             <!-- 정기 휴무 옵션 선택 (매주/격주/매달) -->
             <div class="d-flex gap-16">
                 <label class="radio">
-                    <input type="radio" v-model="holidayType" value="weekly" />
+                    <input type="radio" v-model="holidayType" value="WEEKLY" />
                     <span class="circle"></span>
                     <span class="label">매주</span>
                 </label>
                 <label class="radio">
-                    <input type="radio" v-model="holidayType" value="biweekly" />
+                    <input type="radio" v-model="holidayType" value="BI_WEEKLY" />
                     <span class="circle"></span>
                     <span class="label">격주</span>
                 </label>
                 <label class="radio">
-                    <input type="radio" v-model="holidayType" value="monthly" />
+                    <input type="radio" v-model="holidayType" value="MONTHLY" />
                     <span class="circle"></span>
                     <span class="label">매달</span>
                 </label>
@@ -192,7 +289,7 @@ const removeCustomHoliday = (idx) => {
         </div>
 
         <!-- 옵션: 매주  -->
-        <div v-if="holidayType == 'weekly'" class="holiday-form__option-list">
+        <div v-if="holidayType == 'WEEKLY'" class="holiday-form__option-list">
             <!-- 요일 버튼 -->
             <div class="day-button-group d-flex gap-4">
                 <button 
@@ -209,7 +306,7 @@ const removeCustomHoliday = (idx) => {
         </div>
 
         <!-- 옵션: 격주 -->
-        <div v-if="holidayType == 'biweekly'" class="holiday-form__option-list">
+        <div v-if="holidayType == 'BI_WEEKLY'" class="holiday-form__option-list">
             <div>
                 <div class="d-flex align-center gap-8">
                     <span class="title-s">시작일</span>
@@ -239,7 +336,7 @@ const removeCustomHoliday = (idx) => {
         </div>
 
         <!-- 옵션: 매달 -->
-        <div v-if="holidayType == 'monthly'" class="holiday-form__option-list">
+        <div v-if="holidayType == 'MONTHLY'" class="holiday-form__option-list">
             <div 
                 v-for="(rule, rIdx) in monthlyRules" 
                 :key="rIdx" 

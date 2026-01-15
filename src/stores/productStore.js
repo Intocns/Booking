@@ -422,6 +422,92 @@ export const useProductStore = defineStore("product", () => {
             
         }
     }
+
+    // 상품 운영시간 변경
+    async function setItemReservationInfo(itemId, params){
+        // {
+        //     "reserveCnt": 0,
+        //     "impStartDateTime": "string",
+        //     "impEndDateTime": "string",
+        //     "bookableSettingJson": {
+        //         "isUseOpen": true,
+        //         "openDateTime": "string",
+        //         "useOpen": true
+        //     },
+        //     "pos": [
+        //         {
+        //         "businessDay": true,
+        //         "basicSchedule": true,
+        //         "startDate": "string",
+        //         "endDate": "string",
+        //         "weekdays": [
+        //             "string"
+        //         ],
+        //         "price": 0,
+        //         "isBusinessDay": true,
+        //         "stock": 0,
+        //         "desc": "string",
+        //         "hourBit": "string",
+        //         "time": [
+        //             {
+        //             "startTime": "string",
+        //             "endTime": "string"
+        //             }
+        //         ],
+        //         "isBasicSchedule": true
+        //         }
+        //     ],
+        //     "impos": {
+        //         "week": [
+        //         {
+        //             "holidayType": "string",
+        //             "repetitionType": "string",
+        //             "weekdays": [
+        //             "string"
+        //             ],
+        //             "startDate": "string"
+        //         }
+        //         ],
+        //         "mon": [
+        //         {
+        //             "holidayType": "string",
+        //             "repetitionType": "string",
+        //             "weekdays": [
+        //             "string"
+        //             ],
+        //             "weekNumbers": [
+        //             0
+        //             ]
+        //         }
+        //         ],
+        //         "spDay": [
+        //         {
+        //             "holidayName": "string",
+        //             "holidayType": "string",
+        //             "repetitionType": "string",
+        //             "startDate": "string",
+        //             "endDate": "string",
+        //             "repetitionDay": 0,
+        //             "repetitionMonth": 0,
+        //             "repetitionStartDay": 0,
+        //             "repetitionEndDay": 0,
+        //             "repetitionStartMonth": 0,
+        //             "repetitionEndMonth": 0,
+        //             "calendarType": "string",
+        //             "extraHolidays": [
+        //             0
+        //             ]
+        //         }
+        //         ],
+        //         "hoDay": [
+        //         "string"
+        //         ]
+        //     }
+        // }
+
+        const response = await api.post(`/api/${cocode}/item/add/${itemId}/sche`, params);
+        return response.data;
+    }
     
     return {
         // 
@@ -444,5 +530,6 @@ export const useProductStore = defineStore("product", () => {
         setItemShow, //상품 노출 변경(단건/ 일괄)
         getBusinessSchedule, // 간단 예약 관리 데이터 불러오기 (상품별 예약 운영시간 데이터)
         setScheduleTime, // 상품 운영시간 변경
+        setItemReservationInfo// 상품 등록, 수정 > 예약정보 저장
     }
 })

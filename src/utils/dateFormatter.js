@@ -1,3 +1,6 @@
+import { format } from 'date-fns'
+import { ko } from 'date-fns/locale'
+
 /**
  * YYYY-MM-DD
  */
@@ -68,19 +71,33 @@ export const formatDateTimeForAPI = (date, time) => {
 }
 
 // 요일 합친 형식으로 return
-// Y.MM.DD(day)
+// YYYY-MM-DD(day)
 export function formatDateToDay(date) {
+    if (!date) return ''
+
     const d = new Date(date);
 
     // 유효하지 않은 날짜 처리
     if (isNaN(d.getTime())) return '';
 
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
+    return format(date, 'yyyy.MM.dd(EEEE)', { locale: ko })
+};
 
-    // "YYYY.MM.DD(요일)"
-    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
-    const weekday = weekdays[d.getDay()];
-    return `${year}.${month}.${day}(${weekday})`;
+//날짜 year, month, day, time 나눠서 가져오기
+export function formatDateSplit(date) {
+    if (!date) return ''
+    
+    const d = new Date(date);
+
+    // 유효하지 않은 날짜 처리
+    if (isNaN(d.getTime())) return '';
+
+    return {
+        year : format(d, 'yyyy'),
+        month : format(d, 'M'),
+        day : format(d, 'd'),
+        hours : format(d, 'HH'),
+        minutes : format(d, 'mm'),
+        seconds : format(d, 'ss')
+    }
 };
