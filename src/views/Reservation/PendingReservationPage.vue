@@ -20,6 +20,20 @@ import icReset from '@/assets/icons/ic_reset.svg';
 const reservationStore = useReservationStore();
 const modalStore = useModalStore();
 
+// SMS 모달 컴포넌트 ref
+const sendSmsTalkRef = ref(null);
+
+// 문자 발송 모달 열기
+const openSmsModal = () => {
+    modalStore.smsModal.openModal();
+    // 모달이 열린 후 API 호출
+    nextTick(() => {
+        if (sendSmsTalkRef.value) {
+            sendSmsTalkRef.value.getSmsPointInfo();
+        }
+    });
+};
+
 const reservationChannel = ref(['all']);
 const keyword = ref('');
 const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
@@ -138,7 +152,7 @@ onMounted(() => {
                 <!-- 버튼 -->
                 <template #actions="{ row, rowIndex }">
                     <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row.idx)">상세</button>
-                    <button class="btn btn--size-24 btn--black-outline" @click="modalStore.smsModal.openModal()"><img :src="icSms" alt="SMS"></button>
+                    <button class="btn btn--size-24 btn--black-outline" @click="openSmsModal"><img :src="icSms" alt="SMS"></button>
                 </template>
     
             </CommonTable>
@@ -172,7 +186,7 @@ onMounted(() => {
         title="문자 발송"
         :modalState="modalStore.smsModal"
     >
-        <SendSmsTalk />
+        <SendSmsTalk ref="sendSmsTalkRef" />
     </Modal>
 
     <!-- 문자 발송 확인 모달 -->

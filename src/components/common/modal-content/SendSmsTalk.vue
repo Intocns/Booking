@@ -7,35 +7,52 @@ import TalkPreview from '../TalkPreview.vue';
 
 import { ref } from 'vue';
 import { useModalStore } from '@/stores/modalStore';
+import { api } from '@/api/axios';
 
 const modalStore = useModalStore();
 
 const activeTab = ref('sms');
+const smsRemainingCount = ref(null);
+const isLoadingSmsPoint = ref(false);
+const cocode = '2592'; // TODO: 임시
+
+const getSmsPointInfo = async () => {
+    if (isLoadingSmsPoint.value) return;
+    
+    smsRemainingCount.value = null;
+    isLoadingSmsPoint.value = true;
+    try {
+        const response = await api.get(`/api/${cocode}/sms/point`);
+        if (response.status <= 300 && response.data?.status_code === 200) {
+            const data = response.data.data;
+            if (data?.message?.sms_cnt_float !== undefined) {
+                smsRemainingCount.value = Number(data.message.sms_cnt_float);
+            } 
+        }
+    } catch (error) {
+        console.error('SMS 포인트 정보 조회 오류:', error);
+        smsRemainingCount.value = null;
+    } finally {
+        isLoadingSmsPoint.value = false;
+    }
+};
+
+// 부모 컴포넌트에서 호출할 수 있도록 함수 노출
+defineExpose({
+    getSmsPointInfo
+});
 
 // 툴팁용
-const isSmsTooltipVisible = ref(false); // sms탭 툴팁
-const isTalkTooltipVisible = ref(false); // 수신번호 옆 툴팁
-// 툴팁 핸들러
-const showTooltip = (type) => {
-    if (type === 'sms') {
-        isSmsTooltipVisible.value = true;
-    } else if (type === 'talk') {
-        isTalkTooltipVisible.value = true;
-    }
-}
-
-// 마우스 좌표 상태 추가 (툴팁 위치 제어용)
+const isSmsTooltipVisible = ref(false);
+const isTalkTooltipVisible = ref(false);
 const tooltipCoords = ref({ x: 0, y: 0 });
 
-// 마우스 이동 시 좌표 업데이트 및 툴팁 표시
 const handleMouseMove = (event, type) => {
-    // 툴팁 박스가 마우스 커서를 따라다니도록 좌표 업데이트
     tooltipCoords.value = { 
         x: event.clientX, 
         y: event.clientY 
     };
 
-    // 툴팁 표시 상태 업데이트
     if (type === 'sms') {
         isSmsTooltipVisible.value = true;
     } else if (type === 'talk') {
@@ -43,7 +60,6 @@ const handleMouseMove = (event, type) => {
     }
 }
 
-// 마우스 이탈 시 툴팁 숨김
 const hideTooltip = (type) => {
     if (type === 'sms') {
         isSmsTooltipVisible.value = false;
@@ -56,38 +72,46 @@ const hideTooltip = (type) => {
 <template>
     <div class="modal-contents-inner">
         <div class="tab-content-wrapper">
-            <!-- 탭 메뉴 -->
             <div class="tab-menu">
-                <div class="tab">
-                    <input 
-                        type="radio" 
-                        name="tab_menu" 
-                        id="tab_talk" 
-                        v-model="activeTab"
-                        value="talk"
-                    >
-                    <label for="tab_talk" class="tab--radio_btn">
-                        <span>알림톡</span>
-                    </label>
+                <div class="tab-menu__left">
+                    <div class="tab">
+                        <input 
+                            type="radio" 
+                            name="tab_menu" 
+                            id="tab_talk" 
+                            v-model="activeTab"
+                            value="talk"
+                        >
+                        <label for="tab_talk" class="tab--radio_btn">
+                            <span>알림톡</span>
+                        </label>
+                    </div>
+                    <div class="tab">
+                        <input 
+                            type="radio" 
+                            name="tab_menu" 
+                            id="tab_sms" 
+                            v-model="activeTab"
+                            value="sms"
+                        >
+                        <label for="tab_sms" class="tab--radio_btn">
+                            <span>SMS</span>
+                        </label>
+                    </div>
                 </div>
-                <div class="tab">
-                    <input 
-                        type="radio" 
-                        name="tab_menu" 
-                        id="tab_sms" 
-                        v-model="activeTab"
-                        value="sms"
-                    >
-                    <label for="tab_sms" class="tab--radio_btn">
-                        <span>SMS</span>
-                    </label>
+                <div class="tab-menu__right">
+                    <div class="sms-remaining-count" v-if="smsRemainingCount !== null">
+                        <span class="body-m">잔여건수: </span>
+                        <span class="body-m count-value">{{ smsRemainingCount.toLocaleString() }}건</span>
+                    </div>
+                    <div class="sms-remaining-count" v-else-if="isLoadingSmsPoint">
+                        <span class="body-m">잔여건수 조회 중...</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- 알림톡 -->
-            <div class="content-talk"  v-if="activeTab === 'talk'">
-                <div class=" content-talk__top">
-                    <!-- 템플릿 선택 -->
+            <div class="content-talk" v-if="activeTab === 'talk'">
+                <div class="content-talk__top">
                     <div class="content-talk__templates-wrapper">
                         <div class="content-talk__templates-wrapper-type">
                             <span class="title-s">템플릿 유형</span>
@@ -97,7 +121,6 @@ const hideTooltip = (type) => {
                         <div class="content-talk__templates">
                             <p class="title-m">템플릿 목록</p>
 
-                            <!-- 템플릿 없음 -->
                             <div class="content-talk__templates-empty" style="display: none;">
                                 <p class="empty-box">
                                     <img :src="icEmpty" alt="비어있음 아이콘">
@@ -105,14 +128,12 @@ const hideTooltip = (type) => {
                                 </p>
                             </div>
     
-                            <!-- 템플릿 있음 -->
                             <ul class="content-talk__templates-list">
                                 <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
                             </ul>
                         </div>
                     </div>
 
-                    <!-- 알림톡 미리보기 -->
                     <div class="content-talk__preview">
                         <TalkPreview />
                     </div>
@@ -135,14 +156,11 @@ const hideTooltip = (type) => {
 
             </div>
 
-            <!-- sms -->
-            <div class="content-sms"  v-if="activeTab === 'sms'">
+            <div class="content-sms" v-if="activeTab === 'sms'">
                 <div class="content-sms__top">
-                    <!-- 템플릿 목록 -->
                     <div class="content-sms__templates">
                         <p class="title-m">템플릿 목록</p>
     
-                        <!-- 템플릿 없음 -->
                         <div class="content-sms__templates-empty">
                             <p class="empty-box">
                                 <img :src="icEmpty" alt="비어있음 아이콘">
@@ -150,7 +168,6 @@ const hideTooltip = (type) => {
                             </p>
                         </div>
     
-                        <!-- 템플릿 있음 -->
                         <ul class="content-sms__templates-list" style="display: none;">
                             <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
                             <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
@@ -165,23 +182,18 @@ const hideTooltip = (type) => {
                         </ul>
                     </div>
                     
-                    <!-- 문자 내용 -->
                     <div class="content-sms__editor">
     
-                        <!-- 문자 내용 입력란 -->
                         <div class="content-sms__editor-input">
                             <span class="title-s">(광고) </span>
                             <span class="body-m">문자 내용 입력란</span>
-    
                             <p>문자 내용..</p>
                         </div>
     
-                        <!-- byte 카운트 -->
                         <div class="content-sms__editor-byte">
                             <p class="body-m">100 Byte / 3건</p>
                         </div>
     
-                        <!-- 문구 추가 체크박스 -->
                         <div class="content-sms__editor-options">
                             <label class="checkbox">
                                 <input type="checkbox" />
@@ -219,7 +231,6 @@ const hideTooltip = (type) => {
 
             </div>
             
-            <!-- 버튼영역 -->
             <div class="content-talk__buttons">
                 <button class="btn btn--size-40 btn--blue-outline modal-btn" @click="modalStore.smsModal.closeModal()">취소</button>
                 <button class="btn btn--size-40 btn--blue modal-btn">발송</button>
@@ -230,8 +241,8 @@ const hideTooltip = (type) => {
             class="tooltip-content" 
             v-show="isSmsTooltipVisible || isTalkTooltipVisible"
             :style="{ 
-                left: `${tooltipCoords.x }px`, /* 마우스 커서 오른쪽 10px */
-                top: `${tooltipCoords.y + 10}px`  /* 마우스 커서 아래 10px */
+                left: `${tooltipCoords.x}px`,
+                top: `${tooltipCoords.y + 10}px`
             }"
         >
             <p class="body-s" v-if="isSmsTooltipVisible">
@@ -251,7 +262,6 @@ const hideTooltip = (type) => {
         display: flex;
         flex-direction: column;
         gap: 16px;
-        // height: 705px;
     }
 
     .tab-content-wrapper {
@@ -264,8 +274,36 @@ const hideTooltip = (type) => {
     .tab-menu {
         display: flex;
         width: 100%;
-        
+        justify-content: space-between;
+        align-items: center;
         border-bottom: 1px solid $gray-200;
+
+        &__left {
+            display: flex;
+        }
+
+        &__right {
+            @include flex;
+            align-items: center;
+            padding-right: 8px;
+
+            .sms-remaining-count {
+                @include flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 8px;
+                border-radius: 4px;
+                background-color: $primary-50;
+                border: 1px solid $primary-200;
+                color: $primary-700;
+                font-weight: 600;
+
+                .count-value {
+                    color: $primary-700;
+                    font-weight: 700;
+                }
+            }
+        }
     }
 
     .tab {
@@ -419,7 +457,6 @@ const hideTooltip = (type) => {
                 @include flex;
                 justify-content: flex-end;
                 padding: 8px;
-    
                 border-bottom: 1px solid $gray-100;
                 color: $gray-500;
             }

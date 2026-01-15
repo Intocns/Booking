@@ -23,6 +23,20 @@ const reservationStore = useReservationStore();
 const hospitalStore = useHospitalStore();
 const modalStore = useModalStore();
 
+// SMS 모달 컴포넌트 ref
+const sendSmsTalkRef = ref(null);
+
+// 문자 발송 모달 열기
+const openSmsModal = () => {
+    modalStore.smsModal.openModal();
+    // 모달이 열린 후 API 호출
+    nextTick(() => {
+        if (sendSmsTalkRef.value) {
+            sendSmsTalkRef.value.getSmsPointInfo();
+        }
+    });
+};
+
 // 테이블 col 정의
 const columns = [
     { key: 'idx', label: 'No.', width: '6%' },
@@ -207,7 +221,7 @@ onMounted(async () => {
                 <!-- 버튼 -->
                 <template #actions="{ row, rowIndex }">
                         <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row.idx)">상세</button>
-                        <button class="btn btn--size-24 btn--black-outline" @click="modalStore.smsModal.openModal()"><img :src="icSms" alt="SMS"></button>
+                        <button class="btn btn--size-24 btn--black-outline" @click="openSmsModal"><img :src="icSms" alt="SMS"></button>
                 </template>
             </CommonTable>
         </template>
@@ -230,7 +244,7 @@ onMounted(async () => {
         title="문자 발송"
         :modalState="modalStore.smsModal"
     >
-        <SendSmsTalk />
+        <SendSmsTalk ref="sendSmsTalkRef" />
     </Modal>
 
     <!-- confirm 모달 : 문자발송 확인, 예약 확정 시 확인, -->
