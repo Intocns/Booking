@@ -318,11 +318,22 @@ const hideTooltip = (type) => {
             @include flex-center;
             gap: 2px;
             padding: 0 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
 
             @include typo($title-m-size, $title-m-weight, $title-m-spacing, $title-m-line);
             border-bottom: 2px solid $gray-00;
 
             span { color: $gray-400; }
+
+            &:hover {
+                background-color: $primary-50;
+                border-bottom: 2px solid $primary-200;
+                
+                span { 
+                    color: $primary-700; 
+                }
+            }
         }
 
         input:checked + &--radio_btn {
