@@ -37,6 +37,8 @@ export const menus = [
     {
         name: "병원정보 관리",
         icon: "icHospital",
-        children: []
+        children: [],
+        path: 'https://intolink.co.kr/mylink/hospital',
+        isExternal: true,
     }
 ]

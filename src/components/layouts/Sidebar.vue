@@ -34,6 +34,11 @@ const icons = {
 
 // 1뎁스 클릭 핸들러
 const onClickMenu = (menu, index) => {
+    if (menu.isExternal) {
+        window.open(menu.path, '_blank'); // 새 탭에서 열기
+        return;
+    }
+
     if (!menu.children?.length) {
         router.push(menu.path);
         openMenu.value = index;
@@ -61,6 +66,10 @@ const isActiveChild = (child) => {
     return route.path === child.path;
 };
 
+const goToCsCenter = () => {
+    window.open('https://intolink.co.kr/cscenter/notice')
+}
+
 onMounted(() => {
     hospitalStore.getHospitalInfo();
 })
@@ -84,7 +93,7 @@ onMounted(() => {
                     <div class="hospital-info">
                         <div class="hospital-onOff on">
                             <span class="title-xs">병원예약 - </span>
-                            <span class="title-xs">ON</span>
+                            <!-- <span class="title-xs">ON</span> -->
                         </div>
                         <div class="hospital-name-box">
                             <span class="hospital-name heading-s">{{ hospitalStore.hospitalInfo.name }}</span>
@@ -92,7 +101,7 @@ onMounted(() => {
                         </div>
                     </div>
                     <div class="client-info">
-                        <span class="title-m">민혜린</span>
+                        <span class="title-m"></span>
                         <span class="title-m">님</span>
                     </div>
                 </div>
@@ -141,7 +150,7 @@ onMounted(() => {
         </div>
         <!-- footer -->
         <div class="footer-menu">
-            <button class="footer-btn body-xs">
+            <button class="footer-btn body-xs" @click="goToCsCenter">
                 <img :src="icCs" alt="고객센터 아이콘">
                 고객센터
             </button>

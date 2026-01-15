@@ -78,7 +78,8 @@ const router = createRouter({
                 { 
                     path: 'settings', 
                     name: 'placeSettings', 
-                    component: () => import('@/views/Place/PlaceSettingsPage.vue') 
+                    component: () => import('@/views/Place/PlaceSettingsPage.vue'),
+                    meta: { isWaiting: true }, // 준비 중인 페이지 표시
                 }
             ]
         },
@@ -92,17 +93,26 @@ const router = createRouter({
                 { 
                     path: 'settings', 
                     name: 'intoPetSettings', 
-                    component: () => import('@/views/IntoPet/IntoPetSettingsPage.vue') 
+                    component: () => import('@/views/IntoPet/IntoPetSettingsPage.vue'),
+                    meta: { isWaiting: true }, // 준비 중인 페이지 표시
                 },
                 // 2. 진료실 관리
                 { 
                     path: 'clinic', 
                     name: 'intoPetClinic', 
-                    component: () => import('@/views/IntoPet/IntoPetClinicPage.vue') 
+                    component: () => import('@/views/IntoPet/IntoPetClinicPage.vue'),
+                    meta: { isWaiting: true }, // 준비 중인 페이지 표시
                 },
             ]
         },
     ],
 })
 
+router.beforeEach((to, from, next) => {
+    if (to.matched.some(record => record.meta?.isWaiting) || to.meta?.isWaiting) {
+        alert('서비스 준비 중입니다.');
+        return next(false);
+    }
+    next();
+})
 export default router
