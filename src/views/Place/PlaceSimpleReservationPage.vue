@@ -43,19 +43,19 @@ const columns = computed(() => {
         // 각 col별 버튼 추가
         html: `
             <div class="product-header-cell">
-                <div class="product-name">${product.name}/${product.bizItemId}</div>
+                <div class="product-name"><span>${product.name}/${product.bizItemId}</span></div>
                 <div class="header-btn-group">
                     <div class="d-flex justify-between">
                         <div class="d-flex gap-4">
                             <button 
+                                data-id="${product.bizItemId}"
                                 class="btn btn--size-24 btn--black-outline" 
-                                onclick="window.allOpen('${product.bizItemId}')"
                             >
                                 전체가능
                             </button>
                             <button 
+                                data-id="${product.bizItemId}"
                                 class="btn btn--size-24 btn--black-outline"
-                                onclick="window.allClose('${product.bizItemId}')"
                             >
                                 전체마감
                             </button>
@@ -78,21 +78,45 @@ const columns = computed(() => {
 // hourBit를 DayPilot 이벤트로 변환하는 함수 
 // hourBit를 30분 단위로 쪼개서 이벤트를 생성함 
 const parseHourBitToEvents = (item) => {
+    if (!item || !item.hourBit) return [];
+
     const bitString = item.hourBit; // "0000111..." (48자)
     const newEvents = []; // 가공해서 담아줄 events 데이터
     const dateStr = item.date; // "2023-10-27"
 
+    // 운영 시간 범위 계산
+    const startTime = item.startTime || "00:00";
+    const endTime = item.endTime || "24:00";
+
+    const getTotalMinutes = (timeStr) => {
+        const [h, m] = timeStr.split(':').map(Number);
+        return h * 60 + m;
+    };
+
+    const startLimit = getTotalMinutes(startTime);
+    const endLimit = getTotalMinutes(endTime);    
+
     for (let i = 0; i < bitString.length; i++) {
+        const totalMinutes = i * 30;
+        const nextTotalMinutes = (i + 1) * 30;
+
+        //  startTime ~ endTime 범위 밖이면 이벤트 생성 안 함
+        if (totalMinutes < startLimit || totalMinutes >= endLimit) {
+            continue; 
+        }
+
         const bit = bitString[i];
         
         // 30분 단위 계산
-        const totalMinutes = i * 30;
         const hour = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
         const min = (totalMinutes % 60).toString().padStart(2, '0');
         
-        const nextTotalMinutes = (i + 1) * 30;
         const nextHour = Math.floor(nextTotalMinutes / 60).toString().padStart(2, '0');
         const nextMin = (nextTotalMinutes % 60).toString().padStart(2, '0');
+
+        // 해당 시간대의 time_slots 찾기
+        const currentTimeStr = `${hour}:${min}`;
+        const slot = item.time_slots?.find(s => s.time === currentTimeStr);
 
         // 이벤트를 생성 
         newEvents.push({
@@ -102,7 +126,11 @@ const parseHourBitToEvents = (item) => {
             end: `${dateStr}T${nextHour}:${nextMin}:00`,
             backColor: "#fff", // 이벤트 셀 기본 배경 컬러
             tags: { 
+                scheduleId: item.scheduleId,
                 bitValue: bit, // (0: 미운영, 1: 운영)
+                startTime: startTime,
+                endTime: endTime,
+                reserved: slot ? slot.reserved : 0,
                 stock: item.stock,
             }
         });
@@ -120,6 +148,12 @@ const getIsImp = (resourceId) => {
 // 상품별 운영/미운영 토글 버튼 이벤트
 const handleToggle = async(event, isChecked) => {
     const bizItemId = event.data.resource;
+    const scheduleId = event.data.tags.scheduleId;
+    
+    if(!getIsImp(event.data.resource)) { // 상품이 비노출인경우
+        return;
+    }
+
     const fullStart = event.data.start.toString();
     const day = fullStart.split('T')[0]; // yyyy-mm-dd
     
@@ -129,40 +163,36 @@ const handleToggle = async(event, isChecked) => {
     );
     if (!schedule) return;
 
-    // hourBit 수정 (0: 마감, 1: 운영)
+    // 클릭한 슬롯의 hourBit 수정 (0: 마감, 1: 운영)
     const bitIndex = parseInt(event.data.id.split('_').pop());
     const bitArray = schedule.hourBit.split('');
     bitArray[bitIndex] = isChecked ? '1' : '0';
-    const newHourBit = bitArray.join('');
 
-    // TODO: times배열이 어떤값인지 아직 몰라 임시로 해둠 
     // 수정된 hourBit를 바탕으로 times 배열(운영 시간 리스트) 생성
     const times = [];
-    for (let i = 0; i < newHourBit.length; i++) {
-        if (newHourBit[i] === '1') {
-            const startTotal = i * 30;
-            const endTotal = (i + 1) * 30;
-            
-            times.push({
-                startTime: `${Math.floor(startTotal / 60).toString().padStart(2, '0')}:${(startTotal % 60).toString().padStart(2, '0')}`,
-                endTime: `${Math.floor(endTotal / 60).toString().padStart(2, '0')}:${(endTotal % 60).toString().padStart(2, '0')}`
-            });
-        }
+    for(let i = 0; i < bitArray.length; i++) {
+        times.push({
+            time: formatTime(i),
+            useFlag: parseInt(bitArray[i])
+        })
     }
 
     const params = {
-        scheduleId: bizItemId,
         day: day,
-        times: times,
+        startTime: event.data.tags.startTime,
+        endTime: event.data.tags.endTime,     
+        times: times
+    };
+
+    const response = await productStore.setScheduleTime(bizItemId, params, scheduleId);
+
+    if(response.status_code <= 300) {
+            const params = {
+                startDate: format(currentDate.value, 'yyyy-MM-dd'),
+                endDate: format(currentDate.value, 'yyyy-MM-dd'),
+            }
+            productStore.getBusinessSchedule(params)
     }
-
-    console.log(params)
-
-    // const response = await productStore.setScheduleTime(bizItemId, schId, params);
-
-    // if(response.status_code <= 300) {
-
-    // }
 };
 
 // 상품 노출/비노출 버튼 (캘린더 헤더 버튼)
@@ -180,6 +210,14 @@ const clickProductImpUpdateBtn = (async(itemId, isImp) => {
         productStore.getProductList();
     }
 })
+
+// 시간 포맷팅 함수 (인덱스 -> "HH:mm")
+const formatTime = (index) => {
+    const totalMin = index * 30;
+    const h = Math.floor(totalMin / 60).toString().padStart(2, '0');
+    const m = (totalMin % 60).toString().padStart(2, '0');
+    return `${h}:${m}`;
+};
 
 // ---------------------------------------------
 // 캘린더 구성 옵션
@@ -228,13 +266,14 @@ const config = ref({
         const resourceId = args.data.resource;
         const product = productList.value.find(p => p.bizItemId === args.data.resource);
         if (product && !product.isImp) { // 상품 비노출 상태인 경우
-            args.data.cssClass = "hidden-event"; // 이벤트를 화면에서 숨김
+            // args.data.cssClass = "hidden-event"; // 이벤트를 화면에서 숨김
+            args.data.backColor = "#EDEDF2"
         }
 
         const schedule = productScheduleDataList.value.find(s => s.bizItemId === resourceId);
-        if (schedule && !schedule.isBusinessDay) { // 영업일 여부
-            args.data.cssClass = "hidden-event"; // 이벤트를 화면에서 숨김
-        }
+        // if (schedule && !schedule.isBusinessDay) { // 영업일 여부
+        //     args.data.cssClass = "hidden-event"; // 이벤트를 화면에서 숨김
+        // }
 
         if(schedule && schedule.isHoliday) { // 휴무일인 경우
             args.data.cssClass = 'hidden-event';
@@ -280,16 +319,6 @@ watch(currentDate, async (newDate) => {
     ]);
 
 }, { deep: true });
-
-onMounted(async() => {
-    // const params = {
-    //     startDate: formatDate(currentDate.value),
-    //     endDate: formatDate(currentDate.value),
-    // };
-
-    // await productStore.getProductList();
-    // await productStore.getBusinessSchedule(params);
-})
 </script>
 
 <template>
@@ -310,16 +339,21 @@ onMounted(async() => {
                     :events="events"
                 >
                     <template #event="{event}">
-                        <div 
-                            v-if="getIsImp(event.data.resource)" 
-                            class="w-100 d-flex align-center justify-between"
-                        >
-                            <label class="toggle" @click="(e) => handleToggle(event, e.target.checked)">
-                                <input type="checkbox" :checked="event.data.tags.bitValue === '1'" @click.stop />
+                        <div class="w-100 d-flex align-center justify-between">
+                            <label 
+                                class="toggle"
+                                :class="{ 'is-disabled': !getIsImp(event.data.resource) }"
+                            >
+                                <input 
+                                    type="checkbox" 
+                                    :checked="event.data.tags.bitValue === '1'" 
+                                    @change="(e) => handleToggle(event, e.target.checked)"
+                                    @click.stop 
+                                />
                                 <img class="toggle-img" />
                             </label>
 
-                            <span class="body-s">/ {{ event.data.tags.stock }}</span>
+                            <span class="body-s">{{ event.data.tags.reserved }} / {{ event.data.tags.stock }}</span>
                         </div>
                     </template>
                 </DayPilotCalendar>
@@ -437,8 +471,17 @@ onMounted(async() => {
             display: flex;
             @include flex-center;
             height: 32px;
+            min-width: 0;
 
             border-right: 1px solid $gray-200;
+
+            span {
+                width: 100%;
+                text-align: center;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
         }
         .header-btn-group {
             display: flex;
@@ -476,6 +519,9 @@ onMounted(async() => {
         content: ':';
         display: inline-block;
         transform: translateY(-1px);
+    }
+    :deep(.calendar_default_event) {
+        cursor: default !important;
     }
     :deep(.calendar_default_event_inner) {
         margin-left: 1px;
@@ -544,5 +590,10 @@ onMounted(async() => {
 
             color: $gray-600;
         }
+    }
+
+    .is-disabled {
+        pointer-events: none;
+        opacity: 0.6;
     }
 </style>

@@ -401,7 +401,7 @@ export const useProductStore = defineStore("product", () => {
     }
 
     // 상품 운영시간 변경
-    const setScheduleTime = async(itemId, schId, params) => {
+    const setScheduleTime = async(itemId, params, schId = null) => {
         // {
         //     "scheduleId": 0,
         //     "day": "string",
@@ -413,11 +413,9 @@ export const useProductStore = defineStore("product", () => {
         //     ]
         // }
         try {
-            const response = await api.post(`api/${cocode}/item/${itemId}/schedule/modify/a/${schId}`, params);
+            const response = await api.post(`/api/${cocode}/item/${itemId}/schedule/modify/a/${schId}`, params);
 
-            if(response.data.status_code <= 300) {
-                
-            }
+            return response.data;
         } catch {
             
         }
