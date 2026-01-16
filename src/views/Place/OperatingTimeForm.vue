@@ -41,12 +41,12 @@ const weekendOptions = [
 const satOptions = [{ label: '토요일', value: 'sat' }, { label: '토, 일 합치기', value: 'merge' }];
 const sunOptions = [{ label: '일요일', value: 'sun' }, { label: '토, 일 합치기', value: 'merge' }];
 
-const addTimeRange = (arr) => arr.push({ start: '', end: '' });
+const addTimeRange = (arr) => arr.push({ startTime: '', endTime: '' });
 const removeTimeRange = (arr, i) => arr.splice(i, 1);
 
 const handleWeekendMerge = (val) => { if (val === 'merge') config.splitMode = 'weekend_all'; };
 
-const addDailyGroup = () => config.dailyGroups.push({ selectedDays: [], times: [{ start: '', end: '' }] });
+const addDailyGroup = () => config.dailyGroups.push({ selectedDays: [], times: [{ startTime: '', endTime: '' }] });
 const removeDailyGroup = (i) => config.dailyGroups.splice(i, 1);
 const toggleDayInGroup = (gIdx, dayValue) => {
     const days = config.dailyGroups[gIdx].selectedDays;
@@ -75,10 +75,10 @@ const toggleDayInGroup = (gIdx, dayValue) => {
                 <!-- 시간 설정 영역 -->
                 <div class="d-flex align-center gap-8">
                     <span class="title-s">시작</span>
-                    <TimeSelect v-model="time.start" />
+                    <TimeSelect v-model="time.startTime" />
                     -
                     <span class="title-s">마지막</span>
-                    <TimeSelect v-model="time.end" />
+                    <TimeSelect v-model="time.endTime" />
                 </div>
 
                 <!-- 버튼 영역 -->
@@ -113,10 +113,10 @@ const toggleDayInGroup = (gIdx, dayValue) => {
                         <template v-if="tIdx === 0">평일(월~금)</template>
                     </span>
                     <span class="title-s">시작</span>
-                    <TimeSelect v-model="time.start" />
+                    <TimeSelect v-model="time.startTime" />
                     -
                     <span class="title-s">마지막</span>
-                    <TimeSelect v-model="time.end" />
+                    <TimeSelect v-model="time.endTime" />
                 </div>
 
                 <!-- 버튼 영역 -->
@@ -151,10 +151,10 @@ const toggleDayInGroup = (gIdx, dayValue) => {
                             <CustomSingleSelect v-if="tIdx === 0" v-model="config.splitMode" :options="weekendOptions" select-width="120px" />
                         </div>
                         <span class="title-s">시작</span>
-                        <TimeSelect v-model="time.start" />
+                        <TimeSelect v-model="time.startTime" />
                         -
                         <span class="title-s">마지막</span>
-                        <TimeSelect v-model="time.end" />
+                        <TimeSelect v-model="time.endTime" />
                     </div>
 
                     <!-- 버튼 영역 -->
@@ -194,10 +194,10 @@ const toggleDayInGroup = (gIdx, dayValue) => {
                             />
                         </div>
                         <span class="title-s">시작</span>
-                        <TimeSelect v-model="time.start" />
+                        <TimeSelect v-model="time.startTime" />
                         - 
                         <span class="title-s">마지막</span>
-                        <TimeSelect v-model="time.end" />
+                        <TimeSelect v-model="time.endTime" />
                     </div>
 
                     <!-- 버튼 영역 -->
@@ -234,10 +234,10 @@ const toggleDayInGroup = (gIdx, dayValue) => {
                             />
                         </div>
                         <span class="title-s">시작</span>
-                        <TimeSelect v-model="time.start" />
+                        <TimeSelect v-model="time.startTime" />
                         -
                         <span class="title-s">마지막</span>
-                        <TimeSelect v-model="time.end" />
+                        <TimeSelect v-model="time.endTime" />
                     </div>
 
                     <!-- 버튼 영역 -->
@@ -293,10 +293,10 @@ const toggleDayInGroup = (gIdx, dayValue) => {
                         <!-- 시간 설정 영역 -->
                         <div class="d-flex align-center gap-8">
                             <span class="title-s">시작</span>
-                            <TimeSelect v-model="time.start" />
+                            <TimeSelect v-model="time.startTime" />
                             -
                             <span class="title-s">마지막</span>
-                            <TimeSelect v-model="time.end" />
+                            <TimeSelect v-model="time.endTime" />
                         </div>
     
                         <!-- 버튼 영역 -->

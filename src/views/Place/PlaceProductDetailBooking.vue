@@ -38,11 +38,11 @@ const isHolidayEnabled = ref(false); // 휴무일 설정 여부 (Toggle)
 // 설정 데이터 생성 함수
 const createDefaultConfig = () => ({
     operatingMode: 'all',
-    allDaysTime: [{ start: '', end: '' }],
+    allDaysTime: [{ startTime: '', endTime: '' }],
     splitMode: 'weekend_all',
     splitTime: {
-        weekday: [{ start: '', end: '' }], weekend: [{ start: '', end: '' }],
-        sat: [{ start: '', end: '' }], sun: [{ start: '', end: '' }]
+        weekday: [{ startTime: '', endTime: '' }], weekend: [{ startTime: '', endTime: '' }],
+        sat: [{ startTime: '', endTime: '' }], sun: [{ startTime: '', endTime: '' }]
     },
     dailyGroups: [{ selectedDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], times: [{ start: '', end: '' }] }]
 });
@@ -51,11 +51,11 @@ const createDefaultConfig = () => ({
 const regularConfig = ref(createDefaultConfig());
 
 // [데이터] 이벤트 기간/설정용
-const eventDates = ref([{ start: '', end: '' }]);
+const eventDates = ref([{ startTime: '', endTime: '' }]);
 const periodConfigs = ref([createDefaultConfig()]);
 
 const addEventPeriod = () => {
-    eventDates.value.push({ start: '', end: '' });
+    eventDates.value.push({ startTime: '', endTime: '' });
     periodConfigs.value.push(createDefaultConfig());
 };
 
@@ -97,6 +97,7 @@ const setOperatingObject = (event, object) => {
     const baseSchedule = {
         startDate: event?.[0] ? formatDate(event?.[0]) : null,
         endDate: event?.[1] ? formatDate(event?.[1]) : null,
+        isBusinessDay: true,
         isBasicSchedule: scheduleMode.value !== 'event',
     };
 
@@ -140,7 +141,7 @@ const clickNextBtn = (async() => {
         pos : pos,
         impos : impos
     }
-    
+
     const response = await productStore.setItemReservationInfo(props.savedItemId, params);
 
     if(response.status_code <= 300){

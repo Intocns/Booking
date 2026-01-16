@@ -14,13 +14,13 @@ import { formatDate,  formatDateSplit } from '@/utils/dateFormatter';
 
 // 요일옵션 데이터 (임시)
 const daysOptions = [
-    { label: '월', value: 'mon' },
-    { label: '화', value: 'tue' }, 
-    { label: '수', value: 'wed' },
-    { label: '목', value: 'thu' }, 
-    { label: '금', value: 'fri' }, 
-    { label: '토', value: 'sat' }, 
-    { label: '일', value: 'sun' }
+    { label: '월', value: 'MON' },
+    { label: '화', value: 'TUE' }, 
+    { label: '수', value: 'WED' },
+    { label: '목', value: 'THU' }, 
+    { label: '금', value: 'FRI' }, 
+    { label: '토', value: 'SAT' }, 
+    { label: '일', value: 'SUN' }
 ];
 
 // 주 옵션 데이터 (임시)
@@ -180,34 +180,34 @@ const setSaveFormat = () => {
     };
 
     //정규 휴무 세팅
-    let regularHoliday = [];
+    let regularHoliday = {};
 
     switch(holidayType.value){
         case "WEEKLY" :
-            regularHoliday.push({
-                week : {
+            regularHoliday = {
+                week : [{
                     ...baseHoliday,
                     weekdays : selectedDays.value
-                }
-            });
+                }]
+            };
             break;
         case "BI_WEEKLY" :
-            regularHoliday.push({
-                week : {
+            regularHoliday = {
+                week : [{
                     ...baseHoliday,
                     weekdays : selectedDays.value,
                     startDate : formatDate(startDate.value)
-                }
-            });
+                }]
+            };
             break;
         case "MONTHLY" :
-            regularHoliday.push({
+            regularHoliday = {
                 mon: monthlyRules.value.map(data => ({
                     ...baseHoliday,
                     weekdays: data.selectedDays,
                     weekNumbers: data.selectedWeeks
                 }))
-            });
+            };
             break;
         default :
             break;     
@@ -221,28 +221,28 @@ const setSaveFormat = () => {
             repetitionType : data.type
         };
 
-        let customHolydayResult = [];
+        let customHolydayResult = {};
 
         switch(data.type){
             case "DAILY" :
-                customHolydayResult.push({
+                customHolydayResult = {
                     ...baseCustomHoliday,
                     startDate : formatDate(data.date),
                     endDate : formatDate(data.date)
-                });
+                };
                 break;
             case "MONTHLY" :
-                customHolydayResult.push({
+                customHolydayResult = {
                     ...baseCustomHoliday,
                     repetitionDay : formatDateSplit(data.date).month
-                });
+                };
                 break;
             case "YEARLY" :
-                customHolydayResult.push({
+                customHolydayResult = {
                     ...baseCustomHoliday,
                     repetitionMonth : formatDateSplit(data.date).month,
                     repetitionDay : formatDateSplit(data.date).day
-                });
+                };
                 break;
             default :
                 break;

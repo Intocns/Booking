@@ -32,13 +32,13 @@ const settingType = ref(''); // 현재 어떤 설정을 하고 있는지 저장
 // 설정 데이터 생성 함수
 const createDefaultConfig = () => ({
     operatingMode: 'all',
-    allDaysTime: [{ start: '', end: '' }],
+    allDaysTime: [{ startTime: '', endTime: '' }],
     splitMode: 'weekend_all',
     splitTime: {
-        weekday: [{ start: '', end: '' }], weekend: [{ start: '', end: '' }],
-        sat: [{ start: '', end: '' }], sun: [{ start: '', end: '' }]
+        weekday: [{ startTime: '', endTime: '' }], weekend: [{ startTime: '', endTime: '' }],
+        sat: [{ startTime: '', endTime: '' }], sun: [{ startTime: '', endTime: '' }]
     },
-    dailyGroups: [{ selectedDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], times: [{ start: '', end: '' }] }]
+    dailyGroups: [{ selectedDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], times: [{ startTime: '', endTime: '' }] }]
 });
 
 // [데이터] 정기 운영용
