@@ -1,7 +1,6 @@
 <script setup>
 import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
 import { ref, onMounted, watch, computed, onUnmounted } from 'vue';
-import { api } from "@/api/axios";
 // 예약 상태 아이콘
 import icConfirm from '@/assets/icons/ic_res_confirm.svg'
 import icPersonal from '@/assets/icons/ic_res_personal.svg'
@@ -93,8 +92,6 @@ const config = ref({
     eventResizeHandling: "Disabled",
     
     onEventClick: (args) => {
-        // 부모에게 클릭 이벤트 알림 (필요 시)
-        // console.log("선택된 스케줄:", args.e.data);
         handelReserveDetail(args.e.data.reserveIdx)
     },
 
@@ -112,9 +109,7 @@ const config = ref({
     },
     
     cellDuration: 30,
-    cellHeight: 60, 
-    // businessBeginsHour: 0,                  
-    // businessEndsHour: 0,
+    cellHeight: 60,
 });
 
 // ---------------------------------------------
@@ -132,7 +127,11 @@ watch(() => [props.viewType, props.events, props.staffs, props.startDate], ([new
             columns: newView === 'Resources' ? columns.value : null,
         });
 
-        scrollToWorkTime()
+        scrollToWorkTime();
+        
+        setTimeout(() => {
+            addResizeHandles();
+        }, 100);
     }
 }, { deep: true });
 
@@ -144,8 +143,169 @@ const handelReserveDetail = (reserveIdx) => {
 const scrollToWorkTime = () => {
     const calendarEl = document.querySelector('.calendar_default_main');
     if (calendarEl) {
-        // 30분당 60px 기준 -> 1시간 120px -> 9시 = 1080px
-        calendarEl.scrollTop = 1080;
+        calendarEl.scrollTop = 1080; // 9시 위치로 스크롤
+    }
+};
+
+// 컬럼 리사이즈 관련 변수
+let resizeHandles = [];
+let isResizing = false;
+let startX = 0;
+let startWidth = 0;
+let currentColumn = null;
+let resizeHandleCheckInterval = null;
+
+// 리사이즈 핸들 추가 함수
+const addResizeHandles = () => {
+    if (props.viewType !== 'Resources') return;
+    
+    // 컬럼 헤더 찾기 - 헤더 영역에서만 찾기
+    const headerArea = document.querySelector('.calendar_default_main > div:first-child');
+    if (!headerArea) return;
+    
+    const colHeaders = headerArea.querySelectorAll('.calendar_default_colheader');
+    
+    colHeaders.forEach((header) => {
+        // 이미 핸들이 있는지 확인
+        if (header.querySelector('.column-resize-handle')) {
+            return;
+        }
+        
+        const headerInner = header.querySelector('.calendar_default_colheader_inner');
+        if (!headerInner) return;
+        
+        // 리사이즈 핸들 생성
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'column-resize-handle';
+        resizeHandle.style.cssText = `
+            position: absolute;
+            right: -2px;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            cursor: col-resize;
+            background: transparent;
+            z-index: 1000;
+            user-select: none;
+            transition: all 0.2s;
+            pointer-events: auto;
+            clip-path: none;
+            -webkit-clip-path: none;
+        `;
+        
+        // 마우스 이벤트
+        resizeHandle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isResizing = true;
+            currentColumn = header;
+            startX = e.clientX;
+            startWidth = header.offsetWidth;
+            
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+        
+        // position이 relative가 아니면 설정
+        if (getComputedStyle(header).position === 'static') {
+            header.style.position = 'relative';
+        }
+        
+        header.appendChild(resizeHandle);
+        resizeHandles.push(resizeHandle);
+    });
+};
+
+// 리사이즈 핸들 제거 함수
+const removeResizeHandles = () => {
+    resizeHandles.forEach(handle => {
+        if (handle.parentNode) {
+            handle.parentNode.removeChild(handle);
+        }
+    });
+    resizeHandles = [];
+};
+
+// 컬럼 너비 업데이트 헬퍼 함수
+const updateColumnWidth = (cell, newWidth) => {
+    cell.style.width = `${newWidth}px`;
+    cell.style.minWidth = `${newWidth}px`;
+    cell.style.maxWidth = 'none';
+};
+
+// 마우스 이동 이벤트
+const handleMouseMove = (e) => {
+    if (!isResizing || !currentColumn) return;
+    
+    const diff = e.clientX - startX;
+    const newWidth = Math.max(220, startWidth + diff);
+    
+    const headerArea = document.querySelector('.calendar_default_main > div:first-child');
+    if (!headerArea) return;
+    
+    const allHeaderCells = headerArea.querySelectorAll('.calendar_default_colheader');
+    const currentIndex = Array.from(allHeaderCells).indexOf(currentColumn);
+    
+    if (currentIndex === -1) return;
+    
+    // 현재 컬럼의 너비 변경
+    updateColumnWidth(currentColumn, newWidth);
+    
+    // 헤더 영역의 같은 인덱스 컬럼 업데이트
+    const headerColumnTables = headerArea.querySelectorAll('tbody tr td:nth-child(2) table');
+    headerColumnTables.forEach(columnTable => {
+        const columnCells = columnTable.querySelectorAll('td');
+        const targetCell = columnCells[currentIndex];
+        if (targetCell) {
+            updateColumnWidth(targetCell, newWidth);
+            
+            const innerDiv = targetCell.querySelector('.calendar_default_colheader_inner');
+            if (innerDiv) {
+                innerDiv.style.width = `${newWidth}px`;
+                innerDiv.style.maxWidth = `${newWidth}px`;
+                innerDiv.style.boxSizing = 'border-box';
+            }
+        }
+    });
+    
+    // 본문 영역의 같은 인덱스 컬럼 업데이트
+    const calendarBody = document.querySelector('.calendar_default_main > div:nth-child(2)');
+    if (calendarBody) {
+        const bodyColumnTables = calendarBody.querySelectorAll('tbody tr td:nth-child(2) table');
+        bodyColumnTables.forEach(columnTable => {
+            const columnCells = columnTable.querySelectorAll('td');
+            const targetCell = columnCells[currentIndex];
+            if (targetCell) {
+                updateColumnWidth(targetCell, newWidth);
+                
+                const cellInner = targetCell.querySelector('div');
+                if (cellInner) {
+                    updateColumnWidth(cellInner, newWidth);
+                }
+                
+                // 이벤트 카드 너비 제한
+                const events = targetCell.querySelectorAll('.calendar_default_event_inner');
+                events.forEach(event => {
+                    event.style.maxWidth = `${newWidth - 8}px`;
+                    event.style.boxSizing = 'border-box';
+                });
+            }
+        });
+    }
+};
+
+// 마우스 업 이벤트
+const handleMouseUp = () => {
+    if (isResizing) {
+        isResizing = false;
+        currentColumn = null;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        
+        // 리사이즈 완료 후 핸들 다시 추가
+        setTimeout(() => {
+            addResizeHandles();
+        }, 100);
     }
 };
 
@@ -158,8 +318,26 @@ onMounted(() => {
             columns: props.viewType === 'Resources' ? columns.value : null,
         });
 
-        scrollToWorkTime()
+        scrollToWorkTime();
+        
+        setTimeout(() => {
+            addResizeHandles();
+        }, 100);
     }
+    
+    // 전역 마우스 이벤트 리스너
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+});
+
+onUnmounted(() => {
+    removeResizeHandles();
+    if (resizeHandleCheckInterval) {
+        clearInterval(resizeHandleCheckInterval);
+        resizeHandleCheckInterval = null;
+    }
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
 });
 </script>
 
@@ -203,9 +381,6 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-    .calendar-container {
-        width: 100%;
-    }
     .schedule-wrapper {
         width: 100%;
         height: 100%;
@@ -219,27 +394,28 @@ onMounted(() => {
         font-family: $font-family-base;
 
         &::-webkit-scrollbar {
-            height: 8px; /* 가로 스크롤바 두께 */
+            height: 8px;
         }
 
-        // /* 헤더 영역 */
+        // 헤더 영역
         & > div:first-child {
             width: auto !important;
             overflow: visible !important;
             position: sticky;
             top: 0;
-            z-index: 2;
+            z-index: 100;
             table {
+                overflow: visible !important;
+                width: auto !important;
                 tbody tr td:nth-child(2) table {
-                    td {
-                        // width: 220px !important; 
+                    overflow: visible !important;
+                    tbody tr td {
                         min-width: 220px !important;
-                        max-width: 220px !important;
+                        overflow: visible !important;
                     }
                 }
-                width: auto !important; 
-                // table-layout: fixed;
             }
+            overflow: visible !important;
         }
 
         // 캘린더영역
@@ -254,43 +430,140 @@ onMounted(() => {
                 z-index: 1;
             }
             table {
-                tbody tr td:nth-child(2) table {
-                    td {
-                        // width: 220px !important; 
+                tbody tr td:nth-child(2) table td {
+                    min-width: 220px !important;
+                    & > div {
                         min-width: 220px !important;
-                        max-width: 220px !important;
-                        & > div {
-                            // width: 220px !important; 
-                            min-width: 220px !important;
-                            max-width: 220px !important;
-                            
-                        }
                     }
                 }
-                width: auto !important; 
-                table-layout: fixed;
+                width: auto !important;
             }
         }
-
     }
-
-    // 리소스 컬럼 너비 고정
-    :deep(.calendar_default_colheader),
-    :deep(.calendar_default_cell) {
-        min-width: 220px !important; 
-        max-width: 220px !important;
-        // width: 220px !important;
+    
+    // 헤더 테이블의 overflow visible
+    :deep(.calendar_default_main > div:first-child table tbody tr td:nth-child(2) table td) {
+        overflow: visible !important;
+        position: relative;
     }
 
     :deep(.calendar_default_cornerright_inner), 
-    :deep(.calendar_default_corner_inner), 
-    :deep(.calendar_default_colheader_inner), 
     :deep(.calendar_default_alldayheader_inner) {
         height: 100%;
         background: $gray-100;
         border-color: $gray-200;
         color: $gray-700;
         @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
+    }
+    
+    // 헤더 영역 높이 통일 - corner_inner와 colheader_inner 높이 맞추기
+    :deep(.calendar_default_corner_inner),
+    :deep(.calendar_default_colheader_inner) {
+        height: 31px !important;
+        min-height: 31px !important;
+        max-height: 31px !important;
+        background: $gray-100;
+        border-color: $gray-200;
+        color: $gray-700;
+        @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
+        box-sizing: border-box;
+    }
+    
+    // 컬럼 헤더 내부 요소는 컬럼 전체 너비 사용
+    :deep(.calendar_default_colheader_inner) {
+        width: 100%;
+        overflow: hidden;
+    }
+    
+    // 컬럼 헤더 position 설정
+    :deep(.calendar_default_colheader) {
+        position: relative !important;
+        overflow: visible !important;
+    }
+    
+    // 리사이즈 핸들 스타일
+    :deep(.column-resize-handle) {
+        z-index: 1000 !important;
+        position: absolute !important;
+        clip-path: none !important;
+        -webkit-clip-path: none !important;
+        overflow: visible !important;
+        background: transparent !important;
+        
+        &::before {
+            content: '';
+            position: absolute;
+            right: 3px;
+            top: 20%;
+            bottom: 20%;
+            width: 1px;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(0, 0, 0, 0.15) 20%,
+                rgba(0, 0, 0, 0.15) 80%,
+                transparent 100%
+            );
+            transition: all 0.2s ease;
+            opacity: 0;
+        }
+        
+        &::after {
+            content: '';
+            position: absolute;
+            right: 2.5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+        
+        &:hover {
+            background: transparent !important;
+            &::before {
+                background: linear-gradient(
+                    to bottom,
+                    transparent 0%,
+                    rgba(59, 130, 246, 0.4) 20%,
+                    rgba(59, 130, 246, 0.4) 80%,
+                    transparent 100%
+                );
+                width: 2px;
+                right: 3px;
+                opacity: 1;
+            }
+            &::after {
+                opacity: 1;
+                background: rgba(59, 130, 246, 0.6);
+                width: 4px;
+                height: 4px;
+            }
+        }
+        
+        &:active {
+            background: transparent !important;
+            &::before {
+                background: linear-gradient(
+                    to bottom,
+                    transparent 0%,
+                    rgba(59, 130, 246, 0.7) 20%,
+                    rgba(59, 130, 246, 0.7) 80%,
+                    transparent 100%
+                );
+                width: 2px;
+                opacity: 1;
+            }
+            &::after {
+                opacity: 1;
+                background: rgba(59, 130, 246, 0.9);
+                width: 5px;
+                height: 5px;
+            }
+        }
     }
     :deep(.calendar_default_rowheader_inner) {
         @include flex-center;
@@ -316,8 +589,12 @@ onMounted(() => {
         border-radius: 4px;
         border: none;
         padding: 8px;
-        background: $gray-50; // 기본
+        background: $gray-50;
         box-shadow: -1px 0 3px rgba($color: #000000, $alpha: 0.2);
+        
+        max-width: calc(100% - 8px);
+        overflow: hidden;
+        box-sizing: border-box;
 
         &.confirm {background: $status-confirmed_bg;}
         &.hold {background: $status-onHold_bg;}
@@ -328,7 +605,13 @@ onMounted(() => {
             filter: brightness(96%);
         }
     }
-    :deep(.calendar_default_event_bar) {display: none;} // 왼쪽 색상바 안보이도록
+    
+    // 이벤트가 있는 셀도 overflow 제어
+    :deep(.calendar_default_cell) {
+        overflow: hidden;
+        position: relative;
+    }
+    :deep(.calendar_default_event_bar) {display: none;}
     :deep(.calendar_default_shadow) {display: none;}
 
     .event-header {
@@ -352,10 +635,10 @@ onMounted(() => {
 
                 @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
 
-                &__1 {color: $status-confirmed_text;} // 확정
-                &__0 {color: $status-onHold_text;} // 대기
-                &__2 {color: $status-canceled_text;} // 취소
-                &__3 {color: $status-personal_text} // 개인(불가)
+                &__1 {color: $status-confirmed_text;}
+                &__0 {color: $status-onHold_text;}
+                &__2 {color: $status-canceled_text;}
+                &__3 {color: $status-personal_text;}
             }
         }
 
@@ -370,10 +653,10 @@ onMounted(() => {
         @include typo($body-xs-size, $body-xs-weight, $body-xs-spacing, $body-xs-line);
 
         .reserve-title {
-            &__0 {color: $status-onHold_text;} // 대기
-            &__1 {color: $status-confirmed_text;} // 확정
-            &__2 {color: $status-canceled_text;} // 취소
-            &__3 {color: $status-personal_text} // 개인(불가)
+            &__0 {color: $status-onHold_text;}
+            &__1 {color: $status-confirmed_text;}
+            &__2 {color: $status-canceled_text;}
+            &__3 {color: $status-personal_text;}
         }
         .reserve-memo {
             overflow: hidden;
