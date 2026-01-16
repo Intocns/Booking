@@ -5,8 +5,8 @@ import FilterDate from '@/components/common/filters/FilterDate.vue';
 import PageTitle from '@/components/common/PageTitle.vue';
 import TableLayout from '@/components/common/TableLayout.vue';
 
-import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
-import { ref, onMounted, watch, computed, reactive } from 'vue';
+import { DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
+import { ref, watch, computed } from 'vue';
 import { formatDate } from '@/utils/dateFormatter';
 import { storeToRefs } from 'pinia';
 // 스토어
@@ -49,13 +49,15 @@ const columns = computed(() => {
                         <div class="d-flex gap-4">
                             <button 
                                 data-id="${product.bizItemId}"
-                                class="btn btn--size-24 btn--black-outline" 
+                                data-type="all-open"
+                                class="status-change-btn btn btn--size-24 btn--black-outline" 
                             >
                                 전체가능
                             </button>
                             <button 
                                 data-id="${product.bizItemId}"
-                                class="btn btn--size-24 btn--black-outline"
+                                data-type="all-close"
+                                class="status-change-btn btn btn--size-24 btn--black-outline"
                             >
                                 전체마감
                             </button>
@@ -145,54 +147,71 @@ const getIsImp = (resourceId) => {
     return product ? product.isImp : false;
 };
 
-// 상품별 운영/미운영 토글 버튼 이벤트
-const handleToggle = async(event, isChecked) => {
-    const bizItemId = event.data.resource;
-    const scheduleId = event.data.tags.scheduleId;
-    
-    if(!getIsImp(event.data.resource)) { // 상품이 비노출인경우
-        return;
-    }
-
-    const fullStart = event.data.start.toString();
-    const day = fullStart.split('T')[0]; // yyyy-mm-dd
-    
-    // 현재 이 상품의 해당 날짜 스케줄 데이터 가져옴
-    const schedule = productStore.productScheduleDataList.find(
-        s => s.bizItemId === bizItemId && s.date === day
-    );
-    if (!schedule) return;
-
-    // 클릭한 슬롯의 hourBit 수정 (0: 마감, 1: 운영)
-    const bitIndex = parseInt(event.data.id.split('_').pop());
-    const bitArray = schedule.hourBit.split('');
-    bitArray[bitIndex] = isChecked ? '1' : '0';
-
-    // 수정된 hourBit를 바탕으로 times 배열(운영 시간 리스트) 생성
-    const times = [];
-    for(let i = 0; i < bitArray.length; i++) {
-        times.push({
-            time: formatTime(i),
-            useFlag: parseInt(bitArray[i])
-        })
-    }
+// 상품펼 운영/마감 API 호출 및 상태 업데이트
+const updateScheduleBit = async (bizItemId, day, newBitArray, startTime, endTime, scheduleId) => {
+    const times = newBitArray.map((bit, i) => ({
+        time: formatTime(i),
+        useFlag: parseInt(bit)
+    }));
 
     const params = {
         day: day,
-        startTime: event.data.tags.startTime,
-        endTime: event.data.tags.endTime,     
+        startTime: startTime,
+        endTime: endTime,
         times: times
     };
 
     const response = await productStore.setScheduleTime(bizItemId, params, scheduleId);
 
-    if(response.status_code <= 300) {
-            const params = {
-                startDate: format(currentDate.value, 'yyyy-MM-dd'),
-                endDate: format(currentDate.value, 'yyyy-MM-dd'),
-            }
-            productStore.getBusinessSchedule(params)
+    if (response && response.status_code <= 300) {
+        const fetchParams = {
+            startDate: format(currentDate.value, 'yyyy-MM-dd'),
+            endDate: format(currentDate.value, 'yyyy-MM-dd'),
+        };
+        await productStore.getBusinessSchedule(fetchParams);
     }
+};
+
+// 상품별 운영/미운영 개별 토글 버튼 이벤트
+const handleToggle = async (event, isChecked) => {
+    const bizItemId = event.data.resource;
+    const scheduleId = event.data.tags.scheduleId;
+    const day = event.data.start.toString().split('T')[0];
+
+    if (!getIsImp(bizItemId)) return;
+
+    const schedule = productStore.productScheduleDataList.find(
+        s => s.bizItemId === bizItemId && s.date === day
+    );
+    if (!schedule) return;
+
+    const bitIndex = parseInt(event.data.id.split('_').pop());
+    const bitArray = schedule.hourBit.split('');
+    bitArray[bitIndex] = isChecked ? '1' : '0';
+
+    await updateScheduleBit(bizItemId, day, bitArray, event.data.tags.startTime, event.data.tags.endTime, scheduleId);
+};
+
+// 전체 가능/마감 처리
+const handleAllStatusChange = async (bizItemId, status) => {
+    const day = format(currentDate.value, 'yyyy-MM-dd');
+    const schedule = productStore.productScheduleDataList.find(
+        s => s.bizItemId === bizItemId && s.date === day
+    );
+    
+    if (!schedule) return;
+
+    // 전체를 '1'로 채우거나 '0'으로 채움
+    const newBitArray = new Array(48).fill(status === 'all-open' ? '1' : '0');
+    
+    await updateScheduleBit(
+        bizItemId, 
+        day, 
+        newBitArray, 
+        schedule.startTime || "00:00", 
+        schedule.endTime || "24:00", 
+        schedule.scheduleId
+    );
 };
 
 // 상품 노출/비노출 버튼 (캘린더 헤더 버튼)
@@ -282,15 +301,21 @@ const config = ref({
 
     onHeaderClick: (args) => {
         // 헤더에 html로 삽입해준 버튼에 vue-click이벤트 불가함으로 클릭한 요소(타겟) 찾아서 이벤트 실행해줘야함
+        const target = args.originalEvent.target;
+        const bizItemId = Number(target.getAttribute('data-id'));
 
-        if (args.originalEvent.target.classList.contains('imp-update-btn')) { // 상품 노출/비노출 버튼
-            const target = args.originalEvent.target
-            
-            const bizItemId = Number(target.getAttribute('data-id'));
+         // 상품 노출/비노출 버튼
+        if (target.classList.contains('imp-update-btn')) {
             const currentImp = target.getAttribute('data-imp') === 'true';
             const nextImp = !currentImp;
             
             clickProductImpUpdateBtn(bizItemId, nextImp);
+        }
+
+        // 전체 가능/마감 버튼
+        if(target.classList.contains('status-change-btn')) {
+            const handleAllStatusType = target.getAttribute('data-type');
+            handleAllStatusChange(bizItemId, handleAllStatusType);
         }
     }
 })
