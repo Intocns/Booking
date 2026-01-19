@@ -254,7 +254,7 @@ const config = ref({
     cellHeight: 40,
     headerHeight: 64,
 
-    // 비노출, 휴무일 처리
+    // 캘렌더 셀 설정
     onBeforeCellRender: (args) => {
         const resourceId = args.cell.resource;
         //  productList에서 현재 리소스(상품)의 정보 찾기
@@ -279,8 +279,14 @@ const config = ref({
         args.cell.html = "";
     },
 
+    // 이벤트 셀 설정
     onBeforeEventRender: (args) => {
         const resourceId = args.data.resource;
+        //  productList에서 현재 리소스(상품)의 정보 찾기
+        const product = productList.value.find(p => p.bizItemId === resourceId);
+        if (product && !product.isImp) {
+            args.data.backColor = "#EDEDF2"; // 비노출 상품 배경색
+        }
 
         const schedule = productScheduleDataList.value.find(s => s.bizItemId === resourceId);
         if (schedule && !schedule.isBusinessDay) { // 영업일 여부

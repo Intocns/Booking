@@ -603,7 +603,20 @@ export const useProductStore = defineStore("product", () => {
                 const data = response.data.data;
                 productWeekScheduleDataList.value = data;
             }
-            console.log(response)
+            // console.log(response)
+        } catch {
+            alert('처리 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 상품 수정 > 일정 설정 > 진료가능 동물 수, 운영시간 설정 모달창 저장
+    const setScheduleModalSave = async(itemId, params, schId = null) => {
+        try {
+            const response = await api.post(`/api/${cocode}/item/${itemId}/schedule/modify/b`, params); 
+
+            if(response.data.status_code <= 300) {
+                return response.data;
+            }
         } catch {
             alert('처리 중 오류가 발생했습니다.');
         }
@@ -634,5 +647,6 @@ export const useProductStore = defineStore("product", () => {
         setItemReservationInfo, // 상품 등록 > 예약정보 저장
         updateItemReservationInfo,  // 상품 등록, 수정 > 예약정보 저장(등록화면에서 상품 등록을 한번이라도 한 경우)
         getProductSchedule, // 상품 수정 > 상품 운영시간 불러오기
+        setScheduleModalSave, // 상품 수정 > 일정 설정 > 진료가능 동물 수, 운영시간 설정 모달창 저장
     }
 })

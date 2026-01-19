@@ -1,10 +1,11 @@
 <!-- 상품"수정" > 예약 정보 -->
 <script setup>
 import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
-import { ref, reactive, onMounted, computed, watch } from 'vue';
+import { ref, reactive, onMounted, computed, watch, onActivated } from 'vue';
 import { storeToRefs } from "pinia";
 // 아이콘
 import icArrowRight from '@/assets/icons/ic_arrow_right_blue.svg'
+import icClear from '@/assets/icons/ic_clear.svg'
 // 컴포넌트
 import ModalSimple from "@/components/common/ModalSimple.vue";
 import CustomSingleSelect from "@/components/common/CustomSingleSelect.vue";
@@ -36,6 +37,9 @@ const tempBitArray = ref([]); // 모달 내에서 임시로 수정될 상태 변
 const targetDate = ref("");
 const selectedDay = ref(null); // 요일 선택 상태
 const selectedAnimalCount = ref(null); // 진료 가능 동물 수 선택 상태
+const times = ref([
+    { startTime: "", endTime: "" }
+]); // 진료가능 동물 수, 운영시간 설정 모달창 > 운영시간 설정 times
 
 // 요일옵션 데이터 (임시)
 const daysOptions = [
@@ -162,7 +166,7 @@ const handleEventClick = (args) => {
     const daySchedule = productWeekScheduleDataList.value.find(day => day.date === date);
     
     if (daySchedule) {
-        console.log("선택된 날짜 스케줄:", daySchedule);
+        // console.log("선택된 날짜 스케줄:", daySchedule);
         // 원본 배열로 복사
         tempBitArray.value = daySchedule.hourBit.split('');
 
@@ -237,16 +241,9 @@ const dayEvents = computed(() => {
 const modalTitle = computed(() => {
     if (!selectedEvent.value) return ""
     
-    // yy.MM.dd (ddd) -> 26.01.07 (수)
     // ddd는 요일을 한 글자(월, 화, 수...)로 표시
     return new DayPilot.Date(selectedEvent.value.start).toString("yy.MM.dd (ddd)","ko-kr");
 });
-
-// 진료가능 동물 수, 운영시간 변경하기 모달창 오픈
-const handelSetOperationModalOpen = (() => {
-    modalStore.setDateSettingModal.closeModal();
-    modalStore.setOperationRuleModal.openModal();
-})
 
 // 상품시간별 운영/미운영 개별 토글 버튼 이벤트
 const handleToggle = (index, isChecked) => {
@@ -318,6 +315,64 @@ const handleSaveSchedule = async () => {
     modalStore.setDateSettingModal.closeModal();
 };
 
+// 진료가능 동물 수, 운영시간 변경하기 모달창 오픈
+const handelSetOperationModalOpen = (() => {
+    modalStore.setDateSettingModal.closeModal();
+    modalStore.setOperationRuleModal.openModal();
+})
+
+// 진료가능 동물 수, 운영시간 변경하기 모달창 > 시간추가
+const addTimeSetting = () => {
+    times.value.push({ startTime: "", endTime: "" });
+}
+
+// 진료가능 동물 수, 운영시간 변경 저장
+const handleSaveOperationRule = async () => {
+    if (!selectedAnimalCount.value || selectedAnimalCount.value <= 0) {
+        alert("진료 가능 동물 수를 선택해주세요.");
+        return;
+    }
+
+    // times가 비어있거나, 입력되지 않은 값이 하나라도 있는지 확인
+    const hasEmptyTime = times.value.some(time => !time.startTime || !time.endTime);
+
+    if (times.value.length === 0) {
+        alert("최소 하나 이상의 운영시간을 설정해야 합니다.");
+        return;
+    }
+
+    if (hasEmptyTime) {
+        alert("운영시간을 모두 입력해주세요.");
+        return;
+    }
+    
+    const params = {
+        day: targetDate.value,
+        stock: selectedAnimalCount.value,
+        times: times.value.map(time => ({
+            startTime: time.startTime,
+            endTime: time.endTime
+        }))
+    }
+
+    const response = await productStore.setScheduleModalSave(props.savedItemId, params);
+
+    if (response && response.status_code <= 300) {
+        // 현재 캘린더의 시작일 기준
+        const start = new DayPilot.Date(calendarConfig.startDate);
+        const end = start.addDays(6);
+
+        const fetchParams = {
+            startDate: start.toString("yyyy-MM-dd"),
+            endDate: end.toString("yyyy-MM-dd"),
+        };
+        
+        await productStore.getProductSchedule(props.savedItemId, fetchParams);
+    }
+
+    modalStore.setOperationRuleModal.closeModal();
+}
+
 // 날짜 변경되면 api호출 - 주간 스케줄 데이터 가져오기
 watch( () => calendarConfig.startDate, async (newStartDate) => {
     if (!newStartDate) return;
@@ -334,11 +389,12 @@ watch( () => calendarConfig.startDate, async (newStartDate) => {
 
 }, { immediate: true });
 
-// 캘린더 스크롤을 9시 위치로 이동
+// 캘린더 스크롤을 운영시작 위치로 이동
 const scrollToWorkTime = () => {
-    const calendarEl = document.querySelector('.calendar_default_main');
+    const calendarEl = document.querySelector('.calendar_default_main > div:nth-child(2)');
+
     if (calendarEl) {
-        calendarEl.scrollTop = 1080; // 9시 위치로 스크롤
+        calendarEl.scrollTop = 576; // 9시 위치로 스크롤 // TODO: 동적계산 필요
     }
 };
 
@@ -347,8 +403,12 @@ onMounted(() => {
     const start = DayPilot.Date.today().firstDayOfWeek(1);
     calendarConfig.startDate = start;
 
-    scrollToWorkTime()
+    scrollToWorkTime();
 })
+
+onActivated(() => {
+    scrollToWorkTime();
+});
 </script>
 
 <template>
@@ -450,25 +510,35 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div style="min-height: 200px;">
+            <div style="min-height: 220px;margin-top: 32px;">
                 <!-- 시간 설정 -->
-                <div class="d-flex align-center gap-8" style="margin-top: 32px;">
-                    <span class="title-s">시작</span>
-                    <TimeSelect />
-                    -
-                    <span class="title-s">마지막</span>
-                    <TimeSelect />
+                <div class="d-flex flex-col gap-16">
+                    <div v-for="(time, index) in times" :key="time.id" class="set-time-item">
+                        <span class="title-s">시작</span>
+                        <TimeSelect v-model="time.startTime" />
+                        -
+                        <span class="title-s">마지막</span>
+                        <TimeSelect v-model="time.endTime" />
+                        
+                        <!-- 삭제버튼 -->
+                        <button 
+                            v-if="index > 0" 
+                            class="btn-clear" 
+                            @click="times.splice(times.indexOf(time), 1)">
+                            <img :src="icClear" alt="삭제" />
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div style="margin-top: 16px; border-top: 1px solid #ddd; padding-top: 16px;">
-                <button class="text-button text-button--blue" style="width: 100%;">시간 추가</button>
+                <button class="text-button text-button--blue" style="width: 100%;" @click="addTimeSetting">시간 추가</button>
             </div>
         </div>
 
         <div class="modal-button-wrapper">
             <button class="btn btn--size-32 btn--black" @click="modalStore.setOperationRuleModal.closeModal()">취소</button>
-            <button class="btn btn--size-32 btn--blue">저장</button>
+            <button class="btn btn--size-32 btn--blue" @click="handleSaveOperationRule">저장</button>
         </div>
     </ModalSimple>
 </template>
@@ -614,5 +684,19 @@ onMounted(() => {
         gap: 4px;
         color: $primary-700;
         @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line); 
+    }
+
+    // 진료가능 동물 수, 운영설정 모달 스타일
+    .set-time-item {
+        display:flex;
+        align-items:center;
+        gap:8px;
+        position: relative;
+
+        .btn-clear {
+            position:absolute;
+            right:-7px;
+            top: -7px;
+        }
     }
 </style>
