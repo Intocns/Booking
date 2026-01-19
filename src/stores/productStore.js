@@ -11,6 +11,7 @@ export const useProductStore = defineStore("product", () => {
     const linkItemInfo = ref({});
     const itemDetailInfo = ref({});
     const productScheduleDataList = ref([]); // 간단예약 관리 > 상품별 운영시간 데이터
+    const productWeekScheduleDataList = ref([]); // 상품 수정 > 상품 운영시간 데이터
 
     // 상품 리스트 불러오기
     async function getProductList() {
@@ -421,7 +422,7 @@ export const useProductStore = defineStore("product", () => {
         }
     }
 
-    // 상품 운영시간 변경
+    // 상품 등록, 수정 > 예약정보 저장
     async function setItemReservationInfo(itemId, params){
         // {
         //     "reserveCnt": 0,
@@ -507,6 +508,21 @@ export const useProductStore = defineStore("product", () => {
         return response.data;
     }
     
+    // 상품 수정 > 상품 운영시간 불러오기
+    const getProductSchedule = async(itemId, params) => {
+        try {
+            const response = await api.post(`/api/${cocode}/item/${itemId}/schedule/detail`, params); 
+
+            if(response.data.status_code <= 300) {
+                const data = response.data.data;
+                productWeekScheduleDataList.value = data;
+            }
+            console.log(response)
+        } catch {
+            alert('처리 중 오류가 발생했습니다.');
+        }
+    }
+
     return {
         // 
         productList, // 상품 전체 리스트
@@ -514,6 +530,7 @@ export const useProductStore = defineStore("product", () => {
         linkItemInfo,
         itemDetailInfo,
         productScheduleDataList, // 간단예약 관리 > 상품별 운영시간 데이터
+        productWeekScheduleDataList, // 상품 수정 > 상품 운영시간 데이터
         // 
         getProductList, // 상품 리스트 불러오기
         setItemOrder, // 상품 순서 변경
@@ -528,6 +545,7 @@ export const useProductStore = defineStore("product", () => {
         setItemShow, //상품 노출 변경(단건/ 일괄)
         getBusinessSchedule, // 간단 예약 관리 데이터 불러오기 (상품별 예약 운영시간 데이터)
         setScheduleTime, // 상품 운영시간 변경
-        setItemReservationInfo// 상품 등록, 수정 > 예약정보 저장
+        setItemReservationInfo, // 상품 등록, 수정 > 예약정보 저장
+        getProductSchedule, // 상품 수정 > 상품 운영시간 불러오기
     }
 })
