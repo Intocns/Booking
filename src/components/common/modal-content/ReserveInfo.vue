@@ -1200,4 +1200,7 @@ const handleViewChart = () => {
             text-overflow: ellipsis;
         }
     }
+    :deep(.empty-box) {
+        margin-top: 10px;
+    }
 </style>

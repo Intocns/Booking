@@ -109,10 +109,12 @@ const handleEmptyBtnClick = () => {
             </table>
 
             <template v-if="rows.length == 0">
-                <div class="empty-box">
+                <div class="empty-box" :class="{ 'no-thead_table' : noThead == true}">
                     <img :src="icEmpty" alt="비어있음 아이콘">
-                    <span class="title-s">{{ tableEmptyText }}</span>
-                    <p class="body-m">{{ tableEmptySubText }}</p>
+                    <div class="d-flex flex-col align-center gap-4">
+                        <span class="body-m">{{ tableEmptyText }}</span>
+                        <p class="title-s">{{ tableEmptySubText }}</p>
+                    </div>
                     <button 
                         v-if="tableEmptyBtnText" 
                         class="btn btn--size-32 btn--black" 
@@ -222,6 +224,10 @@ const handleEmptyBtnClick = () => {
 .empty-box {
     height: calc(100% - 41px);
     background-color: $gray-00;
+
+    &.no-thead_table {
+        height: 100%; // thead가 없을 때 높이 조정
+    }
 }
 
 
