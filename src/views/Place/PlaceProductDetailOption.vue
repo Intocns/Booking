@@ -56,7 +56,6 @@ const saveItemOption = (async() => {
                 })
             )
     )
-    console.log(params);
 
     let response = await optionStore.addOptionMapping(params);
 
