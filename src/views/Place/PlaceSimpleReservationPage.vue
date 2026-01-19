@@ -43,7 +43,7 @@ const columns = computed(() => {
         // 각 col별 버튼 추가
         html: `
             <div class="product-header-cell">
-                <div class="product-name"><span>${product.name}/${product.bizItemId}</span></div>
+                <div class="product-name"><span>${product.name}</span></div>
                 <div class="header-btn-group">
                     <div class="d-flex justify-between">
                         <div class="d-flex gap-4">
@@ -272,8 +272,6 @@ const config = ref({
             args.cell.properties.backColor = "#EDEDF2"; // 휴무일 배경색
             return;
         }
-
-        // TODO: 노출 중인 상품 중 영업일이 아닌 경우 처리 (isBusinessDay == false)
         
 
         // 정상 운영 상태 -> 흰색 처리
@@ -283,19 +281,16 @@ const config = ref({
 
     onBeforeEventRender: (args) => {
         const resourceId = args.data.resource;
-        const product = productList.value.find(p => p.bizItemId === args.data.resource);
-        if (product && !product.isImp) { // 상품 비노출 상태인 경우
-            // args.data.cssClass = "hidden-event"; // 이벤트를 화면에서 숨김
-            args.data.backColor = "#EDEDF2"
-        }
 
         const schedule = productScheduleDataList.value.find(s => s.bizItemId === resourceId);
-        // if (schedule && !schedule.isBusinessDay) { // 영업일 여부
-        //     args.data.cssClass = "hidden-event"; // 이벤트를 화면에서 숨김
-        // }
+        if (schedule && !schedule.isBusinessDay) { // 영업일 여부
+            args.data.cssClass = "hidden-event"; // 이벤트를 화면에서 숨김
+            return;
+        }
 
         if(schedule && schedule.isHoliday) { // 휴무일인 경우
             args.data.cssClass = 'hidden-event';
+            return;
         }
     },
 
@@ -424,13 +419,11 @@ watch(currentDate, async (newDate) => {
             table {
                 tbody tr td:nth-child(2) table {
                     td {
-                        // width: 220px !important; 
                         min-width: 220px !important;
                         max-width: 220px !important;
                     }
                 }
                 width: auto !important; 
-                // table-layout: fixed;
             }
         }
 
@@ -449,11 +442,9 @@ watch(currentDate, async (newDate) => {
             table {
                 tbody tr td:nth-child(2) table {
                     td {
-                        // width: 220px !important; 
                         min-width: 220px !important;
                         max-width: 220px !important;
                         & > div {
-                            // width: 220px !important; 
                             min-width: 220px !important;
                             max-width: 220px !important;
                             
@@ -461,7 +452,6 @@ watch(currentDate, async (newDate) => {
                     }
                 }
                 width: auto !important; 
-                // table-layout: fixed;
             }
         }
 
@@ -472,7 +462,6 @@ watch(currentDate, async (newDate) => {
     :deep(.calendar_default_cell) {
         min-width: 220px !important; 
         max-width: 220px !important;
-        // width: 220px !important;
     }
 
     :deep(.calendar_default_corner_inner) {
@@ -512,12 +501,10 @@ watch(currentDate, async (newDate) => {
             display: flex;
             align-items: center;
             padding: 0 16px;
-            // width: 100%;
             height:30px;
             margin-bottom: 1px;
 
             border-top: 1px solid $gray-200;
-            // border-bottom: 1px solid #dedee3;
             border-right: 1px solid $gray-200;
             background-color: $gray-00;
 
