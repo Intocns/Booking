@@ -1,18 +1,23 @@
 <!-- 상품"수정" > 예약 정보 -->
 <script setup>
 import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed, watch } from 'vue';
+import { storeToRefs } from "pinia";
 // 아이콘
 import icArrowRight from '@/assets/icons/ic_arrow_right_blue.svg'
 // 컴포넌트
 import ModalSimple from "@/components/common/ModalSimple.vue";
 import CustomSingleSelect from "@/components/common/CustomSingleSelect.vue";
+import TimeSelect from "@/components/common/TimeSelect.vue";
 // 스토어
 import { useModalStore } from "@/stores/modalStore";
-import TimeSelect from "@/components/common/TimeSelect.vue";
+import { useProductStore } from "@/stores/productStore";
 
+const productStore = useProductStore();
 const modalStore = useModalStore();
+const { productWeekScheduleDataList } = storeToRefs(productStore);
 
+// props
 const props = defineProps({
     savedItemId: {type: String},
     viewType: {type: String, default:null},
@@ -22,90 +27,104 @@ const props = defineProps({
     previewNotice: { type: String }
 })
 
-// 캘린더 데이터 (예시 데이터)
-const events = ref([
-    {
-        id: 1,
-        start: "2026-01-07T10:00:00",
-        end: "2026-01-07T10:30:00",
-        text: "",
-        backColor: "#E3F2FD",
-        cssClass: "event-open",
-    },
-    {
-        id: 2,
-        start: "2026-01-07T10:30:00",
-        end: "2026-01-07T11:00:00",
-        text: "",
-        backColor: "#E3F2FD",
-        cssClass: "event-open",
-    },
-    {
-        id: 3,
-        start: "2026-01-07T11:00:00",
-        end: "2026-01-07T11:30:00",
-        text: "",
-        backColor: "#E3F2FD",
-        cssClass: "event-open",
-    },
-    {
-        id: 4,
-        start: "2026-01-07T11:30:00",
-        end: "2026-01-07T12:00:00",
-        text: "",
-        backColor: "#E3F2FD",
-        cssClass: "event-open",
-    },
-    {
-        id: 5,
-        start: "2026-01-07T12:00:00",
-        end: "2026-01-07T12:30:00",
-        text: "",
-        backColor: "#F5F5FA",
-        cssClass: "event-closed",
-    },
-    {
-        id: 6,
-        start: "2026-01-07T12:30:00",
-        end: "2026-01-07T13:00:00",
-        text: "",
-        backColor: "#F5F5FA",
-        cssClass: "event-closed",
-    },
-    {
-        id: 7,
-        start: "2026-01-07T13:00:00",
-        end: "2026-01-07T13:30:00",
-        text: "",
-        backColor: "#E3F2FD",
-        cssClass: "event-open",
-    },
-    {
-        id: 8,
-        start: "2026-01-07T13:30:00",
-        end: "2026-01-07T14:00:00",
-        text: "",
-        backColor: "#E3F2FD",
-        cssClass: "event-open",
-    },
-]);
+/**
+ * 상태 관리
+ */
+const calendarRef = ref(null);
+const selectedEvent = ref(null);
+const tempBitArray = ref([]); // 모달 내에서 임시로 수정될 상태 변수
+const targetDate = ref("");
+const selectedDay = ref(null); // 요일 선택 상태
+const selectedAnimalCount = ref(null); // 진료 가능 동물 수 선택 상태
 
 // 요일옵션 데이터 (임시)
 const daysOptions = [
-    { label: '월', value: 'mon' },
-    { label: '화', value: 'tue' }, 
-    { label: '수', value: 'wed' },
-    { label: '목', value: 'thu' }, 
-    { label: '금', value: 'fri' }, 
-    { label: '토', value: 'sat' }, 
-    { label: '일', value: 'sun' }
+    { label: '월', value: 'MON' },
+    { label: '화', value: 'TUE' }, 
+    { label: '수', value: 'WED' },
+    { label: '목', value: 'THU' }, 
+    { label: '금', value: 'FRI' }, 
+    { label: '토', value: 'SAT' }, 
+    { label: '일', value: 'SUN' }
 ];
 
 // 예약 가능 동물 수 (임시 1~10)
 const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
 
-// 상태관리
-const selectedEvent = ref(null);
+// productWeekScheduleDataList 데이터를 이벤트 형식으로 파싱
+const events = computed(() => {
+    const allEvents = [];
+
+    if(!productWeekScheduleDataList.value) return [];
+
+    productWeekScheduleDataList.value.forEach(daySchedule => {
+        allEvents.push(...parseHourBitToEvents(daySchedule));
+    });
+
+    return allEvents;
+})
+
+const getTotalMinutes = (timeStr) => { // 운영 시간 범위(startTime ~ endTime)를 인덱스로 변환
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + m;
+};
+
+const parseHourBitToEvents = (daySchedule) => {
+    if(!daySchedule || !daySchedule.hourBit) return [];
+    if(daySchedule.isBusinessDay === false) return []; // 비운영일 경우 빈 배열 반환
+
+    const bitString = daySchedule.hourBit;
+    const newEvents = []; // 가공해서 담아줄 데이터
+    const dateStr = daySchedule.date;
+
+    // 운영 시간 범위 계산
+    const startLimitMin = getTotalMinutes(daySchedule.startTime || "00:00");
+    const endLimitMin = getTotalMinutes(daySchedule.endTime || "24:00");
+
+    const startIdxLimit = Math.max(0, Math.floor(startLimitMin / 30));
+    const endIdxLimit = Math.min(bitString.length, Math.ceil(endLimitMin / 30));
+
+    let i = startIdxLimit;
+
+    while (i < endIdxLimit) {
+        const currentBit = bitString[i];
+        let j = i;
+
+        // 같은 비트가 연속되는 구간 찾기 (단, endIdxLimit을 넘지 않아야 함)
+        while (j < endIdxLimit && bitString[j] === currentBit) {
+            j++;
+        }
+
+        // 시간 계산 (startIdx부터 endIdx까지 하나의 블록)
+        const blockStartTotalMin = i * 30;
+        const blockEndTotalMin = j * 30;
+
+        const format = (totalMin) => {
+            const h = Math.floor(totalMin / 60).toString().padStart(2, '0');
+            const m = (totalMin % 60).toString().padStart(2, '0');
+            return `${h}:${m}:00`;
+        };
+
+        newEvents.push({
+            id: `${dateStr}-${i}`,
+            start: `${dateStr}T${format(blockStartTotalMin)}`,
+            end: `${dateStr}T${format(blockEndTotalMin)}`,
+            backColor: currentBit === '1' ? '#E3F2FD' : '#F5F5FA', // 운영/마감에 따른 배경색 설정
+            cssClass: currentBit === '1' ? 'event-open' : 'event-closed', // 운영/마감에 따른 클래스 설정
+
+            tags: {
+                bitValue: currentBit,
+                startIdx: i,
+                endIdx: j,
+                date: dateStr
+            }
+        });
+
+        // 다음 블록 시작점으로 이동
+        i = j;
+    }
+    return newEvents;
+}
 
 // 이전 주로 이동
 const prevWeek = () => {
@@ -133,16 +152,31 @@ const dateRangeText = computed(() => {
     return `${start.toString("yyyy.MM.dd")} - ${end.toString("MM.dd")}`;
 });
 
-// 이벤트(예약 정보) 클릭 시 호출
+// 이벤트 클릭 시 데이터를 복사해서 임시 변수에 담음
 const handleEventClick = (args) => {
+    // console.log("이벤트 클릭:", args.e.data);
     const eventData = args.e.data;
-    // selectedEvent는 모달 내부에서 수정할 '복사본' 역할을 합니다.
-    selectedEvent.value = JSON.parse(JSON.stringify(eventData)); 
-    
-    // 모달 스토어의 openModal에 데이터 전달
-    modalStore.setDateSettingModal.openModal(selectedEvent.value);
-};
+    const date = eventData.tags.date; // parseHourBitToEvents에서 넣은 날짜
+    targetDate.value = date;
 
+    const daySchedule = productWeekScheduleDataList.value.find(day => day.date === date);
+    
+    if (daySchedule) {
+        console.log("선택된 날짜 스케줄:", daySchedule);
+        // 원본 배열로 복사
+        tempBitArray.value = daySchedule.hourBit.split('');
+
+        const dayOfWeekIndex = new DayPilot.Date(date).getDayOfWeek() - 1; // 1:월 ~ 7:일
+        const currentDayValue = daysOptions[dayOfWeekIndex].value;
+        selectedDay.value = currentDayValue; // 요일 선택 상태 설정
+
+        // 동물 수 연결
+        selectedAnimalCount.value = daySchedule.stock || '';
+        
+        selectedEvent.value = JSON.parse(JSON.stringify(eventData)); 
+        modalStore.setDateSettingModal.openModal(selectedEvent.value);
+    }
+};
 
 // 캘린더 설정
 const calendarConfig = reactive({
@@ -160,46 +194,160 @@ const calendarConfig = reactive({
     eventMoveHandling: "Disabled",
     eventResizeHandling: "Disabled",
     
-    // 날짜 클릭 시 이벤트 
-    // onTimeRangeSelected: (args) => {
-    //     console.log("선택된 시간:", args.start, args.end);
-    // },
-
-    // 이벤트(예약 정보) 클릭 시
     onEventClick: handleEventClick,
 });
 
-const calendarRef = ref(null);
-
 // 모달 내에서 편집할 해당 날짜의 전체 시간 리스트
 const dayEvents = computed(() => {
-    if (!selectedEvent.value) return [];
+    if (!selectedEvent.value || tempBitArray.value.length === 0) return [];
     
-    // 클릭한 이벤트의 날짜(YYYY-MM-DD) 추출
-    const selectedDate = new DayPilot.Date(selectedEvent.value.start).toString("yyyy-MM-dd");
-    
-    // 전체 events 중 같은 날짜인 것만 필터링하여 반환
-    return events.value.filter(ev => 
-        new DayPilot.Date(ev.start).toString("yyyy-MM-dd") === selectedDate
-    );
+    const daySchedule = productWeekScheduleDataList.value.find(day => day.date === targetDate.value);
+    if (!daySchedule) return [];
+
+    const startTime = daySchedule.startTime || "00:00";
+    const endTime = daySchedule.endTime || "24:00";
+
+    const getTotalMinutes = (timeStr) => {
+        const [h, m] = timeStr.split(':').map(Number);
+        return h * 60 + m;
+    };
+
+    const startLimit = getTotalMinutes(startTime);
+    const endLimit = getTotalMinutes(endTime);
+    const list = [];
+
+    // 임시 배열(tempBitArray)을 기준으로 30분 단위 리스트 생성
+    for (let i = 0; i < tempBitArray.value.length; i++) {
+        const totalMinutes = i * 30;
+        if (totalMinutes >= startLimit && totalMinutes < endLimit) {
+            const hour = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+            const min = (totalMinutes % 60).toString().padStart(2, '0');
+            
+            list.push({
+                id: i,
+                timeText: `${hour}:${min}`,
+                bitValue: tempBitArray.value[i] // 임시 상태값
+            });
+        }
+    }
+    return list;
 });
 
-// 모달 헤더에 표시할 날짜 형식 (25.01.07 (수))
+// 모달 헤더에 표시할 날짜 형식
 const modalTitle = computed(() => {
     if (!selectedEvent.value) return ""
     
     // yy.MM.dd (ddd) -> 26.01.07 (수)
-    // ddd는 요일을 한 글자(월, 화, 수...)로 표시합니다.
+    // ddd는 요일을 한 글자(월, 화, 수...)로 표시
     return new DayPilot.Date(selectedEvent.value.start).toString("yy.MM.dd (ddd)","ko-kr");
 });
 
+// 진료가능 동물 수, 운영시간 변경하기 모달창 오픈
 const handelSetOperationModalOpen = (() => {
     modalStore.setDateSettingModal.closeModal();
     modalStore.setOperationRuleModal.openModal();
 })
+
+// 상품시간별 운영/미운영 개별 토글 버튼 이벤트
+const handleToggle = (index, isChecked) => {
+    tempBitArray.value[index] = isChecked ? '1' : '0';
+};
+
+// 상품시간별 운영/마감 API 호출 및 상태 업데이트
+const updateScheduleBit = async (bizItemId, day, newBitArray, startTime, endTime, scheduleId = null) => {
+    const times = newBitArray.map((bit, i) => ({
+        time: formatTime(i),
+        useFlag: parseInt(bit)
+    }));
+
+    const params = {
+        day: day,
+        startTime: startTime,
+        endTime: endTime,
+        times: times
+    };
+
+    const response = await productStore.setScheduleTime(bizItemId, params, scheduleId);
+
+    if (response && response.status_code <= 300) {
+        // 현재 캘린더의 시작일 기준
+        const start = new DayPilot.Date(calendarConfig.startDate);
+        const end = start.addDays(6);
+
+        const fetchParams = {
+            startDate: start.toString("yyyy-MM-dd"),
+            endDate: end.toString("yyyy-MM-dd"),
+        };
+        
+        await productStore.getProductSchedule(bizItemId, fetchParams);
+    }
+};
+
+// 시간 포맷팅 함수 (인덱스 -> "HH:mm")
+const formatTime = (index) => {
+    const totalMin = index * 30;
+    const h = Math.floor(totalMin / 60).toString().padStart(2, '0');
+    const m = (totalMin % 60).toString().padStart(2, '0');
+    return `${h}:${m}`;
+};
+
+// 전체 가능 / 전체 마감 기능
+const setAllStatus = (statusBit) => {
+    const daySchedule = productWeekScheduleDataList.value.find(day => day.date === targetDate.value);
+    const startIdx = Math.floor(getTotalMinutes(daySchedule.startTime) / 30);
+    const endIdx = Math.ceil(getTotalMinutes(daySchedule.endTime) / 30);
+
+    for (let i = startIdx; i < endIdx; i++) {
+        tempBitArray.value[i] = statusBit;
+    }
+};
+
+// 시간별 운영 / 마감 모달창 저장 버튼
+const handleSaveSchedule = async () => {
+    const daySchedule = productWeekScheduleDataList.value.find(day => day.date === targetDate.value);
+    if (!daySchedule) return;
+
+    await updateScheduleBit(
+        props.savedItemId, 
+        targetDate.value, 
+        tempBitArray.value, 
+        daySchedule.startTime, 
+        daySchedule.endTime
+    );
+
+    modalStore.setDateSettingModal.closeModal();
+};
+
+// 날짜 변경되면 api호출 - 주간 스케줄 데이터 가져오기
+watch( () => calendarConfig.startDate, async (newStartDate) => {
+    if (!newStartDate) return;
+
+    const start = new DayPilot.Date(newStartDate);
+    const end = start.addDays(6);
+
+    const params = {
+        startDate: start.toString("yyyy-MM-dd"),
+        endDate: end.toString("yyyy-MM-dd"),
+    };
+
+    await productStore.getProductSchedule(props.savedItemId, params);
+
+}, { immediate: true });
+
+// 캘린더 스크롤을 9시 위치로 이동
+const scrollToWorkTime = () => {
+    const calendarEl = document.querySelector('.calendar_default_main');
+    if (calendarEl) {
+        calendarEl.scrollTop = 1080; // 9시 위치로 스크롤
+    }
+};
+
 onMounted(() => {
-    // 초기 로드 시 오늘 날짜로 이동
-    calendarConfig.startDate = DayPilot.Date.today().firstDayOfWeek(1);
+    // 초기 로드 시 오늘 날짜로 업데이트
+    const start = DayPilot.Date.today().firstDayOfWeek(1);
+    calendarConfig.startDate = start;
+
+    scrollToWorkTime()
 })
 </script>
 
@@ -239,19 +387,20 @@ onMounted(() => {
             <div class="d-flex flex-col gap-16 align-center">
                 <button class="btn-link" @click="handelSetOperationModalOpen">진료 가능 동물 수, 운영시간 변경하기<img :src="icArrowRight" alt="아이콘"></button>
                 <div class="d-flex gap-8">
-                    <button class="btn btn--size-24 btn--black-outline">전체 가능</button>
-                    <button class="btn btn--size-24 btn--black-outline">전체 마감</button>
+                    <button class="btn btn--size-24 btn--black-outline" @click="setAllStatus('1')">전체 가능</button>
+                    <button class="btn btn--size-24 btn--black-outline" @click="setAllStatus('0')">전체 마감</button>
                 </div>
             </div>
 
             <div class="time-list-container">
                 <div v-for="item in dayEvents" :key="item.id" class="time-item d-flex align-center justify-between">
-                    <span class="body-m">{{ new DayPilot.Date(item.start).toString("HH:mm") }}</span>
+                    <span class="body-m">{{ item.timeText }}</span>
                     <label class="toggle">
                         <input 
                             type="checkbox" 
-                            :checked="item.cssClass === 'event-open'"
-                            @change="toggleEventStatus(item)"
+                            :checked="item.bitValue == '1'"
+                            @change="(e) => handleToggle(item.id, e.target.checked)"
+                            @click.stop 
                         />
                         <img class="toggle-img" />
                     </label>
@@ -260,7 +409,7 @@ onMounted(() => {
         </div>
         <div class="modal-button-wrapper">
             <button class="btn btn--size-32 btn--black" @click="modalStore.setDateSettingModal.closeModal()">취소</button>
-            <button class="btn btn--size-32 btn--blue">저장</button>
+            <button class="btn btn--size-32 btn--blue" @click="handleSaveSchedule">저장</button>
         </div>
     </ModalSimple>
 
@@ -282,6 +431,7 @@ onMounted(() => {
                         :key="day.value" 
                         type="button" 
                         class="btn-day" 
+                        :class="{ 'active': selectedDay === day.value }"
                     >
                         {{ day.label }}
                     </button>
@@ -367,7 +517,7 @@ onMounted(() => {
         width: 100%;
         height: 100%;
         overflow-x: auto;
-        overflow-y: hidden;
+        // overflow-y: hidden;
 
         border-color: $gray-200;
         font-family: $font-family-base;
@@ -380,6 +530,10 @@ onMounted(() => {
             top: 0;
             z-index: 2;
             
+        }
+
+        & > div:nth-child(2) {
+            height: calc(100% - 30px) !important;
         }
     }
 
@@ -438,6 +592,10 @@ onMounted(() => {
         opacity: 0.83;
         .calendar_default_event_inner {
             background: url('@/assets/images/Pattern.png') repeat !important;
+
+            &:hover {
+                background-color: $gray-200 !important;
+            }
         }
     }
     :deep(.calendar_default_event_bar) {display: none;} // 왼쪽 색상바 안보이도록
