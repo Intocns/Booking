@@ -170,7 +170,12 @@ const handleEventClick = (args) => {
         // 원본 배열로 복사
         tempBitArray.value = daySchedule.hourBit.split('');
 
-        const dayOfWeekIndex = new DayPilot.Date(date).getDayOfWeek() - 1; // 1:월 ~ 7:일
+        let dayOfWeekIndex = new DayPilot.Date(date).getDayOfWeek(); // 1:월 ~ 7:일
+        if (dayOfWeekIndex === 0) {
+            dayOfWeekIndex = 6;
+        } else {
+            dayOfWeekIndex = dayOfWeekIndex - 1;
+        }
         const currentDayValue = daysOptions[dayOfWeekIndex].value;
         selectedDay.value = currentDayValue; // 요일 선택 상태 설정
 
