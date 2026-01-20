@@ -225,7 +225,8 @@ const toggleOptionVisibility = async (row) => {
         // 옵션 리스트 새로고침
         if (activeTab.value) {
             // await optionStore.getOptionListByCategoryId(activeTab.value);
-            await optionStore.getAllCategoryOptions();
+            // await optionStore.getAllCategoryOptions();
+            await optionStore.getOptionListByCategory();
             await setTab(activeTab.value);
             // const currentCategory = optionStore.optionList.find(
             //     (cat) => String(cat.categoryId) === String(tabId)
@@ -253,7 +254,8 @@ const toggleOptionVisibility = async (row) => {
         // 에러 발생 시 체크박스 상태를 원래대로 되돌리기 위해 리스트 새로고침
         if (activeTab.value) {
             // await optionStore.getOptionListByCategoryId(activeTab.value);
-            await optionStore.getAllCategoryOptions();
+            // await optionStore.getAllCategoryOptions();
+            await optionStore.getOptionListByCategory();
             // dataMap.value[activeTab.value] = optionStore.optionList || [];
             await setTab(activeTab.value);
         }
