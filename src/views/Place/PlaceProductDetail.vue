@@ -7,6 +7,7 @@ import ProductTabBooking from './PlaceProductDetailBooking.vue';
 import ProductTabOption from './PlaceProductDetailOption.vue';
 import PlaceProductPreview from './PlaceProductPreview.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
+import OptionPreview from '@/components/common/OptionPreview.vue';
 // 아이콘
 import icInfo from '@/assets/icons/Ic_round_warning.svg'
 import icImg from '@/assets/icons/ic_image.svg'
@@ -95,7 +96,8 @@ const previewData = reactive({
 
         <!-- right -->
         <div class="right">
-            <PlaceProductPreview :preview-data="previewData" />
+            <OptionPreview v-if="currentTab === 'option'" v-model:selected-product="savedItemId" :no-show-select-box="true" />
+            <PlaceProductPreview v-else :preview-data="previewData" />
         </div>
     </div>
 
