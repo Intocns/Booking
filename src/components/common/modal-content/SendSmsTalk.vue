@@ -16,6 +16,23 @@ const smsRemainingCount = ref(null);
 const isLoadingSmsPoint = ref(false);
 const cocode = '2592'; // TODO: 임시
 
+// 알림톡 프로필/템플릿 체크 및 복호화 테스트용 상태
+const isCheckingAvailable = ref(false);
+const checkAvailableResult = ref(null);
+
+// 템플릿 정보 조회 상태
+const isLoadingTemplates = ref(false);
+const templateList = ref([]);
+const selectedTemplate = ref(null); // 선택된 템플릿
+
+// 알림톡 템플릿 타입 (백엔드와 맞추기 위한 값, 필요 시 변경)
+const selectedTemplateType = ref(1); // TODO: 추후 5로 변경 필요
+
+// 템플릿 선택 핸들러
+const selectTemplate = (template) => {
+    selectedTemplate.value = template;
+};
+
 const getSmsPointInfo = async () => {
     if (isLoadingSmsPoint.value) return;
     
@@ -37,9 +54,94 @@ const getSmsPointInfo = async () => {
     }
 };
 
-// 부모 컴포넌트에서 호출할 수 있도록 함수 노출
+// 알림톡 프로필/템플릿 체크 API 호출
+const checkAvailableApi = async () => {
+    if (isCheckingAvailable.value) return;
+
+    isCheckingAvailable.value = true;
+    checkAvailableResult.value = null;
+
+    try {
+        const body = {
+            compEnrolNum: '1231212345', // TODO: 실제 값으로 교체
+            cocode: cocode,
+            templateType: selectedTemplateType.value, // TODO: 추후 5로 변경 필요
+        };
+
+        const response = await api.post(`/api/${cocode}/alimtalk/checkAvailableApi`, body);
+        checkAvailableResult.value = response.data;
+        
+        // checkAvailableApi가 성공하면 getTemplateInfo 호출
+        if (response.data?.status_code === 200 && response.data?.data) {
+            const data = response.data.data;
+            // is_profile이나 is_available_template이 true인지 확인
+            if (data.is_profile === true || data.is_available_template === true) {
+                await getTemplateInfo();
+            }
+        }
+    } catch (error) {
+        console.error('알림톡 checkAvailableApi 호출 오류:', error);
+        checkAvailableResult.value = null;
+    } finally {
+        isCheckingAvailable.value = false;
+    }
+};
+
+// 템플릿 정보 조회 API 호출
+const getTemplateInfo = async () => {
+    if (isLoadingTemplates.value) return;
+
+    isLoadingTemplates.value = true;
+    templateList.value = [];
+
+    try {
+        const body = {
+            compEnrolNum: '1231212345', // TODO: 실제 값으로 교체
+            cocode: cocode,
+            templateType: selectedTemplateType.value, // TODO: 추후 5로 변경 필요
+        };
+
+        const response = await api.post(`/api/${cocode}/alimtalk/getTemplateInfo`, body);
+        if (response.data?.status_code === 200 && response.data?.data) {
+            const data = response.data.data;
+            // 응답 구조: data.template_info가 배열
+            if (data.template_info && Array.isArray(data.template_info)) {
+                templateList.value = data.template_info;
+            } else if (Array.isArray(data)) {
+                templateList.value = data;
+            } else if (data.template_list || data.list) {
+                templateList.value = data.template_list || data.list || [];
+            } else {
+                templateList.value = [];
+            }
+        }
+    } catch (error) {
+        console.error('템플릿 정보 조회 오류:', error);
+        templateList.value = [];
+    } finally {
+        isLoadingTemplates.value = false;
+    }
+};
+
+// 백엔드 복호화 테스트용: 프론트에서 암호화된 값을 그대로 던짐
+const decryptAlimtalkData = async (encryptedData) => {
+    try {
+        const response = await api.post(`/api/${cocode}/alimtalk/check`, {
+            encryptedData,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('알림톡 복호화 테스트 오류:', error);
+        throw error;
+    }
+};
+
+// 부모 컴포넌트/콘솔에서 호출할 수 있도록 함수 노출
 defineExpose({
-    getSmsPointInfo
+    getSmsPointInfo,
+    checkAvailableApi,
+    getTemplateInfo,
+    decryptAlimtalkData,
 });
 
 // 툴팁용
@@ -121,21 +223,33 @@ const hideTooltip = (type) => {
                         <div class="content-talk__templates">
                             <p class="title-m">템플릿 목록</p>
 
-                            <div class="content-talk__templates-empty" style="display: none;">
+                            <div class="content-talk__templates-empty" v-if="!isLoadingTemplates && templateList.length === 0">
                                 <p class="empty-box">
                                     <img :src="icEmpty" alt="비어있음 아이콘">
                                     <span>템플릿 목록이 없습니다.</span>
                                 </p>
                             </div>
     
-                            <ul class="content-talk__templates-list">
-                                <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
+                            <ul class="content-talk__templates-list" v-if="templateList.length > 0">
+                                <li 
+                                    v-for="template in templateList" 
+                                    :key="template.sno || template.template_id"
+                                    class="btn btn--size-32"
+                                    :class="selectedTemplate?.sno === template.sno || selectedTemplate?.template_id === template.template_id ? 'btn--blue' : 'btn--black-outline'"
+                                    @click="selectTemplate(template)"
+                                >
+                                    {{ template.template_name || template.template_id }}
+                                </li>
                             </ul>
+                            
+                            <div v-if="isLoadingTemplates" class="content-talk__templates-loading">
+                                <span class="body-m">템플릿 목록 조회 중...</span>
+                            </div>
                         </div>
                     </div>
 
                     <div class="content-talk__preview">
-                        <TalkPreview />
+                        <TalkPreview :template="selectedTemplate" />
                     </div>
                 </div>
 
@@ -386,6 +500,17 @@ const hideTooltip = (type) => {
                 flex-direction: column;
                 height: 100%;
                 gap: 4px;
+
+                li {
+                    width: 100%;
+                    text-align: left;
+                    padding: 8px 12px;
+                    white-space: normal;
+                    word-break: break-word;
+                    min-height: 48px;
+                    height: auto;
+                    line-height: 1.4;
+                }
             } 
             
         }

@@ -26,10 +26,12 @@ const sendSmsTalkRef = ref(null);
 // 문자 발송 모달 열기
 const openSmsModal = () => {
     modalStore.smsModal.openModal();
-    // 모달이 열린 후 API 호출
+    // 모달이 열린 후 API 호출 (포인트 조회 + 알림톡 프로필/템플릿 체크)
     nextTick(() => {
         if (sendSmsTalkRef.value) {
             sendSmsTalkRef.value.getSmsPointInfo();
+            // 알림톡 연동 체크 API 호출
+            sendSmsTalkRef.value.checkAvailableApi?.();
         }
     });
 };

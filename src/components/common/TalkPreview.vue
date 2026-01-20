@@ -1,5 +1,32 @@
 <!-- 알림톡 미리보기 -->
-<script setup></script>
+<script setup>
+import { computed } from 'vue';
+
+const props = defineProps({
+    template: {
+        type: Object,
+        default: null
+    }
+});
+
+// template_content를 HTML로 변환
+const formatTemplateContent = (content) => {
+    if (!content) return '';
+    
+    return content
+        .replace(/₩n/g, '<br>')
+        .replace(/\\n/g, '<br>')
+        .replace(/#\{([^}]+)\}/g, '<strong>#{$1}</strong>');
+};
+
+// 버튼 설정
+const buttons = computed(() => {
+    if (!props.template?.btn_setting || !Array.isArray(props.template.btn_setting)) {
+        return [];
+    }
+    return props.template.btn_setting;
+});
+</script>
 
 <template>
     <div class="talk_wrapper">
@@ -9,36 +36,27 @@
                 <!-- 발신명 -->
                 <span class="talk_name" id="">인투씨엔에스</span>
                 <!-- 메세지 말풍선 -->
-                <div class="talk_message" id="">
+                <div class="talk_message">
                     <p class="talk_title">알림톡 도착</p>
 
                     <div class="message_box">
                         <!-- p태그 안에 메세지 내용 들어감 -->
-                        <p>
-                            <!-- 아래내용은 예시입니다. -->
-                            [검사 결과 안내]
-                            <br>
-                            #{동물병원}에서  <br>
-                            '#{동물명}'(이)의 건강검진 결과가 도착했어요.  
-                            <br> 
-                            <br>
-                            ※ 결과 안내사항
-                            <br>
-                            1. 검사 결과에 대한 자세한 설명이 필요하시면 병원으로 문의해주세요.  
-                            <br>
-                            2. 필요 시 추가 검사나 치료가 권장될 수 있습니다.  
-                            <br> 
-                            <br>
-                            ※ 검사결과 문의
-                            <br>
-                            문의전화: #{병원전화번호}
+                        <p v-if="template && template.template_content">
+                            <span v-html="formatTemplateContent(template.template_content)"></span>
+                        </p>
+                        <p v-else class="empty-message">
+                            템플릿을 선택해주세요.
                         </p>
 
                         <!-- 버튼의 경우 -->
-                        <div class="talk_buttons">
-                            <!-- 예시입니다. -->
-                            <div class="talk_button mt-1">문진 작성하기</div>
-                            <div class="talk_button mt-1">추가버튼인 경우</div>
+                        <div class="talk_buttons" v-if="buttons.length > 0">
+                            <div 
+                                v-for="(button, index) in buttons" 
+                                :key="index"
+                                class="talk_button mt-1"
+                            >
+                                {{ button.name || button.button_name || `버튼 ${index + 1}` }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -83,19 +101,28 @@ p {margin: 0;}
 }
 .talk_message {
     max-width: 280px; 
-    min-width: 200px; 
+    min-width: 280px; 
+    max-height: 450px;
     border-radius: 10px;
     background-color: $--white-color; 
     overflow: hidden; 
     margin-top: 7px;
+    display: flex;
+    flex-direction: column;
 }
 .talk_title {
     padding: 10px;
     background-color: $--yellow-color;
     font-size: 10pt;
+    flex-shrink: 0;
 }
 .talk_name {font-size: 10pt;}
-.message_box {padding: 10px;}
+.message_box {
+    padding: 10px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
 .message_box p {font-size: 9.5pt; word-break: break-all;}
 .talk_buttons {margin-top: 10px;}
 .talk_button {border-radius: 5px; width: 100%; background-color: $--light-gray-color-1; text-align: center; padding: 8px 0; font-size: 10pt;}
