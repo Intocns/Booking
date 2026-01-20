@@ -2,7 +2,6 @@
 <script setup>
 import icTooltip from '@/assets/icons/ic_tooltip.svg'
 import icEmpty from '@/assets/icons/ic_empty.svg'
-import CustomSelect from '../CustomSelect.vue';
 import TalkPreview from '../TalkPreview.vue';
 
 import { ref } from 'vue';
@@ -25,8 +24,8 @@ const isLoadingTemplates = ref(false);
 const templateList = ref([]);
 const selectedTemplate = ref(null); // 선택된 템플릿
 
-// 알림톡 템플릿 타입 (백엔드와 맞추기 위한 값, 필요 시 변경)
-const selectedTemplateType = ref(1); // TODO: 추후 5로 변경 필요
+// 알림톡 템플릿 타입 (현재 5로 고정해 확인)
+const selectedTemplateType = ref(1);
 
 // 템플릿 선택 핸들러
 const selectTemplate = (template) => {
@@ -77,6 +76,9 @@ const checkAvailableApi = async () => {
             // is_profile이나 is_available_template이 true인지 확인
             if (data.is_profile === true || data.is_available_template === true) {
                 await getTemplateInfo();
+            } else {
+                // 사용 불가 시 기본 템플릿(is_default=1) 조회
+                await getTemplateInfo(true);
             }
         }
     } catch (error) {
@@ -88,7 +90,8 @@ const checkAvailableApi = async () => {
 };
 
 // 템플릿 정보 조회 API 호출
-const getTemplateInfo = async () => {
+// useDefault가 true이면 is_default=1로 기본 템플릿 조회
+const getTemplateInfo = async (useDefault = false) => {
     if (isLoadingTemplates.value) return;
 
     isLoadingTemplates.value = true;
@@ -99,6 +102,7 @@ const getTemplateInfo = async () => {
             compEnrolNum: '1231212345', // TODO: 실제 값으로 교체
             cocode: cocode,
             templateType: selectedTemplateType.value, // TODO: 추후 5로 변경 필요
+            isDefault: useDefault ? 1 : 0,
         };
 
         const response = await api.post(`/api/${cocode}/alimtalk/getTemplateInfo`, body);
@@ -215,11 +219,6 @@ const hideTooltip = (type) => {
             <div class="content-talk" v-if="activeTab === 'talk'">
                 <div class="content-talk__top">
                     <div class="content-talk__templates-wrapper">
-                        <div class="content-talk__templates-wrapper-type">
-                            <span class="title-s">템플릿 유형</span>
-                            <CustomSelect />
-                        </div>
-
                         <div class="content-talk__templates">
                             <p class="title-m">템플릿 목록</p>
 
@@ -469,14 +468,6 @@ const hideTooltip = (type) => {
         &__templates-wrapper {
             display: flex;
             flex-direction: column;
-            gap: 16px;
-
-            &-type {
-                @include flex-center;
-                gap: 8px;
-
-                .select {flex: 1;}
-            }
         }
 
         &__templates {
@@ -513,6 +504,10 @@ const hideTooltip = (type) => {
                 }
             } 
             
+        }
+
+        &__preview {
+            height: 440px;
         }
 
         &__form {
