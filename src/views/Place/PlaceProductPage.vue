@@ -272,7 +272,7 @@ onMounted(async () => {
     <div class="top-bar">
         <div class="d-flex gap-16 align-center">
 
-            <p class="title-m total-wrapper">전체 <span class="total-num">{{ productStore.productList.length }}</span></p>
+            <p class="title-m total-wrapper">전체 <span class="total-num">{{ dragList.length }}</span></p>
 
             <div class="line"></div>
 
