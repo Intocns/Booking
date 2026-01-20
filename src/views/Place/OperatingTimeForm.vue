@@ -5,6 +5,7 @@ import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import icPlus from '@/assets/icons/ic_plus_black.svg';
 import icPlusBlue from '@/assets/icons/ic_plus_blue.svg';
 import icDel from '@/assets/icons/ic_del.svg';
+import { watch } from 'vue';
 
 const props = defineProps({
     modelValue: Object,
@@ -53,6 +54,19 @@ const toggleDayInGroup = (gIdx, dayValue) => {
     const index = days.indexOf(dayValue);
     index > -1 ? days.splice(index, 1) : days.push(dayValue);
 };
+
+watch(() => props.modelValue.operatingMode, (newVal) => {
+    // 사용자가 모드를 바꿀 때마다 해당 객체의 시간값 초기화
+    const target = props.modelValue;
+    target.allDaysTime = [{ startTime: '', endTime: '' }];
+    target.splitTime = {
+        weekday: [{ startTime: '', endTime: '' }],
+        weekend: [{ startTime: '', endTime: '' }],
+        sat: [{ startTime: '', endTime: '' }],
+        sun: [{ startTime: '', endTime: '' }]
+    };
+    target.dailyGroups = [{ selectedDays: [], times: [{ startTime: '', endTime: '' }] }];
+});
 </script>
 
 <template>

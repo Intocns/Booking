@@ -58,7 +58,7 @@ const doctorOptions = computed(() => {
 
 //PlaceProductDetail.vue에서 선언한component 옵션 사용
 const props = defineProps({
-    savedItemId: {type: String},
+    savedItemId: {type: [ String, Number ]},
     isSavedSchedule: {type: Boolean},
     viewType: {type: String, default:null},
     previewName: { type: String },
@@ -257,11 +257,11 @@ const clickNextBtn = (async() => {
             //등록
             let reponseDecode = JSON.parse(response.data);//등록 api를 탄 경우 bizmItemId를 넘겨줌
 
-            if(props.savedItemId == ""){//첫 등록인 경우에만 삽입
-                props.savedItemId = reponseDecode.bizItemId;
-            }
+            // if(props.savedItemId == ""){//첫 등록인 경우에만 삽입
+            //     props.savedItemId = reponseDecode.bizItemId;
+            // }
 
-            emit('update:nextTab', 'booking', reponseDecode.bizItemId, isSavedSchedule); //등록 완료 시 다음 탭으로 이동
+            emit('update:nextTab', 'booking', reponseDecode.bizItemId, props.isSavedSchedule); //등록 완료 시 다음 탭으로 이동
         }
         
     } else{

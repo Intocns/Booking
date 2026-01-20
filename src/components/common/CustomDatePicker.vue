@@ -26,6 +26,10 @@ const props = defineProps({
         type: String,
         default: '날짜 선택',
     },
+    pickerWidth: {
+        type: [String, Number],
+        default: '120',
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -123,7 +127,7 @@ const onDateUpdate = (val) => {
 </script>
 
 <template>
-    <div class="date-picker-container"> 
+    <div class="date-picker-container" :style="{ 'min-width': pickerWidth + 'px' }"> 
         
         <div 
             class="fake-input" 

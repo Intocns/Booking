@@ -21,7 +21,7 @@ export const setOperatingObject = (event, object, scheduleMode) => {
         startDate: event?.[0] ? formatDate(event?.[0]) : null,
         endDate: event?.[1] ? formatDate(event?.[1]) : null,
         isBusinessDay: true,
-        isBasicSchedule: scheduleMode.value !== 'event',
+        isBasicSchedule: scheduleMode !== 'event',
     };
 
     //운영 시간 라디오 버튼 선택에 따른 분기처리

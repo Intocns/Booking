@@ -20,7 +20,7 @@ const { productWeekScheduleDataList } = storeToRefs(productStore);
 
 // props
 const props = defineProps({
-    savedItemId: {type: String},
+    savedItemId: {type: [ String, Number ]},
     viewType: {type: String, default:null},
     previewName: { type: String },
     previewDesc: { type: String },

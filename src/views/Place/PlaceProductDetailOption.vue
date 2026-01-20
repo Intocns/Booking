@@ -16,7 +16,8 @@ const router = useRouter();
 
 //PlaceProductDetail.vue에서 선언한component 옵션 사용
 const props = defineProps({
-    savedItemId: {type: String},
+    savedItemId: {type: [ String, Number ]},
+    isSavedSchedule: {type: Boolean},
     viewType: {type: String, default:null},
     previewName: { type: String },
     previewDesc: { type: String },
