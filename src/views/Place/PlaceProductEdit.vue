@@ -80,7 +80,7 @@ const previewData = reactive({
 
         <!-- right -->
         <div class="right">
-            <PlaceProductDetailBookingSide v-if="currentTab === 'booking'" />
+            <PlaceProductDetailBookingSide v-if="currentTab === 'booking'" :saved-item-id="itemId"/>
             <PlaceProductPreview v-else :preview-data="previewData" />
         </div>
     </div>

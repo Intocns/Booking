@@ -12,6 +12,7 @@ export const useProductStore = defineStore("product", () => {
     const itemDetailInfo = ref({});
     const productScheduleDataList = ref([]); // 간단예약 관리 > 상품별 운영시간 데이터
     const productWeekScheduleDataList = ref([]); // 상품 수정 > 상품 운영시간 데이터
+    const productScheduleInfo = ref([]);
 
     // 상품 리스트 불러오기
     async function getProductList() {
@@ -594,7 +595,7 @@ export const useProductStore = defineStore("product", () => {
         return response.data;
     }
     
-    // 상품 수정 > 상품 운영시간 불러오기
+    // 상품 수정 > 상품 운영시간 불러오기(캘린더)
     const getProductSchedule = async(itemId, params) => {
         try {
             const response = await api.post(`/api/${cocode}/item/${itemId}/schedule/detail`, params); 
@@ -622,6 +623,20 @@ export const useProductStore = defineStore("product", () => {
         }
     }
 
+    // 상품 수정 > 상품 운영일정 불러오기
+    const getItemReservationInfo = async(itemId) => {
+        try {
+            const response = await api.get(`/api/${cocode}/item/modify/${itemId}/sch`); 
+
+            if(response.data.status_code <= 300) {
+                productScheduleInfo.value = response.data.data;
+            }
+            // console.log(response)
+        } catch {
+            alert('처리 중 오류가 발생했습니다.');
+        }
+    }
+
     return {
         // 
         productList, // 상품 전체 리스트
@@ -630,6 +645,7 @@ export const useProductStore = defineStore("product", () => {
         itemDetailInfo,
         productScheduleDataList, // 간단예약 관리 > 상품별 운영시간 데이터
         productWeekScheduleDataList, // 상품 수정 > 상품 운영시간 데이터
+        productScheduleInfo, //상품 수정 > 예약 정보 데이터
         // 
         getProductList, // 상품 리스트 불러오기
         setItemOrder, // 상품 순서 변경
@@ -644,9 +660,10 @@ export const useProductStore = defineStore("product", () => {
         setItemShow, //상품 노출 변경(단건/ 일괄)
         getBusinessSchedule, // 간단 예약 관리 데이터 불러오기 (상품별 예약 운영시간 데이터)
         setScheduleTime, // 상품 운영시간 변경
-        setItemReservationInfo, // 상품 등록 > 예약정보 저장
+        setItemReservationInfo, // 상품 등록 > 예약 정보 저장
         updateItemReservationInfo,  // 상품 등록, 수정 > 예약정보 저장(등록화면에서 상품 등록을 한번이라도 한 경우)
         getProductSchedule, // 상품 수정 > 상품 운영시간 불러오기
+        getItemReservationInfo, // 상품 수정 > 상품 예약 정보 불러오기
         setScheduleModalSave, // 상품 수정 > 일정 설정 > 진료가능 동물 수, 운영시간 설정 모달창 저장
     }
 })

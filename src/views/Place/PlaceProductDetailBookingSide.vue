@@ -13,11 +13,15 @@ import icEdit from '@/assets/icons/ic_edit.svg'
 import icPlus from '@/assets/icons/ic_plus_black.svg';
 import icDel from '@/assets/icons/ic_del.svg';
 
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
+import { useProductStore } from '@/stores/productStore';
+//util
+import { setOperatingObject } from '@/utils/product';
 
 const modalStore = useModalStore();
+const productStore = useProductStore();
 
 // 상태관리
 const selectedAnimalCount = ref(null); // 예약 가능 동물 수 선택
@@ -27,6 +31,16 @@ const applyMode = ref('all'); // 적용 기간 : 'all', 'period'
 
 const isDatePickerModalOpen = ref(false);
 const settingType = ref(''); // 현재 어떤 설정을 하고 있는지 저장
+
+// props
+const props = defineProps({
+    savedItemId: {type: String},
+    viewType: {type: String, default:null},
+    previewName: { type: String },
+    previewDesc: { type: String },
+    previewDetails: { type: Array },
+    previewNotice: { type: String }
+})
 
 
 // 설정 데이터 생성 함수
@@ -92,6 +106,58 @@ const onAddHoliday = (selectedData) => {
     // 여기서 settingType에 따라 각각 다른 API 호출이나 상태 변경 처리
     isDatePickerModalOpen.value = false;
 };
+
+// 상품 수정 >> 일정 설정 >> 예약 정보 저장(예약일정)
+const updateItemSchedule = (async(type) => {
+    const reserveCnt = selectedAnimalCount;
+    const pos = setScheduleForSave();
+    let impos = null;
+
+    if(type == 'operating'){
+        impos = HolidayForm; //수정화면 오픈 시 조회햇던 holiday 그대로 가져올 것
+    }else{
+        impos = isHolidayEnabled.value ? holidayFormRef.value.setSaveFormat() : null;
+    }
+
+    const params = {
+        reserveCnt : reserveCnt.value,
+        pos : pos,
+        impos : impos
+    }
+
+    console.log(params);
+    return false;
+
+    const response = await productStore.updateItemReservationInfo(props.savedItemId, params);
+
+    if(response.status_code <= 300){
+        alert('저장이 완료되었습니다');
+    }else{
+        alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
+    }
+})
+
+//저장 전 일정 계산
+const setScheduleForSave = () => {
+    const isRegular = (scheduleMode.value === 'regular');
+    const isAllMode = (scheduleMode.value === 'regular' || applyMode.value === 'all');
+
+    return eventDates.value.flatMap((event, idx) => {
+        const eventObject = !isRegular ? event : null;
+        // 전체 설정 모드면 무조건 0번(첫 번째) 설정을 사용
+        const targetConfig = isAllMode ? configs.value[0] : configs.value[idx];
+        
+        return setOperatingObject(eventObject, targetConfig, scheduleMode.value);
+    });
+}
+
+onMounted(async() => {
+    //예약 정보 조회
+    await productStore.getItemReservationInfo(props.savedItemId);
+
+    //상품 기본 정보 조회 >> 예약 오픈, 노출/미노출 설정
+    await productStore.getItemDetailInfo(props.savedItemId); // itemDetailInfo
+})
 </script>
 
 <template>
@@ -141,7 +207,7 @@ const onAddHoliday = (selectedData) => {
                             <div v-for="(date, idx) in eventDates" :key="idx" class="d-flex align-center gap-8">
                                 <div class="d-flex align-center gap-8">
                                     <span class="title-s">기간</span>
-                                    <CustomDatePicker />
+                                    <CustomDatePicker  v-model="eventDates[idx]" />
                                 </div>
 
                                 <button 
@@ -294,8 +360,8 @@ const onAddHoliday = (selectedData) => {
         </section>
 
         <div class="button-wrapper">
-            <button class="btn btn--size-40 btn--black">목록으로</button>
-            <button class="btn btn--size-40 btn--blue">저장</button>
+            <button class="btn btn--size-40 btn--black" @click="router.push({ name: 'placeProduct'})">목록으로</button>
+            <button class="btn btn--size-40 btn--blue" @click="updateItemSchedule('operating')">저장</button>
         </div>
     </div>
 
@@ -316,12 +382,12 @@ const onAddHoliday = (selectedData) => {
         :modal-state="modalStore.holidaySettingModal"
     >
         <div class="modal-contents-inner">
-            <HolidayForm />
+            <HolidayForm ref="holidayFormRef" />
         </div>
 
         <div class="modal-button-wrapper">
             <div class="buttons">
-                <button class="btn btn--size-32 btn--blue">저장</button>
+                <button class="btn btn--size-32 btn--blue" @click="updateItemSchedule('holiday')">저장</button>
             </div>
         </div>
     </Modal>
