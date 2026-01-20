@@ -23,11 +23,21 @@ const reservationStore = useReservationStore();
 const hospitalStore = useHospitalStore();
 const modalStore = useModalStore();
 
-// SMS 모달 컴포넌트 ref
+// SMS 모달 컴포넌트 ref 및 선택된 예약 데이터
 const sendSmsTalkRef = ref(null);
+const selectedReservation = ref(null);
 
 // 문자 발송 모달 열기
-const openSmsModal = () => {
+const openSmsModal = (row) => {
+    // 선택된 예약 데이터 매핑 (TalkPreview 변수 치환용)
+    selectedReservation.value = {
+        petName: row?.petName,
+        reservationDate: row?.reTimeTxt,
+        reservationTime: row?.reTimeHisTxt,
+        productName: row?.roomName,
+        hospitalPhone: row?.hospitalPhone //TODO: cocode 기반 실제 병원명으로 교체
+    };
+
     modalStore.smsModal.openModal();
     // 모달이 열린 후 API 호출 (포인트 조회 + 알림톡 프로필/템플릿 체크)
     nextTick(() => {
@@ -223,7 +233,7 @@ onMounted(async () => {
                 <!-- 버튼 -->
                 <template #actions="{ row, rowIndex }">
                         <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row.idx)">상세</button>
-                        <button class="btn btn--size-24 btn--black-outline" @click="openSmsModal"><img :src="icSms" alt="SMS"></button>
+                        <button class="btn btn--size-24 btn--black-outline" @click="openSmsModal(row)"><img :src="icSms" alt="SMS"></button>
                 </template>
             </CommonTable>
         </template>
@@ -246,7 +256,7 @@ onMounted(async () => {
         title="문자 발송"
         :modalState="modalStore.smsModal"
     >
-        <SendSmsTalk ref="sendSmsTalkRef" />
+        <SendSmsTalk ref="sendSmsTalkRef" :reservationData="selectedReservation" />
     </Modal>
 
     <!-- confirm 모달 : 문자발송 확인, 예약 확정 시 확인, -->

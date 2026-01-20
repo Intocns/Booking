@@ -1,23 +1,36 @@
 <!-- 알림톡 미리보기 -->
 <script setup>
 import { computed } from 'vue';
+import { buildTemplateVariables, formatTemplateContent } from '@/utils/alimtalkTemplate.js';
 
 const props = defineProps({
     template: {
         type: Object,
         default: null
+    },
+    reservationData: {
+        type: Object,
+        default: () => ({})
     }
 });
 
-// template_content를 HTML로 변환
-const formatTemplateContent = (content) => {
-    if (!content) return '';
-    
-    return content
-        .replace(/₩n/g, '<br>')
-        .replace(/\\n/g, '<br>')
-        .replace(/#\{([^}]+)\}/g, '<strong>#{$1}</strong>');
-};
+const variableMap = computed(() => buildTemplateVariables(props.reservationData));
+const formattedContent = computed(() =>
+    formatTemplateContent(props.template?.template_content || '', variableMap.value)
+);
+const senderName = computed(() => {
+    const isDefaultTemplate = props.template?.is_default == 1
+
+    if (isDefaultTemplate) {
+        return '인투링크';
+    }
+// TODO: cocode 기반 실제 병원명으로 교체
+    return (
+        props.reservationData?.hospitalName ||
+        props.reservationData?.hospital_name ||
+        '병원명'
+    );
+});
 
 // 버튼 설정
 const buttons = computed(() => {
@@ -33,8 +46,8 @@ const buttons = computed(() => {
         <div>
             <!-- 메세지 -->
             <div class="talk_message_wrapper">
-                <!-- 발신명 -->
-                <span class="talk_name" id="">인투씨엔에스</span>
+                <!-- 발신명: 템플릿이 있으면 병원명, 없으면 기본값 -->
+                <span class="talk_name">{{ senderName }}</span>
                 <!-- 메세지 말풍선 -->
                 <div class="talk_message">
                     <p class="talk_title">알림톡 도착</p>
@@ -42,7 +55,7 @@ const buttons = computed(() => {
                     <div class="message_box">
                         <!-- p태그 안에 메세지 내용 들어감 -->
                         <p v-if="template && template.template_content">
-                            <span v-html="formatTemplateContent(template.template_content)"></span>
+                            <span v-html="formattedContent"></span>
                         </p>
                         <p v-else class="empty-message">
                             템플릿을 선택해주세요.

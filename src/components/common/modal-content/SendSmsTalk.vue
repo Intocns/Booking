@@ -8,6 +8,13 @@ import { ref } from 'vue';
 import { useModalStore } from '@/stores/modalStore';
 import { api } from '@/api/axios';
 
+const props = defineProps({
+    reservationData: {
+        type: Object,
+        default: () => ({})
+    }
+});
+
 const modalStore = useModalStore();
 
 const activeTab = ref('talk');
@@ -108,13 +115,8 @@ const getTemplateInfo = async (useDefault = false) => {
         const response = await api.post(`/api/${cocode}/alimtalk/getTemplateInfo`, body);
         if (response.data?.status_code === 200 && response.data?.data) {
             const data = response.data.data;
-            // 응답 구조: data.template_info가 배열
             if (data.template_info && Array.isArray(data.template_info)) {
                 templateList.value = data.template_info;
-            } else if (Array.isArray(data)) {
-                templateList.value = data;
-            } else if (data.template_list || data.list) {
-                templateList.value = data.template_list || data.list || [];
             } else {
                 templateList.value = [];
             }
@@ -248,7 +250,7 @@ const hideTooltip = (type) => {
                     </div>
 
                     <div class="content-talk__preview">
-                        <TalkPreview :template="selectedTemplate" />
+                        <TalkPreview :template="selectedTemplate" :reservationData="reservationData" />
                     </div>
                 </div>
 
