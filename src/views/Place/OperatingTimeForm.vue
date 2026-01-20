@@ -55,18 +55,18 @@ const toggleDayInGroup = (gIdx, dayValue) => {
     index > -1 ? days.splice(index, 1) : days.push(dayValue);
 };
 
-watch(() => props.modelValue.operatingMode, (newVal) => {
-    // 사용자가 모드를 바꿀 때마다 해당 객체의 시간값 초기화
-    const target = props.modelValue;
-    target.allDaysTime = [{ startTime: '', endTime: '' }];
-    target.splitTime = {
-        weekday: [{ startTime: '', endTime: '' }],
-        weekend: [{ startTime: '', endTime: '' }],
-        sat: [{ startTime: '', endTime: '' }],
-        sun: [{ startTime: '', endTime: '' }]
-    };
-    target.dailyGroups = [{ selectedDays: [], times: [{ startTime: '', endTime: '' }] }];
-});
+// watch(() => props.modelValue.operatingMode, (newVal) => {
+//     // 사용자가 모드를 바꿀 때마다 해당 객체의 시간값 초기화
+//     const target = props.modelValue;
+//     target.allDaysTime = [{ startTime: '', endTime: '' }];
+//     target.splitTime = {
+//         weekday: [{ startTime: '', endTime: '' }],
+//         weekend: [{ startTime: '', endTime: '' }],
+//         sat: [{ startTime: '', endTime: '' }],
+//         sun: [{ startTime: '', endTime: '' }]
+//     };
+//     target.dailyGroups = [{ selectedDays: [], times: [{ startTime: '', endTime: '' }] }];
+// });
 </script>
 
 <template>
@@ -75,7 +75,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
         <div>
             <div class="d-flex gap-16">
                 <label class="radio" v-for="opt in modeOptions" :key="idx + opt.value">
-                    <input type="radio" v-model="config.operatingMode" :value="opt.value" />
+                    <input type="radio" v-model="modelValue.operatingMode" :value="opt.value" />
                     <span class="circle"></span>
                     <span class="label">{{ opt.label }}</span>
                 </label>
@@ -84,8 +84,8 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
         </div>
 
         <!-- 운영 시간 > 모든 영업일 동일 -->
-        <div v-if="config.operatingMode === 'all'" class="d-flex flex-col gap-8">
-            <div v-for="(time, tIdx) in config.allDaysTime" :key="tIdx" class="d-flex align-center gap-8">
+        <div v-if="modelValue.operatingMode === 'all'" class="d-flex flex-col gap-8">
+            <div v-for="(time, tIdx) in modelValue.allDaysTime" :key="tIdx" class="d-flex align-center gap-8">
                 <!-- 시간 설정 영역 -->
                 <div class="d-flex align-center gap-8">
                     <span class="title-s">시작</span>
@@ -100,7 +100,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
                     <!-- 시간 추가 버튼 -->
                     <button 
                         v-if="tIdx === 0" 
-                        @click="addTimeRange(config.allDaysTime)" 
+                        @click="addTimeRange(modelValue.allDaysTime)" 
                         class="btn btn--size-24 btn--black-outline"
                     >
                         <img :src="icPlus" alt="아이콘">시간 추가
@@ -108,7 +108,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
                     <!-- 삭제 버튼 -->
                     <button 
                         v-else 
-                        @click="removeTimeRange(config.allDaysTime, tIdx)" 
+                        @click="removeTimeRange(modelValue.allDaysTime, tIdx)" 
                         class="btn btn--size-24 btn--black-outline"
                     >
                         <img :src="icDel" width="14">삭제
@@ -119,8 +119,8 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
         </div>
 
         <!-- 운영 시간 > 평일/주말 운영 시간 구분 -->
-        <div v-else-if="config.operatingMode === 'split'" class="d-flex flex-col gap-8">
-            <div v-for="(time, tIdx) in config.splitTime.weekday" :key="'wd'+tIdx" class="d-flex align-center gap-8">
+        <div v-else-if="modelValue.operatingMode === 'split'" class="d-flex flex-col gap-8">
+            <div v-for="(time, tIdx) in modelValue.splitTime.weekday" :key="'wd'+tIdx" class="d-flex align-center gap-8">
                 <!-- 시간 설정 영역 -->
                 <div class="d-flex align-center gap-8">
                     <span class="title-s" style="width: 120px;">
@@ -138,7 +138,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
                     <!-- 시간 추가 버튼 -->
                     <button 
                         v-if="tIdx === 0" 
-                        @click="addTimeRange(config.splitTime.weekday)" 
+                        @click="addTimeRange(modelValue.splitTime.weekday)" 
                         class="btn btn--size-24 btn--black-outline"
                     >
                         <img :src="icPlus" alt="아이콘">시간 추가
@@ -146,7 +146,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
                     <!-- 삭제 버튼 -->
                     <button 
                         v-else 
-                        @click="removeTimeRange(config.splitTime.weekday, tIdx)" 
+                        @click="removeTimeRange(modelValue.splitTime.weekday, tIdx)" 
                         class="btn btn--size-24 btn--black-outline"
                     >
                         <img :src="icDel" width="14">삭제
@@ -156,13 +156,13 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
             
             <!-- 주말, 토/일 구분 영역 -->
             <!-- 주말 -->
-            <template v-if="config.splitMode === 'weekend_all'">
-                <div v-for="(time, tIdx) in config.splitTime.weekend" :key="'we'+tIdx" class="d-flex align-center gap-8">
+            <template v-if="modelValue.splitMode === 'weekend_all'">
+                <div v-for="(time, tIdx) in modelValue.splitTime.weekend" :key="'we'+tIdx" class="d-flex align-center gap-8">
                     <!-- 시간 설정 영역 -->
                     <div class="d-flex align-center gap-8">
                         
                         <div style="width: 120px;">
-                            <CustomSingleSelect v-if="tIdx === 0" v-model="config.splitMode" :options="weekendOptions" select-width="120px" />
+                            <CustomSingleSelect v-if="tIdx === 0" v-model="modelValue.splitMode" :options="weekendOptions" select-width="120px" />
                         </div>
                         <span class="title-s">시작</span>
                         <TimeSelect v-model="time.startTime" />
@@ -176,7 +176,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
                         <!-- 시간 추가 버튼 -->
                         <button 
                             v-if="tIdx === 0" 
-                            @click="addTimeRange(config.splitTime.weekend)" 
+                            @click="addTimeRange(modelValue.splitTime.weekend)" 
                             class="btn btn--size-24 btn--black-outline"
                         >
                             <img :src="icPlus" alt="아이콘">시간 추가
@@ -184,7 +184,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
                         <!-- 삭제 버튼 -->
                         <button 
                             v-else 
-                            @click="removeTimeRange(config.splitTime.weekend, tIdx)" 
+                            @click="removeTimeRange(modelValue.splitTime.weekend, tIdx)" 
                             class="btn btn--size-24 btn--black-outline"
                         >
                             <img :src="icDel" width="14">삭제
@@ -195,7 +195,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
             <!-- 토/일 구분 -->
             <template v-else>
                 <!-- 토 -->
-                <div v-for="(time, tIdx) in config.splitTime.sat" :key="'sat'+tIdx" class="d-flex align-center gap-8">
+                <div v-for="(time, tIdx) in modelValue.splitTime.sat" :key="'sat'+tIdx" class="d-flex align-center gap-8">
                     <!-- 시간 설정 영역 -->
                     <div class="d-flex align-center gap-8">
                         <div style="width: 120px;">
@@ -219,7 +219,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
                         <!-- 시간 추가 버튼 -->
                         <button 
                             v-if="tIdx === 0" 
-                            @click="addTimeRange(config.splitTime.sat)" 
+                            @click="addTimeRange(modelValue.splitTime.sat)" 
                             class="btn btn--size-24 btn--black-outline"
                         >
                             <img :src="icPlus" alt="아이콘">시간 추가
@@ -227,7 +227,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
                         <!-- 삭제 버튼 -->
                         <button 
                             v-else 
-                            @click="removeTimeRange(config.splitTime.sat, tIdx)" 
+                            @click="removeTimeRange(modelValue.splitTime.sat, tIdx)" 
                             class="btn btn--size-24 btn--black-outline"
                         >
                             <img :src="icDel" width="14">삭제
@@ -235,7 +235,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
                     </div>
                 </div>
                 <!-- 일 -->
-                <div v-for="(time, tIdx) in config.splitTime.sun" :key="'sun'+tIdx" class="d-flex align-center gap-8">
+                <div v-for="(time, tIdx) in modelValue.splitTime.sun" :key="'sun'+tIdx" class="d-flex align-center gap-8">
                     <!-- 시간 설정 영역 -->
                     <div class="d-flex align-center gap-8">
                         <div style="width: 120px;">
@@ -258,14 +258,14 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
                     <div class="d-flex align-center gap-8">
                         <button 
                             v-if="tIdx === 0" 
-                            @click="addTimeRange(config.splitTime.sun)" 
+                            @click="addTimeRange(modelValue.splitTime.sun)" 
                             class="btn btn--size-24 btn--black-outline"
                         >
                             <img :src="icPlus" alt="아이콘">시간 추가
                         </button>
                         <button 
                             v-else 
-                            @click="removeTimeRange(config.splitTime.sun, tIdx)" 
+                            @click="removeTimeRange(modelValue.splitTime.sun, tIdx)" 
                             class="btn btn--size-24 btn--black-outline"
                         >
                             <img :src="icDel" width="14">삭제
@@ -276,7 +276,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
         </div>
 
         <!-- 운영 시간 > 요일별 설정 -->
-        <div v-else-if="config.operatingMode === 'daily'" class="d-flex flex-col gap-16">
+        <div v-else-if="modelValue.operatingMode === 'daily'" class="d-flex flex-col gap-16">
             <!-- 요일 추가 버튼 -->
             <button 
                 type="button" 
@@ -286,7 +286,7 @@ watch(() => props.modelValue.operatingMode, (newVal) => {
                 <img :src="icPlusBlue">요일 추가
             </button>
 
-            <div v-for="(group, gIdx) in config.dailyGroups" :key="gIdx" class="d-flex align-start gap-16 flex-wrap">
+            <div v-for="(group, gIdx) in modelValue.dailyGroups" :key="gIdx" class="d-flex align-start gap-16 flex-wrap">
                 <!-- 요일 버튼 -->
                 <div class="day-button-group d-flex gap-4">
                     <button 
