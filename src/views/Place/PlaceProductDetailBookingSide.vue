@@ -45,8 +45,11 @@ const createDefaultConfig = () => ({
 const regularConfig = ref(createDefaultConfig());
 
 // [데이터] 이벤트 기간/설정용
-const eventDates = ref([{ start: '', end: '' }]);
+const eventDates = ref([[]]);
 const periodConfigs = ref([createDefaultConfig()]);
+// 운영 설정 데이터 (하나로 관리)
+const configs = ref([createDefaultConfig()]);
+
 
 const addEventPeriod = () => {
     eventDates.value.push({ start: '', end: '' });
@@ -184,21 +187,23 @@ const onAddHoliday = (selectedData) => {
                     <div class="form-label">운영 시간</div>
                     <div class="form-content">
                         <!-- 정기운영 || 이벤트 운영 && 전체 설정의 경우 -->
-                        <div v-if="scheduleMode === 'regular' || (scheduleMode === 'event' && applyMode === 'all')">
-                            <OperatingTimeForm v-model="regularConfig" />
+                        <div v-if="scheduleMode === 'regular' || applyMode === 'all'">
+                            <OperatingTimeForm v-model="configs[0]" />
                         </div>
 
                         <!-- 이벤트 운영 && 기간별 설정의 경우 -->
                         <div v-else-if="scheduleMode === 'event' && applyMode === 'period'" class="d-flex flex-col gap-16">
                             <!-- 기간별로 운영시간 설정 영역 보여줌 -->
                             <div 
-                                v-for="(pConfig, idx) in periodConfigs" 
+                                v-for="(pConfig, idx) in configs" 
                                 :key="idx"
                                 class="d-flex flex-col gap-8 period-item"
                             >
-                                <!-- TODO: 기간 선택한 값으로 날짜 보여주어야함 -->
-                                <div class="title-s">기간 {{ idx + 1 }}</div>
-                                <OperatingTimeForm v-model="periodConfigs[idx]" :idx="idx" />
+                                <div class="title-s">
+                                    {{ eventDates[idx][0] ? formatDateToDay(eventDates[idx][0]) : '시작일 미정' }} ~ 
+                                    {{ eventDates[idx][1] ? formatDateToDay(eventDates[idx][1]) : '종료일 미정' }}
+                                </div>
+                                <OperatingTimeForm v-model="configs[idx]" :idx="idx" />
                             </div>
                         </div>
                     </div>
