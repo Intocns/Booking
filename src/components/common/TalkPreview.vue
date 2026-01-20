@@ -83,34 +83,25 @@ const buttons = computed(() => {
     $--bg-blue-color: #C4DAEB;
     $--yellow-color: #FFEC32;
     $--light-gray-color-1: #f2f2f5;
-/*
-    본 html은 부트스트랩의 클래스를 사용하고 있습니다.
-    부트스트랩을 사용하지 않는 경우, 아래의 스타일이 필요합니다.
-*/
-.mt-1 {margin-top: .25rem !important;}
 
-/* 
-    p태그의 경우 margin: 0 을 기본값으로 합니다.
-*/
+.mt-1 {margin-top: .25rem !important;}
 p {margin: 0;}
 
-/* 
-    .talk_wrapper 는 부모요소의 너비가 지정되어 있어야합니다.
-*/
 .talk_wrapper {
     background-color: $--bg-blue-color;
     border-radius: 10px; 
     padding: 20px; 
-    // margin-top: 20px; 
-    min-height: 300px; 
-    height: 100%;
+    min-height: 300px;
     width: 100%;
 }
-.talk_wrapper .talk_profile {
-    background-color: $--white-color; 
-    width: 45px; 
-    height: 45px; 
-    border-radius: 19px;
+.talk_message_wrapper {
+    max-height: calc(440px - 40px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 290px;
+    padding-right: 12px;
+    scrollbar-gutter: stable;
+    box-sizing: border-box;
 }
 .talk_message {
     max-width: 280px; 
@@ -118,7 +109,7 @@ p {margin: 0;}
     max-height: 450px;
     border-radius: 10px;
     background-color: $--white-color; 
-    overflow: hidden; 
+    overflow: hidden;
     margin-top: 7px;
     display: flex;
     flex-direction: column;
@@ -132,9 +123,6 @@ p {margin: 0;}
 .talk_name {font-size: 10pt;}
 .message_box {
     padding: 10px;
-    overflow-y: auto;
-    flex: 1;
-    min-height: 0;
 }
 .message_box p {font-size: 9.5pt; word-break: break-all;}
 .talk_buttons {margin-top: 10px;}

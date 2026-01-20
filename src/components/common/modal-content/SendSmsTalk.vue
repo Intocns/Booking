@@ -510,6 +510,7 @@ const hideTooltip = (type) => {
 
         &__preview {
             height: 440px;
+            overflow: hidden;
         }
 
         &__form {
