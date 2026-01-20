@@ -12,16 +12,6 @@ export const useOptionStore = defineStore("option", () => {
     let optionList = ref([]) // 옵션 리스트
     let selectionTypeCode = ref('') // 선택 타입 코드 (NUMBER, CHECK)
 
-    // 병원 정보 가져오기 (대시보드)
-    async function getCategoryList() {
-        const response = await api.get(`/api/${cocode}/category/list`);
-
-        if(response.status == 200) {
-            let data = response.data.data;
-            categoryList.value = data;
-        }
-    }
-
     async function getOptionList() { //옵션 리스트 가져오기 전체
         const response = await api.get(`/api/${cocode}/option/list`);
 
@@ -140,6 +130,42 @@ export const useOptionStore = defineStore("option", () => {
         }
     }
 
+    // 카테고리별 옵션 목록 가져오기
+    const getAllCategoryOptions = async (itemId = 0) => {  // 상품수정에서 조회시 itemId 포함, 옵션관리에서 조회시 0
+        try {
+            const response = await api.get(`/api/${cocode}/option/list/category/${itemId}`);
+
+            if(response.data.status_code <= 300) {
+                const data = response.data.data || [];
+
+                optionList.value = data.map(category => {
+                    return {
+                        categoryId: category.categoryId,
+                        name: category.name,
+                        selectionTypeCode: category.selectionTypeCode,
+                        order: category.order,
+                        options: (category.options || []).map(opt => ({
+                            ...opt,
+                            rawData: { 
+                                ...opt, 
+                                categoryId: category.categoryId 
+                            },
+                            count: opt.stock !== 0 ? opt.stock + ' 개' : '제한 없음',
+                            priceText: opt.price ? opt.price.toLocaleString() + '원' : '0원',
+                            checked: opt.checked,
+                            operatingPeriod: opt.startDate && opt.endDate ? `${formatDateUtil(opt.startDate).replace(/-/g, '.')} ~ ${formatDateUtil(opt.endDate).replace(/-/g, '.')}` : '상시운영',
+                        }))
+                    }
+                })
+
+                // return data;
+            } else {
+                throw new Error('옵션 목록 조회 실패');
+            }
+        } catch (error) {
+            alert('옵션 목록 조회에 실패했습니다.');
+        }
+    }
 
     // 옵션 등록
     async function addOption(params) {
@@ -217,7 +243,6 @@ export const useOptionStore = defineStore("option", () => {
         optionList,
         selectionTypeCode,
         //
-        getCategoryList,
         getOptionList,
         getOptionListByCategoryId,
         addOption,
@@ -225,5 +250,6 @@ export const useOptionStore = defineStore("option", () => {
         updateOption,
         deleteOption,
         getOptionListByItemId,
+        getAllCategoryOptions,
     }
 })

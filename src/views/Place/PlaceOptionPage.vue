@@ -22,15 +22,18 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
 import { useProductStore } from '@/stores/productStore';
+import { useCategoryStore } from '@/stores/categoryStore';
 import { useDragScroll } from '@/composables/useDragScroll';
 
 const modalStore = useModalStore();
 const optionStore = useOptionStore();
 const productStore = useProductStore();
+const categoryStore = useCategoryStore();
 
 // 상태 관리
 const activeTab = ref(null); // 현재 선택된 카테고리
 const selectedProduct = ref(''); // 미리보기에서 선택된 상품 (단일 선택)
+const selectionTypeCode = ref(''); // 선택된 카테고리의 유형(타입)
 // 드롭다운 상태 관리
 const activeMenuIndex = ref(null);
 const menuPosition = ref({ x: 0, y: 0 });
@@ -42,14 +45,14 @@ const { scrollRef: scrollViewport, handleMouseDown: handleCategoryMouseDown } = 
 
 // 카테고리
 const currentIndex = computed(() => {
-    const index = optionStore.categoryList.findIndex(cat => cat.categoryId === activeTab.value);
+    const index = categoryStore.categoryList.findIndex(cat => cat.categoryId === activeTab.value);
     return index === -1 ? 0 : index; // 찾지 못할 경우 0번으로 리턴
 });
 
 // 카테고리 이전 버튼 핸들러
 const prevTab = async () => {
     if (currentIndex.value > 0) {
-        const prevCategoryId = optionStore.categoryList[currentIndex.value - 1].categoryId;
+        const prevCategoryId = categoryStore.categoryList[currentIndex.value - 1].categoryId;
         await setTab(prevCategoryId);
         // 스크롤 왼쪽으로 이동
         scrollViewport.value?.scrollBy({ left: -100, behavior: 'smooth' });
@@ -58,8 +61,8 @@ const prevTab = async () => {
 
 // 카테고리 다음 버튼 핸들러
 const nextTab = async () => {
-    if (currentIndex.value < optionStore.categoryList.length - 1) {
-        const nextCategoryId = optionStore.categoryList[currentIndex.value + 1].categoryId;
+    if (currentIndex.value < categoryStore.categoryList.length - 1) {
+        const nextCategoryId = categoryStore.categoryList[currentIndex.value + 1].categoryId;
         await setTab(nextCategoryId);
         // 스크롤 오른쪽으로 이동
         scrollViewport.value?.scrollBy({ left: 100, behavior: 'smooth' });
@@ -68,10 +71,10 @@ const nextTab = async () => {
 
 
 const optionTableColumns = [ // th에 tooltip이 필요한 경우 여기서 추가
-    { key: 'optionName', label: '옵션명' },
-    { key: 'price', label: '판매가', tooltip: '해당 옵션의 판매 가격을 의미합니다.' },
+    { key: 'name', label: '옵션명' },
+    { key: 'priceText', label: '판매가', tooltip: '해당 옵션의 판매 가격을 의미합니다.' },
     { key: 'count', label: '재고 수', tooltip: '하루 기준으로 옵션의 예약 가능한 수량을 의미합니다.\n해당 수량만큼 예약이 이루어지면 더이상 해당 옵션의 선택은 불가합니다.' },
-    { key: 'selectable', label: '선택가능', tooltip: '고객은 해당 수량 안에서 선택 가능합니다.' },
+    { key: 'maxBookingCount', label: '선택가능', tooltip: '고객은 해당 수량 안에서 선택 가능합니다.' },
     { key: 'operatingPeriod', label: '운영기간', tooltip: '운영기간이 설정되면 기간 내 날짜를 예약 할 경우에만 해당 옵션 선택이 가능합니다.', width: '18%' },
     { key: 'visibleBtn', label: '노출설정' },
     { key: 'connect', label: '상품연결', width: '8%' },
@@ -89,9 +92,19 @@ const currentRows = computed(() => {
 // 탭버튼 변경
 const setTab = async (tabId) => {
     activeTab.value = tabId;
-    await optionStore.getOptionListByCategoryId(tabId);
-    // dataMap에 옵션 리스트 저장 (반응형으로 업데이트)
-    dataMap.value[tabId] = optionStore.optionList || [];
+
+    // 전체 리스트에서 현재 클릭한 tabId(categoryId)와 일치하는 카테고리 찾음
+    const currentCategory = optionStore.optionList.find(
+        (cat) => String(cat.categoryId) === String(tabId)
+    );
+
+    if (currentCategory) {
+        dataMap.value[tabId] = currentCategory.options;
+        
+        selectionTypeCode.value = currentCategory.selectionTypeCode;
+    } else {
+        dataMap.value[tabId] = [];
+    }
 };
 
 const tableTitleTooltipText = "상품에 카테고리 미지정 옵션만 연결될 경우 예약 서비스에서 카테고리 표시없이 옵션만 노출됩니다.다른 카테고리의 옵션과 함께 연결될 경우 카테고리 미지정 옵션은 '기타' 카테고리로 표시됩니다."
@@ -138,10 +151,12 @@ onMounted(async () => {
     // 상품 리스트 미리 로딩
     await productStore.getProductList();
     
-    await optionStore.getCategoryList(); // 카테고리 리스트 불러옴
+    await categoryStore.getCategoryList(); // 카테고리 리스트 불러옴
 
-    if (optionStore.categoryList.length > 0) {
-        const firstCategoryId = optionStore.categoryList[0].categoryId;
+    await optionStore.getAllCategoryOptions();
+
+    if (categoryStore.categoryList.length > 0) {
+        const firstCategoryId = categoryStore.categoryList[0].categoryId;
         await setTab(firstCategoryId);
     }
 });
@@ -167,8 +182,8 @@ const toggleOptionVisibility = async (row) => {
     const rawData = row.rawData || {
         idx: row.idx,
         categoryId: activeTab.value,
-        name: row.optionName || '',
-        desc: '',
+        name: row.name || '',
+        desc: row.desc,
         minBookingCount: null,
         maxBookingCount: null,
         stock: null,
@@ -178,13 +193,13 @@ const toggleOptionVisibility = async (row) => {
         startDate: row.startDate || null,
         endDate: row.endDate || null,
         serviceDuration: null,
-        isImp: row.checked ? 1 : 0,
+        isImp: row.isImp ? 1 : 0,
         order: row.order || 0
     };
 
     try {
         // 현재 isImp 값을 반대로 변경
-        const newIsImp = row.checked ? 0 : 1;
+        const newIsImp = row.isImp ? 0 : 1;
         
         // 옵션 수정 API 호출 (isImp만 변경, 나머지는 기존 값 유지)
         const updateData = {
@@ -209,8 +224,21 @@ const toggleOptionVisibility = async (row) => {
 
         // 옵션 리스트 새로고침
         if (activeTab.value) {
-            await optionStore.getOptionListByCategoryId(activeTab.value);
-            dataMap.value[activeTab.value] = optionStore.optionList || [];
+            // await optionStore.getOptionListByCategoryId(activeTab.value);
+            await optionStore.getAllCategoryOptions();
+            await setTab(activeTab.value);
+            // const currentCategory = optionStore.optionList.find(
+            //     (cat) => String(cat.categoryId) === String(tabId)
+            // );
+
+            // if (currentCategory) {
+            //     dataMap.value[tabId] = currentCategory.options;
+                
+            //     selectionTypeCode.value = currentCategory.selectionTypeCode;
+            // } else {
+            //     dataMap.value[tabId] = [];
+            // }
+            // dataMap.value[activeTab.value] = optionStore.optionList || [];
         }
     } catch (error) {
         console.error('노출설정 변경 실패:', error);
@@ -224,8 +252,10 @@ const toggleOptionVisibility = async (row) => {
         
         // 에러 발생 시 체크박스 상태를 원래대로 되돌리기 위해 리스트 새로고침
         if (activeTab.value) {
-            await optionStore.getOptionListByCategoryId(activeTab.value);
-            dataMap.value[activeTab.value] = optionStore.optionList || [];
+            // await optionStore.getOptionListByCategoryId(activeTab.value);
+            await optionStore.getAllCategoryOptions();
+            // dataMap.value[activeTab.value] = optionStore.optionList || [];
+            await setTab(activeTab.value);
         }
     }
 };
@@ -253,7 +283,7 @@ const handleMenuAction = async (action, row) => {
         // 삭제 확인 모달 열기 (삭제할 옵션 데이터 저장)
         modalStore.confirmModal.openModal({ 
             title: '옵션 삭제',
-            text: '옵션을 삭제하시겠습니까?<br/>삭제하면 옵션정보, 설정 등 모든 정보가 사라지고<br/>다시 복원할 수 없습니다.',
+            text: '옵션을 삭제하시겠습니까?\n삭제하면 옵션정보, 설정 등 모든 정보가 사라지고\n다시 복원할 수 없습니다.',
             confirmBtnText: '삭제',
             onConfirm: () => { handleDeleteOption() },
             optionData: row.rawData 
@@ -280,8 +310,8 @@ const handleDeleteOption = async () => {
         
         // 삭제 성공 후 옵션 리스트 새로고침
         if (activeTab.value) {
-            await optionStore.getOptionListByCategoryId(activeTab.value);
-            dataMap.value[activeTab.value] = optionStore.optionList || [];
+            await optionStore.getAllCategoryOptions(); // 1. 전체 데이터 갱신
+            await setTab(activeTab.value);             // 2. dataMap 업데이트
         }
         
         // 확인 모달 닫기
@@ -307,7 +337,8 @@ const handleProductConnectClick = (row) => {
 watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
     if (!isVisible && activeTab.value) {
         // OptionSetting에서 이미 getOptionListByCategoryId를 호출했으므로 dataMap만 업데이트
-        dataMap.value[activeTab.value] = optionStore.optionList || [];
+        // dataMap.value[activeTab.value] = optionStore.optionList || [];
+        await setTab(activeTab.value);
         
         // 미리보기에 상품이 선택되어 있으면 리로드 (상품 연결 변경사항 반영)
         if (selectedProduct.value && optionPreviewRef.value) {
@@ -331,7 +362,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                 >
                     <!-- 카테고리 버튼 -->
                     <button 
-                        v-for="cat in optionStore.categoryList" 
+                        v-for="cat in categoryStore.categoryList" 
                         :key="cat.categoryId"
                         class="tab-btn btn--size-32"
                         :class="{ 'active': activeTab === cat.categoryId }" 
@@ -352,7 +383,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                     <button 
                         class="btn btn--size-32 btn--black-outline"
                         @click="nextTab"
-                        :disabled="currentIndex === optionStore.categoryList.length - 1"
+                        :disabled="currentIndex === categoryStore.categoryList.length - 1"
                     >
                         <img :src="icArrowRight" alt="다음">
                     </button>
@@ -377,9 +408,9 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                     <template #right>
                         <div class="d-flex gap-16 align-center table-title-right">
                             <div class="d-flex gap-8 align-center">
-                                <span class="title-m">{{ optionStore.selectionTypeCode === 'CHECK' ? '체크형' : '수량형' }}</span>
+                                <span class="title-m">{{ selectionTypeCode === 'CHECK' ? '체크형' : '수량형' }}</span>
                                 <div>
-                                    <span class="title-m">{{ optionStore.optionList.length }}</span>
+                                    <span class="title-m">{{ currentRows.length }}</span>
                                     <span class="title-m"> 개</span>
                                 </div>
                             </div>
@@ -394,7 +425,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                         <label class="toggle"> 
                             <input 
                                 type="checkbox" 
-                                :checked="row.checked" 
+                                :checked="row.isImp" 
                                 @change="toggleOptionVisibility(row)"
                             />
                             <span class="toggle-img"></span>

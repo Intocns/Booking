@@ -8,6 +8,7 @@ import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
 import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
 import { useProductStore } from '@/stores/productStore';
+import { useCategoryStore } from '@/stores/categoryStore';
 // 유틸
 import { formatDate } from '@/utils/dateFormatter.js';
 import { formatPrice, parsePrice } from '@/utils/priceFormatter.js';
@@ -24,6 +25,7 @@ const props = defineProps({
 const modalStore = useModalStore();
 const optionStore = useOptionStore();
 const productStore = useProductStore();
+const categoryStore = useCategoryStore();
 
 /**
  * 화면 모드 상태 관리
@@ -47,7 +49,7 @@ const isImp = ref(1);                 // 노출설정 (기본값: 1, 복사 시 
 const selectedCategory = ref('');
 // 카테고리 옵션 변환 (CustomSingleSelect용)
 const categoryOptions = computed(() => {
-    return optionStore.categoryList.map(cat => ({
+    return categoryStore.categoryList.map(cat => ({
         label: cat.name,
         value: cat.categoryId
     }));
@@ -56,7 +58,7 @@ const categoryOptions = computed(() => {
 // 선택된 카테고리가 체크형인지 확인
 const isCheckTypeCategory = computed(() => {
     if (!selectedCategory.value) return false;
-    const category = optionStore.categoryList.find(cat => cat.categoryId === selectedCategory.value);
+    const category = categoryStore.categoryList.find(cat => cat.categoryId === selectedCategory.value);
     return category?.selectionTypeCode === 'CHECK';
 });
 
