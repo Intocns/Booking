@@ -130,7 +130,8 @@ export const useOptionStore = defineStore("option", () => {
         }
     }
 
-    // 카테고리별 옵션 목록 가져오기
+    // 카테고리별 옵션 목록 가져오기 
+    // TODO: 상품등록/수정에서만 사용하게 되었음으로, 필효한 값만 map하기
     const getAllCategoryOptions = async (itemId = 0) => {  // 상품수정에서 조회시 itemId 포함, 옵션관리에서 조회시 0
         try {
             const response = await api.get(`/api/${cocode}/option/list/category/${itemId}`);
@@ -167,6 +168,36 @@ export const useOptionStore = defineStore("option", () => {
         }
     }
 
+    // 옵션관리 > 카테고리 별 옵션 리스트
+    async function getOptionListByCategory() {
+        const response = await api.get(`/api/${cocode}/option/list/category/ol`);
+        if(response.data.status_code <= 300) {
+            let data = response.data.data;
+
+            optionList.value = data.map(category => {
+                    return {
+                        categoryId: category.categoryId,
+                        name: category.name,
+                        selectionTypeCode: category.selectionTypeCode,
+                        order: category.order,
+                        options: (category.options || []).map(opt => ({
+                            ...opt,
+                            rawData: { 
+                                ...opt, 
+                                categoryId: category.categoryId,
+                                optionsId: opt.optionId,
+                                connectedProductIds: opt.items ? opt.items.map(item => item.itemsDto) : []
+                            },
+                            count: opt.stock !== 0 ? opt.stock + ' 개' : '제한 없음',
+                            priceText: opt.price ? opt.price.toLocaleString() + '원' : '0원',
+                            checked: opt.checked,
+                            operatingPeriod: opt.startDate && opt.endDate ? `${formatDateUtil(opt.startDate).replace(/-/g, '.')} ~ ${formatDateUtil(opt.endDate).replace(/-/g, '.')}` : '상시운영',
+                            is_connect: opt.items ? `${opt.items.length}개 연결중` : '연결하기',
+                        }))
+                    }
+                })
+        }
+    }
     // 옵션 등록
     async function addOption(params) {
         const response = await api.post(`/api/${cocode}/option/add`, params);
@@ -250,6 +281,7 @@ export const useOptionStore = defineStore("option", () => {
         updateOption,
         deleteOption,
         getOptionListByItemId,
-        getAllCategoryOptions,
+        getAllCategoryOptions, // 카테고리별 옵션 목록 가져오기
+        getOptionListByCategory, // 옵션관리 > 카테고리 별 옵션 리스트
     }
 })

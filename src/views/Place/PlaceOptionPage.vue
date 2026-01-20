@@ -153,7 +153,7 @@ onMounted(async () => {
     
     await categoryStore.getCategoryList(); // 카테고리 리스트 불러옴
 
-    await optionStore.getAllCategoryOptions();
+    await optionStore.getOptionListByCategory();
 
     if (categoryStore.categoryList.length > 0) {
         const firstCategoryId = categoryStore.categoryList[0].categoryId;

@@ -409,7 +409,8 @@ const handleSave = async () => {
 
         // 옵션 리스트 새로고침
         if (selectedCategory.value) {
-            await optionStore.getOptionListByCategoryId(selectedCategory.value);
+            // await optionStore.getOptionListByCategoryId(selectedCategory.value);
+            await optionStore.getOptionListByCategory();
         }
 
         alert('옵션이 등록되었습니다.');
@@ -459,7 +460,8 @@ const handleUpdate = async () => {
         };
 
         // 1. 옵션 수정
-        const updateResponse = await optionStore.updateOption(optionDataFromModal.idx, optionData);
+        // const updateResponse = await optionStore.updateOption(optionDataFromModal.idx, optionData);
+        const updateResponse = await optionStore.updateOption(optionDataFromModal.optionId, optionData);
         
         // 옵션 ID 추출 (rawData에 저장된 optionId 사용)
         const optionId = optionDataFromModal.optionId;
@@ -512,7 +514,8 @@ const handleUpdate = async () => {
 
         // 옵션 리스트 새로고침
         if (selectedCategory.value) {
-            await optionStore.getOptionListByCategoryId(selectedCategory.value);
+            // await optionStore.getOptionListByCategoryId(selectedCategory.value);
+            await optionStore.getOptionListByCategory();
         }
 
         alert('옵션이 수정되었습니다.');
@@ -858,7 +861,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">가격 부가설명</p>
                                 <div class="setting-row__content">
-                                    <TextAreaBox v-model="priceDesc" placeholder="가격 부가설명을 입력해주세요." max-length="300" />
+                                    <TextAreaBox v-model="priceDesc" placeholder="가격 부가설명을 입력해주세요." :max-length="300" />
                                 </div>
                             </div>
                         </div>
@@ -891,8 +894,10 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
         </div>
         <!-- 버튼 -->
         <div class="modal-button-wrapper">
-            <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.optionSettingModal.closeModal()">취소</button>
-            <button class="btn btn--size-32 btn--blue" @click="handleNext">다음</button>
+            <div class="buttons">
+                <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.optionSettingModal.closeModal()">취소</button>
+                <button class="btn btn--size-32 btn--blue" @click="handleNext">다음</button>
+            </div>
         </div>
     </template>
 
@@ -934,11 +939,13 @@ onUnmounted(() => window.removeEventListener('click', closeAll));
         </div>
         <!-- 버튼 -->
         <div class="modal-button-wrapper">
-            <button class="btn btn--size-32 btn--blue-outline" @click="handlePrev">이전으로</button>
-            <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.optionSettingModal.closeModal()">취소</button>
-            <button class="btn btn--size-32 btn--blue" @click="handleSubmit">
-                {{ props.isEdit ? '수정' : (modalStore.optionSettingModal.data?.isCopy ? '복사' : '등록') }}
-            </button>
+            <div class="buttons">
+                <button class="btn btn--size-32 btn--blue-outline" @click="handlePrev">이전으로</button>
+                <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.optionSettingModal.closeModal()">취소</button>
+                <button class="btn btn--size-32 btn--blue" @click="handleSubmit">
+                    {{ props.isEdit ? '수정' : (modalStore.optionSettingModal.data?.isCopy ? '복사' : '등록') }}
+                </button>
+            </div>
         </div>
     </template>
 </template>
