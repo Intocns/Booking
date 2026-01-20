@@ -112,8 +112,8 @@ const handleEmptyBtnClick = () => {
                 <div class="empty-box" :class="{ 'no-thead_table' : noThead == true}">
                     <img :src="icEmpty" alt="비어있음 아이콘">
                     <div class="d-flex flex-col align-center gap-4">
-                        <span class="body-m">{{ tableEmptyText }}</span>
-                        <p class="title-s">{{ tableEmptySubText }}</p>
+                        <span class="title-s">{{ tableEmptyText }}</span>
+                        <p class="body-m">{{ tableEmptySubText }}</p>
                     </div>
                     <button 
                         v-if="tableEmptyBtnText" 

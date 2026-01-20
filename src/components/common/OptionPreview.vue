@@ -8,23 +8,31 @@ import { useOptionStore } from '@/stores/optionStore';
 import { useProductStore } from '@/stores/productStore';
 import { useDragScroll } from '@/composables/useDragScroll';
 
-// 미리보기 옵션 데이터
-const previewOptions = ref([]);
-const isLoading = ref(false);
-
 const optionStore = useOptionStore();
 const productStore = useProductStore();
+
+/**
+ * 상태 관리
+ */
+const previewOptions = ref([]); // 미리보기 옵션 데이터
+const isLoading = ref(false);
+const categoryMetaMap = ref({});
+const selectedCategory = ref(null); // 선택된 카테고리 (NUMBER, CHECK 공통)
+const optionQuantities = ref({}); // 수량형 옵션의 선택 수량 관리 // { optionId: quantity }
+const checkedOptions = ref({}); // 체크형 옵션의 선택 상태 관리 // { optionId: boolean }
+const showCategoryNav = ref(false); // 카테고리 좌우 이동 버튼 노출 여부
 
 // Props
 const props = defineProps({
     selectedProduct: {
         type: [String, Number],
         default: ''
-    }
+    }, // 선택된 상품 ID
+    noShowSelectBox: { type: Boolean, default: false }, // 상품 선택 박스 숨김 여부
 });
 
 // Emits
-const emit = defineEmits(['update:selectedProduct']);
+const emit = defineEmits(['update:selectedProduct']); // 선택된 상품 변경 이벤트
 
 // 상품 리스트를 CustomSelect용 options로 변환
 const productOptions = computed(() => {
@@ -116,9 +124,6 @@ const requiredOptions = computed(() => {
         .map(option => mapOptionData(option));
 });
 
-// 선택된 카테고리 (NUMBER, CHECK 공통)
-const selectedCategory = ref(null);
-
 // 미리보기 옵션의 카테고리 목록 (requiredType이 1이 아닌 카테고리만, 중복 제거)
 const previewCategories = computed(() => {
     if (!previewOptions.value.length) {
@@ -143,9 +148,6 @@ const previewCategories = computed(() => {
 
 // 필수 항목 섹션 표시 여부 (requiredType이 1인 옵션이 있을 때만)
 const hasRequiredOptions = computed(() => requiredOptions.value.length > 0);
-
-// 수량형 옵션의 선택 수량 관리
-const optionQuantities = ref({}); // { optionId: quantity }
 
 // 옵션 ID 가져오기 헬퍼 함수
 const getOptionId = (option) => {
@@ -196,9 +198,6 @@ const getTotalPrice = (option) => {
     return 0;
 };
 
-// 체크형 옵션의 선택 상태 관리
-const checkedOptions = ref({}); // { optionId: boolean }
-
 // 체크박스 토글
 const toggleCheckOption = (option) => {
     const optionId = getOptionId(option);
@@ -230,6 +229,8 @@ const loadPreviewOptions = (data) => {
         if (categories.length > 0) {
             selectedCategory.value = categories[0].category_id;
         }
+
+        
     }
 };
 
@@ -248,8 +249,16 @@ const loadPreviewOptionsData = async (productId) => {
         checkedOptions.value = {};
         previewOptions.value = [];
         
-        const response = await optionStore.getOptionListByItemId(productId);//미리보기 조회
+        const response = await optionStore.getOptionListByItemId(productId); // 해당 상품의 연결된 옵션 리스트 불러오기
         const data = response?.data?.data || response?.data || [];
+        data.forEach(opt => {
+            if (!categoryMetaMap.value[opt.categoryId]) {
+                categoryMetaMap.value[opt.categoryId] = {
+                    categoryType: opt.categoryType,
+                    requiredType: opt.requiredType
+                };
+            }
+        })
         loadPreviewOptions(data);
     } catch (error) {
         console.error('미리보기 옵션 로드 실패:', error);
@@ -258,6 +267,41 @@ const loadPreviewOptionsData = async (productId) => {
         isLoading.value = false;
     }
 };
+
+const updatePreviewFromStore = () => {
+    const selectedOptions = [];
+
+    optionStore.optionList.forEach(category => {
+        const checkedOptionsInCategory = category.options.filter(opt => opt.checked);
+
+        checkedOptionsInCategory.forEach(opt => {
+            const meta = categoryMetaMap.value[category.categoryId] || {};
+            // 여기 requiredType 없지않음?
+
+            selectedOptions.push({
+                optionId: opt.optionId, //
+                optionName: opt.name, //
+                optionComment: opt.desc, //
+                optionPrice: opt.price, //
+                useFlag: opt.checked, //
+
+                categoryId: category.categoryId, //
+                categoryName: category.name, //
+                categoryType: category.selectionTypeCode, 
+                requiredType: meta.requiredType, 
+            });
+        });
+    });
+    previewOptions.value = selectedOptions;
+}
+
+// 스토어 데이터 깊은 감시 (옵션 체크박스 클릭 시 즉시 반응)
+watch(() => optionStore.optionList, () => {
+    // 상품 수정/등록 페이지(noShowSelectBox: true)일 때만 실시간 연동
+    if (props.noShowSelectBox) {
+        updatePreviewFromStore();
+    }
+}, { deep: true, immediate: true });
 
 // 선택된 상품이 변경되면 수량/체크 상태 초기화 및 옵션 데이터 로드
 watch(selectedProductModel, async (newValue) => {
@@ -277,9 +321,6 @@ defineExpose({
 const { scrollRef: categoryScrollRef, handleMouseDown } = useDragScroll({
     buttonSelector: '.category-btn'
 });
-
-// 카테고리 좌우 이동 버튼 노출 여부
-const showCategoryNav = ref(false);
 
 // 카테고리 스크롤 영역이 넘칠 때만 버튼 노출
 const updateCategoryNavVisibility = () => {
@@ -310,12 +351,46 @@ const scrollCategoryRight = () => {
 // 카테고리 목록이 변할 때 버튼 노출 여부 재계산
 watch(previewCategories, () => updateCategoryNavVisibility(), { immediate: true });
 
+// previewCategories(카테고리 탭 목록)가 변경될 때 실행
+watch(previewCategories, (newCategories) => {
+    // 1. 카테고리 목록이 비어있으면 선택값 초기화
+    if (!newCategories || newCategories.length === 0) {
+        selectedCategory.value = null;
+        return;
+    }
+
+    // 2. 현재 선택된 카테고리가 여전히 목록에 있는지 확인
+    const isStillValid = newCategories.some(cat => cat.category_id === selectedCategory.value);
+
+    // 3. 만약 선택된 카테고리가 사라졌다면, 첫 번째 카테고리를 자동으로 선택
+    if (!isStillValid) {
+        selectedCategory.value = newCategories[0].category_id;
+    }
+
+    // 기존의 네비게이션 버튼 노출 여부 함수 호출
+    updateCategoryNavVisibility();
+}, { immediate: true });
+
 // 리사이즈 대응
 const handleResize = () => updateCategoryNavVisibility();
-onMounted(() => {
+
+onMounted(async() => {
+    if (!productStore.productList || productStore.productList.length === 0) {
+        try {
+            await productStore.getProductList(); // 스토어의 상품 로드 함수 호출
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     updateCategoryNavVisibility();
     window.addEventListener('resize', handleResize);
+
+    if (props.selectedProduct) {
+        await loadPreviewOptionsData(props.selectedProduct);
+    }
 });
+
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
 });
@@ -328,7 +403,7 @@ onUnmounted(() => {
         </div>
         <div class="preview-contents">
             <!-- 선택 -->
-            <div class="select-wrapper">
+            <div v-if="!noShowSelectBox" class="select-wrapper">
                 <CustomSingleSelect 
                     v-model="selectedProductModel"
                     :options="productOptions"

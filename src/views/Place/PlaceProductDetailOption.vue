@@ -69,32 +69,42 @@ const saveItemOption = (async() => {
 })
 
 onMounted(async() => {
-    const selectedData =  await optionStore.getOptionListByItemId(props.savedItemId);
-    await optionStore.getOptionList()
+    // const selectedData =  await optionStore.getOptionListByItemId(props.savedItemId);
+    await optionStore.getAllCategoryOptions(props.savedItemId);
+    const selectedData = optionStore.optionList.flatMap(category => 
+        category.options.filter(opt => opt.checked == 1)
+    );
+
+    // await optionStore.getOptionList()
 
     const selectedOptionMap = {};
 
     //선택한 옵션값 가져오기
-    selectedData.data.forEach(({ categoryId, optionId }) => {
-        selectedOptionMap[categoryId] ??= []
-        selectedOptionMap[categoryId].push(optionId)
+    selectedData.forEach((item) => {
+        const cId = item.rawData?.categoryId;
+        const oId = item.optionId;
+
+        if (cId && oId) {
+            selectedOptionMap[cId] ??= [];
+            selectedOptionMap[cId].push(oId);
+        }
     })
 
     //카테고리/옵션 구성 및 선택한 옵션 check 값 true로 변경
-    optionStore.optionList = (optionStore.optionList ?? []).map(item => ({
-        ...item,
-        options : item.options.map(detail => ({
-            ...detail,
-            checked : selectedOptionMap[item.categoryId]?.includes(detail.optionId) ?? false
-        }))
-    }))
+    // optionStore.optionList = (optionStore.optionList ?? []).map(item => ({
+    //     ...item,
+    //     options : item.options.map(detail => ({
+    //         ...detail,
+    //         checked : selectedOptionMap[item.categoryId]?.includes(detail.optionId) ?? false
+    //     }))
+    // }))
 
     //아코디언 토글 디폴트로 열어주기 위함
     expandedIndexes.value = (optionStore.optionList ?? []).map((_, index) => index)
 })
 
 //옵션이 하나라도 선택되면 카테고리도 선택
-const isCategoryChecked = (category) => computed(() => category.options.some(c => c.checked))
+const isCategoryChecked = (category) => computed(() => category.options.some(c => c.checked == 1))
 
 //카테고리 체크박스 선택 시
 const changeCategoryChecked = (category) => {
@@ -129,7 +139,8 @@ const toggleOption = (optionDetail) => {
                                 <label class="checkbox" @click.stop>
                                     <input type="checkbox" 
                                         :checked="isCategoryChecked(option).value"
-                                        @change="() => changeCategoryChecked(option)" />
+                                        @change="() => changeCategoryChecked(option)"
+                                    />
                                     <span class="box"></span>
                                     <span class="label">{{ option.name }}</span>
                                 </label>
@@ -148,7 +159,7 @@ const toggleOption = (optionDetail) => {
                                     v-for="optionDetail in option.options"
                                     :key="optionDetail.optionId"
                                     class="option-item"
-                                    :class="{ 'is-selected': optionDetail.checked }"
+                                    :class="{ 'is-selected': optionDetail.checked == 1 }"
                                     @click="toggleOption(optionDetail)"
                                 >
                                     <div class="drag-handle" @click.stop>
@@ -162,7 +173,7 @@ const toggleOption = (optionDetail) => {
         
                                     <div class="option-status">
                                         <label class="checkbox" @click.stop>
-                                            <input type="checkbox" v-model="optionDetail.checked" />
+                                            <input type="checkbox" :checked="optionDetail.checked == 1" @change="toggleOption(optionDetail)" />
                                             <span class="checkMark"></span>
                                         </label>
                                     </div>
