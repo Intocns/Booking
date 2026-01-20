@@ -11,7 +11,7 @@ export const useProductStore = defineStore("product", () => {
     const linkItemInfo = ref({});
     const itemDetailInfo = ref({});
     const productScheduleDataList = ref([]); // 간단예약 관리 > 상품별 운영시간 데이터
-    const productWeekScheduleDataList = ref([]); // 상품 수정 > 상품 운영시간 데이터
+    const productWeekScheduleDataList = ref([]); // 상품 수정 > 상품 운영시간 데이터 (캘랜더)
     const productScheduleInfo = ref([]);
 
     // 상품 리스트 불러오기
@@ -610,7 +610,7 @@ export const useProductStore = defineStore("product", () => {
         }
     }
 
-    // 상품 수정 > 일정 설정 > 진료가능 동물 수, 운영시간 설정 모달창 저장
+    // 상품 수정 > 일정 설정 > 진료가능 동물 수, 운영시간 설정 모달창 저장 (캘랜더 > 모달)
     const setScheduleModalSave = async(itemId, params, schId = null) => {
         try {
             const response = await api.post(`/api/${cocode}/item/${itemId}/schedule/modify/b`, params); 

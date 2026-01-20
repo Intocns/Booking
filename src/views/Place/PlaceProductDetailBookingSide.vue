@@ -151,9 +151,139 @@ const setScheduleForSave = () => {
     });
 }
 
+const bitToTimeRanges = (bitString) => {
+    // 비트가 없거나 전부 0인 경우
+    if (!bitString || !bitString.includes('1')) {
+        return [{ startTime: '', endTime: '' }];
+    }
+
+    const ranges = [];
+    let start = null;
+
+    // 48비트 순회 (0~47)
+    for (let i = 0; i < bitString.length; i++) {
+        const bit = bitString[i];
+        
+        // 1을 만났는데 아직 시작점이 없다면 (새로운 구간 시작)
+        if (bit === '1' && start === null) {
+            start = i;
+        } 
+        
+        // 현재가 1인데 다음이 0이거나, 문자열의 끝인 경우 (구간 종료)
+        if (start !== null && (bitString[i + 1] === '0' || i === bitString.length - 1)) {
+            const end = i + 1; // 종료 지점은 인덱스 + 1 (길이 개념)
+            
+            const formatTime = (totalHalfHours) => {
+                const hours = Math.floor(totalHalfHours / 2);
+                const minutes = (totalHalfHours % 2) * 30;
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            };
+
+            ranges.push({
+                startTime: formatTime(start),
+                endTime: formatTime(end)
+            });
+            
+            start = null; // 초기화
+        }
+    }
+
+    // console.log(bitString, ranges);
+    return ranges.length > 0 ? ranges : [{ startTime: '', endTime: '' }];
+};
+
+// pos 배열을 받아 UI 설정 객체(config)로 변환하는 함수
+const mapPosToConfig = (posArray) => {
+    const config = createDefaultConfig();
+    if (!posArray || posArray.length === 0) return config;
+
+    // 1. 평일/주말/토/일 아이템 정교하게 찾기
+    // 평일: mon~fri 중 하나라도 포함되어 있고, sat/sun은 포함하지 않음
+    const weekdayItem = posArray.find(p => 
+        p.weekdays.some(day => ['mon', 'tue', 'wed', 'thu', 'fri'].includes(day)) &&
+        !p.weekdays.includes('sat') && !p.weekdays.includes('sun')
+    );
+    
+    // 주말(토+일): sat과 sun을 모두 포함함
+    const weekendItem = posArray.find(p => 
+        p.weekdays.includes('sat') && p.weekdays.includes('sun')
+    );
+
+    // 개별 토/일
+    const satItem = posArray.find(p => p.weekdays.length === 1 && p.weekdays[0] === 'sat');
+    const sunItem = posArray.find(p => p.weekdays.length === 1 && p.weekdays[0] === 'sun');
+
+    // 2. 판별 및 매핑
+    if (posArray.length === 1 && posArray[0].weekdays.length === 7) {
+        config.operatingMode = 'all';
+        config.allDaysTime = bitToTimeRanges(posArray[0].hourBit);
+    } 
+    else if (weekdayItem && weekendItem) {
+        config.operatingMode = 'split';
+        config.splitMode = 'weekend_all';
+        config.splitTime.weekday = bitToTimeRanges(weekdayItem.hourBit);
+        config.splitTime.weekend = bitToTimeRanges(weekendItem.hourBit);
+    } 
+    else if (weekdayItem && satItem && sunItem) {
+        config.operatingMode = 'split';
+        config.splitMode = 'sat_sun_individually';
+        config.splitTime.weekday = bitToTimeRanges(weekdayItem.hourBit);
+        config.splitTime.sat = bitToTimeRanges(satItem.hourBit);
+        config.splitTime.sun = bitToTimeRanges(sunItem.hourBit);
+    } 
+    else {
+        config.operatingMode = 'daily';
+        config.dailyGroups = posArray.map(p => ({
+            selectedDays: p.weekdays,
+            times: bitToTimeRanges(p.hourBit)
+        }));
+    }
+    // console.log('--- 매핑 결과 확인 ---');
+    // console.log('Mode:', config.operatingMode);
+    // console.log('Value:', JSON.stringify(config));
+    return config;
+};
+
 onMounted(async() => {
     //예약 정보 조회
-    await productStore.getItemReservationInfo(props.savedItemId);
+    await productStore.getItemReservationInfo(props.savedItemId); // productScheduleInfo
+    const data = productStore.productScheduleInfo;
+    if (!data) return;
+
+    // 2. 예약 가능 동물 수 매핑
+    selectedAnimalCount.value = data.reserveCnt;
+
+    // 3. 휴무일 설정 여부 매핑
+    isHolidayEnabled.value = !!(data.impos && (data.impos.week || data.impos.spDay || data.impos.hoDay));
+
+    // 4. 운영 일정 매핑 (pos 데이터 분석)
+    const pos = data.pos || [];
+
+    const hasEventDate = pos.some(item => item.sdate && item.edate);
+
+    if (hasEventDate) {
+        scheduleMode.value = 'event';
+        const periods = [...new Set(pos.map(p => `${p.sdate}~${p.edate}`))];
+        applyMode.value = periods.length > 1 ? 'period' : 'all';
+        eventDates.value = periods.map(p => p.split('~'));
+        
+        // 새 배열로 할당
+        const newConfigs = periods.map(period => {
+            const periodPos = pos.filter(p => `${p.sdate}~${p.edate}` === period);
+            // console.log('---hasEventDate 매핑---');
+            // console.log(mapPosToConfig(periodPos));
+            return mapPosToConfig(periodPos);
+        });
+        configs.value = newConfigs;
+    } else {
+        scheduleMode.value = 'regular';
+        // console.log('---regular 매핑---');
+        // console.log(mapPosToConfig(pos));
+
+        // 새 배열로 할당
+        configs.value = [mapPosToConfig(pos)];
+    }
+
 
     //상품 기본 정보 조회 >> 예약 오픈, 노출/미노출 설정
     await productStore.getItemDetailInfo(props.savedItemId); // itemDetailInfo
