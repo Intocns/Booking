@@ -8,6 +8,7 @@ defineOptions({
 
 const props = defineProps({
     title: String,
+    smallTitle: String,
     // 제어할 모달 스토어 상태 객체를 받음
     modalState: {
         type: Object,
@@ -38,7 +39,9 @@ const close = () => {
                 <!-- 모달 콘텐츠 -->
                 <div class="modal-contents">
                     <div class="modal-header-custom">
-                        <p class="heading-s">{{ title }}</p>
+                        <p v-if="smallTitle" class="title-s">{{ smallTitle }}</p>
+                        <p v-else class="heading-s">{{ title }}</p>
+                        
                         <button class="modal-close" @click="close">
                             <img :src="icBtnClose" alt="닫기 버튼">
                         </button>
@@ -61,6 +64,7 @@ const close = () => {
     }
     .modal-header-custom {
         display: flex;
+        align-items: center;
         padding: 20px 20px 0px 20px;
 
         p {
