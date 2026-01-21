@@ -33,6 +33,7 @@ const openSmsModal = (row) => {
         reservationTime: row?.reTimeHisTxt,
         productName: row?.roomName,
         hospitalPhone: row?.hospitalPhone || row?.hosTel, //TODO: cocode 기반 실제 병원명으로 교체
+        phoneTxt: row?.phoneTxt, // 수신번호용 전화번호
     };
 
     modalStore.smsModal.openModal();

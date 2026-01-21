@@ -4,7 +4,7 @@ import icTooltip from '@/assets/icons/ic_tooltip.svg'
 import icEmpty from '@/assets/icons/ic_empty.svg'
 import TalkPreview from '../TalkPreview.vue';
 
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useModalStore } from '@/stores/modalStore';
 import { api } from '@/api/axios';
 
@@ -21,6 +21,16 @@ const activeTab = ref('talk');
 const smsRemainingCount = ref(null);
 const isLoadingSmsPoint = ref(false);
 const cocode = '2592'; // TODO: 임시
+
+// 수신번호
+const recipientPhone = ref('');
+
+// reservationData 변경 시 수신번호 자동 설정
+watch(() => props.reservationData, (newData) => {
+    if (newData) {
+        recipientPhone.value = newData.phoneTxt;
+    }
+}, { immediate: true });
 
 // 알림톡 프로필/템플릿 체크 및 복호화 테스트용 상태
 const isCheckingAvailable = ref(false);
@@ -259,7 +269,7 @@ const hideTooltip = (type) => {
                         <span class="title-s helper">
                             수신번호
                         </span>
-                        <input class="input-text" type="text" name="" id="">
+                        <input class="input-text" type="text" v-model="recipientPhone">
                     </div>
                 </div>
 
