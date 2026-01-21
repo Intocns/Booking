@@ -272,7 +272,6 @@ const validateReservation = async () => {
     
     // 5. 담당의 배정 검증
     if (!selectedDoctorId.value) {
-        // alert('담당의가 배정되지 않았습니다. 담당의를 배정한 뒤 예약을 확정해주세요.'); //TODO : 모달로 변경해양함
         modalStore.confirmModal.openModal({
             title: '담당의 배정',
             text: '담당의가 배정되지 않았습니다.\n담당의를 배정한 뒤 예약을 확정해주세요.',

@@ -66,7 +66,6 @@ const handleApply = async() => {
         return;
     }
 
-    // TODO: 적용 로직(카테고리 수정)
     category_list.forEach(item => {
         params.push({
                 "name": item.name,
@@ -155,7 +154,6 @@ const handleDelete = async() => {
         "idx": categoryInfo.idx
     }
 
-    //삭제 api todo
     let response = await categoryStore.deleteCategory(params);
 
     // 삭제 성공 시 다시 리스트 모드로 이동
