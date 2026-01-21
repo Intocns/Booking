@@ -42,11 +42,10 @@ const templateList = ref([]);
 const selectedTemplate = ref(null); // 선택된 템플릿
 
 // 알림톡 템플릿 타입 (현재 5로 고정해 확인)
-const selectedTemplateType = ref(1);
+const selectedTemplateType = ref(5); // TODO: 추후 변경 필요
 
 // 템플릿 선택 핸들러
 const selectTemplate = (template) => {
-    console.log('템플릿 isdefault 값:', template?.is_default);
     selectedTemplate.value = template;
 };
 
@@ -128,6 +127,10 @@ const getTemplateInfo = async (useDefault = false) => {
             const data = response.data.data;
             if (data.template_info && Array.isArray(data.template_info)) {
                 templateList.value = data.template_info;
+                // 템플릿 목록이 있으면 첫 번째 템플릿 자동 선택
+                if (templateList.value.length > 0) {
+                    selectedTemplate.value = templateList.value[0];
+                }
             } else {
                 templateList.value = [];
             }
