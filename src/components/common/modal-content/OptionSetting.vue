@@ -140,6 +140,18 @@ watch(() => productStore.productList, (newList) => {
     }
 }, { immediate: true });
 
+//  openAlert confirmModal을 alert대신 사용
+const openAlert = (text) => {
+    modalStore.confirmModal.openModal({ 
+        text: text,
+        confirmBtnText: '확인',
+        noCancelBtn: true,
+        onConfirm: () => { 
+            modalStore.confirmModal.closeModal(); 
+        }
+    });
+}
+
 // 상품 연결 상태 토글 핸들러
 const toggleProductConnection = (product) => {
     product.isConnected = !product.isConnected;
@@ -149,7 +161,7 @@ const toggleProductConnection = (product) => {
 const validateRequiredFields = async () => {
     // 카테고리 검증
     if (!selectedCategory.value) {
-        alert('카테고리를 선택해주세요.');
+        openAlert('카테고리를 선택해주세요.');
         await nextTick();
         if (categorySelectRef.value) {
             const selectBox = categorySelectRef.value.$el?.querySelector('.select__box');
@@ -162,7 +174,7 @@ const validateRequiredFields = async () => {
     
     // 옵션명 검증
     if (!optionName.value || optionName.value.trim() === '') {
-        alert('옵션명을 입력해주세요.');
+        openAlert('옵션명을 입력해주세요.');
         await nextTick();
         if (optionNameInputRef.value) {
             const inputElement = optionNameInputRef.value.$el?.querySelector('input[type="text"]');
@@ -175,7 +187,7 @@ const validateRequiredFields = async () => {
     
     // 재고 수 검증 (재고 토글이 켜져 있을 때)
     if (isStockEnabled.value && (!stockCount.value || stockCount.value.trim() === '')) {
-        alert('재고 수를 입력해주세요.');
+        openAlert('재고 수를 입력해주세요.');
         await nextTick();
         if (stockCountInputRef.value) {
             const inputElement = stockCountInputRef.value.$el?.querySelector('input[type="text"]');
@@ -188,7 +200,7 @@ const validateRequiredFields = async () => {
     
     // 판매가 검증 (가격 토글이 켜져 있을 때)
     if (isPriceEnabled.value && (!price.value || price.value.trim() === '')) {
-        alert('판매가를 입력해주세요.');
+        openAlert('판매가를 입력해주세요.');
         await nextTick();
         if (priceInputRef.value) {
             const inputElement = priceInputRef.value.$el?.querySelector('input[type="text"]');
@@ -409,15 +421,14 @@ const handleSave = async () => {
 
         // 옵션 리스트 새로고침
         if (selectedCategory.value) {
-            // await optionStore.getOptionListByCategoryId(selectedCategory.value);
             await optionStore.getOptionListByCategory();
         }
 
-        alert('옵션이 등록되었습니다.');
+        openAlert('옵션이 등록되었습니다.');
         modalStore.optionSettingModal.closeModal();
     } catch (error) {
         console.error('옵션 등록 실패:', error);
-        alert('옵션 등록 중 오류가 발생했습니다.');
+        openAlert('옵션 등록 중 오류가 발생했습니다.');
     }
 };
 const handleUpdate = async () => {
@@ -432,13 +443,14 @@ const handleUpdate = async () => {
 
     try {
         const optionDataFromModal = modalStore.optionSettingModal.data?.optionData;
-        if (!optionDataFromModal || !optionDataFromModal.idx) {
+        if (!optionDataFromModal.optionId) {
             throw new Error('옵션 ID를 찾을 수 없습니다.');
         }
 
         // 엔티티 형태로 데이터 매핑
         const optionData = {
             idx: optionDataFromModal.idx, // 옵션 ID를 idx에 포함
+            optionId: optionDataFromModal.optionId,
             categoryId: selectedCategory.value,
             name: optionName.value.trim(),
             serviceDuration: serviceDuration > 0 ? serviceDuration : null,
@@ -460,7 +472,6 @@ const handleUpdate = async () => {
         };
 
         // 1. 옵션 수정
-        // const updateResponse = await optionStore.updateOption(optionDataFromModal.idx, optionData);
         const updateResponse = await optionStore.updateOption(optionDataFromModal.optionId, optionData);
         
         // 옵션 ID 추출 (rawData에 저장된 optionId 사용)
@@ -514,15 +525,14 @@ const handleUpdate = async () => {
 
         // 옵션 리스트 새로고침
         if (selectedCategory.value) {
-            // await optionStore.getOptionListByCategoryId(selectedCategory.value);
             await optionStore.getOptionListByCategory();
         }
 
-        alert('옵션이 수정되었습니다.');
+        openAlert('옵션이 수정되었습니다.');
         modalStore.optionSettingModal.closeModal();
     } catch (error) {
         console.error('옵션 수정 실패:', error);
-        alert('옵션 수정 중 오류가 발생했습니다.');
+        openAlert('옵션 수정 중 오류가 발생했습니다.');
     }
 };
 

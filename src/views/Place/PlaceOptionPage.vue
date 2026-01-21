@@ -89,7 +89,7 @@ const currentRows = computed(() => {
     return dataMap.value[activeTab.value] || [];
 });
 
-// 탭버튼 변경
+// 탭버튼 변경 (dateMap업데이트)
 const setTab = async (tabId) => {
     activeTab.value = tabId;
 
@@ -148,12 +148,9 @@ const closeMenu = (e) => {
 onMounted(async () => {
     window.addEventListener('click', closeMenu);
 
-    // 상품 리스트 미리 로딩
-    await productStore.getProductList();
-    
+    await productStore.getProductList(); // 상품 리스트 불러옴    
     await categoryStore.getCategoryList(); // 카테고리 리스트 불러옴
-
-    await optionStore.getOptionListByCategory();
+    await optionStore.getOptionListByCategory(); // 카테고리+옵션리스트 전체 불러옴
 
     if (categoryStore.categoryList.length > 0) {
         const firstCategoryId = categoryStore.categoryList[0].categoryId;
@@ -169,18 +166,23 @@ const isEdit = ref(false); // 수정 모드 여부 상태 추가
 
 // 노출설정 토글 핸들러
 const toggleOptionVisibility = async (row) => {
-    // idx 확인: rawData.idx 또는 row.idx 사용
-    const optionId = row.rawData?.idx || row.idx;
+    const optionId = row.optionId;
     
     if (!optionId) {
         console.error('옵션 ID를 찾을 수 없습니다. row:', row);
-        alert('옵션 ID를 찾을 수 없습니다.');
+        modalStore.confirmModal.openModal({ 
+            text: '옵션 ID를 찾을 수 없습니다.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => { modalStore.confirmModal.closeModal(); }
+        });
         return;
     }
 
     // rawData가 없으면 현재 row 데이터로 업데이트 데이터 구성
     const rawData = row.rawData || {
         idx: row.idx,
+        optionId: optionId,
         categoryId: activeTab.value,
         name: row.name || '',
         desc: row.desc,
@@ -203,7 +205,8 @@ const toggleOptionVisibility = async (row) => {
         
         // 옵션 수정 API 호출 (isImp만 변경, 나머지는 기존 값 유지)
         const updateData = {
-            idx: optionId,
+            idx: row.idx,
+            optionId: optionId,
             categoryId: rawData.categoryId,
             name: rawData.name,
             desc: rawData.desc || null,
@@ -224,39 +227,32 @@ const toggleOptionVisibility = async (row) => {
 
         // 옵션 리스트 새로고침
         if (activeTab.value) {
-            // await optionStore.getOptionListByCategoryId(activeTab.value);
-            // await optionStore.getAllCategoryOptions();
             await optionStore.getOptionListByCategory();
             await setTab(activeTab.value);
-            // const currentCategory = optionStore.optionList.find(
-            //     (cat) => String(cat.categoryId) === String(tabId)
-            // );
-
-            // if (currentCategory) {
-            //     dataMap.value[tabId] = currentCategory.options;
-                
-            //     selectionTypeCode.value = currentCategory.selectionTypeCode;
-            // } else {
-            //     dataMap.value[tabId] = [];
-            // }
-            // dataMap.value[activeTab.value] = optionStore.optionList || [];
         }
     } catch (error) {
         console.error('노출설정 변경 실패:', error);
         
         // 409 에러인 경우 특별한 메시지 표시
         if (error.message && error.message.includes('옵션을 찾을 수 없습니다')) {
-            alert('옵션을 찾을 수 없습니다. 옵션이 삭제되었거나 존재하지 않을 수 있습니다.\n리스트를 새로고침합니다.');
+            modalStore.confirmModal.openModal({ 
+                text: '옵션을 찾을 수 없습니다. 옵션이 삭제되었거나 존재하지 않을 수 있습니다.\n리스트를 새로고침합니다.',
+                confirmBtnText: '확인',
+                noCancelBtn: true,
+                onConfirm: () => { modalStore.confirmModal.closeModal(); }
+            });
         } else {
-            alert('노출설정 변경 중 오류가 발생했습니다.');
+            modalStore.confirmModal.openModal({ 
+                text: '노출설정 변경 중 오류가 발생했습니다.',
+                confirmBtnText: '확인',
+                noCancelBtn: true,
+                onConfirm: () => { modalStore.confirmModal.closeModal(); }
+            })
         }
         
         // 에러 발생 시 체크박스 상태를 원래대로 되돌리기 위해 리스트 새로고침
         if (activeTab.value) {
-            // await optionStore.getOptionListByCategoryId(activeTab.value);
-            // await optionStore.getAllCategoryOptions();
             await optionStore.getOptionListByCategory();
-            // dataMap.value[activeTab.value] = optionStore.optionList || [];
             await setTab(activeTab.value);
         }
     }
@@ -297,30 +293,43 @@ const handleMenuAction = async (action, row) => {
 const handleDeleteOption = async () => {
     const optionData = modalStore.confirmModal.data?.optionData;
     if (!optionData || !optionData.optionId) {
-        alert('옵션 ID를 찾을 수 없습니다.');
+        modalStore.confirmModal.openModal({ 
+            text: '옵션 ID를 찾을 수 없습니다.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => { modalStore.confirmModal.closeModal(); }
+        })
         return;
     }
 
     try {
-        // TODO: optionId 확인 필요 (optionData.optionId 또는 optionData.idx)
-        const optionId = optionData.optionId || optionData.idx;
+        const optionId = optionData.optionId;
         
         // 옵션 삭제 API 호출
         await optionStore.deleteOption(optionId);
         
-        alert('옵션이 삭제되었습니다.');
+        modalStore.confirmModal.openModal({ 
+            text: '옵션이 삭제되었습니다.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => {modalStore.confirmModal.closeModal(); }
+        })
         
         // 삭제 성공 후 옵션 리스트 새로고침
         if (activeTab.value) {
-            await optionStore.getAllCategoryOptions(); // 1. 전체 데이터 갱신
+            await optionStore.getOptionListByCategory(); // 1. 전체 데이터 갱신
             await setTab(activeTab.value);             // 2. dataMap 업데이트
         }
         
-        // 확인 모달 닫기
-        modalStore.confirmModal.closeModal();
     } catch (error) {
         console.error('옵션 삭제 실패:', error);
-        alert(error.message || '옵션 삭제 중 오류가 발생했습니다.');
+        modalStore.confirmModal.openModal({ 
+            text: error.message || '옵션 삭제 중 오류가 발생했습니다.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => { modalStore.confirmModal.closeModal(); }
+        })
+        
     }
 };
 
@@ -340,7 +349,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
     if (!isVisible && activeTab.value) {
         // OptionSetting에서 이미 getOptionListByCategoryId를 호출했으므로 dataMap만 업데이트
         // dataMap.value[activeTab.value] = optionStore.optionList || [];
-        await setTab(activeTab.value);
+        await setTab(activeTab.value); // setTab에서 dateMap업데이트됨
         
         // 미리보기에 상품이 선택되어 있으면 리로드 (상품 연결 변경사항 반영)
         if (selectedProduct.value && optionPreviewRef.value) {
