@@ -150,14 +150,14 @@ watch(selectedDoctor, (newId) => {
     }
 });
 
-// 만약 라디오 버튼이 '승인 시 배정'으로 돌아가면 값 초기화
-watch(doctorAssignType, (newType) => {
-    if (newType === 'assign') {
-        selectedDoctor.value = "";
-        basicInput.value.doctorId = "";
-        basicInput.value.doctor = "현장데스크(관리자)";
-    }
-});
+// 만약 라디오 버튼이 '승인 시 배정'으로 돌아가면 값 초기화 -> 백에서 처리 260121
+// watch(doctorAssignType, (newType) => {
+//     if (newType === 'assign') {
+//         selectedDoctor.value = "";
+//         basicInput.value.doctorId = "";
+//         basicInput.value.doctor = "현장데스크(관리자)";
+//     }
+// });
 
 // 항목 추가 함수 (예시)
 const addDetailItem = () => {
@@ -224,11 +224,6 @@ const clickNextBtn = (async() => {
     if(await checkedRequired(params) == false){
         return false;
     }
-
-    // if(doctorAssignType === 'assign'){//승인 시 배정일 경우 doctor는 현장데스크(관리자), doctorId는 없음
-    //     params.doctorId ="";
-    //     params.doctor = "현장데스크(관리자)";
-    // }
 
     let response = '';
 
