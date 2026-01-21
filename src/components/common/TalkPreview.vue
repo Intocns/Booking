@@ -106,7 +106,8 @@ p {margin: 0;}
 .talk_message {
     max-width: 280px; 
     min-width: 280px; 
-    max-height: 450px;
+    max-height: none;
+    // height: auto;
     border-radius: 10px;
     background-color: $--white-color; 
     overflow: hidden;
