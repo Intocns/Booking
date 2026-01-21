@@ -12,6 +12,10 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
+    selectWidth: { // 선택 박스의 너비 설정
+        type: String,
+        default: '100%', // 기본값은 100%
+    },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -125,6 +129,7 @@ onUnmounted(() => {
             class="input-display"
             :class="{ '--active': isDropdownVisible, '--placeholder': !modelValue }"
             @click="toggleDropdown"
+            :style="{ width: selectWidth }"
         >
             <span class="display-text">
                 {{ modelValue || DEFAULT_PLACEHOLDER }}
