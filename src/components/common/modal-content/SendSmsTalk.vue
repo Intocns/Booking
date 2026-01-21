@@ -222,7 +222,11 @@ const hideTooltip = (type) => {
                     </div>
                 </div>
                 <div class="tab-menu__right">
-                    <div class="sms-remaining-count" v-if="smsRemainingCount !== null">
+                    <div 
+                        class="sms-remaining-count sms-remaining-count--clickable" 
+                        v-if="smsRemainingCount !== null"
+                        @click="getSmsPointInfo"
+                    >
                         <span class="body-m">잔여건수: </span>
                         <span class="body-m count-value">{{ smsRemainingCount.toLocaleString() }}건</span>
                     </div>
@@ -430,6 +434,15 @@ const hideTooltip = (type) => {
                 .count-value {
                     color: $primary-700;
                     font-weight: 700;
+                }
+
+                &--clickable {
+                    cursor: pointer;
+                    transition: background-color 0.2s ease;
+
+                    &:hover {
+                        background-color: $primary-100;
+                    }
                 }
             }
         }
