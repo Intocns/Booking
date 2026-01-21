@@ -46,6 +46,7 @@ const selectedTemplateType = ref(1);
 
 // 템플릿 선택 핸들러
 const selectTemplate = (template) => {
+    console.log('템플릿 isdefault 값:', template?.is_default);
     selectedTemplate.value = template;
 };
 
@@ -273,7 +274,7 @@ const hideTooltip = (type) => {
                     </div>
                 </div>
 
-                <div class="tooltip-box">
+                <div class="tooltip-box" v-if="selectedTemplate?.is_default == 1">
                     <ul>
                         <li>해당 알림톡은 인투링크 프로필로 발송됩니다.</li>
                     </ul>
