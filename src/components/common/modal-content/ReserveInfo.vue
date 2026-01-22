@@ -1146,12 +1146,12 @@ const handleViewChart = () => {
         overflow: hidden;
         min-height: 200px; // 최소 2명의 고객 정보가 보이도록 최소 높이 설정 (헤더 40px + 행 2개 72px + 여유공간)
 
-        .info-lists-wrapper {
-            padding: 16px 12px;
+        // .info-lists-wrapper {
+        //     padding: 16px 12px;
 
-            border: 1px solid $gray-200;
-            border-radius: 8px;
-        }
+        //     border: 1px solid $gray-200;
+        //     border-radius: 8px;
+        // }
     }
 
     .customer-info-table-wrapper { 
@@ -1183,7 +1183,7 @@ const handleViewChart = () => {
         }
     }
 
-    :deep(.form-item) {min-height: 36px; height: 36px;}
+    :deep(.form-item) {min-height: 32px; height: 32px;}
     :deep(.form-label) {min-width: 70px;}
     :deep(.form-content) {
         .d-flex {
