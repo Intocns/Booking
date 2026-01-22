@@ -1,6 +1,6 @@
 <!-- 상품등록 > 예약 정보 > 휴무일 설정 on -->
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 // 컴포넌트
 import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
 import ModalDatePicker from '@/components/common/ModalDatePicker.vue';
@@ -11,17 +11,7 @@ import icClear from '@/assets/icons/ic_clear.svg'
 // utils
 // import { formatDate } from 'date-fns';
 import { formatDate,  formatDateSplit } from '@/utils/dateFormatter';
-
-// 요일옵션 데이터 (임시)
-const daysOptions = [
-    { label: '월', value: 'MON' },
-    { label: '화', value: 'TUE' }, 
-    { label: '수', value: 'WED' },
-    { label: '목', value: 'THU' }, 
-    { label: '금', value: 'FRI' }, 
-    { label: '토', value: 'SAT' }, 
-    { label: '일', value: 'SUN' }
-];
+import { DAYS_OPTIONS, PUBLIC_HOLIDAYS_OPTIONS } from '@/utils/schedule';
 
 // 주 옵션 데이터 (임시)
 const weeksOptions = [
@@ -31,28 +21,6 @@ const weeksOptions = [
     { label: '네번째', value: 4 },
     { label: '다섯번째', value: 5 },
 ];
-
-// 공휴일 데이터 (임시)
-const publicHolidayOptions = [
-    { label: '신정', value: 0 },
-
-    { label: '설 연휴', value: 1, apiValue: '설 연휴1' },
-    { label: '설날 당일', value: 2 },
-    { label: '설 연휴', value: 3, apiValue: '설 연휴2' },
-
-    { label: '삼일절', value: 4 },
-    { label: '석가탄신일', value: 5 },
-    { label: '어린이날', value: 6 },
-    { label: '현충일', value: 7 },
-    { label: '광복절', value: 8 },
-    { label: '개천절', value: 9 },
-    { label: '한글날', value: 10 },
-    { label: '크리스마스', value: 11 },
-
-    { label: '추석 연휴', value: 12, apiValue: '추석 연휴1' },
-    { label: '추석 당일', value: 13 },
-    { label: '추석 연휴', value: 14, apiValue: '추석 연휴2' }
-]
 
 /**
  * 상태관리
@@ -110,7 +78,7 @@ const toggleMonthlyDay = (ruleIndex, dayValue) => {
 const handleAllPublicHolidays = (e) => {
     if (e.target.checked) {
         // 모든 공휴일 value를 배열에 담음
-        selectedPublicHolidays.value = publicHolidayOptions.map(h => h.value);
+        selectedPublicHolidays.value = PUBLIC_HOLIDAYS_OPTIONS.map(h => h.value);
     } else {
         selectedPublicHolidays.value = [];
     }
@@ -121,7 +89,7 @@ const handleHolidayOnly = (e) => {
     if (e.target.checked) {
         // 설날 당일, 추석 당일만 필터링 
         const targets = [ 2, 11 ]; // 임시 value값임
-        selectedPublicHolidays.value = publicHolidayOptions
+        selectedPublicHolidays.value = PUBLIC_HOLIDAYS_OPTIONS
             .filter(h => targets.includes(h.value))
             .map(h => h.value);
     } else {
@@ -141,8 +109,8 @@ const togglePublicHoliday = (dayVal) => {
 
 // 4. 체크박스가 라디오처럼 보이게 하기 위한 상태 계산
 const isAllChecked = computed(() => {
-    return publicHolidayOptions.length > 0 && 
-           selectedPublicHolidays.value.length === publicHolidayOptions.length;
+    return PUBLIC_HOLIDAYS_OPTIONS.length > 0 && 
+           selectedPublicHolidays.value.length === PUBLIC_HOLIDAYS_OPTIONS.length;
 });
 
 const isHolidayOnlyChecked = computed(() => {
@@ -184,6 +152,10 @@ const setSaveFormat = () => {
 
     switch(holidayType.value){
         case "WEEKLY" :
+            if(selectedDays.value.length === 0){
+                //매주 휴무일이 하나도 선택되지 않은 경우 빈 객체 반환
+                return {};
+            }
             regularHoliday = {
                 week : [{
                     ...baseHoliday,
@@ -192,6 +164,10 @@ const setSaveFormat = () => {
             };
             break;
         case "BI_WEEKLY" :
+            if(selectedDays.value.length === 0 || !startDate.value){
+                //격주 휴무일이 하나도 선택되지 않았거나 시작일이 지정되지 않은 경우 빈 객체 반환
+                return {};
+            }
             regularHoliday = {
                 week : [{
                     ...baseHoliday,
@@ -201,6 +177,10 @@ const setSaveFormat = () => {
             };
             break;
         case "MONTHLY" :
+            if(monthlyRules.value.length === 0 || monthlyRules.value.every(data => data.selectedDays.length === 0 || data.selectedWeeks.length === 0)){
+                //매달 휴무 규칙이 없거나 모든 규칙에서 요일 또는 주차가 하나도 선택되지 않은 경우 빈 객체 반환
+                return {};
+            }
             regularHoliday = {
                 mon: monthlyRules.value.map(data => ({
                     ...baseHoliday,
@@ -254,209 +234,264 @@ const setSaveFormat = () => {
     const result = {
         ...regularHoliday,
         spDay : spDayResult,
-        hoDay : selectedPublicHolidays.value.map(i => publicHolidayOptions[i].apiValue ?? publicHolidayOptions[i].label ?? '')
+        hoDay : selectedPublicHolidays.value.map(i => PUBLIC_HOLIDAYS_OPTIONS[i].apiValue ?? PUBLIC_HOLIDAYS_OPTIONS[i].label ?? '')
     };
 
     return result;
 }
 
-defineExpose({ setSaveFormat })//부모 화면에서 사용하기 위해서 선언
+const initFormData = (impos) => {
+    if (!impos) return;
+
+    // 1. 정기 휴무 세팅
+    if (impos.week && impos.week.length > 0) {
+        const weekData = impos.week[0];
+        holidayType.value = weekData.repetitionType; // WEEKLY or BI_WEEKLY
+        selectedDays.value = weekData.weekdays;
+        startDate.value = new Date(weekData.startDate) || null;
+    } else if (impos.mon && impos.mon.length > 0) {
+        holidayType.value = 'MONTHLY';
+        monthlyRules.value = impos.mon.map(m => ({
+            selectedWeeks: m.weekNumbers,
+            selectedDays: m.weekdays
+        }));
+    }
+
+    // 2. 공휴일 세팅
+    if (impos.hoDay && Array.isArray(impos.hoDay)) {
+        selectedPublicHolidays.value = PUBLIC_HOLIDAYS_OPTIONS
+            .filter(opt => {
+                // apiValue가 있으면 apiValue로 비교, 없으면 label로 비교
+                const targetValue = opt.apiValue || opt.label;
+                return impos.hoDay.includes(targetValue);
+            })
+            .map(opt => opt.value);
+    }
+
+    // 3. 그외 휴무일(spDay) 세팅
+    if (impos.spDay) {
+        customHolidays.value = impos.spDay.filter(d => d.holidayType === "CUSTOM").map(d => {
+            let dateStr = d.startDate;
+            let textStr = d.startDate;
+            
+            if (d.repetitionType === 'MONTHLY') {
+                textStr = `매달 ${d.repetitionDay}일`;
+                dateStr = `2026-01-${d.repetitionDay}`; // 더미 날짜
+            } else if (d.repetitionType === 'YEARLY') {
+                textStr = `매년 ${d.repetitionMonth}월 ${d.repetitionDay}일`;
+                dateStr = `2026-${d.repetitionMonth}-${d.repetitionDay}`;
+            }
+
+            return {
+                type: d.repetitionType,
+                date: dateStr,
+                text: textStr
+            };
+        });
+    }
+};
+
+defineExpose({ setSaveFormat, initFormData })//부모 화면에서 사용하기 위해서 선언
 </script>
 
 <template>
-    <!-- 정기 휴무 -->
-    <div class="holiday-form">
-        <div class="holiday-form__option">
-            <p class="title-s">정기 휴무</p>
-            <!-- 정기 휴무 옵션 선택 (매주/격주/매달) -->
-            <div class="d-flex gap-16">
-                <label class="radio">
-                    <input type="radio" v-model="holidayType" value="WEEKLY" />
-                    <span class="circle"></span>
-                    <span class="label">매주</span>
-                </label>
-                <label class="radio">
-                    <input type="radio" v-model="holidayType" value="BI_WEEKLY" />
-                    <span class="circle"></span>
-                    <span class="label">격주</span>
-                </label>
-                <label class="radio">
-                    <input type="radio" v-model="holidayType" value="MONTHLY" />
-                    <span class="circle"></span>
-                    <span class="label">매달</span>
-                </label>
-            </div>
-        </div>
-
-        <!-- 옵션: 매주  -->
-        <div v-if="holidayType == 'WEEKLY'" class="holiday-form__option-list">
-            <!-- 요일 버튼 -->
-            <div class="day-button-group d-flex gap-4">
-                <button 
-                    v-for="day in daysOptions" 
-                    :key="day.value" 
-                    type="button" 
-                    class="btn-day" 
-                    :class="{active: selectedDays.includes(day.value)}" 
-                    @click="toggleDay(day.value)"
-                >
-                    {{ day.label }}
-                </button>
-            </div>
-        </div>
-
-        <!-- 옵션: 격주 -->
-        <div v-if="holidayType == 'BI_WEEKLY'" class="holiday-form__option-list">
-            <div>
-                <div class="d-flex align-center gap-8">
-                    <span class="title-s">시작일</span>
-                    <CustomDatePicker v-model="startDate" :range="false" />
-                </div>
-                <span class="caption">※ 시작일을 지정해 주세요.</span>
-            </div>
-
-            <!-- 시작일 지정 후 요일 선택 -->
-            <!-- 요일 버튼 -->
-            <div 
-                class="day-button-group d-flex gap-4"
-                :class="{ 'is-disabled': isDaySelectionDisabled }"
-            >
-                <button 
-                    v-for="day in daysOptions" 
-                    :key="day.value" 
-                    type="button" 
-                    class="btn-day" 
-                    :disabled="isDaySelectionDisabled"
-                    :class="{ active: selectedDays.includes(day.value) }" 
-                    @click="toggleDay(day.value)"
-                >
-                    {{ day.label }}
-                </button>
-            </div>
-        </div>
-
-        <!-- 옵션: 매달 -->
-        <div v-if="holidayType == 'MONTHLY'" class="holiday-form__option-list">
-            <div 
-                v-for="(rule, rIdx) in monthlyRules" 
-                :key="rIdx" 
-                class="d-flex align-center gap-16 mb-8"
-            >
+    <div class="d-flex flex-col gap-16">
+        <!-- 정기 휴무 -->
+        <div class="holiday-form">
+            <div class="holiday-form__option">
+                <p class="title-s">정기 휴무</p>
+                <!-- 정기 휴무 옵션 선택 (매주/격주/매달) -->
                 <div class="d-flex gap-16">
-                    <label v-for="week in weeksOptions" :key="week.value" class="checkbox">
-                        <input 
-                            type="checkbox" 
-                            :value="week.value" 
-                            v-model="rule.selectedWeeks" 
-                        />
-                        <span class="box"></span>
-                        <span class="label">{{ week.label }}</span>
+                    <label class="radio">
+                        <input type="radio" v-model="holidayType" value="WEEKLY" />
+                        <span class="circle"></span>
+                        <span class="label">매주</span>
+                    </label>
+                    <label class="radio">
+                        <input type="radio" v-model="holidayType" value="BI_WEEKLY" />
+                        <span class="circle"></span>
+                        <span class="label">격주</span>
+                    </label>
+                    <label class="radio">
+                        <input type="radio" v-model="holidayType" value="MONTHLY" />
+                        <span class="circle"></span>
+                        <span class="label">매달</span>
                     </label>
                 </div>
-
+            </div>
+    
+            <!-- 옵션: 매주  -->
+            <div v-if="holidayType == 'WEEKLY'" class="holiday-form__option-list">
+                <!-- 요일 버튼 -->
                 <div class="day-button-group d-flex gap-4">
                     <button 
-                        v-for="day in daysOptions" 
+                        v-for="day in DAYS_OPTIONS" 
                         :key="day.value" 
                         type="button" 
                         class="btn-day" 
-                        :class="{ active: rule.selectedDays.includes(day.value) }" 
-                        @click="toggleMonthlyDay(rIdx, day.value)"
+                        :class="{active: selectedDays.includes(day.value)}" 
+                        @click="toggleDay(day.value)"
                     >
                         {{ day.label }}
                     </button>
                 </div>
-
-                <div class="d-flex gap-8">
+            </div>
+    
+            <!-- 옵션: 격주 -->
+            <div v-if="holidayType == 'BI_WEEKLY'" class="holiday-form__option-list">
+                <div>
+                    <div class="d-flex align-center gap-8">
+                        <span class="title-s">시작일</span>
+                        <div style="width: 240px;">
+                            <CustomDatePicker v-model="startDate" :range="false" />
+                        </div>
+                    </div>
+                    <span class="caption">※ 시작일을 지정해 주세요.</span>
+                </div>
+    
+                <!-- 시작일 지정 후 요일 선택 -->
+                <!-- 요일 버튼 -->
+                <div 
+                    class="day-button-group d-flex gap-4"
+                    :class="{ 'is-disabled': isDaySelectionDisabled }"
+                >
                     <button 
-                        v-if="rIdx === 0"
-                        type="button"
-                        class="btn btn--size-24 btn--black-outline" 
-                        @click="addMonthlyRule"
+                        v-for="day in DAYS_OPTIONS" 
+                        :key="day.value" 
+                        type="button" 
+                        class="btn-day" 
+                        :disabled="isDaySelectionDisabled"
+                        :class="{ active: selectedDays.includes(day.value) }" 
+                        @click="toggleDay(day.value)"
                     >
-                        <img :src="icPlus" alt="아이콘">규칙 추가
+                        {{ day.label }}
                     </button>
-                    
+                </div>
+            </div>
+    
+            <!-- 옵션: 매달 -->
+            <div v-if="holidayType == 'MONTHLY'" class="holiday-form__option-list">
+                <div 
+                    v-for="(rule, rIdx) in monthlyRules" 
+                    :key="rIdx" 
+                    class="d-flex align-center gap-16 mb-8"
+                >
+                    <div class="d-flex gap-16">
+                        <label v-for="week in weeksOptions" :key="week.value" class="checkbox">
+                            <input 
+                                type="checkbox" 
+                                :value="week.value" 
+                                v-model="rule.selectedWeeks" 
+                            />
+                            <span class="box"></span>
+                            <span class="label">{{ week.label }}</span>
+                        </label>
+                    </div>
+    
+                    <div class="day-button-group d-flex gap-4">
+                        <button 
+                            v-for="day in DAYS_OPTIONS" 
+                            :key="day.value" 
+                            type="button" 
+                            class="btn-day" 
+                            :class="{ active: rule.selectedDays.includes(day.value) }" 
+                            @click="toggleMonthlyDay(rIdx, day.value)"
+                        >
+                            {{ day.label }}
+                        </button>
+                    </div>
+    
+                    <div class="d-flex gap-8">
+                        <button 
+                            v-if="rIdx === 0"
+                            type="button"
+                            class="btn btn--size-24 btn--black-outline" 
+                            @click="addMonthlyRule"
+                        >
+                            <img :src="icPlus" alt="아이콘">규칙 추가
+                        </button>
+                        
+                        <button 
+                            v-else
+                            type="button"
+                            class="btn btn--size-24 btn--black-outline"
+                            @click="removeMonthlyRule(rIdx)"
+                        >
+                            <img :src="icDel" width="14">삭제
+                        </button>
+                    </div>
+                </div>
+            </div>
+    
+        </div>
+    
+        <!-- 공휴일 휴무 -->
+        <div class="holiday-form">
+            <div class="holiday-form__option">
+                <div class="title-s">공휴일 휴무</div>
+                
+                <div class="d-flex gap-16 mb-8">
+                    <label class="checkbox">
+                        <input 
+                            type="checkbox" 
+                            :checked="isAllChecked" 
+                            @change="handleAllPublicHolidays" 
+                        />
+                        <span class="box"></span>
+                        <span class="label">전체 휴무</span>
+                    </label>
+    
+                    <label class="checkbox">
+                        <input 
+                            type="checkbox" 
+                            :checked="isHolidayOnlyChecked" 
+                            @change="handleHolidayOnly" 
+                        />
+                        <span class="box"></span>
+                        <span class="label">설, 추석 당일만 휴무</span>
+                    </label>
+                </div> 
+    
+                <div class="d-flex align-center flex-wrap gap-4">
                     <button 
-                        v-else
+                        v-for="day in PUBLIC_HOLIDAYS_OPTIONS" 
+                        :key="day.value"
                         type="button"
-                        class="btn btn--size-24 btn--black-outline"
-                        @click="removeMonthlyRule(rIdx)"
+                        class="btn-day btn-day--auto"
+                        :class="{ active: selectedPublicHolidays.includes(day.value) }"
+                        @click="togglePublicHoliday(day.value)"
                     >
-                        <img :src="icDel" width="14">삭제
+                        {{ day.label }}
                     </button>
                 </div>
             </div>
         </div>
-
-    </div>
-
-    <!-- 공휴일 휴무 -->
-    <div class="holiday-form">
-        <div class="holiday-form__option">
-            <div class="title-s">공휴일 휴무</div>
-            
-            <div class="d-flex gap-16 mb-8">
-                <label class="checkbox">
-                    <input 
-                        type="checkbox" 
-                        :checked="isAllChecked" 
-                        @change="handleAllPublicHolidays" 
-                    />
-                    <span class="box"></span>
-                    <span class="label">전체 휴무</span>
-                </label>
-
-                <label class="checkbox">
-                    <input 
-                        type="checkbox" 
-                        :checked="isHolidayOnlyChecked" 
-                        @change="handleHolidayOnly" 
-                    />
-                    <span class="box"></span>
-                    <span class="label">설, 추석 당일만 휴무</span>
-                </label>
-            </div> 
-
-            <div class="d-flex align-center flex-wrap gap-4">
-                <button 
-                    v-for="day in publicHolidayOptions" 
-                    :key="day.value"
-                    type="button"
-                    class="btn-day btn-day--auto"
-                    :class="{ active: selectedPublicHolidays.includes(day.value) }"
-                    @click="togglePublicHoliday(day.value)"
-                >
-                    {{ day.label }}
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 날짜로 휴무일 지정 -->
-    <div class="holiday-form">
-        <div class="holiday-form__option">
-            <div class="d-flex align-center gap-8 mb-8">
-                <p class="title-s">날짜로 휴무일 지정</p>
-                <button 
-                    type="button" 
-                    class="btn btn--size-24 btn--black-outline"
-                    @click="isModalOpen = true"
-                >
-                    <img :src="icPlus" alt="아이콘">항목 추가
-                </button>
-            </div>
-
-            <div v-if="customHolidays.length > 0" class="d-flex flex-wrap gap-8">
-                <div 
-                    v-for="(date, idx) in customHolidays" 
-                    :key="idx" 
-                    class="btn-day active selected-date-tag"
-                >
-                    <span>{{ date.text }}</span>
-                    <button type="button" @click="removeCustomHoliday(idx)">
-                        <img :src="icClear" width="16" alt="삭제">
+    
+        <!-- 날짜로 휴무일 지정 -->
+        <div class="holiday-form">
+            <div class="holiday-form__option">
+                <div class="d-flex align-center gap-8 mb-8">
+                    <p class="title-s">날짜로 휴무일 지정</p>
+                    <button 
+                        type="button" 
+                        class="btn btn--size-24 btn--black-outline"
+                        @click="isModalOpen = true"
+                    >
+                        <img :src="icPlus" alt="아이콘">항목 추가
                     </button>
+                </div>
+    
+                <div v-if="customHolidays.length > 0" class="d-flex flex-wrap gap-8">
+                    <div 
+                        v-for="(date, idx) in customHolidays" 
+                        :key="idx" 
+                        class="btn-day active selected-date-tag"
+                    >
+                        <span>{{ date.text }}</span>
+                        <button type="button" @click="removeCustomHoliday(idx)">
+                            <img :src="icClear" width="16" alt="삭제">
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
