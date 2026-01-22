@@ -2,10 +2,6 @@
 <script setup>
 import icBtnClose from '@/assets/icons/ic_btn_close_b.svg'
 
-defineOptions({
-    inheritAttrs: false
-})
-
 const props = defineProps({
     title: String,
     smallTitle: String,
@@ -24,6 +20,7 @@ const props = defineProps({
 
 // 닫기 메서드는 Prop으로 받은 객체의 closeModal을 호출하도록 
 const close = () => {
+    console.log('close')
     // Prop으로 전달받은 스토어 상태 객체의 closeModal 메서드 호출
     props.modalState.closeModal();
 };
@@ -32,7 +29,7 @@ const close = () => {
 
 <template>
     <teleport to="#app">
-        <div class="modal-backdrop" @click="close" v-bind="$attrs">
+        <div class="modal-backdrop" @click="close">
             <div class="modal-container simple"  @click.stop :style="{width: modalWidth, height: modalHeight}">
                 <!-- 모달 헤더 -->
                 <div class="modal-header"></div>
