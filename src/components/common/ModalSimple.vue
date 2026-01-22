@@ -20,7 +20,6 @@ const props = defineProps({
 
 // 닫기 메서드는 Prop으로 받은 객체의 closeModal을 호출하도록 
 const close = () => {
-    console.log('close')
     // Prop으로 전달받은 스토어 상태 객체의 closeModal 메서드 호출
     props.modalState.closeModal();
 };

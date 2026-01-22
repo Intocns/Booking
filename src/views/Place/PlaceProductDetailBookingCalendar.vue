@@ -331,7 +331,7 @@ const addTimeSetting = () => {
     times.value.push({ startTime: "", endTime: "" });
 }
 
-// 진료가능 동물 수, 운영시간 변경 저장
+// 진료가능 동물 수, 운영시간 변경 저장 (임시 운영 데이터)
 const handleSaveOperationRule = async () => {
     if (!selectedAnimalCount.value || selectedAnimalCount.value <= 0) {
         alert("진료 가능 동물 수를 선택해주세요.");
@@ -373,6 +373,7 @@ const handleSaveOperationRule = async () => {
         };
         
         await productStore.getProductSchedule(props.savedItemId, fetchParams);
+        await productStore.getItemReservationInfo(props.savedItemId)
     }
 
     modalStore.setOperationRuleModal.closeModal();

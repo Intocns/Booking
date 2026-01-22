@@ -60,6 +60,7 @@ export const useModalStore = defineStore("modalStore", () => {
     const holidaySettingModal = createModalState() // 상품 수정 > 예약 정보 > 휴무일 수정
     const setDateSettingModal = createModalState() // 상품 수정 > 예약 정보 > 캘린더 운영/미운영 블록 클릭시
     const setOperationRuleModal = createModalState() // 상품 수정 > 예약 정보 > 운영 설정 모달 > 진료 가능 동물 수, 운영시간 변경하기
+    const setTimeSettingModal = createModalState() // 상품 수정 > 예약오픈,예약 노출, 예약미노출 시작일 시간 설정 모달
 
     return {
         smsModal,
@@ -89,5 +90,6 @@ export const useModalStore = defineStore("modalStore", () => {
         holidaySettingModal,
         setDateSettingModal,
         setOperationRuleModal,
+        setTimeSettingModal,
     }
 })

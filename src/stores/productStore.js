@@ -13,6 +13,7 @@ export const useProductStore = defineStore("product", () => {
     const productScheduleDataList = ref([]); // 간단예약 관리 > 상품별 운영시간 데이터
     const productWeekScheduleDataList = ref([]); // 상품 수정 > 상품 운영시간 데이터 (캘랜더)
     const productScheduleInfo = ref([]);
+    const temporarySchedules = ref([]); // 임시운영데이터만 따로 저장
 
     // 상품 리스트 불러오기
     async function getProductList() {
@@ -629,7 +630,16 @@ export const useProductStore = defineStore("product", () => {
             const response = await api.get(`/api/${cocode}/item/modify/${itemId}/sch`); 
 
             if(response.data.status_code <= 300) {
-                productScheduleInfo.value = response.data.data;
+                const rawData = response.data.data;
+                productScheduleInfo.value = rawData;
+
+                if (rawData && rawData.pos) {
+                    temporarySchedules.value = rawData.pos.filter(
+                        (item) => item.isBasicSchedule === false
+                    );
+                } else {
+                    temporarySchedules.value = [];
+                }
             }
             // console.log(response)
         } catch {
@@ -646,6 +656,7 @@ export const useProductStore = defineStore("product", () => {
         productScheduleDataList, // 간단예약 관리 > 상품별 운영시간 데이터
         productWeekScheduleDataList, // 상품 수정 > 상품 운영시간 데이터
         productScheduleInfo, //상품 수정 > 예약 정보 데이터
+        temporarySchedules, // 임시운영 데이터만
         // 
         getProductList, // 상품 리스트 불러오기
         setItemOrder, // 상품 순서 변경

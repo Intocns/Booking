@@ -7,30 +7,24 @@ import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
 import OperatingTimeForm from './OperatingTimeForm.vue';
 import Modal from '@/components/common/Modal.vue';
 import HolidayForm from './HolidayForm.vue';
+import ModalSimple from '@/components/common/ModalSimple.vue';
+import TimeSelect from '@/components/common/TimeSelect.vue';
 // 아이콘
 import icSetting from '@/assets/icons/ic_setting.svg'
 import icEdit from '@/assets/icons/ic_edit.svg'
 import icPlus from '@/assets/icons/ic_plus_black.svg';
 import icDel from '@/assets/icons/ic_del.svg';
 
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import { format } from "date-fns";
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
 //util
+import { formatDateToDay } from '@/utils/dateFormatter';
 import { setOperatingObject } from '@/utils/product';
-
-const modalStore = useModalStore();
-const productStore = useProductStore();
-
-// 상태관리
-const selectedAnimalCount = ref(null); // 예약 가능 동물 수 선택
-const isHolidayEnabled = ref(false); // 휴무일 설정 여부 (Toggle)
-const scheduleMode = ref('regular'); // 운영 일정 : 'regular', 'event'
-const applyMode = ref('all'); // 적용 기간 : 'all', 'period'
-
-const isDatePickerModalOpen = ref(false);
-const settingType = ref(''); // 현재 어떤 설정을 하고 있는지 저장
+import { DAYS_OPTIONS, PUBLIC_HOLIDAYS_OPTIONS } from '@/utils/schedule';
 
 // props
 const props = defineProps({
@@ -42,6 +36,10 @@ const props = defineProps({
     previewNotice: { type: String }
 })
 
+const router = useRouter();
+// 스토어
+const modalStore = useModalStore();
+const productStore = useProductStore();
 
 // 설정 데이터 생성 함수
 const createDefaultConfig = () => ({
@@ -55,36 +53,58 @@ const createDefaultConfig = () => ({
     dailyGroups: [{ selectedDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], times: [{ startTime: '', endTime: '' }] }]
 });
 
-// [데이터] 정기 운영용
-const regularConfig = ref(createDefaultConfig());
+// 상태관리
+const selectedAnimalCount = ref(null); // 예약 가능 동물 수 선택
+const isHolidayEnabled = ref(false); // 휴무일 설정 여부 (Toggle)
+const scheduleMode = ref('regular'); // 운영 일정 : 'regular', 'event'
+const applyMode = ref('all'); // 적용 기간 : 'all', 'period'
+const eventDates = ref([[]]); // 이벤트 기간/설정용
 
-// [데이터] 이벤트 기간/설정용
-const eventDates = ref([[]]);
-const periodConfigs = ref([createDefaultConfig()]);
-// 운영 설정 데이터 (하나로 관리)
-const configs = ref([createDefaultConfig()]);
+const configs = ref([createDefaultConfig()]); // 운영 설정 데이터 (하나로 관리)
+const temporarySchedules = computed(() => productStore.temporarySchedules); //임시운영 데이터 스토어 직접참조
+const holidayTexts = ref({
+    regular: '',
+    public: '',
+    custom: ''
+});
+const holidayFormRef = ref(null) //저장 시 api에 맞춰 request형식으로 format하는 함수를 호출
 
+const isDatePickerModalOpen = ref(false); //
+const isTimeModalOpen = ref(false); // 시간 모달(ModalSimple) 상태
+const settingType = ref(''); // 현재 어떤 설정을 하고 있는지 저장
 
+// 기간 추가 
 const addEventPeriod = () => {
-    eventDates.value.push({ start: '', end: '' });
-    periodConfigs.value.push(createDefaultConfig());
+    eventDates.value.push([]);
+    configs.value.push(createDefaultConfig());
 };
-
+// 기간 삭제
 const removeEventPeriod = (idx) => {
     eventDates.value.splice(idx, 1);
-    periodConfigs.value.splice(idx, 1);
+    configs.value.splice(idx, 1);
 };
 
-// 예약 가능 동물 수 (임시 1~10)
+// 예약 가능 동물 수 옵션 (임시 1~10)
 const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
 
 
-// 1. 모달 타이틀 동적 계산
+/**
+ * 예약 오픈, 노출, 미노출 일 설정 관련
+ */
+
+// 모달에서 선택된 날짜들을 보관 (초기화 방지용)
+const selectionData = reactive({
+    OPEN_DATE: { date: null, time: '' },
+    EXPOSURE_START: { date: null, time: '' },
+    EXPOSURE_END: { date: null, time: '' }
+});
+
+//  모달 타이틀 동적 계산
 const datePickerModalTitle = computed(() => {
     switch (settingType.value) {
-        case 'OPEN_DATE': return '예약 오픈일을 선택해 주세요';
-        case 'EXPOSURE_START': return '노출 시작일을 선택해 주세요';
-        case 'EXPOSURE_END': return '미노출 시작일을 선택해 주세요';
+        case 'OPEN_DATE': return '예약 오픈일시를 선택해 주세요';
+        case 'EXPOSURE_START': return '노출 시작일시를 선택해 주세요';
+        case 'EXPOSURE_END': return '미노출 시작일시를 선택해 주세요';
         default: return '날짜를 선택해 주세요';
     }
 });
@@ -95,43 +115,137 @@ const openModal = (type) => {
     isDatePickerModalOpen.value = true;
 };
 
-// 이벤트 핸들러
+// 날짜 모달에서 '적용' 클릭 시 -> 시간 모달로 전환
+const onAddHoliday = (selectedData) => {
+    if (settingType.value) {
+        // 날짜 보관
+        selectionData[settingType.value].date = selectedData.date;
+    }
+    isDatePickerModalOpen.value = false;
+    isTimeModalOpen.value = true;
+};
+
+// 시간 모달 내부에서 날짜 박스 클릭 시 -> 다시 날짜 모달로
+const goToDatePicker = () => {
+    isTimeModalOpen.value = false;       // 시간 잠시 닫고
+    isDatePickerModalOpen.value = true;  // 날짜 다시 열기 (기존 settingType 유지됨)
+};
+
+// 모달데이터 초기화 
+const resetSelection = (type) => {
+    if (!type) return;
+    selectionData[type].date = null;
+    selectionData[type].time = ''; // 또는 기본값 '09:00'
+};
+
 const onOpenDateSetting = () => openModal('OPEN_DATE'); // 예약 오픈일 설정하기
 const onExposureStartSetting = () => openModal('EXPOSURE_START'); // 노출 시작일 설정하기
 const onExposureEndSetting = () => openModal('EXPOSURE_END'); // 미노출 시작일 설정하기
 
-// 모달에서 '적용' 버튼 눌렀을 때 처리
-const onAddHoliday = (selectedData) => {
-    console.log(`${settingType.value} 설정됨:`, selectedData);
-    // 여기서 settingType에 따라 각각 다른 API 호출이나 상태 변경 처리
-    isDatePickerModalOpen.value = false;
+// 예약오픈, 노출, 미노출일 취소 버튼 클릭 시
+const closeTimeModal = () => {
+    resetSelection(settingType.value); 
+    isTimeModalOpen.value = false;
 };
 
+// selectionData에 값이 있으면(사용자가 수정했으면) 그 값을 쓰고, 없으면 기존 store 값 사용
+const getFormattedDateTime = (type) => {
+    const data = selectionData[type];
+    if (data && data.date && data.time) {
+        const datePart = format(data.date, 'yyyy-MM-dd');
+        return `${datePart}T${data.time}:00+09:00`;
+    }
+    return null;
+};
+
+// 예약오픈, 노출, 미노출일 저장 버튼 클릭 시 
+const saveTimeSetting = () => {
+    const type = settingType.value; // 현재 설정 중인 타입 (OPEN_DATE 등)
+    const currentData = selectionData[type];
+    
+    if (!currentData.date || !currentData.time) {
+        alert('날짜와 시간을 모두 설정해 주세요.');
+        return;
+    }
+
+    updateItemSchedule('operating');
+};
+
+/**
+ * 저장 로직
+ */
 // 상품 수정 >> 일정 설정 >> 예약 정보 저장(예약일정)
 const updateItemSchedule = (async(type) => {
-    const reserveCnt = selectedAnimalCount;
-    const pos = setScheduleForSave();
-    let impos = null;
+    const reserveCnt = selectedAnimalCount.value; // 진료가능 동물 수
 
-    if(type == 'operating'){
-        impos = HolidayForm; //수정화면 오픈 시 조회햇던 holiday 그대로 가져올 것
-    }else{
+    // 1. 현재 화면의 정기/이벤트 일정
+    const currentPos = setScheduleForSave();
+    // 2. 스토어에 보관 중인 임시 운영 일정 
+    const tempPos = (productStore.temporarySchedules || []).map(temp => {
+        return {
+            ...temp,
+            time: bitToTimeRanges(temp.hourBit),
+            weekdays: [format(new Date(temp.startDate), 'eee').toLowerCase()],
+        };
+    });
+    // 두 배열을 하나로 합침
+    const pos = [...currentPos, ...tempPos];
+
+    const proSchInfo = productStore.productScheduleInfo || {};
+
+    // 휴무일 데이터 
+    let impos = null;
+    if(type == 'operating'){ // 수정화면 저장
+        //수정화면 오픈 시 조회햇던 holiday 그대로 가져올 것
+        impos = proSchInfo.impos;
+    }else{ // holiday
         impos = isHolidayEnabled.value ? holidayFormRef.value.setSaveFormat() : null;
     }
 
-    const params = {
-        reserveCnt : reserveCnt.value,
-        pos : pos,
-        impos : impos
-    }
+    // 예약 오픈일, 노출시작일, 미노출 시작일 데이터
+    // const newOpenDate = getFormattedDateTime('OPEN_DATE'); // 예약 오픈일 설정 미사용
+    const newExpStart = getFormattedDateTime('EXPOSURE_START');
+    const newExpEnd = getFormattedDateTime('EXPOSURE_END');
 
-    console.log(params);
-    return false;
+    const params = {
+        reserveCnt: reserveCnt,
+        pos: pos,
+        impos: impos,
+        impStartDateTime: proSchInfo.impStartDateTime || null,
+        impEndDateTime: proSchInfo.impEndDateTime || null,
+        bookableSettingJson: proSchInfo.bookableSettingJson ? { ...proSchInfo.bookableSettingJson } : null,
+    };
+
+    // 사용자가 모달을 통해 새로 설정한 값이 있다면 덮어쓰기
+    if (newExpStart) params.impStartDateTime = newExpStart;
+    if (newExpEnd) params.impEndDateTime = newExpEnd;
+     // 예약 오픈일 설정 미사용
+    // if (newOpenDate) {
+    //     params.bookableSettingJson = {
+    //         ...productStore.productScheduleInfo.bookableSettingJson,
+    //         isUseOpen: true,
+    //         openDateTime: newOpenDate,
+    //     };
+    // }
+
+    // console.log(params);
+    // return false;
 
     const response = await productStore.updateItemReservationInfo(props.savedItemId, params);
 
     if(response.status_code <= 300){
         alert('저장이 완료되었습니다');
+
+        await initDataMapping(); 
+        // TODO: 캘랜더 데이터 업데이트
+        const currentStart = DayPilot.Date.today().firstDayOfWeek(1); 
+        await productStore.getProductSchedule(props.savedItemId, {
+            startDate: currentStart.toString("yyyy-MM-dd"),
+            endDate: currentStart.addDays(6).toString("yyyy-MM-dd"),
+        });
+    
+        isTimeModalOpen.value = false;
+        modalStore.holidaySettingModal.closeModal();
     }else{
         alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
     }
@@ -151,6 +265,7 @@ const setScheduleForSave = () => {
     });
 }
 
+// hourBit를 변환
 const bitToTimeRanges = (bitString) => {
     // 비트가 없거나 전부 0인 경우
     if (!bitString || !bitString.includes('1')) {
@@ -192,12 +307,20 @@ const bitToTimeRanges = (bitString) => {
     return ranges.length > 0 ? ranges : [{ startTime: '', endTime: '' }];
 };
 
-// pos 배열을 받아 UI 설정 객체(config)로 변환하는 함수
+// 운영일정,운영시간 데이터를 ui용 객체(config)로 변환
 const mapPosToConfig = (posArray) => {
     const config = createDefaultConfig();
     if (!posArray || posArray.length === 0) return config;
 
-    // 1. 평일/주말/토/일 아이템 정교하게 찾기
+    // 데이터가 1개이면서 7일 전체이거나, 혹은 여러 개라도 첫 번째 객체가 7일 전체인 경우
+    const allDayItem = posArray.find(p => p.weekdays.length === 7);
+
+    if (allDayItem) {
+        config.operatingMode = 'all';
+        config.allDaysTime = bitToTimeRanges(allDayItem.hourBit);
+        return config; // 
+    }
+
     // 평일: mon~fri 중 하나라도 포함되어 있고, sat/sun은 포함하지 않음
     const weekdayItem = posArray.find(p => 
         p.weekdays.some(day => ['mon', 'tue', 'wed', 'thu', 'fri'].includes(day)) &&
@@ -238,55 +361,173 @@ const mapPosToConfig = (posArray) => {
             times: bitToTimeRanges(p.hourBit)
         }));
     }
-    // console.log('--- 매핑 결과 확인 ---');
-    // console.log('Mode:', config.operatingMode);
-    // console.log('Value:', JSON.stringify(config));
     return config;
 };
 
-onMounted(async() => {
-    //예약 정보 조회
-    await productStore.getItemReservationInfo(props.savedItemId); // productScheduleInfo
-    const data = productStore.productScheduleInfo;
-    if (!data) return;
+// 임시운영 데이터를 ui용 객체로 변환
+// 시작일과 종료일을 비교하여 포맷팅하는 헬퍼 함수
+const formatTempDate = (start, end) => {
+    const s = formatDateToDay(start); // 이미 만드신 util 사용
+    const e = formatDateToDay(end);
+    return s === e ? s : `${s} ~ ${e}`;
+};
 
-    // 2. 예약 가능 동물 수 매핑
-    selectedAnimalCount.value = data.reserveCnt;
-
-    // 3. 휴무일 설정 여부 매핑
-    isHolidayEnabled.value = !!(data.impos && (data.impos.week || data.impos.spDay || data.impos.hoDay));
-
-    // 4. 운영 일정 매핑 (pos 데이터 분석)
-    const pos = data.pos || [];
-
-    const hasEventDate = pos.some(item => item.sdate && item.edate);
-
-    if (hasEventDate) {
-        scheduleMode.value = 'event';
-        const periods = [...new Set(pos.map(p => `${p.sdate}~${p.edate}`))];
-        applyMode.value = periods.length > 1 ? 'period' : 'all';
-        eventDates.value = periods.map(p => p.split('~'));
+// UI에 표시할 임시 운영 리스트 가공
+const formattedTempSchedules = computed(() => {
+    return temporarySchedules.value.map(temp => {
+        const timeRanges = bitToTimeRanges(temp.hourBit);
         
-        // 새 배열로 할당
-        const newConfigs = periods.map(period => {
-            const periodPos = pos.filter(p => `${p.sdate}~${p.edate}` === period);
-            // console.log('---hasEventDate 매핑---');
-            // console.log(mapPosToConfig(periodPos));
-            return mapPosToConfig(periodPos);
-        });
-        configs.value = newConfigs;
-    } else {
-        scheduleMode.value = 'regular';
-        // console.log('---regular 매핑---');
-        // console.log(mapPosToConfig(pos));
+        const timeText = timeRanges
+            .map(range => (range.startTime && range.endTime) 
+                ? `${range.startTime} - ${range.endTime}` 
+                : '시간 미설정')
+            .join(', ');
 
-        // 새 배열로 할당
-        configs.value = [mapPosToConfig(pos)];
+        return {
+            id: temp.id, // 수정 시 참조할 ID
+            text: `${formatTempDate(temp.startDate, temp.endDate)} ${timeText} / 30분당 ${productStore.productScheduleInfo.reserveCnt}마리`,
+            raw: temp // 수정 시 활용할 원본 데이터
+        };
+    });
+});
+
+// 휴무일 데이터를 ui용 객체(config)로 변환
+const mapImposConfig = (impos) => {
+    if (!impos) return;
+
+    // 1. 정기 휴무일 처리
+    const regularData = (impos.week && impos.week.length > 0) ? impos.week[0] : null;
+    let regText = '';
+    
+    if (regularData?.weekdays && regularData.weekdays.length > 0) {
+        // daysOptions에서 라벨 매핑 (daysOptions는 상단에 정의되어 있어야 함)
+        const dayLabels = regularData.weekdays
+            .map(d => DAYS_OPTIONS.find(opt => opt.value === d)?.label)
+            .filter(l => l)
+            .join(', ');
+
+        const typeMap = {
+            'WEEKLY': '매주',
+            'BI_WEEKLY': '격주',
+            'MONTHLY': '매달'
+        };
+        regText = `${typeMap[regularData.repetitionType] || ''} ${dayLabels}`;
     }
 
+    // 2. 법정 공휴일 처리
+    const hoDay = impos.hoDay || [];
+    let pubText = '';
 
-    //상품 기본 정보 조회 >> 예약 오픈, 노출/미노출 설정
-    await productStore.getItemDetailInfo(props.savedItemId); // itemDetailInfo
+    if (hoDay.length > 0) {
+        PUBLIC_HOLIDAYS_OPTIONS.forEach(opt => {
+            if (hoDay.includes(opt.apiValue || opt.label)) {
+                pubText += (pubText ? ', ' : '') + opt.label;
+            }
+        });
+        pubText = hoDay.join(', ');
+    }
+
+    // 3. 그외 휴무일(spDay) 처리
+    const spDay = impos.spDay || [];
+    let cusText = '';
+    if (spDay.length > 0) {
+        cusText = spDay
+        .filter(d => d.holidayType === "CUSTOM")
+        .map(d => {
+            if (d.repetitionType === 'DAILY') return d.startDate;
+            if (d.repetitionType === 'MONTHLY') return `매달 ${d.repetitionDay}일`;
+            if (d.repetitionType === 'YEARLY') return `매년 ${d.repetitionMonth}월 ${d.repetitionDay}일`;
+            return '';
+        }).join(', ');
+    }
+
+    // 최종 객체 업데이트
+    holidayTexts.value = {
+        regular: regText,
+        public: pubText,
+        custom: cusText
+    };
+};
+
+// 휴무일 수정 모달 오픈
+const openHolidayModal = async () => {
+    modalStore.holidaySettingModal.openModal();
+    
+    setTimeout(() => {
+        if (holidayFormRef.value) {
+            holidayFormRef.value.initFormData(productStore.productScheduleInfo.impos);
+        }
+    }, 100);
+};
+
+// 데이터 매핑 함수
+const initDataMapping = async () => {
+    // API 호출 
+    await Promise.all([
+        productStore.getItemReservationInfo(props.savedItemId),
+        productStore.getItemDetailInfo(props.savedItemId)
+    ]);
+
+    const data = productStore.productScheduleInfo;
+    if (!data || !data.pos) return;
+
+    // 임시운영 (isBasicSchedule:false) 데이터
+    temporarySchedules.value = productStore.temporarySchedules;
+
+    // 실제 화면 설정(정기/이벤트)에 사용할 데이터만 필터링 (isBasicSchedule:true)
+    const basicPos = data.pos.filter(item => item.isBasicSchedule !== false);
+
+    // 기본 운영 데이터를 시작일 기준 정렬
+    const sortedPos = [...basicPos].sort((a, b) => {
+        return new Date(a.startDate) - new Date(b.startDate);
+    });
+
+    // 휴무일 데이터
+    const impos = data.impos || {};
+
+    // 이벤트 일정 존재 여부 확인 (endDate값 유무)
+    const hasEventDate = sortedPos.some(item => item.endDate);
+
+    // 데이터 매핑
+    // 예약 가능 동물 수 매핑
+    selectedAnimalCount.value = data.reserveCnt;
+    // 휴무일 설정 여부 매핑
+    isHolidayEnabled.value = !!(impos && (impos.week || impos.spDay || impos.hoDay));
+
+    if (hasEventDate) {
+        // 이벤트 운영 모드
+        scheduleMode.value = 'event';
+
+        const periods = [...new Set(sortedPos.map(p => `${p.startDate}~${p.endDate}`))];
+
+        // 적용방식 > 기간이 2개 이상이면  'period'(기간별 설정), 1개면 'all'(전체 설정)
+        applyMode.value = periods.length > 1 ? 'period' : 'all';
+        // UI용 날짜 배열 생성
+        eventDates.value = periods.map(p => p.split('~'));
+        
+        // 각 기간에 해당하는 설정값을 configs 배열에 매핑
+        configs.value = periods.map(period => {
+            const periodPos = sortedPos.filter(p => `${p.startDate}~${p.endDate}` === period);
+            return mapPosToConfig(periodPos);
+        });
+    } else {
+        // 정기 운영 모드
+        scheduleMode.value = 'regular';
+        configs.value = [mapPosToConfig(sortedPos)];
+    }
+
+    mapImposConfig(impos); // 휴무일 텍스트 갱신
+    
+    // 저장이 완료되었으므로 임시 선택 데이터는 비워줌
+    resetSelection('OPEN_DATE');
+    resetSelection('EXPOSURE_START');
+    resetSelection('EXPOSURE_END');
+};
+
+// TODO: 임시운영 데이터 수정로직
+
+onMounted(async() => {
+    initDataMapping();
 })
 </script>
 
@@ -405,6 +646,38 @@ onMounted(async() => {
                     </div>
                 </li>
 
+                <!-- 임시운영 정보 표시 -->
+                <li v-if="formattedTempSchedules.length > 0" class="form-item">
+                    <div class="form-label">임시 운영</div>
+                    <div class="form-content">
+                        <div class="d-flex flex-col gap-8">
+                            <div 
+                                v-for="(temp, idx) in formattedTempSchedules" 
+                                :key="idx" 
+                                class="d-flex align-center justify-between gap-8 body-s"
+                            >
+                                <span class="temp-schedule-text">{{ temp.text }}</span>
+                                <!-- 수정/삭제 버튼 -->
+                                <div class="d-flex align-center gap-4">
+                                    <button 
+                                        type="button" 
+                                        class="btn btn--size-24 btn--black-outline" 
+                                        @click="onEditTemporary(temp.raw)"
+                                    >
+                                        <img :src="icEdit" alt="수정" style="width:14px;">수정
+                                    </button>
+                                    <button
+                                        class="btn btn--size-24 btn--black-outline"
+                                        @click="onDeletTemporary(temp.row)"
+                                    >
+                                        <img/>삭제
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+
                 <li class="form-item">
                     <div class="form-label">휴무일 설정</div>
                     <div class="form-content">
@@ -416,7 +689,7 @@ onMounted(async() => {
                             <button 
                                 v-if="isHolidayEnabled" 
                                 class="btn btn--size-24 btn--black-outline"
-                                @click="modalStore.holidaySettingModal.openModal()"
+                                @click="openHolidayModal"
                             >
                                 <img :src="icEdit" alt="아이콘">휴무일 수정
                             </button>
@@ -429,19 +702,19 @@ onMounted(async() => {
                     <li class="form-item">
                         <div class="form-label">정기 휴무일</div>
                         <div class="form-content">
-                            <p class="body-s">매주 월, 일요일</p>
+                            <p class="body-s">{{ holidayTexts.regular }}</p>
                         </div>
                     </li>
                     <li class="form-item">
                         <div class="form-label">법정 공휴일</div>
                         <div class="form-content">
-                            <p class="body-s">설날 당일, 추석 당일, 크리스마스</p>
+                            <p class="body-s">{{ holidayTexts.public }}</p>
                         </div>
                     </li>
                     <li class="form-item">
                         <div class="form-label">그외 휴무일</div>
                         <div class="form-content">
-                            <p class="body-s">매달 1일, 2025년 11월 30일, 2025년 12월 20일, 매달 1일, 2025년 11월 30일, 2025년 12월 20일 매달 1일, 2025년 11월 30일, 2025년 12월 20일</p>
+                            <p class="body-s">{{ holidayTexts.custom }}</p>
                         </div>
                     </li>
                 </template>
@@ -450,25 +723,35 @@ onMounted(async() => {
         </section>
 
         <section class="setting-box bottom">
-            <p class="heading-s">예약 오픈, 노출/미노출 설정</p>
+            <p class="heading-s">노출/미노출 시작일 설정</p>
             
             <ul class="form-container">
-                <li class="form-item">
+                <!-- 예약오픈일 (추후 기능필요시 주석해제) -->
+                <!-- <li class="form-item">
                     <div class="form-label">예약 오픈일</div>
                     <div class="form-content">
                         <div class="d-flex align-center justify-between">
-                            <span class="body-s">오픈일 설정시, 오픈일 이전까지 예약 상품은 사전공개됩니다.</span>
+                            <span class="body-s">
+                                {{ productStore.productScheduleInfo.bookableSettingJson?.isUseOpen ? 
+                                    formatDateToDay(new Date(productStore.productScheduleInfo.bookableSettingJson.openDateTime)) + '부터 예약 시작'
+                                    : '오픈일 설정시, 오픈일 이전까지 예약 상품은 사전공개됩니다.' 
+                                }}
+                            </span>
                             <button class="btn btn--size-24 btn--black-outline" @click="onOpenDateSetting">
                                 <img :src="icSetting" alt="아이콘">설정하기
                             </button>
                         </div>
                     </div>
-                </li>
+                </li> -->
                 <li class="form-item">
                     <div class="form-label">노출 시작일</div>
                     <div class="form-content">
                         <div class="d-flex align-center justify-between">
-                            <span class="body-s">노출되는 날짜, 시간을 미리 예약 설정할 수 있습니다.</span>
+                            <span class="body-s">
+                                {{ productStore.productScheduleInfo.impStartDateTime ? 
+                                    formatDateToDay(new Date(productStore.productScheduleInfo.impStartDateTime)) + '부터 노출'
+                                    : '노출되는 날짜, 시간을 미리 예약 설정할 수 있습니다.' }}
+                            </span>
                             <button class="btn btn--size-24 btn--black-outline" @click="onExposureStartSetting">
                                 <img :src="icSetting" alt="아이콘">설정하기
                             </button>
@@ -479,7 +762,11 @@ onMounted(async() => {
                     <div class="form-label">미노출 시작일</div>
                     <div class="form-content">
                         <div class="d-flex align-center justify-between">
-                            <span class="body-s">미노출되는 날짜, 시간을 미리 예약 설정할 수 있습니다.</span>
+                            <span class="body-s">
+                                {{ productStore.productScheduleInfo.impEndDateTime ? 
+                                    formatDateToDay(new Date(productStore.productScheduleInfo.impEndDateTime)) + '부터 미노출'
+                                    : '미노출되는 날짜, 시간을 미리 예약 설정할 수 있습니다.' }}
+                            </span>
                             <button class="btn btn--size-24 btn--black-outline" @click="onExposureEndSetting">
                                 <img :src="icSetting" alt="아이콘">설정하기
                             </button>
@@ -499,10 +786,49 @@ onMounted(async() => {
     <ModalDatePicker
         :is-modal-open="isDatePickerModalOpen" 
         :title="datePickerModalTitle"
-        :showRepeatOptions="false"
+        :show-repeat-options="false"
+        :initial-date="selectionData[settingType]?.date"
         @close="isDatePickerModalOpen = false"
         @add="onAddHoliday"
     />
+    
+    <!-- 예약 오픈, 노출/미노출 설정 후 시간 설정 모달 -->
+    <ModalSimple 
+        v-if="isTimeModalOpen" 
+        modal-width="240px"
+        modal-height="400px"
+        :modal-state="modalStore.setTimeSettingModal"
+        :small-title="datePickerModalTitle"
+    >
+        <div class="modal-contents-inner">
+            <div class="d-flex flex-col gap-16">
+                <div class="d-flex flex-col gap-6">
+                    <p class="title-s">시작일 설정</p>
+                    <!--  -->
+                    <div class="fake-date-picker" @click.stop="goToDatePicker">
+                        <CustomDatePicker 
+                            v-model="selectionData[settingType].date"
+                            readonly 
+                            :range="false"
+                            style="pointer-events: none;"
+                        />
+                    </div>
+                </div>
+    
+                <div class="d-flex flex-col gap-6">
+                    <p class="title-s">시작 시각 설정</p>
+                    <TimeSelect v-model="selectionData[settingType].time" />
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-button-wrapper small">
+            <div class="buttons">
+                <button class="btn btn--size-24 btn--black-outline" @click="closeTimeModal">취소</button>
+                <button class="btn btn--size-24 btn--black" @click="saveTimeSetting">저장</button>
+            </div>
+        </div>
+    </ModalSimple>
 
     <!-- 휴무일 설정 모달 -->
     <Modal
@@ -541,7 +867,7 @@ onMounted(async() => {
             border-radius: 8px;
             padding: 24px;
             
-            &.top {flex: 2; min-height:0;}
+            &.top {flex: 4; min-height:0;}
             &.bottom {flex: 1;}
         }
     }
@@ -549,7 +875,7 @@ onMounted(async() => {
     .button-wrapper {
         display: flex;
         gap: 8px;
-        padding-top: 16px;
+        // padding-top: 16px;
 
         button {flex:1;}
     }
