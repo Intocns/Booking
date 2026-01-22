@@ -13,6 +13,7 @@ const props = defineProps({
     isModalOpen: {type: Boolean, default: false},
     showRepeatOptions: { type: Boolean, default: true }, // 주기 선택 영역 노출 여부
     title: { type: String, default: '' },               // 모달 상단 타이틀
+    initialDate: { type: [Date, String, null], default: null }, // 초기 선택 날짜 (Date 또는 'yyyy-MM-dd' 형식 문자열)
 })
 
 const emit = defineEmits(['close', 'add']);
@@ -22,6 +23,18 @@ const emit = defineEmits(['close', 'add']);
  */
 const selectedDate = ref(null); // 데이트피커 선택 값
 const repeatType = ref('DAILY'); // 'YEARLY', 'MONTHLY', 'DAILY'
+
+// 모달이 열릴 때 부모가 넘겨준 이전 날짜를 세팅합니다.
+watch(() => props.isModalOpen, (newVal) => {
+    if (newVal) {
+        // 부모에게서 받은 initialDate가 있다면 Date 객체로 변환해서 할당
+        if (props.initialDate) {
+            selectedDate.value = new Date(props.initialDate);
+        } else {
+            selectedDate.value = null; // 없다면 비움
+        }
+    }
+});
 
 // 1. 과거 날짜 선택 방지 (오늘 이전 날짜 비활성화)
 const disabledDates = (date) => {
@@ -76,7 +89,7 @@ const handleAdd = () => {
 const handleClose = () => {
     emit('close');
     // 닫을 때 초기화
-    selectedDate.ref = null;
+    selectedDate.value = null;
     repeatType.value = 'DAILY';
 };
 
