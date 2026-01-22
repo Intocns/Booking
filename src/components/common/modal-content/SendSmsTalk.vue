@@ -165,7 +165,7 @@ const checkAvailableApi = async () => {
 
     try {
         const body = {
-            compEnrolNum: '1231212345', // TODO: 실제 값으로 교체
+            compEnrolNum: compEnrolNum, // TODO: 실제 값 연동
             cocode: cocode,
             templateType: selectedTemplateType.value, // TODO: 추후 5로 변경 필요
         };
@@ -176,12 +176,17 @@ const checkAvailableApi = async () => {
         // checkAvailableApi가 성공하면 getTemplateInfo 호출
         if (response.data?.status_code === 200 && response.data?.data) {
             const data = response.data.data;
-            // is_profile이나 is_available_template이 true인지 확인
-            if (data.is_profile === true || data.is_available_template === true) {
-                await getTemplateInfo();
-            } else {
-                // 사용 불가 시 기본 템플릿(is_default=1) 조회
+            // is_channel, is_profile, is_available_template 모두 false이면 기본 템플릿 조회
+            const isChannel = data.is_channel === true;
+            const isProfile = data.is_profile === true;
+            const isAvailableTemplate = data.is_available_template === true;
+            
+            if (!isChannel && !isProfile && !isAvailableTemplate) {
+                // 모두 false이면 기본 템플릿(is_default=1) 조회 (인투링크 발송)
                 await getTemplateInfo(true);
+            } else {
+                // 하나라도 true이면 일반 템플릿 조회
+                await getTemplateInfo();
             }
         }
     } catch (error) {
@@ -193,19 +198,18 @@ const checkAvailableApi = async () => {
 };
 
 // 템플릿 정보 조회 API 호출
-// useDefault가 true이면 is_default=1로 기본 템플릿 조회
-const getTemplateInfo = async (useDefault = false) => {
+// useLink가 true이면 is_link=true로 기본 템플릿 조회 (인투링크 발송용)
+const getTemplateInfo = async (useLink = false) => {
     if (isLoadingTemplates.value) return;
-
     isLoadingTemplates.value = true;
     templateList.value = [];
 
     try {
         const body = {
-            compEnrolNum: props.reservationData?.compEnrolNum || compEnrolNum, // TODO: 실제 값 연동
-            cocode: props.reservationData?.cocode || cocode,
+            compEnrolNum: compEnrolNum, // TODO: 실제 값 연동
+            cocode: cocode,
             templateType: selectedTemplateType.value, // TODO: 추후 5로 변경 필요
-            isDefault: useDefault ? 1 : 0,
+            isLink: useLink,
         };
 
         const response = await api.post(`/api/${cocode}/alimtalk/getTemplateInfo`, body);
