@@ -7,6 +7,7 @@ import TalkPreview from '../TalkPreview.vue';
 import { ref, watch } from 'vue';
 import { useModalStore } from '@/stores/modalStore';
 import { api } from '@/api/axios';
+import { buildTemplateVariables } from '@/utils/alimtalkTemplate.js';
 
 const props = defineProps({
     reservationData: {
@@ -21,6 +22,9 @@ const activeTab = ref('talk');
 const smsRemainingCount = ref(null);
 const isLoadingSmsPoint = ref(false);
 const cocode = '2592'; // TODO: 임시
+const compEnrolNum = '1231212345'; // TODO: 임시
+const hospitalName = '인투병원'; // TODO: 임시
+const hospitalPhone = '01089380571'; // TODO: 임시
 
 // 수신번호
 const recipientPhone = ref('');
@@ -42,11 +46,93 @@ const templateList = ref([]);
 const selectedTemplate = ref(null); // 선택된 템플릿
 
 // 알림톡 템플릿 타입 (현재 5로 고정해 확인)
-const selectedTemplateType = ref(5); // TODO: 추후 변경 필요
+const selectedTemplateType = ref(1); // TODO: 추후 변경 필요
+const isSending = ref(false);
 
 // 템플릿 선택 핸들러
 const selectTemplate = (template) => {
     selectedTemplate.value = template;
+};
+
+const sendTalk = async () => {
+    if (isSending.value) return;
+
+    if (!selectedTemplate.value) {
+        alert('템플릿을 선택해주세요.');
+        return;
+    }
+    if (!recipientPhone.value) {
+        alert('수신번호를 입력해주세요.');
+        return;
+    }
+
+    const templateId =
+        selectedTemplate.value.template_id ||
+        selectedTemplate.value.templateId ||
+        selectedTemplate.value.sno;
+
+    if (!templateId) {
+        alert('템플릿 ID를 확인할 수 없습니다.');
+        return;
+    }
+
+    // alim_data_array payload 빌드
+    const contentVariables = buildTemplateVariables(props.reservationData);
+    const alimData = {
+        animal_num: props.reservationData?.animalNum || '',
+        protector_name: props.reservationData?.protectorName || '',
+        protector_phone: recipientPhone.value,
+        visit_source: props.reservationData?.visitSource || '',
+        visit_source_text: props.reservationData?.visitSourceText || '',
+        animal_name: props.reservationData?.petName || '',
+        animal_species: props.reservationData?.speciesName || '',
+        animal_breed: props.reservationData?.breedName || '',
+        birth: props.reservationData?.birth || props.reservationData?.birthday || '',
+        animal_gender: props.reservationData?.sex || '',
+        reserve_at: props.reservationData?.reservationDate && props.reservationData?.reservationTime
+            ? `${props.reservationData.reservationDate} ${props.reservationData.reservationTime}`.trim()
+            : (props.reservationData?.reservationDate || ''),
+        content_replace_array: contentVariables,
+        btn_replace_array: selectedTemplate.value?.btn_setting || [],
+    };
+
+    isSending.value = true;
+    try {
+        const body = {
+            compEnrolNum: compEnrolNum, // TODO: 실제 값 연동
+            cocode: cocode, // TODO: 실제 값 연동
+            templateType: selectedTemplateType.value ?? 0,
+            templateSno: selectedTemplate.value?.sno || null,
+            templateId: String(templateId),
+            alimDataArray: [alimData],
+            isNotRemovePoint: 1,
+            hospitalReplaceInfo: {
+                comp_enrol_num: compEnrolNum, // TODO: 실제 값 연동
+                cocode: cocode, // TODO: 실제 값 연동
+                company_name: hospitalName, // TODO: 실제 값 연동
+                sms_send_tel: hospitalPhone, // TODO: 실제 값 연동
+            },
+            visitSourceTotalList: props.reservationData?.visitSourceTotalList || '',
+        };
+
+        console.log('[알림톡 발송] request body', body);
+        return;
+
+        const response = await api.post(`/api/${cocode}/alimtalk/send`, body);
+
+        if (response.status <= 300 && response.data?.status_code === 200) {
+            alert('알림톡 발송이 완료되었습니다.');
+            modalStore.smsModal.closeModal();
+            return;
+        }
+
+        alert(response.data?.message || '알림톡 발송에 실패했습니다.');
+    } catch (error) {
+        console.error('알림톡 발송 오류:', error);
+        alert('알림톡 발송 중 오류가 발생했습니다.');
+    } finally {
+        isSending.value = false;
+    }
 };
 
 const getSmsPointInfo = async () => {
@@ -116,8 +202,8 @@ const getTemplateInfo = async (useDefault = false) => {
 
     try {
         const body = {
-            compEnrolNum: '1231212345', // TODO: 실제 값으로 교체
-            cocode: cocode,
+            compEnrolNum: props.reservationData?.compEnrolNum || compEnrolNum, // TODO: 실제 값 연동
+            cocode: props.reservationData?.cocode || cocode,
             templateType: selectedTemplateType.value, // TODO: 추후 5로 변경 필요
             isDefault: useDefault ? 1 : 0,
         };
@@ -366,7 +452,13 @@ const hideTooltip = (type) => {
             
             <div class="content-talk__buttons">
                 <button class="btn btn--size-40 btn--blue-outline modal-btn" @click="modalStore.smsModal.closeModal()">취소</button>
-                <button class="btn btn--size-40 btn--blue modal-btn">발송</button>
+                <button 
+                    class="btn btn--size-40 btn--blue modal-btn" 
+                    :disabled="isSending"
+                    @click="activeTab === 'talk' ? sendTalk() : null"
+                >
+                    {{ isSending ? '발송 중...' : '발송' }}
+                </button>
             </div>
         </div>
 

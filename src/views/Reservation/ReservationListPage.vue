@@ -37,6 +37,14 @@ const openSmsModal = (row) => {
         productName: row?.roomName,
         hospitalPhone: row?.hospitalPhone, //TODO: cocode 기반 실제 병원명으로 교체
         phoneTxt: row?.phoneTxt, // 수신번호용 전화번호
+        // 동물 정보
+        speciesName: row?.speciesName, // 종
+        breedName: row?.breedName, // 품종
+        sex: row?.sex, // 성별
+        // 추가 동물 정보 (필요시)
+        animalNum: row?.animalNum,
+        protectorName: row?.userName, // 고객명
+        visitSource: row?.reRouteTxt, // 예약경로
     };
 
     modalStore.smsModal.openModal();
