@@ -359,10 +359,18 @@ const JSON_FIELDS = [
 const setInputData = (async() => {
     Object.keys(basicInput.value).forEach((key) => {
         const value = productStore.itemDetailInfo[key];
-        if (value === undefined) return;
+        if (value === undefined || value === null) return;
 
         if (JSON_FIELDS.includes(key)) {
-            let decodeValue = JSON.parse(value);
+            let decodeValue = value;
+
+            if (typeof value === 'string' && (value.startsWith('{') || value.startsWith('['))) {
+                try {
+                    decodeValue = JSON.parse(value);
+                } catch (e) {
+                    decodeValue = value;
+                }
+            }
 
             switch (key) {
                 case 'bookingPrecautionJson':
