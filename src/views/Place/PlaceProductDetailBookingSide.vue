@@ -404,10 +404,19 @@ const onEditTemporary = (raw) => {
     });
 };
 
+// 임시운영 삭제 확인 모달 
+const openDeleteTemporaryModal = (raw, targetIdx) => {
+    modalStore.confirmModal.openModal({
+        title: '예약 시간대 삭제',
+        text: '삭제 시 일별로 변경한 설정을 포함하여 해당 시간대의\n모든 일정이 삭제됩니다.',
+        confirmBtnText: '삭제',
+        onConfirm: () => onDeleteTemporary(raw, targetIdx)
+    })
+
+}
 // 임시운영 데이터 삭제 로직 (삭제하려는임시운영의 데이터만 제외하고 저장함)
 const onDeleteTemporary = async (raw, targetIdx) => {
-    // TODO: 삭제 확인 묻는 모달 추가해야함.
-    if (!confirm('해당 임시 운영 일정을 삭제하시겠습니까?')) return;
+    modalStore.confirmModal.closeModal();
 
     // 현재 스토어의 임시 운영 배열 복사 및 해당 인덱스 삭제
     // 원본 스토어 데이터를 직접 수정하지 않기 위해 filter의 index 활용
@@ -452,7 +461,11 @@ const onDeleteTemporary = async (raw, targetIdx) => {
     const response = await productStore.updateItemReservationInfo(props.savedItemId, params);
 
     if (response.status_code <= 300) {
-        alert('삭제되었습니다.');
+        modalStore.confirmModal.openModal({
+            text: '삭제되었습니다.',
+            noCancelBtn: true,
+            onConfirm: (() => {modalStore.confirmModal.closeModal()})
+        })
         
         await initDataMapping(); // 예약 정보 재조회
         
@@ -463,7 +476,11 @@ const onDeleteTemporary = async (raw, targetIdx) => {
             endDate: start.addDays(6).toString("yyyy-MM-dd"),
         });
     } else {
-        alert('삭제 중 오류가 발생했습니다.');
+        modalStore.confirmModal.openModal({
+            text: '삭제 중 오류가 발생했습니다.',
+            noCancelBtn: true,
+            onConfirm: (() => {modalStore.confirmModal.closeModal()})
+        })
     }
 };
 
@@ -739,7 +756,7 @@ onMounted(async() => {
                                     </button>
                                     <button
                                         class="btn btn--size-24 btn--black-outline"
-                                        @click="onDeleteTemporary(temp.raw, idx)"
+                                        @click="openDeleteTemporaryModal(temp.raw, idx)"
                                     >
                                         <img :src="icDel" alt="아이콘"/>삭제
                                     </button>

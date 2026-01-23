@@ -403,7 +403,7 @@ onUnmounted(() => {
             overflow: visible !important;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 49;
             table {
                 overflow: visible !important;
                 width: auto !important;
