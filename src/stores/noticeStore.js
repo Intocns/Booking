@@ -4,9 +4,6 @@ import Qs from "qs"
 import { ref } from "vue";
 
 export const useNoticeStore = defineStore("notice", () => {
-    const cocode = '2592' // TODO: 임시
-    // TODO: 프록시 설정도 임시
-
     let noticeList = ref([]) 
 
     // 공지사항 리스트 가져오기 (대시보드)

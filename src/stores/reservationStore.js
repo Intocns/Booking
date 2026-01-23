@@ -10,8 +10,6 @@ import { useModalStore } from "./modalStore";
 export const useReservationStore = defineStore("reservation", () => {
     const modalStore = useModalStore();
 
-    const cocode = '2592' // TODO: 임시
-    // TODO: 프록시 설정도 임시
     let reserveList = ref([]); // 전체 예약 내역
     let reservePendingList = ref([]); // 대기 예약 리스트
     let reserveCount = ref({}) // 예약별 카운트
@@ -35,11 +33,8 @@ export const useReservationStore = defineStore("reservation", () => {
 
     // 전체 예약 내역 불러오기
     async function getReservationList(params) {
-        // const response = await api.get('/api/2592/reserve/getDoc')//담당의 불러오기
-        // const docID = params.docId || '' // 담당의 아이디
-        // const cocode = params.cocode || '2592' // TODO: 임시 병원 코드 추후삭제
-         try {
-            const response = await api.post(`/api/${cocode}/reserve/list`, params);
+        try {
+            const response = await api.post(`/api/{cocode}/reserve/list`, params);
             if(response.status <= 300){
                 let data = response.data.data;
                 reserveList.value = data.list.map(mapReserveRow);
@@ -52,7 +47,7 @@ export const useReservationStore = defineStore("reservation", () => {
 
     // 예약 종류별 카운트 (대시보드)
     async function getReserveCount() {
-        const response = await api.get(`/api/${cocode}/reserve/cnt`);
+        const response = await api.get(`/api/{cocode}/reserve/cnt`);
 
         if(response.status <= 300) {
             // console.log(response);
@@ -63,7 +58,7 @@ export const useReservationStore = defineStore("reservation", () => {
 
     // 대기 예약 리스트 불러오기 (대기 예약 관리,대시보드)
     async function getPendingList(params) {
-        const response = await api.get(`/api/${cocode}/reserve/pendinglist`, {params: params});
+        const response = await api.get(`/api/{cocode}/reserve/pendinglist`, {params: params});
 
         if(response.status <= 300) {
             // console.log(response)
@@ -75,7 +70,7 @@ export const useReservationStore = defineStore("reservation", () => {
     // 예약 일정 불러오기 (예약 일정 확인 페이지)
     async function getReserveSchedule(params) {
         try {
-            const response = await api.post(`/api/${cocode}/reserve/sche`, params)
+            const response = await api.post(`/api/{cocode}/reserve/sche`, params)
             if(response.status <= 300) {
                 let data = response.data.data;
 
@@ -98,7 +93,7 @@ export const useReservationStore = defineStore("reservation", () => {
     // 고객 매칭용 목록 및 예약 정보
     async function getReserveInfo(reserveIdx) {
         try {
-            const response = await api.get(`/api/${cocode}/reserve/${reserveIdx}/cm`)
+            const response = await api.get(`/api/{cocode}/reserve/${reserveIdx}/cm`)
             if(response.status <= 300) {
                 if(response.data.status_code <= 300) {
                     let data = response.data.data
@@ -119,7 +114,7 @@ export const useReservationStore = defineStore("reservation", () => {
     // 고객 검색 (고객 매칭용)
     async function searchClientMapping(searchData) {
         try {
-            const response = await api.post(`/api/${cocode}/reserve/search`, searchData);
+            const response = await api.post(`/api/{cocode}/reserve/search`, searchData);
             if(response.status <= 300) {
                 if(response.data.status_code <= 300) {
                     return response.data.data;
@@ -139,7 +134,7 @@ export const useReservationStore = defineStore("reservation", () => {
     // 예약 확정
     async function confirmReservation(reserveIdx, confirmData) {
         try {
-            const response = await api.post(`/api/${cocode}/reserve/${reserveIdx}/set`, confirmData);
+            const response = await api.post(`/api/{cocode}/reserve/${reserveIdx}/set`, confirmData);
             
             if(response.status <= 300 && response.data?.status_code <= 300) {
                 return { success: true, data: response.data.data || null };
@@ -158,7 +153,7 @@ export const useReservationStore = defineStore("reservation", () => {
     // 예약 취소
     async function cancelReservation(reserveIdx, cancelData) {
         try {
-            const response = await api.post(`/api/${cocode}/reserve/${reserveIdx}/reject`, cancelData);
+            const response = await api.post(`/api/{cocode}/reserve/${reserveIdx}/reject`, cancelData);
             
             if(response.status <= 300 && response.data?.status_code <= 300) {
                 return { success: true, data: response.data.data || null };

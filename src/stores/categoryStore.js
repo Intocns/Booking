@@ -4,14 +4,11 @@ import { api} from "@/api/axios";
 import { ref } from "vue";
 
 export const useCategoryStore = defineStore("category", () => {
-    const cocode = '2592' // TODO: 임시
-    // TODO: 프록시 설정도 임시
-
     let categoryList = ref([]) // 카테고리 리스트
 
     // 카테고리 목록 조회
     async function getCategoryList() {//251226 optionStore에서 삭제
-        const response = await api.get(`/api/${cocode}/category/list`);
+        const response = await api.get(`/api/{cocode}/category/list`);
 
         if(response.status == 200) {
             let data = response.data.data;
@@ -34,7 +31,7 @@ export const useCategoryStore = defineStore("category", () => {
         // ]
         //임시 적용 end(사용 시 해당 params값 참고)
         
-        const response = await api.post(`/api/${cocode}/category/modify`, params);
+        const response = await api.post(`/api/{cocode}/category/modify`, params);
 
         return response.data;
     }
@@ -48,7 +45,7 @@ export const useCategoryStore = defineStore("category", () => {
         // }
         //임시 적용 end(사용 시 해당 params값 참고)
         
-        const response = await api.post(`/api/${cocode}/category/add`, params);
+        const response = await api.post(`/api/{cocode}/category/add`, params);
 
         return response.data;
     }
@@ -61,7 +58,7 @@ export const useCategoryStore = defineStore("category", () => {
         //     "idx": 0,
         // }
         //임시 적용 end(사용 시 해당 params값 참고)
-        const response = await api.post(`/api/${cocode}/category/delete`, params);
+        const response = await api.post(`/api/{cocode}/category/delete`, params);
 
         return response.data;
     }

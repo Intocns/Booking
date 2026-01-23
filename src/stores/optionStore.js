@@ -5,15 +5,12 @@ import { ref } from "vue";
 import { formatDate as formatDateUtil } from "@/utils/dateFormatter";
 
 export const useOptionStore = defineStore("option", () => {
-    const cocode = '2592' // TODO: 임시
-    // TODO: 프록시 설정도 임시
-
     let categoryList = ref([]) // 카테고리 리스트
     let optionList = ref([]) // 옵션 리스트
     let selectionTypeCode = ref('') // 선택 타입 코드 (NUMBER, CHECK)
 
     async function getOptionList() { //옵션 리스트 가져오기 전체
-        const response = await api.get(`/api/${cocode}/option/list`);
+        const response = await api.get(`/api/{cocode}/option/list`);
 
         if(response.status == 200) {
             let data = response.data.data;
@@ -22,7 +19,7 @@ export const useOptionStore = defineStore("option", () => {
     }
 
     async function getOptionListByCategoryId(categoryId) { //옵션 리스트 가져오기 카테고리별
-        const response = await api.get(`/api/${cocode}/option/list/category`, { params: { categoryId: categoryId } });
+        const response = await api.get(`/api/{cocode}/option/list/category`, { params: { categoryId: categoryId } });
 
         if(response.status == 200) {
             let data = response.data.data;
@@ -133,7 +130,7 @@ export const useOptionStore = defineStore("option", () => {
     // 카테고리별 옵션 목록 가져오기 
     const getAllCategoryOptions = async (itemId = 0) => {  // 상품수정에서 조회시 itemId 포함, 옵션관리에서 조회시 0
         try {
-            const response = await api.get(`/api/${cocode}/option/list/category/${itemId}`);
+            const response = await api.get(`/api/{cocode}/option/list/category/${itemId}`);
 
             if(response.data.status_code <= 300) {
                 const data = response.data.data || [];
@@ -169,7 +166,7 @@ export const useOptionStore = defineStore("option", () => {
 
     // 옵션관리 > 카테고리 별 옵션 리스트
     async function getOptionListByCategory() {
-        const response = await api.get(`/api/${cocode}/option/list/category/ol`);
+        const response = await api.get(`/api/{cocode}/option/list/category/ol`);
         if(response.data.status_code <= 300) {
             let data = response.data.data;
 
@@ -200,7 +197,7 @@ export const useOptionStore = defineStore("option", () => {
 
     // 옵션 등록
     async function addOption(params) {
-        const response = await api.post(`/api/${cocode}/option/add`, params);
+        const response = await api.post(`/api/{cocode}/option/add`, params);
 
         if(response.status == 200) {
             return response.data;
@@ -211,7 +208,7 @@ export const useOptionStore = defineStore("option", () => {
 
     // 옵션-상품 매핑 저장
     async function addOptionMapping(params) {
-        const response = await api.post(`/api/${cocode}/option/mapping`, params);
+        const response = await api.post(`/api/{cocode}/option/mapping`, params);
 
         if(response.status == 200) {
             return response.data;
@@ -223,7 +220,7 @@ export const useOptionStore = defineStore("option", () => {
     // 옵션 수정
     async function updateOption(optionId, params) {
         try {
-            const response = await api.post(`/api/${cocode}/option/${optionId}/modify`, params);
+            const response = await api.post(`/api/{cocode}/option/${optionId}/modify`, params);
             if(response.status == 200) {
                 return response.data;
             } else {
@@ -242,7 +239,7 @@ export const useOptionStore = defineStore("option", () => {
     // 옵션 삭제
     async function deleteOption(optionId) {
         try {
-            const response = await api.post(`/api/${cocode}/option/${optionId}/del`);
+            const response = await api.post(`/api/{cocode}/option/${optionId}/del`);
             
             if(response.status == 200) {
                 return response.data;
@@ -260,7 +257,7 @@ export const useOptionStore = defineStore("option", () => {
 
     // 옵션 상품 목록 api
     async function getOptionListByItemId(itemId) {
-        const response = await api.get(`/api/${cocode}/option/item/${itemId}`);
+        const response = await api.get(`/api/{cocode}/option/item/${itemId}`);
         if(response.status == 200) {
             return response.data;
         } else {

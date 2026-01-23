@@ -4,8 +4,6 @@ import { api } from "@/api/axios";
 import { ref } from "vue";
 
 export const useProductStore = defineStore("product", () => {
-    const cocode = '2592' // TODO: 임시
-
     const productList = ref([]);     // 상품 전체 리스트
     const itemRoomList = ref([]);    // 인투펫 진료실 리스트
     const linkItemInfo = ref({});
@@ -18,7 +16,7 @@ export const useProductStore = defineStore("product", () => {
     // 상품 리스트 불러오기
     async function getProductList() {
 
-        const response = await api.get(`/api/${cocode}/item/list`)
+        const response = await api.get(`/api/{cocode}/item/list`)
 
         if (response.status == 200) {
             const data = response.data.data;
@@ -37,7 +35,7 @@ export const useProductStore = defineStore("product", () => {
         // ]
         //임시 적용 end(사용 시 해당 params값 참고)
 
-        const response = await api.post(`/api/${cocode}/item/set/order`, params);
+        const response = await api.post(`/api/{cocode}/item/set/order`, params);
         
         return response.data;
     }
@@ -65,14 +63,14 @@ export const useProductStore = defineStore("product", () => {
         // }
         //임시 적용 end(사용 시 해당 params값 참고)
 
-        const response = await api.post(`/api/${cocode}/item/set/desc`, params);
+        const response = await api.post(`/api/{cocode}/item/set/desc`, params);
         
         return response.data;
     }
 
     // 인투펫 진료실 리스트 불러오기
     async function getItemRoomList() {
-        const response = await api.get(`/api/${cocode}/item/room/list`);
+        const response = await api.get(`/api/{cocode}/item/room/list`);
 
         if(response.data.status_code <= 300) {
             const data = response.data.data;
@@ -82,7 +80,7 @@ export const useProductStore = defineStore("product", () => {
 
     // 인투펫 진료실 불러오기(import)
     async function getLinkItemInfo(roomIdx) {
-        const response = await api.get(`/api/${cocode}/item/linkItem/${roomIdx}`);
+        const response = await api.get(`/api/{cocode}/item/linkItem/${roomIdx}`);
 
         if(response.data.status_code <= 300) {
             const data = response.data.data;
@@ -96,7 +94,7 @@ export const useProductStore = defineStore("product", () => {
 
     // 상품 삭제
     async function delItem(itemId) {
-        const response = await api.post(`/api/${cocode}/item/set/del/${itemId}`);
+        const response = await api.post(`/api/{cocode}/item/set/del/${itemId}`);
 
         if(response.data.status_code <= 300) {
             await getProductList();
@@ -108,7 +106,7 @@ export const useProductStore = defineStore("product", () => {
     // 상품 복사
     const copyItem = async(itemId, params) => {
         try {
-            const response = await api.post(`/api/${cocode}/item/add/${itemId}/cp`, params);
+            const response = await api.post(`/api/{cocode}/item/add/${itemId}/cp`, params);
 
             if(response.data.status_code <= 300) {
                 await getProductList();
@@ -236,7 +234,7 @@ export const useProductStore = defineStore("product", () => {
         // };
         //임시 적용 end(사용 시 해당 params값 참고)
 
-        const response = await api.post(`/api/${cocode}/item/add`, params);
+        const response = await api.post(`/api/{cocode}/item/add`, params);
         return response.data;
     }
 
@@ -358,14 +356,14 @@ export const useProductStore = defineStore("product", () => {
         // };
         //임시 적용 end(사용 시 해당 params값 참고)
 
-        const response = await api.post(`/api/${cocode}/item/modify/${itemId}`, params);
+        const response = await api.post(`/api/{cocode}/item/modify/${itemId}`, params);
 
         return response.data;
     }
 
     // 상품 기본정보 확인
     async function getItemDetailInfo(itemId) {
-        const response = await api.get(`/api/${cocode}/item/detail/${itemId}`);
+        const response = await api.get(`/api/{cocode}/item/detail/${itemId}`);
 
         if(response.data.status_code <= 300) {
             const data = response.data.data;
@@ -384,7 +382,7 @@ export const useProductStore = defineStore("product", () => {
         // ]
         //임시 적용 end(사용 시 해당 params값 참고)
 
-        const response = await api.post(`/api/${cocode}/item/show`, params);
+        const response = await api.post(`/api/{cocode}/item/show`, params);
         
         return response.data;
     }
@@ -392,7 +390,7 @@ export const useProductStore = defineStore("product", () => {
     // 간단 예약 관리 데이터 불러오기 (상품별 예약 운영시간 데이터)
     const getBusinessSchedule = async(params) => {
         try {
-            const response = await api.post(`/api/businesses/${cocode}/sche`, params);
+            const response = await api.post(`/api/businesses/{cocode}/sche`, params);
             
             if(response.data.status_code <= 300) {
                 const data = response.data.data;
@@ -416,7 +414,7 @@ export const useProductStore = defineStore("product", () => {
         //     ]
         // }
         try {
-            const response = await api.post(`/api/${cocode}/item/${itemId}/schedule/modify/a/${schId}`, params);
+            const response = await api.post(`/api/{cocode}/item/${itemId}/schedule/modify/a/${schId}`, params);
 
             return response.data;
         } catch {
@@ -506,7 +504,7 @@ export const useProductStore = defineStore("product", () => {
         //     }
         // }
 
-        const response = await api.post(`/api/${cocode}/item/add/${itemId}/sche`, params);
+        const response = await api.post(`/api/{cocode}/item/add/${itemId}/sche`, params);
         return response.data;
     }
 
@@ -592,14 +590,14 @@ export const useProductStore = defineStore("product", () => {
         //     }
         // }
 
-        const response = await api.post(`/api/${cocode}/item/${itemId}/schedule/modify`, params);
+        const response = await api.post(`/api/{cocode}/item/${itemId}/schedule/modify`, params);
         return response.data;
     }
     
     // 상품 수정 > 상품 운영시간 불러오기(캘린더)
     const getProductSchedule = async(itemId, params) => {
         try {
-            const response = await api.post(`/api/${cocode}/item/${itemId}/schedule/detail`, params); 
+            const response = await api.post(`/api/{cocode}/item/${itemId}/schedule/detail`, params); 
 
             if(response.data.status_code <= 300) {
                 const data = response.data.data;
@@ -614,7 +612,7 @@ export const useProductStore = defineStore("product", () => {
     // 상품 수정 > 일정 설정 > 진료가능 동물 수, 운영시간 설정 모달창 저장 (캘랜더 > 모달)
     const setScheduleModalSave = async(itemId, params, schId = 0) => {
         try {
-            const response = await api.post(`/api/${cocode}/item/${itemId}/schedule/modify/b`, params); 
+            const response = await api.post(`/api/{cocode}/item/${itemId}/schedule/modify/b`, params); 
 
             if(response.data.status_code <= 300) {
                 return response.data;
@@ -627,7 +625,7 @@ export const useProductStore = defineStore("product", () => {
     // 상품 수정 > 상품 운영일정 불러오기
     const getItemReservationInfo = async(itemId) => {
         try {
-            const response = await api.get(`/api/${cocode}/item/modify/${itemId}/sch`); 
+            const response = await api.get(`/api/{cocode}/item/modify/${itemId}/sch`); 
 
             if(response.data.status_code <= 300) {
                 const rawData = response.data.data;
