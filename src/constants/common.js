@@ -1,0 +1,1 @@
+export const COCODE = '2592'; // TODO: 개발 사용 임시 cocode
