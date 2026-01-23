@@ -69,7 +69,7 @@ const handleApply = async() => {
     category_list.forEach(item => {
         params.push({
                 "name": item.name,
-                "selectionTypeCode": item.selection_type_code, //NUMBER, CHECK
+                "selectionTypeCode": item.selectionTypeCode, //NUMBER, CHECK
                 "categoryId": item.categoryId,
                 "useFlag": item.use_flag, //1:수정일 시, 0:삭제일 시
                 "idx": item.idx,
