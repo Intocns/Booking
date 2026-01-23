@@ -1,6 +1,7 @@
 <script setup>
     import Sidebar from './Sidebar.vue';
     import Spinner from '../common/Spinner.vue';
+    import ConfirmModal from '../common/ConfirmModal.vue';
 
     import { api } from '@/api/axios';
 </script>
@@ -15,6 +16,8 @@
     </div>
 
     <Spinner v-show="api.ing.value" />
+
+    <ConfirmModal/>
 </template>
 
 <style lang="scss" scoped>

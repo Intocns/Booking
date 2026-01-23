@@ -26,6 +26,7 @@ import { useRouter } from 'vue-router';
 //util
 import { IS_IMP_TYPE } from "@/utils/product";
 import InputTextBox from '@/components/common/InputTextBox.vue';
+import { showAlert } from '@/utils/ui';
 
 const router = useRouter();
 const productStore = useProductStore();
@@ -230,19 +231,19 @@ const toggleCopyOption = (target) => {
 const submitCopyItem = () => {
     // 1. 상품명 입력 확인 (공백 제거 후 체크)
     if (!copyProductName.value || copyProductName.value.trim() === '') {
-        alert('새로운 상품명을 입력해주세요.');
+        showAlert('새로운 상품명을 입력해주세요.');
         return;
     }
 
     // 2. 상품명 글자수 체크 (30자 초과)
     if (copyProductName.value.length > 30) {
-        alert('상품명은 최대 30자까지 입력 가능합니다.');
+        showAlert('상품명은 최대 30자까지 입력 가능합니다.');
         return;
     }
 
     // 3. 복사 옵션 선택 확인 (둘 다 체크 해제된 경우)
     if (copyOptionItem.value == 0 && copyOptionBooking.value == 0) {
-        alert('복사할 정보(기본 정보 또는 예약 정보)를 최소 하나 이상 선택해주세요.');
+        showAlert('복사할 정보(기본 정보 또는 예약 정보)를 최소 하나 이상 선택해주세요.');
         return;
     }
 

@@ -120,7 +120,7 @@ const saveItemOption = (async() => {
 
 onMounted(async() => {
     // const selectedData =  await optionStore.getOptionListByItemId(props.savedItemId);
-    await optionStore.getOptionListByCategory(props.savedItemId);
+    await optionStore.getAllCategoryOptions(props.savedItemId);
     const selectedData = optionStore.optionList.flatMap(category => 
         category.options.filter(opt => opt.checked == 1)
     );

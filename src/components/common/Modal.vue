@@ -25,7 +25,7 @@ const close = () => {
 
 <template>
     <teleport to="#app">
-        <div class="modal-backdrop" @click="close">
+        <div class="modal-backdrop">
             <div class="modal-container" :class="`modal--${size}`" @click.stop :style="{width: modalWidth, height: modalHeight}">
                 <!-- 모달 헤더 -->
                 <div class="modal-header">
