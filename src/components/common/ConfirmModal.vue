@@ -15,19 +15,27 @@ const handleConfirm = () => {
     // 실행 후 모달 닫기
     modal.closeModal();
 };
+
+const handelCancel = () => {
+    if(modal.data?.onCancel) {
+        modal.data.onCancel();
+    }
+    // 실행 후 모달 닫기
+    modal.closeModal();
+}
 </script>
 
 <template>
     <teleport to='#app'>
         <Transition name="modal">
-            <div v-if="modalStore.confirmModal.isVisible" class="modal-backdrop" @click="modal.closeModal()" style="z-index: 999;">
+            <div v-if="modalStore.confirmModal.isVisible" class="modal-backdrop" style="z-index: 999;">
                 <div class="modal-container confirm-modal"  @click.stop>
                     <!-- 모달 헤더 -->
                     <div class="modal-header">
                         <p class="modal-header__title heading-s">{{ modal.data?.title }}</p>
-                        <button class="modal-close" @click="modal.closeModal()">
+                        <!-- <button class="modal-close" @click="modal.closeModal()">
                             <img :src="icBtnCloseB" alt="닫기 버튼">
-                        </button>
+                        </button> -->
                     </div>
                     <div class="modal-contents">
                         <!-- 각 모달 별 콘텐츠 들어감 -->
@@ -38,8 +46,19 @@ const handleConfirm = () => {
     
                         <!-- 버튼 -->
                         <div class="modal-footer">
-                            <button v-if="!modal.data?.noCancelBtn" class="btn btn--size-40 btn--black" @click="modal.closeModal()">취소</button>
-                            <button class="btn btn--size-40 btn--blue" @click="handleConfirm">{{ modal.data?.confirmBtnText || '확인' }}</button>
+                            <button 
+                                v-if="!modal.data?.noCancelBtn" 
+                                class="btn btn--size-40 btn--black" 
+                                @click="handelCancel"
+                            >
+                                {{ modal.data?.cancelBtnText || '취소' }}
+                            </button>
+                            <button 
+                                class="btn btn--size-40 btn--blue" 
+                                @click="handleConfirm"
+                            >
+                                {{ modal.data?.confirmBtnText || '확인' }}
+                            </button>
                         </div>
                     </div>
                 </div>
