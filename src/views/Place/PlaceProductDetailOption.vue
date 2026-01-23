@@ -1,6 +1,8 @@
 <script setup>
 // 스토어
 import { useOptionStore } from '@/stores/optionStore';
+// 컴포넌트
+import Modal from '@/components/common/Modal.vue';
 // 아이콘
 import icDropDown from '@/assets/icons/ic_arrow_down_b.svg'
 import icDragHandel from '@/assets/icons/ic_drag_handel.svg'
@@ -10,9 +12,13 @@ import icEmpty from '@/assets/icons/ic_empty.svg'
 import { onMounted, computed } from 'vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useModalStore } from '@/stores/modalStore';
+import { useProductStore } from '@/stores/productStore';
 
 const optionStore = useOptionStore();
 const router = useRouter();
+const modalStore = useModalStore();
+const productStore = useProductStore();
 
 //PlaceProductDetail.vue에서 선언한component 옵션 사용
 const props = defineProps({
@@ -44,6 +50,24 @@ const toggleAccordion = (index) => {
 // 특정 인덱스가 열려있는지 확인하는 함수 (템플릿 바인딩용)
 const isOpen = (index) => expandedIndexes.value.includes(index);
 
+// 상품별 노출/미노출 변경
+const clickProductImpUpdateBtn = (async(itemId, isImp) => {
+    let params = [
+        {
+            "bizItemId" : itemId,
+            "isImp" : isImp,
+        }
+    ]
+
+    try {
+        let response = await productStore.setItemShow(params);
+        return response; // 성공 여부 반환
+    } catch (e) {
+        console.error(e);
+        throw e; // 상위 try-catch에서 처리하도록 던짐
+    }
+})
+
 //옵션 연결 > 저장 버튼
 const saveItemOption = (async() => {
     let params = optionStore.optionList.flatMap(category =>
@@ -58,19 +82,45 @@ const saveItemOption = (async() => {
             )
     )
 
-    let response = await optionStore.addOptionMapping(params);
+    try {
+        let response = await optionStore.addOptionMapping(params);
 
-    if(response.status_code <= 300){
-        alert('저장이 완료되었습니다.');
-        router.push({ name: 'placeProduct' });
-    }else{
-        alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
+        if(response.status_code <= 300){
+            if(props.viewType !== 'update') {
+                // 상품 노출설정 여부 체크
+                modalStore.confirmModal.openModal({
+                    title: '상품 노출 설정',
+                    text: '옵션 설정이 완료되었습니다.\n상품을 예약받을 수 있도록 노출하시겠습니까?',
+                    confirmBtnText: '노출',
+                    cancelBtnText: '미노출',
+                    onConfirm: async () => {
+                        // 상품 노출
+                        await clickProductImpUpdateBtn(props.savedItemId, true);
+                        router.push({ name: 'placeProduct' });
+                    },
+                    onCancel: async () => {
+                        // 상품 미노출 
+                        await clickProductImpUpdateBtn(props.savedItemId, false);
+                        router.push({ name: 'placeProduct' });
+                    }
+                });
+            } else {
+                alert('옵션 설정이 완료되었습니다.')
+                router.push({ name: 'placeProduct' });
+            }
+        }else{
+            alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
+        }
+    } catch(e) {
+        console.error(e);
+        alert('저장 중 오류가 발생했습니다.');
     }
+
 })
 
 onMounted(async() => {
     // const selectedData =  await optionStore.getOptionListByItemId(props.savedItemId);
-    await optionStore.getAllCategoryOptions(props.savedItemId);
+    await optionStore.getOptionListByCategory(props.savedItemId);
     const selectedData = optionStore.optionList.flatMap(category => 
         category.options.filter(opt => opt.checked == 1)
     );

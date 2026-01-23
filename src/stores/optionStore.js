@@ -131,7 +131,6 @@ export const useOptionStore = defineStore("option", () => {
     }
 
     // 카테고리별 옵션 목록 가져오기 
-    // TODO: 상품등록/수정에서만 사용하게 되었음으로, 필효한 값만 map하기
     const getAllCategoryOptions = async (itemId = 0) => {  // 상품수정에서 조회시 itemId 포함, 옵션관리에서 조회시 0
         try {
             const response = await api.get(`/api/${cocode}/option/list/category/${itemId}`);
@@ -198,6 +197,7 @@ export const useOptionStore = defineStore("option", () => {
                 })
         }
     }
+
     // 옵션 등록
     async function addOption(params) {
         const response = await api.post(`/api/${cocode}/option/add`, params);
