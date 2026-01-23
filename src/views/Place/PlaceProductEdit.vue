@@ -182,9 +182,6 @@ const handleModalSave = async () => {
         </div>
     </div>
 
-    <!-- confirmModal -->
-    <ConfirmModal />
-
     <ModalSimple
         v-if="modalStore.setOperationRuleModal.isVisible"
         :modal-state="modalStore.setOperationRuleModal"

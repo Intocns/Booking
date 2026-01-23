@@ -205,7 +205,4 @@ onMounted(() => {
     >
         <SendSmsTalk ref="sendSmsTalkRef" :reservationData="selectedReservation" />
     </Modal>
-
-    <!-- 문자 발송 확인 모달 -->
-    <ConfirmModal />
 </template>

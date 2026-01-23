@@ -270,9 +270,6 @@ onMounted(() => {
     >
         <SendSmsTalk />
     </Modal>
-
-    <!-- 문자 발송 확인 모달 -->
-    <ConfirmModal />
 </template>
 
 <style lang="scss" scoped>

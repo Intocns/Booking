@@ -100,9 +100,6 @@ const previewData = reactive({
             <PlaceProductPreview v-else :preview-data="previewData" />
         </div>
     </div>
-
-    <!-- confirmModal -->
-    <ConfirmModal />
 </template>
 
 <style lang="scss" scoped>

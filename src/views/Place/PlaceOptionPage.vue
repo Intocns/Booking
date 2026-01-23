@@ -515,9 +515,6 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
     >
         <OptionSetting :is-edit="isEdit" />
     </Modal>
-
-    <!-- 옵션 삭제 -->
-    <ConfirmModal />
 </template>
 
 <style lang="scss" scoped>

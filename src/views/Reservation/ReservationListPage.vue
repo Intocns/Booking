@@ -263,9 +263,6 @@ onMounted(async () => {
     >
         <SendSmsTalk ref="sendSmsTalkRef" :reservationData="selectedReservation" />
     </Modal>
-
-    <!-- confirm 모달 : 문자발송 확인, 예약 확정 시 확인, -->
-    <ConfirmModal />
 </template>
 
 <style lang="scss" scoped>
