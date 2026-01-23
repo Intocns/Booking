@@ -18,6 +18,7 @@ import { useProductStore } from '@/stores/productStore';
 import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
 import { useRouter } from 'vue-router';
+import { showAlert } from '@/utils/ui';
 
 const productStore = useProductStore();
 const modalStore = useModalStore();
@@ -126,7 +127,7 @@ const clickProductImpUpdateBtn = (async(itemId, isImp) => {
 const clickNextBtn = (async() => {
     // 동물 수 미선택 체크
     if (!selectedAnimalCount.value) {
-        alert("예약 가능 동물 수를 선택해주세요.");
+        showAlert("예약 가능 동물 수를 선택해주세요.");
         return;
     }
 
@@ -134,7 +135,7 @@ const clickNextBtn = (async() => {
     if (scheduleMode.value === 'event') {
         const isDateMissing = eventDates.value.some(date => !date || date.length < 2 || !date[0] || !date[1]);
         if (isDateMissing) {
-            alert("이벤트 기간을 모두 선택해주세요.");
+            showAlert("이벤트 기간을 모두 선택해주세요.");
             return;
         }
     }
@@ -173,7 +174,7 @@ const clickNextBtn = (async() => {
     });
 
     if (isTimeMissing) {
-        alert("운영 시간을 모두 입력해주세요.");
+        showAlert("운영 시간을 모두 입력해주세요.");
         return;
     }
 
@@ -198,38 +199,33 @@ const clickNextBtn = (async() => {
             response = await productStore.updateItemReservationInfo(props.savedItemId, params);
         }
 
-        if(response.status_code <= 300){
-            // 옵션 리스트 조회
-            await optionStore.getOptionList(props.savedItemId);
-            const hasOptions = optionStore.optionList && optionStore.optionList.length > 0;
-    
-            if(hasOptions) {
-                // 옵션이 있는 경우: 옵션 탭으로 이동
-                emit('update:nextTab', 'option' , props.savedItemId,props.isSavedSchedule);//다음 페이지 이동
-            } else {
-                modalStore.confirmModal.openModal({
-                    title: '상품 노출 여부 설정',
-                    text: '상품을 예약받을 수 있도록 노출하시겠습니까?',
-                    confirmBtnText: '노출',
-                    cancelBtnText: '미노출',
-                    onConfirm: async () => {
-                        // 노출 설정 로직
-                        await clickProductImpUpdateBtn(props.savedItemId, true);
-                        router.push({ name: 'placeProduct' });
-                    },
-                    onCancel: async () => {
-                        // 미노출 설정 로직
-                        await clickProductImpUpdateBtn(props.savedItemId, false);
-                        router.push({ name: 'placeProduct' });
-                    }
-                })
-            }
-        }else{
-            alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
+        // 옵션 리스트 조회
+        await optionStore.getOptionList(props.savedItemId);
+        const hasOptions = optionStore.optionList && optionStore.optionList.length > 0;
+
+        if(hasOptions) {
+            // 옵션이 있는 경우: 옵션 탭으로 이동
+            emit('update:nextTab', 'option' , props.savedItemId,props.isSavedSchedule);//다음 페이지 이동
+        } else {
+            modalStore.confirmModal.openModal({
+                title: '상품 노출 여부 설정',
+                text: '상품을 예약받을 수 있도록 노출하시겠습니까?',
+                confirmBtnText: '노출',
+                cancelBtnText: '미노출',
+                onConfirm: async () => {
+                    // 노출 설정 로직
+                    await clickProductImpUpdateBtn(props.savedItemId, true);
+                    router.push({ name: 'placeProduct' });
+                },
+                onCancel: async () => {
+                    // 미노출 설정 로직
+                    await clickProductImpUpdateBtn(props.savedItemId, false);
+                    router.push({ name: 'placeProduct' });
+                }
+            })
         }
     } catch(e) {
         console.error(e);
-        alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
     }
 })
 

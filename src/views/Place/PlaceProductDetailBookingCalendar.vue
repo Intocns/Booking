@@ -331,54 +331,6 @@ const handleSaveSchedule = async () => {
     modalStore.setDateSettingModal.closeModal();
 };
 
-// 진료가능 동물 수, 운영시간 변경 저장 (임시 운영 데이터)
-const handleSaveOperationRule = async () => {
-    if (!selectedAnimalCount.value || selectedAnimalCount.value <= 0) {
-        alert("진료 가능 동물 수를 선택해주세요.");
-        return;
-    }
-
-    // times가 비어있거나, 입력되지 않은 값이 하나라도 있는지 확인
-    const hasEmptyTime = times.value.some(time => !time.startTime || !time.endTime);
-
-    if (times.value.length === 0) {
-        alert("최소 하나 이상의 운영시간을 설정해야 합니다.");
-        return;
-    }
-
-    if (hasEmptyTime) {
-        alert("운영시간을 모두 입력해주세요.");
-        return;
-    }
-    
-    const params = {
-        day: targetDate.value,
-        stock: selectedAnimalCount.value,
-        times: times.value.map(time => ({
-            startTime: time.startTime,
-            endTime: time.endTime
-        }))
-    }
-
-    const response = await productStore.setScheduleModalSave(props.savedItemId, params);
-
-    if (response && response.status_code <= 300) {
-        // 현재 캘린더의 시작일 기준
-        const start = new DayPilot.Date(calendarConfig.startDate);
-        const end = start.addDays(6);
-
-        const fetchParams = {
-            startDate: start.toString("yyyy-MM-dd"),
-            endDate: end.toString("yyyy-MM-dd"),
-        };
-        
-        await productStore.getProductSchedule(props.savedItemId, fetchParams);
-        await productStore.getItemReservationInfo(props.savedItemId)
-    }
-
-    modalStore.setOperationRuleModal.closeModal();
-}
-
 // 날짜 변경되면 api호출 - 주간 스케줄 데이터 가져오기
 watch( () => calendarConfig.startDate, async (newStartDate) => {
     if (!newStartDate) return;

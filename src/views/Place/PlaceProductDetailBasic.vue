@@ -21,6 +21,7 @@ import { useModalStore } from '@/stores/modalStore';
 import { parseJSON } from 'date-fns';
 import { useRouter } from 'vue-router';
 import { uploadImage } from '@/utils/fileUpload';
+import { showAlert } from '@/utils/ui';
 
 const productStore = useProductStore();
 const hospitalStore = useHospitalStore();
@@ -112,7 +113,7 @@ const handleMainImageUpload = async (event) => {
             }
         }
     } catch (error) {
-        alert(error.message);
+        console.error(error);
     } finally {
         event.target.value = '';
     }
@@ -182,7 +183,7 @@ const handleDetailImageUpload = async (event, itemIndex) => {
 
     // 최대 3장
     if (detailList.value[itemIndex].images && detailList.value[itemIndex].images.length >= 3) {
-        alert('이미지는 최대 3장까지 추가할 수 있습니다.');
+        showAlert('이미지는 최대 3장까지 추가할 수 있습니다.');
         event.target.value = '';
         return;
     }
@@ -202,7 +203,7 @@ const handleDetailImageUpload = async (event, itemIndex) => {
             });
         }
     } catch (error) {
-        alert(error.message);
+        console.error(error);
     } finally {
         event.target.value = ''; // 같은 파일 재업로드 가능하게 초기화
     }
@@ -236,38 +237,33 @@ const clickNextBtn = (async() => {
         response = await productStore.addItem(params);
     }
 
-    if(response != '' && response.status_code <= 300){
-        //다음 페이지로 이동
-        if(props.viewType == 'update'){
-            //수정
-            modalStore.confirmModal.openModal({
-                text: '수정이 완료되었습니다.',
-                noCancelBtn: true,
-                onConfirm: () => {
-                    //수정 완료 시 이동
-                    router.push({ name: 'placeProduct' });
-                }
-            })
-        }else{
-            //등록
-            let finalBizItemId = props.bizItemId;
-
-            if (response.data && response.data !== 'success') {
-                try {
-                    const reponseDecode = JSON.parse(response.data); //등록 api를 탄 경우 bizmItemId를 넘겨줌
-                    if (reponseDecode && reponseDecode.bizItemId) {
-                        finalBizItemId = reponseDecode.bizItemId;
-                    }
-                } catch (e) {
-                    console.warn(e);
-                }
+    //다음 페이지로 이동
+    if(props.viewType == 'update'){
+        //수정
+        modalStore.confirmModal.openModal({
+            text: '수정이 완료되었습니다.',
+            noCancelBtn: true,
+            onConfirm: () => {
+                //수정 완료 시 이동
+                router.push({ name: 'placeProduct' });
             }
+        })
+    }else{
+        //등록
+        let finalBizItemId = props.bizItemId;
 
-            emit('update:nextTab', 'booking', finalBizItemId, props.isSavedSchedule); //등록 완료 시 다음 탭으로 이동
+        if (response.data && response.data !== 'success') {
+            try {
+                const reponseDecode = JSON.parse(response.data); //등록 api를 탄 경우 bizmItemId를 넘겨줌
+                if (reponseDecode && reponseDecode.bizItemId) {
+                    finalBizItemId = reponseDecode.bizItemId;
+                }
+            } catch (e) {
+                console.warn(e);
+            }
         }
-        
-    } else{
-        alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
+
+        emit('update:nextTab', 'booking', finalBizItemId, props.isSavedSchedule); //등록 완료 시 다음 탭으로 이동
     }
 })
 

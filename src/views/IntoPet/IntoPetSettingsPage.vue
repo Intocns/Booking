@@ -13,6 +13,7 @@ import icDel from '@/assets/icons/ic_del.svg'
 import icSms from '@/assets/icons/ic_sms.svg'
 
 import { ref } from 'vue';
+import { showAlert } from '@/utils/ui';
 
 const MAX_PURPOSES = 6;
 
@@ -34,7 +35,7 @@ const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String
 // 항목 추가
 const addPurpose = () => {
     if (visitPurposes.value.length >= MAX_PURPOSES) {
-        alert(`방문 목적은 최대 ${MAX_PURPOSES}개까지만 설정할 수 있습니다.`);
+        showAlert(`방문 목적은 최대 ${MAX_PURPOSES}개까지만 설정할 수 있습니다.`);
         return;
     }
 
