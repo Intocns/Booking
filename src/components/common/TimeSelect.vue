@@ -1,7 +1,7 @@
 <script setup>
 import icClear from '@/assets/icons/ic_clear.svg'
 import icClock from '@/assets/icons/ic_clock.svg'
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 
 const props = defineProps({
     modelValue: {
@@ -26,6 +26,9 @@ const DEFAULT_PLACEHOLDER = '시간 선택';
 // --- UI 상태 관리 ---
 const isDropdownVisible = ref(false); // 드롭다운 표시 상태
 const wrapperRef = ref(null); // 컴포넌트 외부 클릭 감지를 위한 ref
+// --- 드론다운 스크롤 제어 ref ---
+const hourColumnRef = ref(null); // ul 태그 참조
+const minuteColumnRef = ref(null); // ul 태그 참조
 
 // --- 임시 선택 상태 (취소/적용 로직용) ---
 const tempSelectedHour = ref('00');
@@ -58,6 +61,9 @@ watch(() => props.modelValue, (newValue) => {
 // 입력 필드 클릭 (드롭다운 토글)
 const toggleDropdown = () => {
     isDropdownVisible.value = !isDropdownVisible.value;
+    if (isDropdownVisible.value) {
+        scrollToSelected(); // 열릴 때 스크롤 실행
+    }
 };
 
 // --- 액션 버튼 핸들러 ---
@@ -114,6 +120,29 @@ const handleClickOutside = (event) => {
     }
 };
 
+// 스크롤 이동 함수
+const scrollToSelected = async () => {
+    await nextTick(); // 렌더링 대기
+
+    // 시간 컬럼 스크롤
+    if (hourColumnRef.value) {
+        const selected = hourColumnRef.value.querySelector('.selected');
+        if (selected) {
+            // 선택된 항목이 맨위로
+            hourColumnRef.value.scrollTop = selected.offsetTop - 8; // 상단 패딩값 빼줌
+        }
+    }
+
+    // 분 컬럼 스크롤
+    if (minuteColumnRef.value) {
+        const selected = minuteColumnRef.value.querySelector('.selected');
+        if (selected) {
+            // 선택된 항목이 맨위로
+            minuteColumnRef.value.scrollTop = selected.offsetTop; // 상단 패딩값 빼줌
+        }
+    }
+};
+
 onMounted(() => {
     document.addEventListener('click', handleClickOutside);
 });
@@ -156,9 +185,9 @@ onUnmounted(() => {
 
         <div v-if="isDropdownVisible" class="time-picker-dropdown">
             <div class="time-columns-container">
-                <ul class="time-column hour-column">
+                <ul class="time-column hour-column" ref="hourColumnRef">
                     <li
-                        v-for="hour in hourOptions"
+                        v-for="(hour, index) in hourOptions"
                         :key="hour"
                         :class="{ 'selected': tempSelectedHour === hour }"
                         @click="handleHourClick(hour)"
@@ -167,9 +196,9 @@ onUnmounted(() => {
                     </li>
                 </ul>
                 
-                <ul class="time-column minute-column">
+                <ul class="time-column minute-column" ref="minuteColumnRef">
                     <li
-                        v-for="minute in minuteOptions"
+                        v-for="(minute, index) in minuteOptions"
                         :key="minute"
                         :class="{ 'selected': tempSelectedMinute === minute }"
                         @click="handleMinuteClick(minute)"
@@ -187,7 +216,6 @@ onUnmounted(() => {
     </div>
 </template>
 
-/* CustomTimePicker.vue style */
 <style lang="scss" scoped>
 .custom-time-picker-wrapper {
     position: relative;
@@ -195,7 +223,6 @@ onUnmounted(() => {
     min-width: 0;
 }
 
-// 1. 인풋 디스플레이 스타일 (기존 InputTextBox와 유사)
 .input-display {
     display: flex;
     justify-content: space-between;
@@ -257,7 +284,7 @@ onUnmounted(() => {
     }
 }
 
-// 2. 드롭다운 팝업 스타일
+// 드롭다운 팝업 스타일
 .time-picker-dropdown {
     position: absolute;
     z-index: 1000; // 다른 요소 위에 표시
@@ -316,7 +343,7 @@ onUnmounted(() => {
     }
 }
 
-// 3. 푸터 버튼 스타일
+// 푸터 버튼 스타일
 .picker-footer {
     display: flex;
     justify-content: flex-end;
