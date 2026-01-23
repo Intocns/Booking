@@ -14,6 +14,7 @@ import icSetting from '@/assets/icons/ic_setting.svg'
 import icEdit from '@/assets/icons/ic_edit.svg'
 import icPlus from '@/assets/icons/ic_plus_black.svg';
 import icDel from '@/assets/icons/ic_del.svg';
+import icReset from '@/assets/icons/ic_reset.svg'
 
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
@@ -614,6 +615,11 @@ const initDataMapping = async () => {
     resetSelection('EXPOSURE_END');
 };
 
+// 운영시간 초기화 버튼
+const onClearConfig = () => {
+    configs.value = [createDefaultConfig()];
+}
+
 onMounted(async() => {
     initDataMapping();
 })
@@ -710,7 +716,7 @@ onMounted(async() => {
                 <!-- 운영 시간 -->
                 <li class="form-item">
                     <div class="form-label">운영 시간</div>
-                    <div class="form-content">
+                    <div class="form-content" style="padding: 8px 10px;">
                         <!-- 정기운영 || 이벤트 운영 && 전체 설정의 경우 -->
                         <div v-if="scheduleMode === 'regular' || applyMode === 'all'">
                             <OperatingTimeForm v-model="configs[0]" />
@@ -730,6 +736,16 @@ onMounted(async() => {
                                 </div>
                                 <OperatingTimeForm v-model="configs[idx]" :idx="idx" />
                             </div>
+                        </div>
+
+                        <div class="d-flex justify-end">
+                            <button 
+                                @click="onClearConfig"
+                                class="btn btn--size-24 btn--black-outline"
+                            >
+                                <img :src="icReset" alt="아이콘">
+                                운영시간 초기화
+                            </button>
                         </div>
                     </div>
                 </li>
