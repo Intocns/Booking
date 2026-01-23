@@ -404,7 +404,7 @@ export const useProductStore = defineStore("product", () => {
     }
 
     // 상품 운영시간 변경
-    const setScheduleTime = async(itemId, params, schId = null) => {
+    const setScheduleTime = async(itemId, params, schId = 0) => {
         // {
         //     "scheduleId": 0,
         //     "day": "string",
@@ -612,7 +612,7 @@ export const useProductStore = defineStore("product", () => {
     }
 
     // 상품 수정 > 일정 설정 > 진료가능 동물 수, 운영시간 설정 모달창 저장 (캘랜더 > 모달)
-    const setScheduleModalSave = async(itemId, params, schId = null) => {
+    const setScheduleModalSave = async(itemId, params, schId = 0) => {
         try {
             const response = await api.post(`/api/${cocode}/item/${itemId}/schedule/modify/b`, params); 
 
