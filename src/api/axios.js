@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ref } from "vue";
+import { showAlert } from "@/utils/ui";
 import { COCODE } from "@/constants/common";
 
 const api = axios.create({
@@ -43,34 +44,34 @@ api.interceptors.request.use(
 // 응답 인터셉터
 api.interceptors.response.use(
     async (response) => {
-        // 응답이 수신된 후, 본격적으로 응답을 처리하기 전에 실행되는 로직
-        try {
-            // console.log('응답 수신:', response);
-        } finally {
-            if (!response.config.skipLoading) {
-                // skipLoading이 true가 아닌 경우에만 로딩 상태를 변경
-                api.ing.value = false // 로딩 상태를 false로 설정
-            }
+        if (!response.config.skipLoading) {
+            api.ing.value = false;
         }
+
+        const res = response.data; // 서버에서 보낸 실제 데이터 바디
+
+        // 비즈니스 로직 에러 처리
+        if(res && res.status_code >  300) {
+            // 공통 알럿 처리 (skipAlert가 아닐 때만)
+            const message = res.message || '요청 처리 중 오류가 발생했습니다.';
+            showAlert(message, response.config)
+
+            // 성공 핸들러지만 reject를 던져서 스토어를 catch로 보냄
+            return Promise.reject(res);
+        }
+
+        // 진짜 성공일 때만 데이터를 반환
         return response
     },
     async (error) => {
         // 오류 응답이 수신될 경우 실행되는 로직
         api.ing.value = false
-        // console.log('오류 수신:', error);
-        const originalRequest = error.config //원래 시도했던 요청 객체 불러옴
 
-        const showAlert = (message) => {
-            // 에러메세지 보여주는 함수
-            if (!originalRequest.skipAlert) {
-                // 요청에 skipAlert값이 없을떄만 alert창 띄움.
-                alert(message)
-            }
-        }
+        const originalRequest = error.config //원래 시도했던 요청 객체 불러옴
 
         if (!error.response) {
             // error.response가 없는 경우 처리
-            showAlert('서버 에러입니다. 잠시 후 다시 시도해주세요.')
+            showAlert('서버 에러입니다. 잠시 후 다시 시도해주세요.', originalRequest)
             return Promise.reject(error)
         }
 
