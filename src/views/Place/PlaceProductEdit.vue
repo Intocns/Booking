@@ -23,6 +23,7 @@ import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
 // utils
 import { DAYS_OPTIONS } from '@/utils/schedule';
+import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();
 const productStore = useProductStore();
@@ -91,8 +92,8 @@ const handleModalSave = async () => {
     const data = modalStore.setOperationRuleModal.data;
 
     // 유효성 검사
-    if (!data.stock || data.stock <= 0) return alert("진료 가능 동물 수를 선택해주세요.");
-    if (data.times.some(t => !t.startTime || !t.endTime)) return alert("운영시간을 모두 입력해주세요.");
+    if (!data.stock || data.stock <= 0) return showAlert("진료 가능 동물 수를 선택해주세요.");
+    if (data.times.some(t => !t.startTime || !t.endTime)) return showAlert("운영시간을 모두 입력해주세요.");
 
     const params = {
         day: data.date,
@@ -106,7 +107,7 @@ const handleModalSave = async () => {
     const response = await productStore.setScheduleModalSave(itemId.value, params);
 
     if (response && response.status_code <= 300) {
-        alert("저장되었습니다.");
+        showAlert("저장되었습니다.");
         
         await productStore.getItemReservationInfo(itemId.value); // 오른쪽 목록 갱신
         

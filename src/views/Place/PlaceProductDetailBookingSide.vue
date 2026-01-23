@@ -27,6 +27,7 @@ import { formatDateToDay } from '@/utils/dateFormatter';
 import { setOperatingObject } from '@/utils/product';
 import { DAYS_OPTIONS, PUBLIC_HOLIDAYS_OPTIONS } from '@/utils/schedule';
 import { DayPilot } from '@daypilot/daypilot-lite-vue';
+import { showAlert } from '@/utils/ui';
 
 // props
 const props = defineProps({
@@ -165,7 +166,7 @@ const saveTimeSetting = () => {
     const currentData = selectionData[type];
     
     if (!currentData.date || !currentData.time) {
-        alert('날짜와 시간을 모두 설정해 주세요.');
+        showAlert('날짜와 시간을 모두 설정해 주세요.');
         return;
     }
 
@@ -232,23 +233,24 @@ const updateItemSchedule = (async(type) => {
     // console.log(params);
     // return false;
 
-    const response = await productStore.updateItemReservationInfo(props.savedItemId, params);
+    try {
+        const response = await productStore.updateItemReservationInfo(props.savedItemId, params);
 
-    if(response.status_code <= 300){
-        alert('저장이 완료되었습니다');
+        showAlert('저장이 완료되었습니다');
 
         await initDataMapping(); 
+
         // 캘랜더 데이터 업데이트
         const currentStart = DayPilot.Date.today().firstDayOfWeek(1); 
         await productStore.getProductSchedule(props.savedItemId, {
             startDate: currentStart.toString("yyyy-MM-dd"),
             endDate: currentStart.addDays(6).toString("yyyy-MM-dd"),
         });
-    
+
         isTimeModalOpen.value = false;
         modalStore.holidaySettingModal.closeModal();
-    }else{
-        alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
+    } catch(e) {
+        console.error(e)
     }
 })
 

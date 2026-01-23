@@ -14,6 +14,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
+import { showAlert } from '@/utils/ui';
 
 const optionStore = useOptionStore();
 const router = useRouter();
@@ -85,35 +86,30 @@ const saveItemOption = (async() => {
     try {
         let response = await optionStore.addOptionMapping(params);
 
-        if(response.status_code <= 300){
-            if(props.viewType !== 'update') {
-                // 상품 노출설정 여부 체크
-                modalStore.confirmModal.openModal({
-                    title: '상품 노출 설정',
-                    text: '옵션 설정이 완료되었습니다.\n상품을 예약받을 수 있도록 노출하시겠습니까?',
-                    confirmBtnText: '노출',
-                    cancelBtnText: '미노출',
-                    onConfirm: async () => {
-                        // 상품 노출
-                        await clickProductImpUpdateBtn(props.savedItemId, true);
-                        router.push({ name: 'placeProduct' });
-                    },
-                    onCancel: async () => {
-                        // 상품 미노출 
-                        await clickProductImpUpdateBtn(props.savedItemId, false);
-                        router.push({ name: 'placeProduct' });
-                    }
-                });
-            } else {
-                alert('옵션 설정이 완료되었습니다.')
-                router.push({ name: 'placeProduct' });
-            }
-        }else{
-            alert('오류가 발생했습니다. 관리자에게 문의해주세요.');
+        if(props.viewType !== 'update') {
+            // 상품 노출설정 여부 체크
+            modalStore.confirmModal.openModal({
+                title: '상품 노출 설정',
+                text: '옵션 설정이 완료되었습니다.\n상품을 예약받을 수 있도록 노출하시겠습니까?',
+                confirmBtnText: '노출',
+                cancelBtnText: '미노출',
+                onConfirm: async () => {
+                    // 상품 노출
+                    await clickProductImpUpdateBtn(props.savedItemId, true);
+                    router.push({ name: 'placeProduct' });
+                },
+                onCancel: async () => {
+                    // 상품 미노출 
+                    await clickProductImpUpdateBtn(props.savedItemId, false);
+                    router.push({ name: 'placeProduct' });
+                }
+            });
+        } else {
+            showAlert('옵션 설정이 완료되었습니다.')
+            router.push({ name: 'placeProduct' });
         }
     } catch(e) {
         console.error(e);
-        alert('저장 중 오류가 발생했습니다.');
     }
 
 })

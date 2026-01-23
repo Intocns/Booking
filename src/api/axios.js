@@ -75,92 +75,96 @@ api.interceptors.response.use(
             return Promise.reject(error)
         }
 
-        // switch (error.response.status) {
-        //     case 401: // 토큰만료
-        //         if (!originalRequest._retry) {
-        //             originalRequest._retry = true
+        const status = error.response.status;
+        const errorData = error.response.data; // 서버에서 보내준 에러 객체
 
-        //             const refreshToken = Cookies.get('INTOPG_REFRESH')
-        //             const isAdmin = Cookies.get('INTOPG_IS_MANAGER') == 1 ? true : false
+        switch (status) {
+            case 401: // 토큰만료
+                // if (!originalRequest._retry) {
+                //     originalRequest._retry = true
 
-        //             if (!refreshToken) {
-        //                 // refreshToken 없음
-        //                 Cookies.remove('INTOPG_ACCESS')
-        //                 Cookies.remove('INTOPG_REFRESH')
-        //                 Cookies.remove('INTOPG_IS_MANAGER')
-        //                 if (isAdmin) {
-        //                     showAlert('로그인이 만료되었습니다. 다시 로그인해주세요.')
-        //                     // window.location.href = '/admin/login'
-        //                     router.push('/admin/login')
-        //                 } else {
-        //                     showAlert('연결이 종료되었습니다. 새 창에서 이용해 주세요.')
-        //                     router.push({ name: 'login', query: { closeWebview: '1' } })
-        //                 }
-        //                 return Promise.reject(error)
-        //             }
+                //     const refreshToken = Cookies.get('INTOPG_REFRESH')
+                //     const isAdmin = Cookies.get('INTOPG_IS_MANAGER') == 1 ? true : false
 
-        //             // 동시 401 방지: 리프레시 한 번만 수행
-        //             if (!isRefreshing) {
-        //                 isRefreshing = true
-        //                 refreshPromise = HttpClient.post(
-        //                     '/auth/refresh',
-        //                     { refresh_token: refreshToken }, // 바디
-        //                     {
-        //                         headers: {
-        //                             'X-Refresh-Token': refreshToken, // 헤더
-        //                         },
-        //                     },
-        //                 )
-        //                     .then((res) => {
-        //                         const ok =
-        //                             res.status === 200 &&
-        //                             String(res.data?.code) === '200' &&
-        //                             res.data?.token
-        //                         if (!ok) throw new Error('Refresh failed')
-        //                         const newAccessToken = res.data.token
-        //                         Cookies.set('INTOPG_ACCESS', newAccessToken, { expires: 7 })
-        //                         return newAccessToken
-        //                     })
-        //                     .finally(() => {
-        //                         isRefreshing = false
-        //                     })
-        //             }
+                //     if (!refreshToken) {
+                //         // refreshToken 없음
+                //         Cookies.remove('INTOPG_ACCESS')
+                //         Cookies.remove('INTOPG_REFRESH')
+                //         Cookies.remove('INTOPG_IS_MANAGER')
+                //         if (isAdmin) {
+                //             showAlert('로그인이 만료되었습니다. 다시 로그인해주세요.')
+                //             // window.location.href = '/admin/login'
+                //             router.push('/admin/login')
+                //         } else {
+                //             showAlert('연결이 종료되었습니다. 새 창에서 이용해 주세요.')
+                //             router.push({ name: 'login', query: { closeWebview: '1' } })
+                //         }
+                //         return Promise.reject(error)
+                //     }
 
-        //             try {
-        //                 const newAccessToken = await refreshPromise
-        //                 originalRequest.headers = originalRequest.headers || {}
-        //                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
-        //                 return HttpClient(originalRequest) // 원요청 재시도
-        //             } catch (e) {
-        //                 // 리프레시 실패
-        //                 Cookies.remove('INTOPG_ACCESS')
-        //                 Cookies.remove('INTOPG_REFRESH')
-        //                 Cookies.remove('INTOPG_IS_MANAGER')
-        //                 if (isAdmin) {
-        //                     showAlert('로그인이 만료되었습니다. 다시 로그인해주세요.')
-        //                     window.location.href = '/admin/login'
-        //                 } else {
-        //                     showAlert('연결이 종료되었습니다. 새 창에서 이용해 주세요.')
-        //                     router.push({ name: 'login', query: { closeWebview: '1' } })
-        //                 }
-        //                 return Promise.reject(e)
-        //             }
-        //         }
-        //         break
-        //     case 500: // 500 -> 서버
-        //         showAlert('서버 에러입니다. 잠시 후 다시 시도해주세요.')
-        //         break
-        //     case 408: // 408 -> 요청시간 초과
-        //         showAlert('요청 시간이 초과되었습니다. 다시 시도해주세요')
-        //         break
-        //     default:
-        //         if (error.response.data.result) {
-        //             showAlert(error.response.data.result)
-        //         } else {
-        //             showAlert(`에러가 발생했습니다: ${error.message}\n관리자에게 문의 바랍니다.`)
-        //         }
-        //         break
-        // }
+                //     // 동시 401 방지: 리프레시 한 번만 수행
+                //     if (!isRefreshing) {
+                //         isRefreshing = true
+                //         refreshPromise = HttpClient.post(
+                //             '/auth/refresh',
+                //             { refresh_token: refreshToken }, // 바디
+                //             {
+                //                 headers: {
+                //                     'X-Refresh-Token': refreshToken, // 헤더
+                //                 },
+                //             },
+                //         )
+                //             .then((res) => {
+                //                 const ok =
+                //                     res.status === 200 &&
+                //                     String(res.data?.code) === '200' &&
+                //                     res.data?.token
+                //                 if (!ok) throw new Error('Refresh failed')
+                //                 const newAccessToken = res.data.token
+                //                 Cookies.set('INTOPG_ACCESS', newAccessToken, { expires: 7 })
+                //                 return newAccessToken
+                //             })
+                //             .finally(() => {
+                //                 isRefreshing = false
+                //             })
+                //     }
+
+                //     try {
+                //         const newAccessToken = await refreshPromise
+                //         originalRequest.headers = originalRequest.headers || {}
+                //         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+                //         return HttpClient(originalRequest) // 원요청 재시도
+                //     } catch (e) {
+                //         // 리프레시 실패
+                //         Cookies.remove('INTOPG_ACCESS')
+                //         Cookies.remove('INTOPG_REFRESH')
+                //         Cookies.remove('INTOPG_IS_MANAGER')
+                //         if (isAdmin) {
+                //             showAlert('로그인이 만료되었습니다. 다시 로그인해주세요.')
+                //             window.location.href = '/admin/login'
+                //         } else {
+                //             showAlert('연결이 종료되었습니다. 새 창에서 이용해 주세요.')
+                //             router.push({ name: 'login', query: { closeWebview: '1' } })
+                //         }
+                //         return Promise.reject(e)
+                //     }
+                // }
+                showAlert('인증이 만료되었습니다. 다시 로그인해주세요.', originalRequest);
+                break
+            case 500: // 500 -> 서버
+                showAlert('서버 에러입니다. 잠시 후 다시 시도해주세요.', originalRequest)
+                break
+            case 408: // 408 -> 요청시간 초과
+                showAlert('요청 시간이 초과되었습니다. 다시 시도해주세요', originalRequest)
+                break
+            default:
+                if (errorData.message) {
+                    showAlert(`에러가 발생했습니다: ${errorData.message}`)
+                } else {
+                    showAlert(`에러가 발생했습니다: ${error.message}\n관리자에게 문의 바랍니다.`, originalRequest)
+                }
+                break
+        }
         return Promise.reject(error)
     },
 )
