@@ -13,6 +13,7 @@ import Modal from '@/components/common/Modal.vue';
 import { useModalStore } from '@/stores/modalStore';
 
 import { ref, reactive, watch } from 'vue';
+import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();
 
@@ -33,7 +34,7 @@ const newQuestion = reactive({
 // 질문 추가 모달 열기 (10개 제한)
 const handleAddQuestion = () => {
     if (questions.value.length >= 10) {
-        alert('질문은 최대 10개까지만 등록 가능합니다.');
+        showAlert('질문은 최대 10개까지만 등록 가능합니다.');
         return;
     }
     
@@ -64,7 +65,7 @@ watch(() => newQuestion.type, (newType) => {
 
 // 저장 로직
 const saveQuestion = () => {
-    if (!newQuestion.title) return alert('질문을 입력하세요.');
+    if (!newQuestion.title) return showAlert('질문을 입력하세요.');
     
     questions.value.push({
         id: Date.now(),

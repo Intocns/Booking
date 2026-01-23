@@ -10,6 +10,7 @@ import icClose from '@/assets/icons/ic_btn_close_b.svg'
 import { ref } from 'vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
+import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();
 
@@ -37,7 +38,7 @@ const removeGuide = (type, index) => {
 // 모달 열기 함수
 const openGuideModal = (type) => {
     const targetList = type === 'confirm' ? confirmGuides : cancelGuides;
-    if (targetList.value.length >= 10) return alert('최대 10개까지 등록 가능합니다.');
+    if (targetList.value.length >= 10) return showAlert('최대 10개까지 등록 가능합니다.');
     
     currentGuideType.value = type;
     guideInputText.value = ''; // 초기화
@@ -47,7 +48,7 @@ const openGuideModal = (type) => {
 
 // 등록 완료 함수
 const handleGuideSubmit = () => {
-    if (!guideInputText.value.trim()) return alert('내용을 입력해주세요.');
+    if (!guideInputText.value.trim()) return showAlert('내용을 입력해주세요.');
     
     const targetList = currentGuideType.value === 'confirm' ? confirmGuides : cancelGuides;
     targetList.value.push({ 
