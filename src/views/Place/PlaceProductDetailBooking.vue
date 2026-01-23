@@ -12,8 +12,10 @@ import icDel from '@/assets/icons/ic_del.svg';
 import { formatDateToDay } from '@/utils/dateFormatter';
 import { setOperatingObject } from '@/utils/product';
 import { useProductStore } from '@/stores/productStore';
+import { useModalStore } from '@/stores/modalStore';
 
 const productStore = useProductStore();
+const modalStore = useModalStore();
 
 // 예약 가능 동물 수 (임시 1~10)
 const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
@@ -178,7 +180,13 @@ const clickNextBtn = (async() => {
 
 // 이전 버튼
 const clickPrevBtn = (() => {
-    emit('update:nextTab', 'basic');//이전 페이지 이동
+    modalStore.confirmModal.openModal({
+        title: '이전 단계 이동',
+        text: '이전 단계로 이동하시겠습니까?\n저장 하지 않고 이전 단계로 이동시 입력한 정보는 모두 사라집니다.',
+        onConfirmBtnText: '이전으로',
+        onConfirm: () => {emit('update:nextTab', 'basic');} //이전 페이지 이동
+    })
+    
 })
 </script>
 

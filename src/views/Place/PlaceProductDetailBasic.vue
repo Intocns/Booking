@@ -250,13 +250,20 @@ const clickNextBtn = (async() => {
             })
         }else{
             //등록
-            let reponseDecode = JSON.parse(response.data);//등록 api를 탄 경우 bizmItemId를 넘겨줌
+            let finalBizItemId = props.bizItemId;
 
-            // if(props.savedItemId == ""){//첫 등록인 경우에만 삽입
-            //     props.savedItemId = reponseDecode.bizItemId;
-            // }
+            if (response.data && response.data !== 'success') {
+                try {
+                    const reponseDecode = JSON.parse(response.data); //등록 api를 탄 경우 bizmItemId를 넘겨줌
+                    if (reponseDecode && reponseDecode.bizItemId) {
+                        finalBizItemId = reponseDecode.bizItemId;
+                    }
+                } catch (e) {
+                    console.warn(e);
+                }
+            }
 
-            emit('update:nextTab', 'booking', reponseDecode.bizItemId, props.isSavedSchedule); //등록 완료 시 다음 탭으로 이동
+            emit('update:nextTab', 'booking', finalBizItemId, props.isSavedSchedule); //등록 완료 시 다음 탭으로 이동
         }
         
     } else{
@@ -633,7 +640,7 @@ onMounted(async() => {
     
     <div class="button-wrapper">
         <button class="btn btn--size-40 btn--black" @click="goToList()">목록으로</button>
-        <button class="btn btn--size-40 btn--blue" @click="clickNextBtn()">{{ savedItemId == "" ? "다음" : "저장"}}</button>
+        <button class="btn btn--size-40 btn--blue" @click="clickNextBtn()">{{ props.viewType !== 'update' ? "다음" : "저장"}}</button>
     </div>
 </template>
 
