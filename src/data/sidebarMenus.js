@@ -12,7 +12,7 @@ export const menus = [
         { name: "전체 예약 조회", path: "/reservation/list" },
         { name: "대기 예약 관리", path: "/reservation/pending" },
         { name: "예약 일정 확인", path: "/reservation/schedule" },
-        { name: "SMS 발송 내역", path: "/reservation/sms-history" },
+        { name: "SMS/알림톡 발송 내역", path: "/reservation/sms-history" },
         ]
     },
     {
