@@ -11,6 +11,10 @@ const props = defineProps({
     reservationData: {
         type: Object,
         default: () => ({})
+    },
+    isLink: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -19,12 +23,11 @@ const formattedContent = computed(() =>
     formatTemplateContent(props.template?.template_content || '', variableMap.value)
 );
 const senderName = computed(() => {
-    const isDefaultTemplate = props.template?.is_default == 1
-
-    if (isDefaultTemplate) {
+    // isLink가 true이면 인투링크 발송
+    if (props.isLink) {
         return '인투링크';
     }
-// TODO: cocode 기반 실제 병원명으로 교체
+// TODO: cocode 기반 실제 병원명으로 교체해야함
     return (
         props.reservationData?.hospitalName ||
         props.reservationData?.hospital_name ||

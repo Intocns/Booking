@@ -29,22 +29,18 @@ const selectedReservation = ref(null);
 
 // 문자 발송 모달 열기
 const openSmsModal = (row) => {
-    // 선택된 예약 데이터 매핑 (TalkPreview 변수 치환용)
+    // row 객체 전체를 전달하고 필요한 필드만 추가 매핑
     selectedReservation.value = {
+        ...row, // row 객체의 모든 필드 포함
         petName: row?.petName,
         reservationDate: row?.reTimeTxt,
         reservationTime: row?.reTimeHisTxt,
         productName: row?.roomName,
         hospitalPhone: row?.hospitalPhone, //TODO: cocode 기반 실제 병원명으로 교체
         phoneTxt: row?.phoneTxt, // 수신번호용 전화번호
-        // 동물 정보
-        speciesName: row?.speciesName, // 종
-        breedName: row?.breedName, // 품종
-        sex: row?.sex, // 성별
-        // 추가 동물 정보 (필요시)
-        animalNum: row?.animalNum,
         protectorName: row?.userName, // 고객명
-        visitSource: row?.reRouteTxt, // 예약경로
+        visitSource: row?.reRouteTxt, // 예약경로 텍스트
+        visitSourceText: '', // 방문경로(기타일 경우 text 입력 값)
     };
 
     modalStore.smsModal.openModal();

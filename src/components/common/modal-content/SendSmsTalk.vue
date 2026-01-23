@@ -8,6 +8,8 @@ import { ref, watch } from 'vue';
 import { useModalStore } from '@/stores/modalStore';
 import { api } from '@/api/axios';
 import { buildTemplateVariables } from '@/utils/alimtalkTemplate.js';
+import { formatPhone } from '@/utils/phoneFormatter.js';
+import { PET_GENDER_MAP, RESERVE_ROUTE_MAP } from '@/utils/reservation.js';
 
 const props = defineProps({
     reservationData: {
@@ -32,13 +34,20 @@ const recipientPhone = ref('');
 // reservationData 변경 시 수신번호 자동 설정
 watch(() => props.reservationData, (newData) => {
     if (newData) {
-        recipientPhone.value = newData.phoneTxt;
+        recipientPhone.value = formatPhone(newData.phoneTxt);
     }
 }, { immediate: true });
+
+// 전화번호 입력 시 자동 형식 변환
+const handlePhoneInput = (event) => {
+    const formatted = formatPhone(event.target.value);
+    recipientPhone.value = formatted;
+};
 
 // 알림톡 프로필/템플릿 체크 및 복호화 테스트용 상태
 const isCheckingAvailable = ref(false);
 const checkAvailableResult = ref(null);
+const isLink = ref(false); // 인투링크 발송 여부
 
 // 템플릿 정보 조회 상태
 const isLoadingTemplates = ref(false);
@@ -77,9 +86,13 @@ const sendTalk = async () => {
     }
 
     // alim_data_array payload 빌드
-    const contentVariables = buildTemplateVariables(props.reservationData);
+    const reservationDataWithPhone = {
+        ...props.reservationData,
+        hospitalPhone: hospitalPhone,
+    };
+    const contentVariables = buildTemplateVariables(reservationDataWithPhone);
     const alimData = {
-        animal_num: props.reservationData?.animalNum || '',
+        animal_num: props.reservationData?.gePetNo || '',
         protector_name: props.reservationData?.protectorName || '',
         protector_phone: recipientPhone.value,
         visit_source: props.reservationData?.visitSource || '',
@@ -87,8 +100,8 @@ const sendTalk = async () => {
         animal_name: props.reservationData?.petName || '',
         animal_species: props.reservationData?.speciesName || '',
         animal_breed: props.reservationData?.breedName || '',
-        birth: props.reservationData?.birth || props.reservationData?.birthday || '',
-        animal_gender: props.reservationData?.sex || '',
+        birth: props.reservationData?.petBirth || '',
+        animal_gender: PET_GENDER_MAP[props.reservationData?.petSex] || '',
         reserve_at: props.reservationData?.reservationDate && props.reservationData?.reservationTime
             ? `${props.reservationData.reservationDate} ${props.reservationData.reservationTime}`.trim()
             : (props.reservationData?.reservationDate || ''),
@@ -105,7 +118,6 @@ const sendTalk = async () => {
             templateSno: selectedTemplate.value?.sno || null,
             templateId: String(templateId),
             alimDataArray: [alimData],
-            isNotRemovePoint: 1,
             hospitalReplaceInfo: {
                 comp_enrol_num: compEnrolNum, // TODO: 실제 값 연동
                 cocode: cocode, // TODO: 실제 값 연동
@@ -181,7 +193,11 @@ const checkAvailableApi = async () => {
             const isProfile = data.is_profile === true;
             const isAvailableTemplate = data.is_available_template === true;
             
-            if (!isChannel && !isProfile && !isAvailableTemplate) {
+            // isLink 상태 설정
+            isLink.value = !isChannel && !isProfile && !isAvailableTemplate;
+            // isLink.value = true; //TODO: 임시로 인투링크 발송 체크 삭제 해야함
+          
+            if (isLink.value) {
                 // 모두 false이면 기본 템플릿(is_default=1) 조회 (인투링크 발송)
                 await getTemplateInfo(true);
             } else {
@@ -358,7 +374,11 @@ const hideTooltip = (type) => {
                     </div>
 
                     <div class="content-talk__preview">
-                        <TalkPreview :template="selectedTemplate" :reservationData="reservationData" />
+                        <TalkPreview 
+                            :template="selectedTemplate" 
+                            :reservationData="{ ...reservationData, hospitalPhone: reservationData?.hospitalPhone || hospitalPhone }" 
+                            :isLink="isLink === true" 
+                        />
                     </div>
                 </div>
 
@@ -367,11 +387,16 @@ const hideTooltip = (type) => {
                         <span class="title-s helper">
                             수신번호
                         </span>
-                        <input class="input-text" type="text" v-model="recipientPhone">
+                        <input 
+                            class="input-text" 
+                            type="text" 
+                            v-model="recipientPhone"
+                            @input="handlePhoneInput"
+                        >
                     </div>
                 </div>
 
-                <div class="tooltip-box" v-if="selectedTemplate?.is_default == 1">
+                <div class="tooltip-box" v-if="isLink === true">
                     <ul>
                         <li>해당 알림톡은 인투링크 프로필로 발송됩니다.</li>
                     </ul>
