@@ -1,3 +1,4 @@
+import { showAlert } from "@/utils/ui";
 import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
@@ -110,7 +111,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta?.isWaiting) || to.meta?.isWaiting) {
-        alert('서비스 준비 중입니다.');
+        showAlert('서비스 준비 중입니다.');
         return next(false);
     }
     next();

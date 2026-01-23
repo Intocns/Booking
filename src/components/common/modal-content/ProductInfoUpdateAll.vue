@@ -17,6 +17,7 @@ import { ref, watch, computed } from 'vue';
 import { getFieldError } from '@/utils/common'
 import { api } from '@/api/axios'
 import { uploadImage } from '@/utils/fileUpload'
+import { showAlert } from '@/utils/ui'
 
 const modalStore = useModalStore();
 const productStore = useProductStore();
@@ -87,7 +88,7 @@ const handleImageUpload = async (event, itemIndex) => {
 
     const currentImages = additionalItems.value[itemIndex].images;
     if (currentImages && currentImages.length >= 3) {
-        alert('이미지는 항목당 최대 3장까지 추가할 수 있습니다.');
+        showAlert('이미지는 항목당 최대 3장까지 추가할 수 있습니다.');
         event.target.value = ''; // input 초기화
         return;
     }
@@ -103,7 +104,7 @@ const handleImageUpload = async (event, itemIndex) => {
             });
         }
     } catch (error) {
-        alert(error.message);
+        console.error(error);
     }
 
     event.target.value = ''; // 초기화
@@ -119,7 +120,7 @@ const goInfo = (() => {
     if(selectedList.length > 0){
         mode.value = 'INFO'
     }else{
-        alert('상품을 선택해주세요.'); //confirm모달로 변경 예정
+        showAlert('상품을 선택해주세요.');
     }
 })
 
@@ -141,7 +142,7 @@ const eventSave = (async() => {
     const hasError = validations.some(result => result.isError);
 
     if (hasError) {
-        alert('입력 양식을 확인해 주세요.');
+        showAlert('입력 양식을 확인해 주세요.');
         return;
     }
 
