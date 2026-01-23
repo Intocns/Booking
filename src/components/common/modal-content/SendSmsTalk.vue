@@ -55,7 +55,7 @@ const templateList = ref([]);
 const selectedTemplate = ref(null); // 선택된 템플릿
 
 // 알림톡 템플릿 타입 (현재 5로 고정해 확인)
-const selectedTemplateType = ref(1); // TODO: 추후 변경 필요
+const selectedTemplateType = ref(5); // TODO: 추후 변경 필요
 const isSending = ref(false);
 
 // 템플릿 선택 핸들러
@@ -195,7 +195,6 @@ const checkAvailableApi = async () => {
             
             // isLink 상태 설정
             isLink.value = !isChannel && !isProfile && !isAvailableTemplate;
-            // isLink.value = true; //TODO: 임시로 인투링크 발송 체크 삭제 해야함
           
             if (isLink.value) {
                 // 모두 false이면 기본 템플릿(is_default=1) 조회 (인투링크 발송)
