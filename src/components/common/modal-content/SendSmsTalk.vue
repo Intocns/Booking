@@ -502,7 +502,7 @@ const hideTooltip = (type) => {
             <p class="body-s" v-if="isSmsTooltipVisible">
                 - 80Byte 이상 시 LMS로 발송되어 문자 건수가 2건씩 차감됩니다.<br/>
                 - 문자 발송 상태 확인까지 시간이 소요될 수 있으며, 확인 전까지 ‘대기’ 상태로 표시됩니다.
-                발송 내역은 ‘SMS 발송내역’ 메뉴에서 확인할 수 있습니다.
+                발송 내역은 ‘SMS/알림톡 발송내역’ 메뉴에서 확인할 수 있습니다.
             </p>
             <p class="body-s" v-else-if="isTalkTooltipVisible">
                 해당 알림톡은 인투링크 프로필로 발송됩니다

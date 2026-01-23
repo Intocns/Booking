@@ -25,6 +25,7 @@ import { useProductStore } from '@/stores/productStore';
 import { formatDateToDay } from '@/utils/dateFormatter';
 import { setOperatingObject } from '@/utils/product';
 import { DAYS_OPTIONS, PUBLIC_HOLIDAYS_OPTIONS } from '@/utils/schedule';
+import { DayPilot } from '@daypilot/daypilot-lite-vue';
 
 // props
 const props = defineProps({
@@ -86,7 +87,6 @@ const removeEventPeriod = (idx) => {
 
 // 예약 가능 동물 수 옵션 (임시 1~10)
 const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
-
 
 /**
  * 예약 오픈, 노출, 미노출 일 설정 관련
@@ -237,7 +237,7 @@ const updateItemSchedule = (async(type) => {
         alert('저장이 완료되었습니다');
 
         await initDataMapping(); 
-        // TODO: 캘랜더 데이터 업데이트
+        // 캘랜더 데이터 업데이트
         const currentStart = DayPilot.Date.today().firstDayOfWeek(1); 
         await productStore.getProductSchedule(props.savedItemId, {
             startDate: currentStart.toString("yyyy-MM-dd"),
@@ -391,6 +391,82 @@ const formattedTempSchedules = computed(() => {
     });
 });
 
+// 임시운영 데이터 수정 로직
+const onEditTemporary = (raw) => {
+    // 캘린더에서 클릭했을 때와 동일한 데이터 규격으로 payload를 구성하여 전달
+    modalStore.setOperationRuleModal.openModal({
+        date: raw.startDate,
+        stock: raw.stock,
+        // bit를 [{startTime, endTime}] 배열로 변환해서 전달
+        times: bitToTimeRanges(raw.hourBit),
+        isUpdate: true, // 수정 모드임을 알림 (선택사항)
+        originData: raw  // 원본 데이터가 필요할 경우를 대비
+    });
+};
+
+// 임시운영 데이터 삭제 로직 (삭제하려는임시운영의 데이터만 제외하고 저장함)
+const onDeleteTemporary = async (raw, targetIdx) => {
+    // TODO: 삭제 확인 묻는 모달 추가해야함.
+    if (!confirm('해당 임시 운영 일정을 삭제하시겠습니까?')) return;
+
+    // 현재 스토어의 임시 운영 배열 복사 및 해당 인덱스 삭제
+    // 원본 스토어 데이터를 직접 수정하지 않기 위해 filter의 index 활용
+    const updatedTempSchedules = (productStore.temporarySchedules || []).filter((_, idx) => idx !== targetIdx);
+
+    // 가공 로직 (기존 updateItemSchedule 내부 로직 재활용)
+    const reserveCnt = selectedAnimalCount.value;
+    const currentPos = setScheduleForSave(); // 정기/이벤트 일정
+
+    // 삭제하고 남은 임시 일정들 가공
+    const tempPos = updatedTempSchedules.map(temp => {
+        // startDate를 기반으로 요일 계산
+        const dayAbbr = new DayPilot.Date(temp.startDate).toString("ddd", "en-us").toUpperCase();
+        const shortToLong = {
+            'MO': 'MON', 'TU': 'TUE', 'WE': 'WED', 'TH': 'THU', 
+            'FR': 'FRI', 'SA': 'SAT', 'SU': 'SUN'
+        };
+        const finalDay = shortToLong[dayAbbr] || dayAbbr;
+        return {
+            ...temp,
+            time: bitToTimeRanges(temp.hourBit),
+            weekdays: [finalDay]
+        }
+    });
+
+    const pos = [...currentPos, ...tempPos];
+    const proSchInfo = productStore.productScheduleInfo || {};
+
+    const params = {
+        reserveCnt: reserveCnt,
+        pos: pos,
+        impos: proSchInfo.impos,
+        impStartDateTime: proSchInfo.impStartDateTime,
+        impEndDateTime: proSchInfo.impEndDateTime,
+        bookableSettingJson: proSchInfo.bookableSettingJson
+    };
+
+    // console.log(params)
+    // return false;
+
+    // 전체 데이터 전송
+    const response = await productStore.updateItemReservationInfo(props.savedItemId, params);
+
+    if (response.status_code <= 300) {
+        alert('삭제되었습니다.');
+        
+        await initDataMapping(); // 예약 정보 재조회
+        
+        // 캘린더 새로고침
+        const start = DayPilot.Date.today().firstDayOfWeek(1);
+        await productStore.getProductSchedule(props.savedItemId, {
+            startDate: start.toString("yyyy-MM-dd"),
+            endDate: start.addDays(6).toString("yyyy-MM-dd"),
+        });
+    } else {
+        alert('삭제 중 오류가 발생했습니다.');
+    }
+};
+
 // 휴무일 데이터를 ui용 객체(config)로 변환
 const mapImposConfig = (impos) => {
     if (!impos) return;
@@ -471,9 +547,6 @@ const initDataMapping = async () => {
     const data = productStore.productScheduleInfo;
     if (!data || !data.pos) return;
 
-    // 임시운영 (isBasicSchedule:false) 데이터
-    temporarySchedules.value = productStore.temporarySchedules;
-
     // 실제 화면 설정(정기/이벤트)에 사용할 데이터만 필터링 (isBasicSchedule:true)
     const basicPos = data.pos.filter(item => item.isBasicSchedule !== false);
 
@@ -523,8 +596,6 @@ const initDataMapping = async () => {
     resetSelection('EXPOSURE_START');
     resetSelection('EXPOSURE_END');
 };
-
-// TODO: 임시운영 데이터 수정로직
 
 onMounted(async() => {
     initDataMapping();
@@ -668,9 +739,9 @@ onMounted(async() => {
                                     </button>
                                     <button
                                         class="btn btn--size-24 btn--black-outline"
-                                        @click="onDeletTemporary(temp.row)"
+                                        @click="onDeleteTemporary(temp.raw, idx)"
                                     >
-                                        <img/>삭제
+                                        <img :src="icDel" alt="아이콘"/>삭제
                                     </button>
                                 </div>
                             </div>

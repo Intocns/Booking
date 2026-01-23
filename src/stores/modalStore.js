@@ -13,7 +13,7 @@ export const useModalStore = defineStore("modalStore", () => {
             // isVisible을 외부에서는 읽기 전용으로 노출
             isVisible: readonly(isVisible), 
             title,
-            data: readonly(data),
+            data: data,
             // 모달을 열고 닫는 메서드
             openModal(payload = null) {
                 isVisible.value = true;

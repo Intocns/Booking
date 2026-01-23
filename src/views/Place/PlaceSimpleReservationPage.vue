@@ -147,8 +147,8 @@ const getIsImp = (resourceId) => {
     return product ? product.isImp : false;
 };
 
-// 상품펼 운영/마감 API 호출 및 상태 업데이트
-const updateScheduleBit = async (bizItemId, day, newBitArray, startTime, endTime, scheduleId) => {
+// 상품별 운영/마감 API 호출 및 상태 업데이트
+const updateScheduleBit = async (bizItemId, day, newBitArray, startTime, endTime, scheduleId = 0) => {
     const times = newBitArray.map((bit, i) => ({
         time: formatTime(i),
         useFlag: parseInt(bit)

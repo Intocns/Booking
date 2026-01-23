@@ -13,6 +13,10 @@ import TimeSelect from "@/components/common/TimeSelect.vue";
 // 스토어
 import { useModalStore } from "@/stores/modalStore";
 import { useProductStore } from "@/stores/productStore";
+// 
+import { bitToTimeRanges } from "@/utils/schedule";
+import { DAYS_OPTIONS } from "@/utils/schedule";
+
 
 const productStore = useProductStore();
 const modalStore = useModalStore();
@@ -40,17 +44,6 @@ const selectedAnimalCount = ref(null); // 진료 가능 동물 수 선택 상태
 const times = ref([
     { startTime: "", endTime: "" }
 ]); // 진료가능 동물 수, 운영시간 설정 모달창 > 운영시간 설정 times
-
-// 요일옵션 데이터 (임시)
-const daysOptions = [
-    { label: '월', value: 'MON' },
-    { label: '화', value: 'TUE' }, 
-    { label: '수', value: 'WED' },
-    { label: '목', value: 'THU' }, 
-    { label: '금', value: 'FRI' }, 
-    { label: '토', value: 'SAT' }, 
-    { label: '일', value: 'SUN' }
-];
 
 // 예약 가능 동물 수 (임시 1~10)
 const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
@@ -176,7 +169,7 @@ const handleEventClick = (args) => {
         } else {
             dayOfWeekIndex = dayOfWeekIndex - 1;
         }
-        const currentDayValue = daysOptions[dayOfWeekIndex].value;
+        const currentDayValue = DAYS_OPTIONS[dayOfWeekIndex].value;
         selectedDay.value = currentDayValue; // 요일 선택 상태 설정
 
         // 동물 수 연결
@@ -184,6 +177,24 @@ const handleEventClick = (args) => {
         
         selectedEvent.value = JSON.parse(JSON.stringify(eventData)); 
         modalStore.setDateSettingModal.openModal(selectedEvent.value);
+    }
+};
+
+// 2단계: "진료 가능 동물 수, 운영시간 변경하기" 버튼 클릭 시
+const handelSetOperationModalOpen = () => {
+    // 1. 현재 열려있는 캘린더 전용 모달 닫기
+    modalStore.setDateSettingModal.closeModal();
+
+    // 2. 부모가 관리하는 '공통 설정 모달'에 데이터 채워주며 열기
+    const daySchedule = productStore.productWeekScheduleDataList.find(day => day.date === targetDate.value);
+    
+    if (daySchedule) {
+        modalStore.setOperationRuleModal.openModal({
+            date: targetDate.value,
+            stock: daySchedule.stock,
+            // 비트를 [{startTime, endTime}] 배열로 변환
+            times: bitToTimeRanges(daySchedule.hourBit) 
+        });
     }
 };
 
@@ -256,7 +267,7 @@ const handleToggle = (index, isChecked) => {
 };
 
 // 상품시간별 운영/마감 API 호출 및 상태 업데이트
-const updateScheduleBit = async (bizItemId, day, newBitArray, startTime, endTime, scheduleId = null) => {
+const updateScheduleBit = async (bizItemId, day, newBitArray, startTime, endTime, scheduleId = 0) => {
     const times = newBitArray.map((bit, i) => ({
         time: formatTime(i),
         useFlag: parseInt(bit)
@@ -319,17 +330,6 @@ const handleSaveSchedule = async () => {
 
     modalStore.setDateSettingModal.closeModal();
 };
-
-// 진료가능 동물 수, 운영시간 변경하기 모달창 오픈
-const handelSetOperationModalOpen = (() => {
-    modalStore.setDateSettingModal.closeModal();
-    modalStore.setOperationRuleModal.openModal();
-})
-
-// 진료가능 동물 수, 운영시간 변경하기 모달창 > 시간추가
-const addTimeSetting = () => {
-    times.value.push({ startTime: "", endTime: "" });
-}
 
 // 진료가능 동물 수, 운영시간 변경 저장 (임시 운영 데이터)
 const handleSaveOperationRule = async () => {
@@ -478,75 +478,6 @@ onActivated(() => {
             <button class="btn btn--size-32 btn--blue" @click="handleSaveSchedule">저장</button>
         </div>
     </ModalSimple>
-
-    <!-- 진료가능 동물 수, 운영시간 변경하기 -->
-    <ModalSimple
-        v-if="modalStore.setOperationRuleModal.isVisible"
-        :modal-state="modalStore.setOperationRuleModal"
-        :title="modalTitle"
-    >
-        <div class="modal-contents-inner">
-            <!-- 일정 설정 -->
-            <div class="d-flex flex-col gap-16 align-center">
-                <span class="body-m">선택한 일정의 설정을 변경할 수 있습니다.</span>
-
-                <!-- 요일 버튼 -->
-                <div class="day-button-group d-flex gap-4">
-                    <button 
-                        v-for="day in daysOptions" 
-                        :key="day.value" 
-                        type="button" 
-                        class="btn-day" 
-                        :class="{ 'active': selectedDay === day.value }"
-                    >
-                        {{ day.label }}
-                    </button>
-                </div>
-
-                <!-- 예약가능 설정 -->
-                <div class="d-flex align-center gap-4 body-s">
-                    매 30분 마다
-                    <CustomSingleSelect 
-                        v-model="selectedAnimalCount" 
-                        :options="animalCountOptions" 
-                        select-width="63px" 
-                        placeholder="0" 
-                    />
-                    마리 진료 가능
-                </div>
-            </div>
-
-            <div style="min-height: 220px;margin-top: 32px;">
-                <!-- 시간 설정 -->
-                <div class="d-flex flex-col gap-16">
-                    <div v-for="(time, index) in times" :key="time.id" class="set-time-item">
-                        <span class="title-s">시작</span>
-                        <TimeSelect v-model="time.startTime" />
-                        -
-                        <span class="title-s">마지막</span>
-                        <TimeSelect v-model="time.endTime" />
-                        
-                        <!-- 삭제버튼 -->
-                        <button 
-                            v-if="index > 0" 
-                            class="btn-clear" 
-                            @click="times.splice(times.indexOf(time), 1)">
-                            <img :src="icClear" alt="삭제" />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 16px; border-top: 1px solid #ddd; padding-top: 16px;">
-                <button class="text-button text-button--blue" style="width: 100%;" @click="addTimeSetting">시간 추가</button>
-            </div>
-        </div>
-
-        <div class="modal-button-wrapper">
-            <button class="btn btn--size-32 btn--black" @click="modalStore.setOperationRuleModal.closeModal()">취소</button>
-            <button class="btn btn--size-32 btn--blue" @click="handleSaveOperationRule">저장</button>
-        </div>
-    </ModalSimple>
 </template>
 
 <style lang="scss" scoped>
@@ -690,19 +621,5 @@ onActivated(() => {
         gap: 4px;
         color: $primary-700;
         @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line); 
-    }
-
-    // 진료가능 동물 수, 운영설정 모달 스타일
-    .set-time-item {
-        display:flex;
-        align-items:center;
-        gap:8px;
-        position: relative;
-
-        .btn-clear {
-            position:absolute;
-            right:-7px;
-            top: -7px;
-        }
     }
 </style>

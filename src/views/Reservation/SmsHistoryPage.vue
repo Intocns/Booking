@@ -1,4 +1,4 @@
-<!-- SMS 발송 내역 -->
+<!-- SMS/알림톡 발송 내역 -->
 <script setup>
 import PageTitle from '@/components/common/PageTitle.vue';
 import TableLayout from '@/components/common/TableLayout.vue';
@@ -10,7 +10,7 @@ import CommonTable from '@/components/common/CommonTable.vue';
 import icReset from '@/assets/icons/ic_reset.svg'
 import { ref } from 'vue';
 
-// sms 발송 내역 테이블 col 정의
+// sms/알림톡 발송 내역 테이블 col 정의
 const columns = [
     { key: 'idx', label: 'No.', width: '5%' },
     { key: 'send_date', label: '발송일자', width: '15%' },
@@ -26,7 +26,7 @@ const currentDate = ref(new Date())
 
 <template>
     <!-- 페이지 타이틀 -->
-    <PageTitle title="SMS 발송 내역" /> 
+    <PageTitle title="SMS/알림톡 발송 내역" helper-text="예약 관리자 센터에서 발송한 SMS/알림톡 내역만 조회 가능합니다." /> 
 
     <TableLayout>
         <!-- 검색 필터 -->
