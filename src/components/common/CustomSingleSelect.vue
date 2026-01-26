@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
 import icSelectBoxOpenClosed from '@/assets/icons/Ic_selectbox_OpenClosed.svg';
 
 const props = defineProps({
@@ -15,10 +15,31 @@ const emit = defineEmits(['update:modelValue']);
 
 const isOpen = ref(false);
 const wrapper = ref(null);
+const dropdownRef = ref(null); // 드롭다운 ref
+const optionRefs = ref([]);
+
+const scrollToSelected = async () => {
+    await nextTick();
+    
+    // 현재 선택된 값의 인덱스 찾기
+    const selectedIndex = props.options.findIndex(opt => opt.value === props.modelValue);
+    
+    // 선택된 항목이 있고, 해당 DOM 요소가 존재할 경우
+    if (selectedIndex !== -1 && optionRefs.value[selectedIndex]) {
+        optionRefs.value[selectedIndex].scrollIntoView({
+            block: 'start', // 상단
+        });
+    }
+};
 
 /* 토글 */
 const toggle = () => {
-    if (!props.disabled) isOpen.value = !isOpen.value;
+    if (!props.disabled) {
+        isOpen.value = !isOpen.value;
+        if(isOpen.value) {
+            scrollToSelected();
+        }
+    }
 };
 
 // 현재 선택된 옵션의 라벨 찾기
@@ -66,10 +87,11 @@ onBeforeUnmount(() => {
 
         <span v-show="caption" class="caption">{{ caption }}</span>
 
-        <div class="select__dropdown" v-if="isOpen">
+        <div class="select__dropdown" v-if="isOpen" ref="dropdownRef">
             <div 
-                v-for="opt in options" 
+                v-for="(opt, index) in options" 
                 :key="opt.value"
+                :ref="el => { if (el) optionRefs[index] = el }"
                 class="select__option"
                 :class="{ selected: modelValue === opt.value }"
                 @click.stop="selectOption(opt.value)"
