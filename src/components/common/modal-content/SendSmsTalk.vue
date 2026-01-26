@@ -12,6 +12,7 @@ import { api } from '@/api/axios';
 import { buildTemplateVariables, formatTemplateContent, getSmsByteLength } from '@/utils/alimtalkSmsTemplate.js';
 import { formatPhone } from '@/utils/phoneFormatter.js';
 import { PET_GENDER_MAP } from '@/utils/reservation.js';
+import { showAlert } from '@/utils/ui';
 
 const props = defineProps({
     reservationData: {
@@ -87,11 +88,11 @@ const sendTalk = async () => {
     if (isSending.value) return;
 
     if (!selectedTemplate.value) {
-        alert('템플릿을 선택해주세요.');
+        showAlert('템플릿을 선택해주세요.');
         return;
     }
     if (!recipientPhone.value) {
-        alert('수신번호를 입력해주세요.');
+        showAlert('수신번호를 입력해주세요.');
         return;
     }
 
@@ -101,7 +102,7 @@ const sendTalk = async () => {
         selectedTemplate.value.sno;
 
     if (!templateId) {
-        alert('템플릿 ID를 확인할 수 없습니다.');
+        showAlert('템플릿 ID를 확인할 수 없습니다.');
         return;
     }
 
@@ -151,15 +152,15 @@ const sendTalk = async () => {
         const response = await talkSmsStore.sendAlimTalk(body);
 
         if (response.status <= 300 && response.data?.status_code === 200) {
-            alert('알림톡 발송이 완료되었습니다.');
+            showAlert('알림톡 발송이 완료되었습니다.');
             modalStore.smsModal.closeModal();
             return;
         }
 
-        alert(response.data?.message || '알림톡 발송에 실패했습니다.');
+        showAlert(response.data?.message || '알림톡 발송에 실패했습니다.');
     } catch (error) {
         console.error('알림톡 발송 오류:', error);
-        alert('알림톡 발송 중 오류가 발생했습니다.');
+        showAlert('알림톡 발송 중 오류가 발생했습니다.');
     } finally {
         isSending.value = false;
     }
@@ -388,16 +389,21 @@ const hideTooltip = (type) => {
                     
                     <div class="content-sms__editor">
                         <div class="content-sms__editor-input">
-                            <span class="title-s">문자 미리보기</span>
+                            <div class="d-flex justify-between">
+                                <span class="title-s">문자 미리보기</span>
+                                <div class="content-sms__editor-byte">
+                                    <p class="body-m">{{ smsByteCount }} Byte / {{ smsMessageCount }}건</p>
+                                </div>
+                            </div>
                             <p class="content-sms__preview-text" v-if="selectedSmsTemplate?.sms_memo">
                                 {{ smsPreviewText }}
                             </p>
                             <p v-else class="empty-message">템플릿을 선택해주세요.</p>
                         </div>
 
-                        <div class="content-sms__editor-byte">
+                        <!-- <div class="content-sms__editor-byte">
                             <p class="body-m">{{ smsByteCount }} Byte / {{ smsMessageCount }}건</p>
-                        </div>
+                        </div> -->
 
                         <div class="content-sms__editor-options">
                             <label class="checkbox">
@@ -718,15 +724,18 @@ const hideTooltip = (type) => {
             &-input {
                 flex: 1;
                 overflow-y: auto;
+                padding-right: 5px;
+                
+                border-bottom: 1px solid $gray-200;
                 .content-sms__preview-text { white-space: pre-wrap; word-break: break-all; margin: 8px 0 0; }
                 .empty-message { color: $gray-400; margin: 8px 0 0; }
             }
 
             &-byte {
-                @include flex;
-                justify-content: flex-end;
-                padding: 8px;
-                border-bottom: 1px solid $gray-100;
+                // @include flex;
+                // justify-content: flex-end;
+                // padding: 8px;
+                // border-bottom: 1px solid $gray-100;
                 color: $gray-500;
             }
     
