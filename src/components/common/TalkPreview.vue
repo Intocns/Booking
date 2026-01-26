@@ -49,8 +49,12 @@ const buttons = computed(() => {
         <div>
             <!-- 메세지 -->
             <div class="talk_message_wrapper">
-                <!-- 발신명: 템플릿이 있으면 병원명, 없으면 기본값 -->
-                <span class="talk_name">{{ senderName }}</span>
+                <div class="d-flex justify-between">
+                    <!-- 발신명: 템플릿이 있으면 병원명, 없으면 기본값 -->
+                    <span class="talk_name title-s">{{ senderName }}</span>
+                    <span class="talk_byte body-m">알림톡 1건 / 0.7건</span>
+                </div>
+
                 <!-- 메세지 말풍선 -->
                 <div class="talk_message">
                     <p class="talk_title">알림톡 도착</p>
@@ -124,7 +128,8 @@ p {margin: 0;}
     font-size: 10pt;
     flex-shrink: 0;
 }
-.talk_name {font-size: 10pt;}
+// .talk_name {font-size: 10pt;}
+.talk_byte {color: $gray-600}
 .message_box {
     padding: 10px;
 }

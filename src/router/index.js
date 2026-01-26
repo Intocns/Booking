@@ -39,7 +39,8 @@ const router = createRouter({
                 { 
                     path: 'account', 
                     name: 'placeAccount', 
-                    component: () => import('@/views/Place/PlaceAccountPage.vue') 
+                    component: () => import('@/views/Place/PlaceAccountPage.vue'),
+                    meta: { isWaiting: true }, // 준비 중인 페이지 표시
                 },
                 
                 // 2. 상품 관리

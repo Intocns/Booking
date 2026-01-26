@@ -26,6 +26,7 @@ const DEFAULT_PLACEHOLDER = '시간 선택';
 // --- UI 상태 관리 ---
 const isDropdownVisible = ref(false); // 드롭다운 표시 상태
 const wrapperRef = ref(null); // 컴포넌트 외부 클릭 감지를 위한 ref
+const triggerRef = ref(null); // .input-display 참조
 // --- 드론다운 스크롤 제어 ref ---
 const hourColumnRef = ref(null); // ul 태그 참조
 const minuteColumnRef = ref(null); // ul 태그 참조
@@ -33,6 +34,14 @@ const minuteColumnRef = ref(null); // ul 태그 참조
 // --- 임시 선택 상태 (취소/적용 로직용) ---
 const tempSelectedHour = ref('00');
 const tempSelectedMinute = ref('00');
+
+const dropdownStyle = ref({
+    position: 'fixed',
+    top: '0px',
+    left: '0px',
+    width: '0px',
+    zIndex: 100
+});
 
 // --- 시간/분 옵션 생성 ---
 const hourOptions = computed(() => {
@@ -62,6 +71,7 @@ watch(() => props.modelValue, (newValue) => {
 const toggleDropdown = () => {
     isDropdownVisible.value = !isDropdownVisible.value;
     if (isDropdownVisible.value) {
+        updatePosition(); // 위치 계산 추가
         scrollToSelected(); // 열릴 때 스크롤 실행
     }
 };
@@ -143,12 +153,33 @@ const scrollToSelected = async () => {
     }
 };
 
+// 드롭다운 포지션 업데이트
+const updatePosition = async () => {
+    await nextTick();
+    if (triggerRef.value) {
+        const rect = triggerRef.value.getBoundingClientRect();
+        const dropdownHeight = 180; 
+        const windowHeight = window.innerHeight;
+        const spaceBelow = windowHeight - rect.bottom;
+        const showUpward = spaceBelow < dropdownHeight + 10;
+
+        dropdownStyle.value = {
+            position: 'fixed',
+            left: `${rect.left}px`,
+            width: `${rect.width}px`,
+            zIndex: 100,
+            top: showUpward ? 'auto' : `${rect.bottom}px`,
+            bottom: showUpward ? `${windowHeight - rect.top}px` : 'auto'
+        };
+    }
+};
+
 onMounted(() => {
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('click', handleClickOutside, true);
 });
 
 onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
+    document.removeEventListener('click', handleClickOutside, true);
 });
 </script>
 
@@ -159,6 +190,7 @@ onUnmounted(() => {
             :class="{ '--active': isDropdownVisible, '--placeholder': !modelValue }"
             @click="toggleDropdown"
             :style="{ width: selectWidth }"
+            ref="triggerRef"
         >
             <span class="display-text">
                 {{ modelValue || DEFAULT_PLACEHOLDER }}
@@ -183,36 +215,38 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <div v-if="isDropdownVisible" class="time-picker-dropdown">
-            <div class="time-columns-container">
-                <ul class="time-column hour-column" ref="hourColumnRef">
-                    <li
-                        v-for="(hour, index) in hourOptions"
-                        :key="hour"
-                        :class="{ 'selected': tempSelectedHour === hour }"
-                        @click="handleHourClick(hour)"
-                    >
-                        {{ hour }}
-                    </li>
-                </ul>
-                
-                <ul class="time-column minute-column" ref="minuteColumnRef">
-                    <li
-                        v-for="(minute, index) in minuteOptions"
-                        :key="minute"
-                        :class="{ 'selected': tempSelectedMinute === minute }"
-                        @click="handleMinuteClick(minute)"
-                    >
-                        {{ minute }}
-                    </li>
-                </ul>
+        <teleport to='body'>
+            <div v-if="isDropdownVisible" class="time-picker-dropdown" :style="dropdownStyle">
+                <div class="time-columns-container">
+                    <ul class="time-column hour-column" ref="hourColumnRef">
+                        <li
+                            v-for="(hour, index) in hourOptions"
+                            :key="hour"
+                            :class="{ 'selected': tempSelectedHour === hour }"
+                            @click="handleHourClick(hour)"
+                        >
+                            {{ hour }}
+                        </li>
+                    </ul>
+                    
+                    <ul class="time-column minute-column" ref="minuteColumnRef">
+                        <li
+                            v-for="(minute, index) in minuteOptions"
+                            :key="minute"
+                            :class="{ 'selected': tempSelectedMinute === minute }"
+                            @click="handleMinuteClick(minute)"
+                        >
+                            {{ minute }}
+                        </li>
+                    </ul>
+                </div>
+    
+                <div v-if="!props.autoApply" class="picker-footer">
+                    <button class="btn btn--size-24 btn--black-outline" @click.stop="cancelSelection">취소</button>
+                    <button class="btn btn--size-24 btn--black" @click.stop="applySelection">적용</button>
+                </div>
             </div>
-
-            <div v-if="!props.autoApply" class="picker-footer">
-                <button class="btn btn--size-24 btn--black-outline" @click.stop="cancelSelection">취소</button>
-                <button class="btn btn--size-24 btn--black" @click.stop="applySelection">적용</button>
-            </div>
-        </div>
+        </teleport>
     </div>
 </template>
 
@@ -303,8 +337,7 @@ onUnmounted(() => {
 
 .time-columns-container {
     display: flex;
-    height: 200px; /* 스크롤 영역의 높이 */
-    border-bottom: 1px solid $gray-200;
+    height: 180px; /* 스크롤 영역의 높이 */
 }
 
 .time-column {
@@ -349,5 +382,6 @@ onUnmounted(() => {
     justify-content: flex-end;
     padding: 8px;
     gap: 8px;
+    border-top: 1px solid $gray-200;
 }
 </style>

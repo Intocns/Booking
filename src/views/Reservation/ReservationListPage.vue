@@ -253,7 +253,7 @@ onMounted(async () => {
     <Modal 
         v-if="modalStore.smsModal.isVisible"
         size="s"
-        title="문자 발송"
+        title="알림톡/SMS 발송"
         :modalState="modalStore.smsModal"
     >
         <SendSmsTalk ref="sendSmsTalkRef" :reservationData="selectedReservation" />

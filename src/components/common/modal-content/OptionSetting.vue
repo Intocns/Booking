@@ -667,8 +667,8 @@ watch(categoryOptions, async (options) => {
     // 상품 리스트는 PlaceOptionPage에서 미리 로드됨
 }, { immediate: true });
 
-onMounted(() => window.addEventListener('click', closeAll));
-onUnmounted(() => window.removeEventListener('click', closeAll));
+onMounted(() => window.addEventListener('click', closeAll, true));
+onUnmounted(() => window.removeEventListener('click', closeAll, true));
 </script>
 
 <template>
