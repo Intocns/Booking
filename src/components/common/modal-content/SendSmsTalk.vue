@@ -25,8 +25,6 @@ const talkSmsStore = useTalkSmsStore();
 const {
     smsRemainingCount,
     isLoadingSmsPoint,
-    isCheckingAvailable,
-    checkAvailableResult,
     isLink,
     templateList,
     isLoadingTemplates,
@@ -67,6 +65,9 @@ const handleSmsSenderInput = (event) => {
 // 선택된 템플릿 (모달 내 선택 상태)
 const selectedTemplate = ref(null);
 const selectedSmsTemplate = ref(null);
+
+// 광고/무료수신거부 문구 추가 체크박스
+const includeAdText = ref(false);
 
 // 알림톡 템플릿 타입 (현재 5로 고정해 확인)
 const selectedTemplateType = ref(5); // TODO: 추후 변경 필요
@@ -190,7 +191,13 @@ const smsPreviewText = computed(() => {
         hospitalName: props.reservationData?.hospitalName || hospitalName,
     };
     const vars = buildTemplateVariables(data);
-    return formatTemplateContent(selectedSmsTemplate.value?.sms_memo || '', vars, { mode: 'sms' });
+    const templateContent = formatTemplateContent(selectedSmsTemplate.value?.sms_memo || '', vars, { mode: 'sms' });
+    
+    // 광고/무료수신거부 문구 추가 체크 시: "(광고)" + 템플릿 내용 + "무료수신거부 0808517898"
+    if (includeAdText.value) {
+        return `(광고)${templateContent}\n무료수신거부 0808517898`;
+    }
+    return templateContent;
 });
 
 // SMS: 미리보기 텍스트 기준 Byte·건수 (80Byte 초과 시 2건)
@@ -381,8 +388,7 @@ const hideTooltip = (type) => {
                     
                     <div class="content-sms__editor">
                         <div class="content-sms__editor-input">
-                            <span class="title-s">(광고) </span>
-                            <span class="body-m">문자 미리보기</span>
+                            <span class="title-s">문자 미리보기</span>
                             <p class="content-sms__preview-text" v-if="selectedSmsTemplate?.sms_memo">
                                 {{ smsPreviewText }}
                             </p>
@@ -395,7 +401,7 @@ const hideTooltip = (type) => {
 
                         <div class="content-sms__editor-options">
                             <label class="checkbox">
-                                <input type="checkbox" />
+                                <input type="checkbox" v-model="includeAdText" />
                                 <span class="box"></span>
                                 <span class="label">광고/무료수신거부 문구 추가</span>
                             </label>
