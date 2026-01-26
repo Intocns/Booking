@@ -438,6 +438,10 @@
     box-shadow: 0 0 40px 0 rgba(0, 0, 0, 0.20);
 
     --modal-padding: 24px; // (기본값 s,xs 사이즈 모달의 패딩)
+
+    @media (max-width: 1600px) {
+        max-height: 90%;
+    }
 }
 
 .modal--xl {
@@ -484,7 +488,7 @@
     display:flex;
     flex-direction: column;
     width: 100%;
-     min-height: 0; // flex 아이템이면서 overflow 있을 때 필요;
+    min-height: 0; // flex 아이템이면서 overflow 있을 때 필요;
     max-height: 100%;
     border-radius: 0 0 8px 8px;
 
@@ -493,6 +497,7 @@
 .modal-contents-inner {
     flex: 1;
     padding: var(--modal-padding);
+    padding-bottom: calc(var(--modal-padding) - 10px);
     min-height: 0; // flex 아이템이면서 overflow 있을 때 필요;
     max-height: 100%;
     overflow-y: auto;

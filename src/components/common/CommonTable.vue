@@ -160,7 +160,9 @@ const handleEmptyBtnClick = () => {
 .table-wrapper {
     width: 100%;
     flex: 1 1 auto;
+    min-height:0;
     height: 100%;
+    overflow-x: hidden;
     overflow-y: auto;
     // border-bottom: 1px solid $gray-300;
     border-top: 2px solid $gray-700;

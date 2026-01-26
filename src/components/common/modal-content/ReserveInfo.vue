@@ -1059,7 +1059,7 @@ const handleViewChart = () => {
         gap: 16px; // 24px -> 16px로 줄임
 
         flex-grow: 1;
-        overflow: hidden; // 전체 스크롤 제거
+        // overflow: hidden; // 전체 스크롤 제거
         min-height: 0;
     }
 
@@ -1083,7 +1083,7 @@ const handleViewChart = () => {
         display: flex;
         flex-direction: column;
         gap: 6px; // 8px -> 6px로 줄임
-        padding: 16px 12px; // 20px 16px -> 16px 12px로 줄임
+        padding: 14px 12px; // 20px 16px -> 16px 12px로 줄임
 
         border-radius: 8px;
         border: 1px solid $gray-200;
@@ -1123,7 +1123,7 @@ const handleViewChart = () => {
     // 고객정보 섹션 스타일
     .customer-info-section {
         flex: 1;
-        min-height: 0;
+        // min-height: 0;
         display: flex;
         flex-direction: column;
         overflow: hidden;
