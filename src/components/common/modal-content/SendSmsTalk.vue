@@ -165,6 +165,59 @@ const sendTalk = async () => {
     }
 };
 
+const sendSms = async () => {
+    if (isSending.value) return;
+
+    if (!selectedSmsTemplate.value) {
+        alert('템플릿을 선택해주세요.');
+        return;
+    }
+    if (!recipientPhone.value) {
+        alert('수신번호를 입력해주세요.');
+        return;
+    }
+    if (!smsSenderPhone.value) {
+        alert('발신번호를 입력해주세요.');
+        return;
+    }
+
+    // 발송할 메시지 내용 (미리보기 텍스트 사용)
+    const messageContent = smsPreviewText.value;
+
+    if (!messageContent || messageContent.trim() === '') {
+        alert('발송할 메시지 내용이 없습니다.');
+        return;
+    }
+
+    isSending.value = true;
+    try {
+        const body = {
+            recipientNumber: recipientPhone.value.replace(/-/g, ''), // 하이픈 제거
+            senderNumber: smsSenderPhone.value.replace(/-/g, ''), // 하이픈 제거
+            content: messageContent,
+            addOptOutPhrase: includeAdText.value,
+        };
+        console.log(body);
+        const response = await api.post(`/api/{cocode}/sms/send`, body);
+
+        if (response.status <= 300 && response.data?.status_code === 200) {
+            alert('SMS 발송이 완료되었습니다.');
+            modalStore.smsModal.closeModal();
+            // 포인트 정보 갱신
+            await talkSmsStore.getSmsPointInfo();
+            return;
+        }
+
+        const errorMsg = response.data?.message || response.data?.data?.msg || 'SMS 발송에 실패했습니다.';
+        alert(errorMsg);
+    } catch (error) {
+        console.error('SMS 발송 오류:', error);
+        alert('SMS 발송 중 오류가 발생했습니다.');
+    } finally {
+        isSending.value = false;
+    }
+};
+
 // 스토어 액션 래퍼 (템플릿·잔여건수 클릭 시 재조회용)
 const getSmsPointInfo = () => talkSmsStore.getSmsPointInfo();
 const checkAvailableApi = () => talkSmsStore.checkAvailableApi();
@@ -451,7 +504,7 @@ const hideTooltip = (type) => {
                 <button 
                     class="btn btn--size-40 btn--blue modal-btn" 
                     :disabled="isSending"
-                    @click="activeTab === 'talk' ? sendTalk() : null"
+                    @click="activeTab === 'talk' ? sendTalk() : sendSms()"
                 >
                     {{ isSending ? '발송 중...' : '발송' }}
                 </button>

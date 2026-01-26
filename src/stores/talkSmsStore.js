@@ -104,6 +104,11 @@ export const useTalkSmsStore = defineStore('talkSms', () => {
         return api.post('/api/{cocode}/alimtalk/send', body);
     }
 
+    /** SMS 발송 */
+    async function sendSms(body) {
+        return api.post('/api/{cocode}/sms/send', body);
+    }
+
     /** 페이지 진입 시 알림톡·SMS 템플릿·포인트 한 번에 프리로드 */
     function preloadTemplatesAndPoint() {
         getSmsPointInfo();
@@ -126,6 +131,7 @@ export const useTalkSmsStore = defineStore('talkSms', () => {
         getTemplateInfo,
         getSmsTemplateList,
         sendAlimTalk,
+        sendSms,
         preloadTemplatesAndPoint,
     };
 });
