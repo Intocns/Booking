@@ -214,7 +214,6 @@ const focusField = async (ref, selector) => {
 const validateReservation = async () => {
     // 1. 방문일 검증
     if (!reserveDate.value) {
-        // alert('예약 방문일을 선택해주세요.');
         modalStore.confirmModal.openModal({
             title: '예약 방문일 확인',
             text: '예약 방문일을 선택해주세요.',
@@ -228,7 +227,6 @@ const validateReservation = async () => {
     
     // 2. 시작 시간 검증
     if (!startTime.value) {
-        // alert('예약 시작 시간을 선택해주세요.');
         modalStore.confirmModal.openModal({
             title: '예약 시간 확인',
             text: '예약 시작 시간을 선택해주세요.',
@@ -242,7 +240,6 @@ const validateReservation = async () => {
     
     // 3. 종료 시간 검증
     if (!endTime.value) {
-        // alert('예약 종료 시간을 선택해주세요.');
         modalStore.confirmModal.openModal({
             title: '예약 시간 확인',
             text: '예약 종료 시간을 선택해주세요.',

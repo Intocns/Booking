@@ -159,7 +159,7 @@ api.interceptors.response.use(
                 break
             default:
                 if (errorData.message) {
-                    showAlert(`에러가 발생했습니다: ${errorData.message}`)
+                    showAlert(`에러가 발생했습니다: ${errorData.message}\n관리자에게 문의 바랍니다.`)
                 } else {
                     showAlert(`에러가 발생했습니다: ${error.message}\n관리자에게 문의 바랍니다.`, originalRequest)
                 }

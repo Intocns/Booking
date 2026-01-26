@@ -82,38 +82,24 @@ export const useProductStore = defineStore("product", () => {
     async function getLinkItemInfo(roomIdx) {
         const response = await api.get(`/api/{cocode}/item/linkItem/${roomIdx}`);
 
-        if(response.data.status_code <= 300) {
-            const data = response.data.data;
-            linkItemInfo.value = data;
+        const data = response.data.data;
+        linkItemInfo.value = data;
 
-            await getProductList();
-        } else {
-            alert('처리 중 오류가 발생했습니다.');
-        }
+        await getProductList();
     }
 
     // 상품 삭제
     async function delItem(itemId) {
         const response = await api.post(`/api/{cocode}/item/set/del/${itemId}`);
 
-        if(response.data.status_code <= 300) {
-            await getProductList();
-        }else{
-            alert('처리 중 오류가 발생했습니다.');
-        }
+        await getProductList();
     }
     
     // 상품 복사
     const copyItem = async(itemId, params) => {
-        try {
-            const response = await api.post(`/api/{cocode}/item/add/${itemId}/cp`, params);
+        const response = await api.post(`/api/{cocode}/item/add/${itemId}/cp`, params);
 
-            if(response.data.status_code <= 300) {
-                await getProductList();
-            }
-        } catch {
-            alert('처리 중 오류가 발생했습니다.');
-        }
+        await getProductList();
     }
 
     // 상품 등록
@@ -365,10 +351,8 @@ export const useProductStore = defineStore("product", () => {
     async function getItemDetailInfo(itemId) {
         const response = await api.get(`/api/{cocode}/item/detail/${itemId}`);
 
-        if(response.data.status_code <= 300) {
-            const data = response.data.data;
-            itemDetailInfo.value = data;
-        }
+        const data = response.data.data;
+        itemDetailInfo.value = data;
     }
 
     //상품 노출 변경(단건/ 일괄)
@@ -389,16 +373,10 @@ export const useProductStore = defineStore("product", () => {
 
     // 간단 예약 관리 데이터 불러오기 (상품별 예약 운영시간 데이터)
     const getBusinessSchedule = async(params) => {
-        try {
-            const response = await api.post(`/api/businesses/{cocode}/sche`, params);
-            
-            if(response.data.status_code <= 300) {
-                const data = response.data.data;
-                productScheduleDataList.value = data;
-            }
-        } catch {
-            alert('처리 중 오류가 발생했습니다.');
-        }
+        const response = await api.post(`/api/businesses/{cocode}/sche`, params);
+        
+        const data = response.data.data;
+        productScheduleDataList.value = data;
     }
 
     // 상품 운영시간 변경
@@ -413,13 +391,9 @@ export const useProductStore = defineStore("product", () => {
         //         }
         //     ]
         // }
-        try {
-            const response = await api.post(`/api/{cocode}/item/${itemId}/schedule/modify/a/${schId}`, params);
+        const response = await api.post(`/api/{cocode}/item/${itemId}/schedule/modify/a/${schId}`, params);
 
-            return response.data;
-        } catch {
-            
-        }
+        return response.data;
     }
 
     // 상품 등록, 수정 > 예약정보 저장
@@ -596,52 +570,32 @@ export const useProductStore = defineStore("product", () => {
     
     // 상품 수정 > 상품 운영시간 불러오기(캘린더)
     const getProductSchedule = async(itemId, params) => {
-        try {
-            const response = await api.post(`/api/{cocode}/item/${itemId}/schedule/detail`, params); 
+        const response = await api.post(`/api/{cocode}/item/${itemId}/schedule/detail`, params); 
 
-            if(response.data.status_code <= 300) {
-                const data = response.data.data;
-                productWeekScheduleDataList.value = data;
-            }
-            // console.log(response)
-        } catch {
-            alert('처리 중 오류가 발생했습니다.');
-        }
+        const data = response.data.data;
+        productWeekScheduleDataList.value = data;
     }
 
     // 상품 수정 > 일정 설정 > 진료가능 동물 수, 운영시간 설정 모달창 저장 (캘랜더 > 모달)
     const setScheduleModalSave = async(itemId, params, schId = 0) => {
-        try {
-            const response = await api.post(`/api/{cocode}/item/${itemId}/schedule/modify/b`, params); 
+        const response = await api.post(`/api/{cocode}/item/${itemId}/schedule/modify/b`, params); 
 
-            if(response.data.status_code <= 300) {
-                return response.data;
-            }
-        } catch {
-            alert('처리 중 오류가 발생했습니다.');
-        }
+        return response.data;
     }
 
     // 상품 수정 > 상품 운영일정 불러오기
     const getItemReservationInfo = async(itemId) => {
-        try {
-            const response = await api.get(`/api/{cocode}/item/modify/${itemId}/sch`); 
+        const response = await api.get(`/api/{cocode}/item/modify/${itemId}/sch`); 
+        
+        const rawData = response.data.data;
+        productScheduleInfo.value = rawData;
 
-            if(response.data.status_code <= 300) {
-                const rawData = response.data.data;
-                productScheduleInfo.value = rawData;
-
-                if (rawData && rawData.pos) {
-                    temporarySchedules.value = rawData.pos.filter(
-                        (item) => item.isBasicSchedule === false
-                    );
-                } else {
-                    temporarySchedules.value = [];
-                }
-            }
-            // console.log(response)
-        } catch {
-            alert('처리 중 오류가 발생했습니다.');
+        if (rawData && rawData.pos) {
+            temporarySchedules.value = rawData.pos.filter(
+                (item) => item.isBasicSchedule === false
+            );
+        } else {
+            temporarySchedules.value = [];
         }
     }
 

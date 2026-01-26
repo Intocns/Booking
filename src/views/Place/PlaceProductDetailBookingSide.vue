@@ -985,4 +985,8 @@ onMounted(async() => {
 
         button {flex:1;}
     }
+
+    .temp-schedule-text {
+        flex: 2;
+    }
 </style>

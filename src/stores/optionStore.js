@@ -129,39 +129,29 @@ export const useOptionStore = defineStore("option", () => {
 
     // 카테고리별 옵션 목록 가져오기 
     const getAllCategoryOptions = async (itemId = 0) => {  // 상품수정에서 조회시 itemId 포함, 옵션관리에서 조회시 0
-        try {
-            const response = await api.get(`/api/{cocode}/option/list/category/${itemId}`);
+        const response = await api.get(`/api/{cocode}/option/list/category/${itemId}`);
 
-            if(response.data.status_code <= 300) {
-                const data = response.data.data || [];
+        const data = response.data.data || [];
 
-                optionList.value = data.map(category => {
-                    return {
-                        categoryId: category.categoryId,
-                        name: category.name,
-                        selectionTypeCode: category.selectionTypeCode,
-                        order: category.order,
-                        options: (category.options || []).map(opt => ({
-                            ...opt,
-                            rawData: { 
-                                ...opt, 
-                                categoryId: category.categoryId 
-                            },
-                            count: opt.stock !== 0 ? opt.stock + ' 개' : '제한 없음',
-                            priceText: opt.price ? opt.price.toLocaleString() + '원' : '0원',
-                            checked: opt.checked,
-                            operatingPeriod: opt.startDate && opt.endDate ? `${formatDateUtil(opt.startDate).replace(/-/g, '.')} ~ ${formatDateUtil(opt.endDate).replace(/-/g, '.')}` : '상시운영',
-                        }))
-                    }
-                })
-
-                // return data;
-            } else {
-                throw new Error('옵션 목록 조회 실패');
+        optionList.value = data.map(category => {
+            return {
+                categoryId: category.categoryId,
+                name: category.name,
+                selectionTypeCode: category.selectionTypeCode,
+                order: category.order,
+                options: (category.options || []).map(opt => ({
+                    ...opt,
+                    rawData: { 
+                        ...opt, 
+                        categoryId: category.categoryId 
+                    },
+                    count: opt.stock !== 0 ? opt.stock + ' 개' : '제한 없음',
+                    priceText: opt.price ? opt.price.toLocaleString() + '원' : '0원',
+                    checked: opt.checked,
+                    operatingPeriod: opt.startDate && opt.endDate ? `${formatDateUtil(opt.startDate).replace(/-/g, '.')} ~ ${formatDateUtil(opt.endDate).replace(/-/g, '.')}` : '상시운영',
+                }))
             }
-        } catch (error) {
-            alert('옵션 목록 조회에 실패했습니다.');
-        }
+        })
     }
 
     // 옵션관리 > 카테고리 별 옵션 리스트

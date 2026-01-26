@@ -14,6 +14,7 @@ import { formatDate } from '@/utils/dateFormatter.js';
 import { formatPrice, parsePrice } from '@/utils/priceFormatter.js';
 
 import { ref, computed, onMounted, onUnmounted, defineProps, nextTick, watch } from 'vue';
+import { showAlert } from '@/utils/ui';
 
 const props = defineProps({
     isEdit: {
@@ -140,18 +141,6 @@ watch(() => productStore.productList, (newList) => {
     }
 }, { immediate: true });
 
-//  openAlert confirmModal을 alert대신 사용
-const openAlert = (text) => {
-    modalStore.confirmModal.openModal({ 
-        text: text,
-        confirmBtnText: '확인',
-        noCancelBtn: true,
-        onConfirm: () => { 
-            modalStore.confirmModal.closeModal(); 
-        }
-    });
-}
-
 // 상품 연결 상태 토글 핸들러
 const toggleProductConnection = (product) => {
     product.isConnected = !product.isConnected;
@@ -161,7 +150,7 @@ const toggleProductConnection = (product) => {
 const validateRequiredFields = async () => {
     // 카테고리 검증
     if (!selectedCategory.value) {
-        openAlert('카테고리를 선택해주세요.');
+        showAlert('카테고리를 선택해주세요.');
         await nextTick();
         if (categorySelectRef.value) {
             const selectBox = categorySelectRef.value.$el?.querySelector('.select__box');
@@ -174,7 +163,7 @@ const validateRequiredFields = async () => {
     
     // 옵션명 검증
     if (!optionName.value || optionName.value.trim() === '') {
-        openAlert('옵션명을 입력해주세요.');
+        showAlert('옵션명을 입력해주세요.');
         await nextTick();
         if (optionNameInputRef.value) {
             const inputElement = optionNameInputRef.value.$el?.querySelector('input[type="text"]');
@@ -187,7 +176,7 @@ const validateRequiredFields = async () => {
     
     // 재고 수 검증 (재고 토글이 켜져 있을 때)
     if (isStockEnabled.value && (!stockCount.value || stockCount.value.trim() === '')) {
-        openAlert('재고 수를 입력해주세요.');
+        showAlert('재고 수를 입력해주세요.');
         await nextTick();
         if (stockCountInputRef.value) {
             const inputElement = stockCountInputRef.value.$el?.querySelector('input[type="text"]');
@@ -200,7 +189,7 @@ const validateRequiredFields = async () => {
     
     // 판매가 검증 (가격 토글이 켜져 있을 때)
     if (isPriceEnabled.value && (!price.value || price.value.trim() === '')) {
-        openAlert('판매가를 입력해주세요.');
+        showAlert('판매가를 입력해주세요.');
         await nextTick();
         if (priceInputRef.value) {
             const inputElement = priceInputRef.value.$el?.querySelector('input[type="text"]');
@@ -424,13 +413,13 @@ const handleSave = async () => {
             await optionStore.getOptionListByCategory();
         }
 
-        openAlert('옵션이 등록되었습니다.');
+        showAlert('옵션이 등록되었습니다.');
         modalStore.optionSettingModal.closeModal();
     } catch (error) {
         console.error('옵션 등록 실패:', error);
-        openAlert('옵션 등록 중 오류가 발생했습니다.');
     }
 };
+
 const handleUpdate = async () => {
     // 필수 필드 검증 (등록과 동일)
     const isValid = await validateRequiredFields();
@@ -528,11 +517,11 @@ const handleUpdate = async () => {
             await optionStore.getOptionListByCategory();
         }
 
-        openAlert('옵션이 수정되었습니다.');
+        showAlert('옵션이 수정되었습니다.')
         modalStore.optionSettingModal.closeModal();
     } catch (error) {
         console.error('옵션 수정 실패:', error);
-        openAlert('옵션 수정 중 오류가 발생했습니다.');
+        // showAlert('옵션 수정 중 오류가 발생했습니다.')
     }
 };
 

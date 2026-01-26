@@ -69,45 +69,35 @@ export const useReservationStore = defineStore("reservation", () => {
 
     // 예약 일정 불러오기 (예약 일정 확인 페이지)
     async function getReserveSchedule(params) {
-        try {
-            const response = await api.post(`/api/{cocode}/reserve/sche`, params)
-            if(response.status <= 300) {
-                let data = response.data.data;
+        const response = await api.post(`/api/{cocode}/reserve/sche`, params)
 
-                const processedData = data.map((item, idx) => ({
-                    ...item,                   // 기존 데이터 복사
-                    start: item.startDate,     // startDate 값을 start 키로 추가
-                    end: item.endDate,          // endDate 값을 end 키로 추가
-                    resource: item.doctorId || "", // 리소스 키 추가,
-                    id: idx, // TODO: 임시값 추가
-                }));
+        let data = response.data.data;
 
-                reserveScheduleList.value = processedData;
-            }
-        } catch (error) {
-            console.error(error);
-            alert('오류가 발생했습니다.')
-        }
+        const processedData = data.map((item, idx) => ({
+            ...item,                   // 기존 데이터 복사
+            start: item.startDate,     // startDate 값을 start 키로 추가
+            end: item.endDate,          // endDate 값을 end 키로 추가
+            resource: item.doctorId || "", // 리소스 키 추가,
+            id: idx, // TODO: 임시값 추가
+        }));
+
+        reserveScheduleList.value = processedData;
     }
 
     // 고객 매칭용 목록 및 예약 정보
     async function getReserveInfo(reserveIdx) {
         try {
             const response = await api.get(`/api/{cocode}/reserve/${reserveIdx}/cm`)
-            if(response.status <= 300) {
-                if(response.data.status_code <= 300) {
-                    let data = response.data.data
-                    reserveInfo.value = data;
-                    modalStore.reserveInfoModal.openModal(reserveInfo.value)
-                } else {
-                    reserveInfo.value = '';
-                    alert(response.message)
-                }
+            if(response.data.status_code <= 300) {
+                let data = response.data.data
+                reserveInfo.value = data;
+                modalStore.reserveInfoModal.openModal(reserveInfo.value)
+            } else {
+                reserveInfo.value = '';
             }
         } catch (error) {
             console.error(error);
             reserveInfo.value = '';
-            alert('오류가 발생했습니다.')
         }
     }
 
@@ -119,14 +109,12 @@ export const useReservationStore = defineStore("reservation", () => {
                 if(response.data.status_code <= 300) {
                     return response.data.data;
                 } else {
-                    alert(response.data.message || '검색 중 오류가 발생했습니다.');
                     return [];
                 }
             }
             return [];
         } catch (error) {
             console.error('고객 검색 오류:', error);
-            alert('고객 검색 중 오류가 발생했습니다.');
             return [];
         }
     }
