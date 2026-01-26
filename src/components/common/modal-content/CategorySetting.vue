@@ -12,6 +12,7 @@ import { useModalStore } from '@/stores/modalStore';
 import { useCategoryStore } from '@/stores/categoryStore'
 //util
 import { CATEGORY_TYPE_OPTIONS} from "@/utils/category";
+import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();
 const categoryStore = useCategoryStore();
@@ -57,12 +58,7 @@ const handleApply = async() => {
     );
 
     if (hasError) {
-        modalStore.confirmModal.openModal({
-            text: '입력하신 카테고리 명을 확인해주세요.',
-            confirmBtnText: '확인',
-            noCancelBtn: true,
-            onConfirm: (() => {modalStore.confirmModal.closeModal()})
-        })
+        showAlert('입력하신 카테고리 명을 확인해주세요.');
         return;
     }
 
@@ -94,22 +90,12 @@ const handleSave = async() => {
     );
     
     if (!name || name.trim().length === 0 || name.length > 10) {
-        modalStore.confirmModal.openModal({
-            text: confirmMsg,
-            confirmBtnText: '확인',
-            noCancelBtn: true,
-            onConfirm: (() => {modalStore.confirmModal.closeModal()})
-        })
+        showAlert(confirmMsg);
         return;
     }
 
     if (!type) {
-        modalStore.confirmModal.openModal({
-            text: '유형을 선택해주세요.',
-            confirmBtnText: '확인',
-            noCancelBtn: true,
-            onConfirm: (() => {modalStore.confirmModal.closeModal()})
-        })
+        showAlert('유형을 선택해주세요.');
         return;
     }
 

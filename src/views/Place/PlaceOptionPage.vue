@@ -24,6 +24,7 @@ import { useOptionStore } from '@/stores/optionStore';
 import { useProductStore } from '@/stores/productStore';
 import { useCategoryStore } from '@/stores/categoryStore';
 import { useDragScroll } from '@/composables/useDragScroll';
+import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();
 const optionStore = useOptionStore();
@@ -169,13 +170,7 @@ const toggleOptionVisibility = async (row) => {
     const optionId = row.optionId;
     
     if (!optionId) {
-        console.error('옵션 ID를 찾을 수 없습니다. row:', row);
-        modalStore.confirmModal.openModal({ 
-            text: '옵션 ID를 찾을 수 없습니다.',
-            confirmBtnText: '확인',
-            noCancelBtn: true,
-            onConfirm: () => { modalStore.confirmModal.closeModal(); }
-        });
+        showAlert('옵션 ID를 찾을 수 없습니다.');
         return;
     }
 
@@ -235,19 +230,9 @@ const toggleOptionVisibility = async (row) => {
         
         // 409 에러인 경우 특별한 메시지 표시
         if (error.message && error.message.includes('옵션을 찾을 수 없습니다')) {
-            modalStore.confirmModal.openModal({ 
-                text: '옵션을 찾을 수 없습니다. 옵션이 삭제되었거나 존재하지 않을 수 있습니다.\n리스트를 새로고침합니다.',
-                confirmBtnText: '확인',
-                noCancelBtn: true,
-                onConfirm: () => { modalStore.confirmModal.closeModal(); }
-            });
+            showAlert('옵션을 찾을 수 없습니다. 옵션이 삭제되었거나 존재하지 않을 수 있습니다.\n리스트를 새로고침합니다.')
         } else {
-            modalStore.confirmModal.openModal({ 
-                text: '노출설정 변경 중 오류가 발생했습니다.',
-                confirmBtnText: '확인',
-                noCancelBtn: true,
-                onConfirm: () => { modalStore.confirmModal.closeModal(); }
-            })
+            showAlert('노출설정 변경 중 오류가 발생했습니다.');
         }
         
         // 에러 발생 시 체크박스 상태를 원래대로 되돌리기 위해 리스트 새로고침
@@ -293,12 +278,7 @@ const handleMenuAction = async (action, row) => {
 const handleDeleteOption = async () => {
     const optionData = modalStore.confirmModal.data?.optionData;
     if (!optionData || !optionData.optionId) {
-        modalStore.confirmModal.openModal({ 
-            text: '옵션 ID를 찾을 수 없습니다.',
-            confirmBtnText: '확인',
-            noCancelBtn: true,
-            onConfirm: () => { modalStore.confirmModal.closeModal(); }
-        })
+        showAlert('옵션 ID를 찾을 수 없습니다.');
         return;
     }
 
@@ -308,13 +288,8 @@ const handleDeleteOption = async () => {
         // 옵션 삭제 API 호출
         await optionStore.deleteOption(optionId);
         
-        modalStore.confirmModal.openModal({ 
-            text: '옵션이 삭제되었습니다.',
-            confirmBtnText: '확인',
-            noCancelBtn: true,
-            onConfirm: () => {modalStore.confirmModal.closeModal(); }
-        })
-        
+        showAlert('옵션이 삭제되었습니다.');
+
         // 삭제 성공 후 옵션 리스트 새로고침
         if (activeTab.value) {
             await optionStore.getOptionListByCategory(); // 1. 전체 데이터 갱신
@@ -323,13 +298,6 @@ const handleDeleteOption = async () => {
         
     } catch (error) {
         console.error('옵션 삭제 실패:', error);
-        modalStore.confirmModal.openModal({ 
-            text: error.message || '옵션 삭제 중 오류가 발생했습니다.',
-            confirmBtnText: '확인',
-            noCancelBtn: true,
-            onConfirm: () => { modalStore.confirmModal.closeModal(); }
-        })
-        
     }
 };
 

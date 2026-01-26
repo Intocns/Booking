@@ -19,6 +19,7 @@ import SearchCustomer from '@/components/common/modal-content/SearchCustomer.vue
 import { useModalStore } from '@/stores/modalStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
 import { useReservationStore } from '@/stores/reservationStore';
+import { showAlert } from '@/utils/ui';
 
 const emit = defineEmits(['refresh-list']);
 
@@ -407,12 +408,7 @@ const handleCustomerSelected = (customer) => {
 const handleSaveCancel = async () => {
     // 1. 유효성 검사
     if (!cancelReasonType.value) {
-        modalStore.confirmModal.openModal({
-            text: '취소 사유를 선택해주세요.',
-            confirmBtnText: '확인',
-            noCancelBtn: true,
-            onConfirm: () => {modalStore.confirmModal.closeModal()}
-        })
+        showAlert('취소 사유를 선택해주세요.');
         return;
     }
     
@@ -420,23 +416,13 @@ const handleSaveCancel = async () => {
     if (cancelReasonType.value === '직접 입력') {
         // 빈 값 체크
         if (!cancelReasonDirect.value.trim()) {
-            modalStore.confirmModal.openModal({
-                text: '취소 사유를 입력해주세요.',
-                confirmBtnText: '확인',
-                noCancelBtn: true,
-                onConfirm: () => {modalStore.confirmModal.closeModal()}
-            })
+            showAlert('취소 사유를 입력해주세요.');
             return;
         }
         
         // 3. 50자 초과 체크 추가
         if (cancelReasonDirect.value.length > 50) {
-            modalStore.confirmModal.openModal({
-                text: '취소 사유는 최대 50자까지 입력 가능합니다.',
-                confirmBtnText: '확인',
-                noCancelBtn: true,
-                onConfirm: () => {modalStore.confirmModal.closeModal()}
-            })
+            showAlert('취소 사유는 최대 50자까지 입력 가능합니다.');
             return;
         }
     }

@@ -463,28 +463,16 @@ const onDeleteTemporary = async (raw, targetIdx) => {
     // 전체 데이터 전송
     const response = await productStore.updateItemReservationInfo(props.savedItemId, params);
 
-    if (response.status_code <= 300) {
-        modalStore.confirmModal.openModal({
-            text: '삭제되었습니다.',
-            noCancelBtn: true,
-            onConfirm: (() => {modalStore.confirmModal.closeModal()})
-        })
-        
-        await initDataMapping(); // 예약 정보 재조회
-        
-        // 캘린더 새로고침
-        const start = DayPilot.Date.today().firstDayOfWeek(1);
-        await productStore.getProductSchedule(props.savedItemId, {
-            startDate: start.toString("yyyy-MM-dd"),
-            endDate: start.addDays(6).toString("yyyy-MM-dd"),
-        });
-    } else {
-        modalStore.confirmModal.openModal({
-            text: '삭제 중 오류가 발생했습니다.',
-            noCancelBtn: true,
-            onConfirm: (() => {modalStore.confirmModal.closeModal()})
-        })
-    }
+    showAlert('삭제되었습니다.');
+
+    await initDataMapping(); // 예약 정보 재조회
+
+    // 캘린더 새로고침
+    const start = DayPilot.Date.today().firstDayOfWeek(1);
+    await productStore.getProductSchedule(props.savedItemId, {
+        startDate: start.toString("yyyy-MM-dd"),
+        endDate: start.addDays(6).toString("yyyy-MM-dd"),
+    });
 };
 
 // 휴무일 데이터를 ui용 객체(config)로 변환

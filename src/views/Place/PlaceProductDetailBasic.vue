@@ -289,31 +289,31 @@ const checkedRequired = (async(params) => {
     
     // 상품명 체크
     if(!params.name || params.name.trim() === ""){
-        openErrorModal('예약 상품명을 입력해주세요.');
+        showAlert('예약 상품명을 입력해주세요.');
         return false;
     }
 
     const nameError = getFieldError(params.name, 0, 50);
     if (nameError.isError) {
-        openErrorModal(`입력하신 상품명을 확인해주세요.`);
+        showAlert(`입력하신 상품명을 확인해주세요.`);
         return false;
     }
 
     const descError = getFieldError(params.desc, 0, 1000);
     if(descError.isError) {
-        openErrorModal('입력하신 상품 소개를 확인해주세요.');
+        showAlert('입력하신 상품 소개를 확인해주세요.');
         return false;
     }
 
     const precautionError = getFieldError(params.bookingPrecautionJson[0].desc, 0, 1000);
     if(precautionError.isError) {
-        openErrorModal('입력하신 유의사항을 확인해주세요.');
+        showAlert('입력하신 유의사항을 확인해주세요.');
         return false;
     }
 
     //상품 사진 체크
     if(!params.imageUrls || params.imageUrls.length === 0){
-        openErrorModal(`상품 사진을 최소 1장 이상 추가해주세요.`);
+        showAlert(`상품 사진을 최소 1장 이상 추가해주세요.`);
         return false;
     }
 
@@ -324,32 +324,23 @@ const checkedRequired = (async(params) => {
             
             // 상세 설명 내 제목/내용 길이 체크
             if (getFieldError(item.title, 0, 40).isError) {
-                openErrorModal(`상세 설명 ${i + 1}번째 제목 형식을 확인해주세요.`);
+                showAlert(`상세 설명 ${i + 1}번째 제목 형식을 확인해주세요.`);
                 return false;
             }
             if (getFieldError(item.context, 0, 1000).isError) {
-                openErrorModal(`상세 설명 ${i + 1}번째 내용 형식을 확인해주세요.`);
+                showAlert(`상세 설명 ${i + 1}번째 내용 형식을 확인해주세요.`);
                 return false;
             }
         }
     }
 
     if (doctorAssignType.value === 'select' && !selectedDoctor.value) {
-        openErrorModal('담당의를 선택해주세요.');
+        showAlert('담당의를 선택해주세요.');
         return false;
     }
 
     return true;
 })
-
-// 모달 오픈 공통 함수
-const openErrorModal = (text) => {
-    modalStore.confirmModal.openModal({
-        text: text,
-        noCancelBtn: true,
-        onConfirm: () => { modalStore.confirmModal.closeModal(); }
-    });
-};
 
 //화면에 데이터 전달 JSON 파싱할 항목 리스트
 const JSON_FIELDS = [
