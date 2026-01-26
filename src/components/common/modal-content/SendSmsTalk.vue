@@ -4,12 +4,12 @@ import icTooltip from '@/assets/icons/ic_tooltip.svg'
 import icEmpty from '@/assets/icons/ic_empty.svg'
 import TalkPreview from '../TalkPreview.vue';
 
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useModalStore } from '@/stores/modalStore';
 import { useTalkSmsStore } from '@/stores/talkSmsStore';
 import { api } from '@/api/axios';
-import { buildTemplateVariables } from '@/utils/alimtalkTemplate.js';
+import { buildTemplateVariables, formatTemplateContent, getSmsByteLength } from '@/utils/alimtalkSmsTemplate.js';
 import { formatPhone } from '@/utils/phoneFormatter.js';
 import { PET_GENDER_MAP } from '@/utils/reservation.js';
 
@@ -40,20 +40,28 @@ const compEnrolNum = '1231212345'; // TODO: 임시
 const hospitalName = '인투병원'; // TODO: 임시
 const hospitalPhone = '01089380571'; // TODO: 임시
 
-// 수신번호
+// 수신번호 (알림톡·SMS 공통)
 const recipientPhone = ref('');
 
-// reservationData 변경 시 수신번호 자동 설정
+// SMS 발신번호 (병원 전화번호)
+const smsSenderPhone = ref(formatPhone(hospitalPhone));
+
+// reservationData 변경 시 수신번호·SMS 발신번호(병원 전화) 자동 설정
 watch(() => props.reservationData, (newData) => {
     if (newData) {
-        recipientPhone.value = formatPhone(newData.phoneTxt);
+        // 수신번호: 예약의 고객 전화 (phoneTxt 우선, phone fallback)
+        recipientPhone.value = formatPhone(newData.phoneTxt || newData.phone || '');
+        // 발신번호: 병원 전화번호 (reservationData.hospitalPhone 우선, 상수 fallback)
+        smsSenderPhone.value = formatPhone(newData.hospitalPhone || hospitalPhone);
     }
 }, { immediate: true });
 
 // 전화번호 입력 시 자동 형식 변환
 const handlePhoneInput = (event) => {
-    const formatted = formatPhone(event.target.value);
-    recipientPhone.value = formatted;
+    recipientPhone.value = formatPhone(event.target.value);
+};
+const handleSmsSenderInput = (event) => {
+    smsSenderPhone.value = formatPhone(event.target.value);
 };
 
 // 선택된 템플릿 (모달 내 선택 상태)
@@ -173,6 +181,21 @@ function syncSelectedFromStore() {
 }
 onMounted(syncSelectedFromStore);
 watch([templateList, smsTemplateList], syncSelectedFromStore, { deep: true });
+
+// SMS: sms_memo + {변수} 치환 미리보기
+const smsPreviewText = computed(() => {
+    const data = {
+        ...props.reservationData,
+        hospitalPhone: props.reservationData?.hospitalPhone || hospitalPhone,
+        hospitalName: props.reservationData?.hospitalName || hospitalName,
+    };
+    const vars = buildTemplateVariables(data);
+    return formatTemplateContent(selectedSmsTemplate.value?.sms_memo || '', vars, { mode: 'sms' });
+});
+
+// SMS: 미리보기 텍스트 기준 Byte·건수 (80Byte 초과 시 2건)
+const smsByteCount = computed(() => getSmsByteLength(smsPreviewText.value));
+const smsMessageCount = computed(() => (smsByteCount.value >= 80 ? 2 : 1));
 
 // 백엔드 복호화 테스트용
 const decryptAlimtalkData = async (encryptedData) => {
@@ -357,17 +380,19 @@ const hideTooltip = (type) => {
                     </div>
                     
                     <div class="content-sms__editor">
-    
                         <div class="content-sms__editor-input">
                             <span class="title-s">(광고) </span>
-                            <span class="body-m">문자 내용 입력란</span>
-                            <p>문자 내용..</p>
+                            <span class="body-m">문자 미리보기</span>
+                            <p class="content-sms__preview-text" v-if="selectedSmsTemplate?.sms_memo">
+                                {{ smsPreviewText }}
+                            </p>
+                            <p v-else class="empty-message">템플릿을 선택해주세요.</p>
                         </div>
-    
+
                         <div class="content-sms__editor-byte">
-                            <p class="body-m">100 Byte / 3건</p>
+                            <p class="body-m">{{ smsByteCount }} Byte / {{ smsMessageCount }}건</p>
                         </div>
-    
+
                         <div class="content-sms__editor-options">
                             <label class="checkbox">
                                 <input type="checkbox" />
@@ -382,7 +407,12 @@ const hideTooltip = (type) => {
                 <div class="content-sms__form">
                     <div class="content-sms__form-row">
                         <span class="title-s">문자 수신번호</span>
-                        <input class="input-text" type="text" name="" id="">
+                        <input
+                            class="input-text"
+                            type="text"
+                            v-model="recipientPhone"
+                            @input="handlePhoneInput"
+                        >
                     </div>
                     <div class="content-sms__form-row">
                         <span class="title-s d-flex gap-4 helper">
@@ -392,7 +422,12 @@ const hideTooltip = (type) => {
                                 ※ 전기통신사업법에 의거하여 거짓으로 표기된 전화번호로 인한 이용자 피해 예방을 위해서 발신번호 사전등록제가 시행  됩니다. 발신번호는 개인 또는 기업이 소유한 유효 전화번호를 사용해야하며, 사전등록이 안된 발신번호는 문자 메시지 발송이 차단됩니다.
                             </div>
                         </span>
-                        <input class="input-text" type="text" name="" id="">
+                        <input
+                            class="input-text"
+                            type="text"
+                            v-model="smsSenderPhone"
+                            @input="handleSmsSenderInput"
+                        >
                     </div>
                 </div>
 
@@ -674,8 +709,13 @@ const hideTooltip = (type) => {
             border: 1px solid $gray-300;
             background-color: $gray-00;
     
-            &-input {flex: 1;}
-    
+            &-input {
+                flex: 1;
+                overflow-y: auto;
+                .content-sms__preview-text { white-space: pre-wrap; word-break: break-all; margin: 8px 0 0; }
+                .empty-message { color: $gray-400; margin: 8px 0 0; }
+            }
+
             &-byte {
                 @include flex;
                 justify-content: flex-end;
