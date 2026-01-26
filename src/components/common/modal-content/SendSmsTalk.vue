@@ -49,18 +49,28 @@ const isCheckingAvailable = ref(false);
 const checkAvailableResult = ref(null);
 const isLink = ref(false); // 인투링크 발송 여부
 
-// 템플릿 정보 조회 상태
+// 알림톡 템플릿 정보 조회 상태
 const isLoadingTemplates = ref(false);
 const templateList = ref([]);
-const selectedTemplate = ref(null); // 선택된 템플릿
+const selectedTemplate = ref(null); // 선택된 알림톡 템플릿
+
+// SMS 템플릿 정보 조회 상태
+const isLoadingSmsTemplates = ref(false);
+const smsTemplateList = ref([]);
+const selectedSmsTemplate = ref(null); // 선택된 SMS 템플릿
 
 // 알림톡 템플릿 타입 (현재 5로 고정해 확인)
 const selectedTemplateType = ref(5); // TODO: 추후 변경 필요
 const isSending = ref(false);
 
-// 템플릿 선택 핸들러
+// 알림톡 템플릿 선택 핸들러
 const selectTemplate = (template) => {
     selectedTemplate.value = template;
+};
+
+// SMS 템플릿 선택 핸들러
+const selectSmsTemplate = (template) => {
+    selectedSmsTemplate.value = template;
 };
 
 const sendTalk = async () => {
@@ -127,10 +137,8 @@ const sendTalk = async () => {
             visitSourceTotalList: props.reservationData?.visitSourceTotalList || '',
         };
 
-        console.log('[알림톡 발송] request body', body);
-        return;
 
-        const response = await api.post(`/api/${cocode}/alimtalk/send`, body);
+        const response = await api.post(`/api/{cocode}/alimtalk/send`, body);
 
         if (response.status <= 300 && response.data?.status_code === 200) {
             alert('알림톡 발송이 완료되었습니다.');
@@ -153,7 +161,7 @@ const getSmsPointInfo = async () => {
     smsRemainingCount.value = null;
     isLoadingSmsPoint.value = true;
     try {
-        const response = await api.get(`/api/${cocode}/sms/point`);
+        const response = await api.get(`/api/{cocode}/sms/point`);
         if (response.status <= 300 && response.data?.status_code === 200) {
             const data = response.data.data;
             if (data?.message?.sms_cnt_float !== undefined) {
@@ -182,7 +190,7 @@ const checkAvailableApi = async () => {
             templateType: selectedTemplateType.value, // TODO: 추후 5로 변경 필요
         };
 
-        const response = await api.post(`/api/${cocode}/alimtalk/checkAvailableApi`, body);
+        const response = await api.post(`/api/{cocode}/alimtalk/checkAvailableApi`, body);
         checkAvailableResult.value = response.data;
         
         // checkAvailableApi가 성공하면 getTemplateInfo 호출
@@ -227,7 +235,7 @@ const getTemplateInfo = async (useLink = false) => {
             isLink: useLink,
         };
 
-        const response = await api.post(`/api/${cocode}/alimtalk/getTemplateInfo`, body);
+        const response = await api.post(`/api/{cocode}/alimtalk/getTemplateInfo`, body);
         if (response.data?.status_code === 200 && response.data?.data) {
             const data = response.data.data;
             if (data.template_info && Array.isArray(data.template_info)) {
@@ -251,7 +259,7 @@ const getTemplateInfo = async (useLink = false) => {
 // 백엔드 복호화 테스트용: 프론트에서 암호화된 값을 그대로 던짐
 const decryptAlimtalkData = async (encryptedData) => {
     try {
-        const response = await api.post(`/api/${cocode}/alimtalk/check`, {
+        const response = await api.post(`/api/{cocode}/alimtalk/check`, {
             encryptedData,
         });
         return response.data;
@@ -261,11 +269,48 @@ const decryptAlimtalkData = async (encryptedData) => {
     }
 };
 
+// SMS 템플릿 목록 조회 API 호출
+const getSmsTemplateList = async () => {
+    if (isLoadingSmsTemplates.value) return;
+    isLoadingSmsTemplates.value = true;
+    smsTemplateList.value = [];
+
+    try {
+        const response = await api.get(`/api/{cocode}/sms/template/list`);
+        if (response.data?.status_code === 200 && response.data?.data) {
+            const data = response.data.data;
+            if (data.template_list && Array.isArray(data.template_list)) {
+                smsTemplateList.value = data.template_list;
+                // 템플릿 목록이 있으면 첫 번째 템플릿 자동 선택
+                if (smsTemplateList.value.length > 0) {
+                    selectedSmsTemplate.value = smsTemplateList.value[0];
+                }
+            } else {
+                smsTemplateList.value = [];
+            }
+        }
+    } catch (error) {
+        console.error('SMS 템플릿 목록 조회 오류:', error);
+        smsTemplateList.value = [];
+    } finally {
+        isLoadingSmsTemplates.value = false;
+    }
+};
+
+// 탭 변경 감지하여 SMS 탭일 때 템플릿 목록 조회
+watch(activeTab, (newTab) => {
+    if (newTab === 'sms' && smsTemplateList.value.length === 0) {
+        // SMS 탭으로 변경되고 템플릿 목록이 없을 때만 조회
+        getSmsTemplateList();
+    }
+});
+
 // 부모 컴포넌트/콘솔에서 호출할 수 있도록 함수 노출
 defineExpose({
     getSmsPointInfo,
     checkAvailableApi,
     getTemplateInfo,
+    getSmsTemplateList,
     decryptAlimtalkData,
 });
 
@@ -407,26 +452,29 @@ const hideTooltip = (type) => {
                 <div class="content-sms__top">
                     <div class="content-sms__templates">
                         <p class="title-m">템플릿 목록</p>
-    
-                        <div class="content-sms__templates-empty">
+
+                        <div class="content-sms__templates-empty" v-if="!isLoadingSmsTemplates && smsTemplateList.length === 0">
                             <p class="empty-box">
                                 <img :src="icEmpty" alt="비어있음 아이콘">
                                 <span>템플릿 목록이 없습니다.</span>
                             </p>
                         </div>
     
-                        <ul class="content-sms__templates-list" style="display: none;">
-                            <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
-                            <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
-                            <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
-                            <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
-                            <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
-                            <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
-                            <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
-                            <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
-                            <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
-                            <li class="btn btn--size-32 btn--black-outline">템플릿 1</li>
+                        <ul class="content-sms__templates-list" v-if="smsTemplateList.length > 0">
+                            <li 
+                                v-for="template in smsTemplateList" 
+                                :key="template.Group_Sno || template.Category"
+                                class="btn btn--size-32"
+                                :class="selectedSmsTemplate?.Group_Sno === template.Group_Sno ? 'btn--blue' : 'btn--black-outline'"
+                                @click="selectSmsTemplate(template)"
+                            >
+                                {{ template.Category || template.sms_memo || '템플릿' }}
+                            </li>
                         </ul>
+                        
+                        <div v-if="isLoadingSmsTemplates" class="content-sms__templates-loading">
+                            <span class="body-m">템플릿 목록 조회 중...</span>
+                        </div>
                     </div>
                     
                     <div class="content-sms__editor">
@@ -713,9 +761,24 @@ const hideTooltip = (type) => {
             &-list {
                 display: flex;
                 flex-direction: column;
-                height: 100%;
                 gap: 4px;
-        
+                padding-bottom: 5px;
+
+                li {
+                    width: 100%;
+                    text-align: left;
+                    padding: 8px 12px;
+                    white-space: normal;
+                    word-break: break-word;
+                    min-height: 48px;
+                    height: auto;
+                    line-height: 1.4;
+                }
+            }
+            
+            &-loading {
+                margin: auto;
+                text-align: center;
             } 
         }
 
