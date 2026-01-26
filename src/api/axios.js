@@ -4,7 +4,7 @@ import { showAlert } from "@/utils/ui";
 import { COCODE } from "@/constants/common";
 
 const api = axios.create({
-    baseURL: '', //import.meta.env.VITE_API_URL,
+    baseURL: '',
     timeout: 120000, // 2분
     headers : {
         'Content-Type': 'application/json;charset=utf-8',
@@ -17,6 +17,15 @@ api.ing = ref(false) // 응답 상태에 따라 dom 요소에서 사용할 상�
 // 요청 인터셉터
 api.interceptors.request.use(
     (config) => {
+        // env > api url 
+        const baseUrl = import.meta.env.VITE_API_URL;
+
+        if (config.url.startsWith('/api') && baseUrl) {
+            if (baseUrl !== '/api') {
+                config.url = config.url.replace(/^\/api/, baseUrl);
+            }
+        }
+        
         // 요청 발신 전
         if (config.skipLoading !== true) {
             // skipLoading이 true가 아닌 경우에만 로딩 상태를 변경
