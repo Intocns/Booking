@@ -37,6 +37,7 @@ const toggle = () => {
     if (!props.disabled) {
         isOpen.value = !isOpen.value;
         if(isOpen.value) {
+            updatePosition();
             scrollToSelected();
         }
     }
@@ -61,18 +62,69 @@ const handleClickOutside = (e) => {
     }
 };
 
+const triggerRef = ref(null); // .select__box를 참조
+const dropdownStyle = ref({
+    position: 'absolute',
+    top: '0px',
+    left: '0px',
+    width: '0px',
+    zIndex: 9999
+});
+
+const updatePosition = async () => {
+    await nextTick();
+    if (triggerRef.value) {
+        const rect = triggerRef.value.getBoundingClientRect();
+        const dropdownHeight = 220; // 드롭다운의 최대 높이 (CSS max-height와 맞추도록)
+        const windowHeight = window.innerHeight;
+        
+        // 하단 공간이 부족한지 확인 (여유공간 10px 추가)
+        const spaceBelow = windowHeight - rect.bottom;
+        const showUpward = spaceBelow < dropdownHeight + 10;
+
+        if (showUpward) {
+            // 위로 띄우기
+            dropdownStyle.value = {
+                position: 'fixed',
+                bottom: `${windowHeight - rect.top}px`, // 셀렉트박스 상단에 맞춤
+                left: `${rect.left}px`,
+                width: `${rect.width}px`,
+                top: 'auto' // 기존 top 값 제거
+            };
+        } else {
+            // 아래로 띄우기
+            dropdownStyle.value = {
+                position: 'fixed',
+                top: `${rect.bottom}px`,
+                left: `${rect.left}px`,
+                width: `${rect.width}px`,
+                bottom: 'auto' // 기존 bottom 값 제거
+            };
+        }
+    }
+};
 onMounted(() => {
-    document.addEventListener("click", handleClickOutside);
+    document.addEventListener("click", handleClickOutside, true);
 });
 
 onBeforeUnmount(() => {
-    document.removeEventListener("click", handleClickOutside);
+    document.removeEventListener("click", handleClickOutside, true);
 });
 </script>
 
 <template>
-    <div class="select" :class="{ disabled }" ref="wrapper" :style="{ width: selectWidth }">
-        <div class="select__box" :class="{ open: isOpen }" @click="toggle">
+    <div 
+        class="select" 
+        :class="{ disabled }" 
+        ref="wrapper" 
+        :style="{ width: selectWidth }"
+    >
+        <div 
+            class="select__box" 
+            :class="{ open: isOpen }" 
+            @click="toggle" 
+            ref="triggerRef"
+        >
             <span 
                 class="select__text"
                 :class="{'is-placeholder' : !selectedLabel }"
@@ -87,18 +139,25 @@ onBeforeUnmount(() => {
 
         <span v-show="caption" class="caption">{{ caption }}</span>
 
-        <div class="select__dropdown" v-if="isOpen" ref="dropdownRef">
+        <teleport to='body'>
             <div 
-                v-for="(opt, index) in options" 
-                :key="opt.value"
-                :ref="el => { if (el) optionRefs[index] = el }"
-                class="select__option"
-                :class="{ selected: modelValue === opt.value }"
-                @click.stop="selectOption(opt.value)"
+                class="select__dropdown teleported-dropdown" 
+                v-if="isOpen" 
+                ref="dropdownRef" 
+                :style="dropdownStyle"
             >
-                <span class="label body-m">{{ opt.label }}</span>
+                <div 
+                    v-for="(opt, index) in options" 
+                    :key="opt.value"
+                    :ref="el => { if (el) optionRefs[index] = el }"
+                    class="select__option"
+                    :class="{ selected: modelValue === opt.value }"
+                    @click.stop="selectOption(opt.value)"
+                >
+                    <span class="label body-m">{{ opt.label }}</span>
+                </div>
             </div>
-        </div>
+        </teleport>
     </div>
 </template>
 
@@ -168,7 +227,7 @@ onBeforeUnmount(() => {
         padding: 5px;
         max-height: 220px;
         overflow-y: auto;
-        z-index: 50;
+        z-index: 100;
     }
 
     &__option {
