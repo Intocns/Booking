@@ -86,7 +86,7 @@ export const useTalkSmsStore = defineStore('talkSms', () => {
         isLoadingSmsTemplates.value = true;
         smsTemplateList.value = [];
         try {
-            const res = await api.get('/api/{cocode}/sms/template/list');
+            const res = await api.get('/api/{cocode}/sms/getTemplateInfo');
             if (res.data?.status_code === 200 && res.data?.data?.template_list) {
                 const list = res.data.data.template_list;
                 smsTemplateList.value = Array.isArray(list) ? list : [];
