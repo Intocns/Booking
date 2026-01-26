@@ -1,3 +1,17 @@
+/**
+ * SMS 바이트 길이 (EUC-KR 기준: ASCII 1byte, 한글 등 2byte)
+ * @param {string} str
+ * @returns {number}
+ */
+export const getSmsByteLength = (str) => {
+    if (!str || typeof str !== 'string') return 0;
+    let bytes = 0;
+    for (let i = 0; i < str.length; i++) {
+        bytes += str.charCodeAt(i) < 128 ? 1 : 2;
+    }
+    return bytes;
+};
+
 export const buildTemplateVariables = (reservationData = {}) => {
     return {
         '동물명': reservationData?.petName,
