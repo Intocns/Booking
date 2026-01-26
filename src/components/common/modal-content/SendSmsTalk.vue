@@ -9,7 +9,7 @@ import { storeToRefs } from 'pinia';
 import { useModalStore } from '@/stores/modalStore';
 import { useTalkSmsStore } from '@/stores/talkSmsStore';
 import { api } from '@/api/axios';
-import { buildTemplateVariables } from '@/utils/alimtalkTemplate.js';
+import { buildTemplateVariables } from '@/utils/alimtalkSmsTemplate.js';
 import { formatPhone } from '@/utils/phoneFormatter.js';
 import { PET_GENDER_MAP } from '@/utils/reservation.js';
 
