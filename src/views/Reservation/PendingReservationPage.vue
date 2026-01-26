@@ -3,6 +3,7 @@
 import { computed, ref, onMounted, watch, nextTick } from 'vue';
 import { RESERVE_ROUTE_OPTIONS, RESERVE_ROUTE_MAP } from "@/utils/reservation";
 import { useReservationStore } from '@/stores/reservationStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
 import { useModalStore } from '@/stores/modalStore';
 import { useTalkSmsStore } from '@/stores/talkSmsStore';
 import PageTitle from '@/components/common/PageTitle.vue';
@@ -13,17 +14,16 @@ import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
 import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
 import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
-import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import SearchCustomer from '@/components/common/modal-content/SearchCustomer.vue';
 import icSms from '@/assets/icons/ic_sms.svg';
 import icReset from '@/assets/icons/ic_reset.svg';
 
 const reservationStore = useReservationStore();
+const hospitalStore = useHospitalStore();
 const modalStore = useModalStore();
 const talkSmsStore = useTalkSmsStore();
 
 // SMS 모달 컴포넌트 ref 및 선택된 예약 데이터
-const sendSmsTalkRef = ref(null);
 const selectedReservation = ref(null);
 
 // 문자 발송 모달 열기
@@ -118,6 +118,7 @@ const handelReserveDetail = (reserveIdx) => {
 };
 
 onMounted(() => {
+    hospitalStore.getHospitalInfo(); // 발신번호(병원 전화)용
     talkSmsStore.preloadTemplatesAndPoint();
     searchList();
     isInitialMount = false;

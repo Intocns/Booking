@@ -167,6 +167,7 @@ onMounted(async () => {
     if (hospitalStore.doctorList.length === 0) {
         await hospitalStore.getDoctorList();
     }
+    hospitalStore.getHospitalInfo(); // 발신번호(병원 전화)용
     talkSmsStore.preloadTemplatesAndPoint();
     searchList();
     isInitialMount = false;

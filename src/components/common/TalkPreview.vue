@@ -1,7 +1,7 @@
 <!-- 알림톡 미리보기 -->
 <script setup>
 import { computed } from 'vue';
-import { buildTemplateVariables, formatTemplateContent } from '@/utils/alimtalkTemplate.js';
+import { buildTemplateVariables, formatTemplateContent } from '@/utils/alimtalkSmsTemplate.js';
 
 const props = defineProps({
     template: {
