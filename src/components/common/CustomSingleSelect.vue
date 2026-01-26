@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
-import icSelectBoxOpenClosed from '@/assets/icons/Ic_selectbox_OpenClosed.svg';
+import icSelectBoxOpenClosed from '@/assets/icons/ic_selectbox_OpenClosed.svg';
 
 const props = defineProps({
     modelValue: { type: [String, Number], default: '' }, // 단일 값 (문자열 또는 숫자)

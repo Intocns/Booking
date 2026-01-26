@@ -1,8 +1,8 @@
 <!-- 인풋 텍스트 박스 컴포넌트 (검색필터 텍스트박스 x) -->
 <script setup>
 import icClear from '@/assets/icons/ic_clear.svg'
-import icCheck from '@/assets/icons/Ic_round_check.svg'
-import icWarning from '@/assets/icons/Ic_round_warning.svg'
+import icCheck from '@/assets/icons/ic_round_check.svg'
+import icWarning from '@/assets/icons/ic_round_warning.svg'
 
 import { ref, computed } from 'vue';
 

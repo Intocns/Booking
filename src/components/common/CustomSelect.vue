@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { formatSelectedLabels } from '@/utils/selectFormatter';
-import icSelectBoxOpenClosed from '@/assets/icons/Ic_selectbox_OpenClosed.svg';
+import icSelectBoxOpenClosed from '@/assets/icons/ic_selectbox_OpenClosed.svg';
 
 
 const props = defineProps({

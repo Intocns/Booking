@@ -9,7 +9,7 @@ import PlaceProductPreview from './PlaceProductPreview.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import OptionPreview from '@/components/common/OptionPreview.vue';
 // 아이콘
-import icInfo from '@/assets/icons/Ic_round_warning.svg'
+import icInfo from '@/assets/icons/ic_round_warning.svg'
 import icImg from '@/assets/icons/ic_image.svg'
 
 import { ref, reactive } from 'vue';

@@ -1,6 +1,6 @@
 <!-- 상품 미리보기 -->
 <script setup>
-import icInfo from '@/assets/icons/Ic_round_warning.svg';
+import icInfo from '@/assets/icons/ic_round_warning.svg';
 import icImg from '@/assets/icons/ic_image.svg';
 
 const props = defineProps({
