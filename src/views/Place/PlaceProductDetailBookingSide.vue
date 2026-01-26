@@ -26,6 +26,7 @@ import { useProductStore } from '@/stores/productStore';
 import { formatDateToDay } from '@/utils/dateFormatter';
 import { setOperatingObject } from '@/utils/product';
 import { DAYS_OPTIONS, PUBLIC_HOLIDAYS_OPTIONS } from '@/utils/schedule';
+import { validateTimeRanges } from '@/utils/common';
 import { DayPilot } from '@daypilot/daypilot-lite-vue';
 import { showAlert } from '@/utils/ui';
 
@@ -178,6 +179,30 @@ const saveTimeSetting = () => {
  */
 // 상품 수정 >> 일정 설정 >> 예약 정보 저장(예약일정)
 const updateItemSchedule = (async(type) => {
+    // --- 시간 유효성 검사 추가 ---
+    for (const config of configs.value) {
+        let allRanges = [];
+
+        if (config.operatingMode === 'all') {
+            allRanges = config.allDaysTime;
+        } else if (config.operatingMode === 'split') {
+            allRanges = [
+                ...config.splitTime.weekday,
+                ...config.splitTime.weekend,
+                ...config.splitTime.sat,
+                ...config.splitTime.sun
+            ];
+        } else if (config.operatingMode === 'daily') {
+            allRanges = config.dailyGroups.flatMap(g => g.times);
+        }
+
+        if (!validateTimeRanges(allRanges)) {
+            showAlert('마감 시간은 시작 시간보다 이후여야 합니다.');
+            return; // 저장 중단
+        }
+    }
+    // --------------------------
+
     const reserveCnt = selectedAnimalCount.value; // 진료가능 동물 수
 
     // 1. 현재 화면의 정기/이벤트 일정
@@ -324,14 +349,15 @@ const mapPosToConfig = (posArray) => {
         return config; // 
     }
 
-    // 평일: mon~fri 중 하나라도 포함되어 있고, sat/sun은 포함하지 않음
+    // 평일 그룹 (월~금만 포함)
     const weekdayItem = posArray.find(p => 
-        p.weekdays.some(day => ['mon', 'tue', 'wed', 'thu', 'fri'].includes(day)) &&
-        !p.weekdays.includes('sat') && !p.weekdays.includes('sun')
+        p.weekdays.every(day => ['mon', 'tue', 'wed', 'thu', 'fri'].includes(day)) && 
+        p.weekdays.length >= 1
     );
     
-    // 주말(토+일): sat과 sun을 모두 포함함
+    // 주말 그룹 (토, 일만 포함)
     const weekendItem = posArray.find(p => 
+        p.weekdays.every(day => ['sat', 'sun'].includes(day)) &&
         p.weekdays.includes('sat') && p.weekdays.includes('sun')
     );
 
@@ -339,18 +365,14 @@ const mapPosToConfig = (posArray) => {
     const satItem = posArray.find(p => p.weekdays.length === 1 && p.weekdays[0] === 'sat');
     const sunItem = posArray.find(p => p.weekdays.length === 1 && p.weekdays[0] === 'sun');
 
-    // 2. 판별 및 매핑
-    if (posArray.length === 1 && posArray[0].weekdays.length === 7) {
-        config.operatingMode = 'all';
-        config.allDaysTime = bitToTimeRanges(posArray[0].hourBit);
-    } 
-    else if (weekdayItem && weekendItem) {
+    // 판별 및 매핑
+    if (posArray.length === 2 && weekdayItem && weekendItem) {
         config.operatingMode = 'split';
         config.splitMode = 'weekend_all';
         config.splitTime.weekday = bitToTimeRanges(weekdayItem.hourBit);
         config.splitTime.weekend = bitToTimeRanges(weekendItem.hourBit);
     } 
-    else if (weekdayItem && satItem && sunItem) {
+    else if (posArray.length === 3 && weekdayItem && satItem && sunItem) {
         config.operatingMode = 'split';
         config.splitMode = 'sat_sun_individually';
         config.splitTime.weekday = bitToTimeRanges(weekdayItem.hourBit);

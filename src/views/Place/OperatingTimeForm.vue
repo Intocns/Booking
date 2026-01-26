@@ -5,8 +5,7 @@ import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import icPlus from '@/assets/icons/ic_plus_black.svg';
 import icPlusBlue from '@/assets/icons/ic_plus_blue.svg';
 import icDel from '@/assets/icons/ic_del.svg';
-import { watch } from 'vue';
-
+import { watch, computed } from 'vue';
 const props = defineProps({
     modelValue: Object,
     idx: { type: Number, default: 0 }
@@ -14,7 +13,12 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue']);
 
 // 부모로부터 받은 객체 참조
-const config = props.modelValue;
+// const config = props.modelValue;
+
+const config = computed({
+    get: () => props.modelValue,
+    set: (val) => emit('update:modelValue', val)
+});
 
 // 운영 시간 옵션
 const modeOptions = [ 
@@ -47,12 +51,28 @@ const removeTimeRange = (arr, i) => arr.splice(i, 1);
 
 const handleWeekendMerge = (val) => { if (val === 'merge') config.splitMode = 'weekend_all'; };
 
-const addDailyGroup = () => config.dailyGroups.push({ selectedDays: [], times: [{ startTime: '', endTime: '' }] });
-const removeDailyGroup = (i) => config.dailyGroups.splice(i, 1);
+const addDailyGroup = () => config.value.dailyGroups.push({ selectedDays: [], times: [{ startTime: '', endTime: '' }] });
+const removeDailyGroup = (i) => config.value.dailyGroups.splice(i, 1);
 const toggleDayInGroup = (gIdx, dayValue) => {
-    const days = config.dailyGroups[gIdx].selectedDays;
+    const disabledDays = getDisabledDays(gIdx);
+    if (disabledDays.includes(dayValue)) return;
+
+    const days = config.value.dailyGroups[gIdx].selectedDays;
     const index = days.indexOf(dayValue);
     index > -1 ? days.splice(index, 1) : days.push(dayValue);
+
+    emit('update:modelValue', { ...config.value });
+};
+
+// 이미 선택된 요일 값 (선택하지 못하도록)
+const getDisabledDays = (currentGIdx) => {
+    const disabledDays = [];
+    config.value.dailyGroups.forEach((group, index) => {
+        if (index !== currentGIdx) {
+            disabledDays.push(...group.selectedDays);
+        }
+    });
+    return disabledDays;
 };
 
 // watch(() => props.modelValue.operatingMode, (newVal) => {
@@ -294,7 +314,11 @@ const toggleDayInGroup = (gIdx, dayValue) => {
                         :key="day.value" 
                         type="button" 
                         class="btn-day" 
-                        :class="{active: group.selectedDays.includes(day.value)}" 
+                        :class="{
+                            active: group.selectedDays.includes(day.value),
+                            disabled: getDisabledDays(gIdx).includes(day.value)
+                        }"
+                        :disabled="getDisabledDays(gIdx).includes(day.value)"
                         @click="toggleDayInGroup(gIdx, day.value)"
                     >
                         {{ day.label }}

@@ -28,3 +28,19 @@ export const getFieldError = (value, min, max) => {
 
     return { isError: false, message: '' };
 };
+
+/**
+ * 시작/마감 시간 유효성 검사
+ * timeRanges: [{startTime, endTime}, ...]
+ * return: true/false
+ */
+export const validateTimeRanges = (timeRanges) => {
+    for (const range of timeRanges) {
+        if (!range.startTime || !range.endTime) continue;
+
+        if (range.startTime >= range.endTime) {
+            return false;
+        }
+    }
+    return true;
+};
