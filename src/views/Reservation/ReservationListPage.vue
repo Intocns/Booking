@@ -7,6 +7,7 @@ import { RESERVE_STATUS_OPTIONS, RESERVE_ROUTE_OPTIONS } from "@/utils/reservati
 import { useReservationStore } from '@/stores/reservationStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
 import { useModalStore } from '@/stores/modalStore';
+import { useTalkSmsStore } from '@/stores/talkSmsStore';
 import PageTitle from '@/components/common/PageTitle.vue';
 import TableLayout from '@/components/common/TableLayout.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
@@ -16,12 +17,12 @@ import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
 import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
 import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
-import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import icSms from '@/assets/icons/ic_sms.svg';
 import icReset from '@/assets/icons/ic_reset.svg';
 const reservationStore = useReservationStore();
 const hospitalStore = useHospitalStore();
 const modalStore = useModalStore();
+const talkSmsStore = useTalkSmsStore();
 
 // SMS 모달 컴포넌트 ref 및 선택된 예약 데이터
 const sendSmsTalkRef = ref(null);
@@ -44,14 +45,6 @@ const openSmsModal = (row) => {
     };
 
     modalStore.smsModal.openModal();
-    // 모달이 열린 후 API 호출 (포인트 조회 + 알림톡 프로필/템플릿 체크)
-    nextTick(() => {
-        if (sendSmsTalkRef.value) {
-            sendSmsTalkRef.value.getSmsPointInfo();
-            // 알림톡 연동 체크 API 호출
-            sendSmsTalkRef.value.checkAvailableApi?.();
-        }
-    });
 };
 
 // 테이블 col 정의
@@ -174,6 +167,7 @@ onMounted(async () => {
     if (hospitalStore.doctorList.length === 0) {
         await hospitalStore.getDoctorList();
     }
+    talkSmsStore.preloadTemplatesAndPoint();
     searchList();
     isInitialMount = false;
 });

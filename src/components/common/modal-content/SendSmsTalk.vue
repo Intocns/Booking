@@ -4,12 +4,14 @@ import icTooltip from '@/assets/icons/ic_tooltip.svg'
 import icEmpty from '@/assets/icons/ic_empty.svg'
 import TalkPreview from '../TalkPreview.vue';
 
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useModalStore } from '@/stores/modalStore';
+import { useTalkSmsStore } from '@/stores/talkSmsStore';
 import { api } from '@/api/axios';
 import { buildTemplateVariables } from '@/utils/alimtalkTemplate.js';
 import { formatPhone } from '@/utils/phoneFormatter.js';
-import { PET_GENDER_MAP, RESERVE_ROUTE_MAP } from '@/utils/reservation.js';
+import { PET_GENDER_MAP } from '@/utils/reservation.js';
 
 const props = defineProps({
     reservationData: {
@@ -19,10 +21,20 @@ const props = defineProps({
 });
 
 const modalStore = useModalStore();
+const talkSmsStore = useTalkSmsStore();
+const {
+    smsRemainingCount,
+    isLoadingSmsPoint,
+    isCheckingAvailable,
+    checkAvailableResult,
+    isLink,
+    templateList,
+    isLoadingTemplates,
+    smsTemplateList,
+    isLoadingSmsTemplates,
+} = storeToRefs(talkSmsStore);
 
 const activeTab = ref('talk');
-const smsRemainingCount = ref(null);
-const isLoadingSmsPoint = ref(false);
 const cocode = '2592'; // TODO: 임시
 const compEnrolNum = '1231212345'; // TODO: 임시
 const hospitalName = '인투병원'; // TODO: 임시
@@ -44,20 +56,9 @@ const handlePhoneInput = (event) => {
     recipientPhone.value = formatted;
 };
 
-// 알림톡 프로필/템플릿 체크 및 복호화 테스트용 상태
-const isCheckingAvailable = ref(false);
-const checkAvailableResult = ref(null);
-const isLink = ref(false); // 인투링크 발송 여부
-
-// 알림톡 템플릿 정보 조회 상태
-const isLoadingTemplates = ref(false);
-const templateList = ref([]);
-const selectedTemplate = ref(null); // 선택된 알림톡 템플릿
-
-// SMS 템플릿 정보 조회 상태
-const isLoadingSmsTemplates = ref(false);
-const smsTemplateList = ref([]);
-const selectedSmsTemplate = ref(null); // 선택된 SMS 템플릿
+// 선택된 템플릿 (모달 내 선택 상태)
+const selectedTemplate = ref(null);
+const selectedSmsTemplate = ref(null);
 
 // 알림톡 템플릿 타입 (현재 5로 고정해 확인)
 const selectedTemplateType = ref(5); // TODO: 추후 변경 필요
@@ -138,7 +139,7 @@ const sendTalk = async () => {
         };
 
 
-        const response = await api.post(`/api/{cocode}/alimtalk/send`, body);
+        const response = await talkSmsStore.sendAlimTalk(body);
 
         if (response.status <= 300 && response.data?.status_code === 200) {
             alert('알림톡 발송이 완료되었습니다.');
@@ -155,157 +156,35 @@ const sendTalk = async () => {
     }
 };
 
-const getSmsPointInfo = async () => {
-    if (isLoadingSmsPoint.value) return;
-    
-    smsRemainingCount.value = null;
-    isLoadingSmsPoint.value = true;
-    try {
-        const response = await api.get(`/api/{cocode}/sms/point`);
-        if (response.status <= 300 && response.data?.status_code === 200) {
-            const data = response.data.data;
-            if (data?.message?.sms_cnt_float !== undefined) {
-                smsRemainingCount.value = Number(data.message.sms_cnt_float);
-            } 
-        }
-    } catch (error) {
-        console.error('SMS 포인트 정보 조회 오류:', error);
-        smsRemainingCount.value = null;
-    } finally {
-        isLoadingSmsPoint.value = false;
+// 스토어 액션 래퍼 (템플릿·잔여건수 클릭 시 재조회용)
+const getSmsPointInfo = () => talkSmsStore.getSmsPointInfo();
+const checkAvailableApi = () => talkSmsStore.checkAvailableApi();
+const getTemplateInfo = (useLink = false) => talkSmsStore.getTemplateInfo(useLink);
+const getSmsTemplateList = () => talkSmsStore.getSmsTemplateList();
+
+// 스토어 템플릿 로딩 시 첫 항목 자동 선택
+function syncSelectedFromStore() {
+    if (templateList.value?.length && !selectedTemplate.value) {
+        selectedTemplate.value = templateList.value[0];
     }
-};
-
-// 알림톡 프로필/템플릿 체크 API 호출
-const checkAvailableApi = async () => {
-    if (isCheckingAvailable.value) return;
-
-    isCheckingAvailable.value = true;
-    checkAvailableResult.value = null;
-
-    try {
-        const body = {
-            compEnrolNum: compEnrolNum, // TODO: 실제 값 연동
-            cocode: cocode,
-            templateType: selectedTemplateType.value, // TODO: 추후 5로 변경 필요
-        };
-
-        const response = await api.post(`/api/{cocode}/alimtalk/checkAvailableApi`, body);
-        checkAvailableResult.value = response.data;
-        
-        // checkAvailableApi가 성공하면 getTemplateInfo 호출
-        if (response.data?.status_code === 200 && response.data?.data) {
-            const data = response.data.data;
-            // is_channel, is_profile, is_available_template 모두 false이면 기본 템플릿 조회
-            const isChannel = data.is_channel === true;
-            const isProfile = data.is_profile === true;
-            const isAvailableTemplate = data.is_available_template === true;
-            
-            // isLink 상태 설정
-            isLink.value = !isChannel && !isProfile && !isAvailableTemplate;
-          
-            if (isLink.value) {
-                // 모두 false이면 기본 템플릿(is_default=1) 조회 (인투링크 발송)
-                await getTemplateInfo(true);
-            } else {
-                // 하나라도 true이면 일반 템플릿 조회
-                await getTemplateInfo();
-            }
-        }
-    } catch (error) {
-        console.error('알림톡 checkAvailableApi 호출 오류:', error);
-        checkAvailableResult.value = null;
-    } finally {
-        isCheckingAvailable.value = false;
+    if (smsTemplateList.value?.length && !selectedSmsTemplate.value) {
+        selectedSmsTemplate.value = smsTemplateList.value[0];
     }
-};
+}
+onMounted(syncSelectedFromStore);
+watch([templateList, smsTemplateList], syncSelectedFromStore, { deep: true });
 
-// 템플릿 정보 조회 API 호출
-// useLink가 true이면 is_link=true로 기본 템플릿 조회 (인투링크 발송용)
-const getTemplateInfo = async (useLink = false) => {
-    if (isLoadingTemplates.value) return;
-    isLoadingTemplates.value = true;
-    templateList.value = [];
-
-    try {
-        const body = {
-            compEnrolNum: compEnrolNum, // TODO: 실제 값 연동
-            cocode: cocode,
-            templateType: selectedTemplateType.value, // TODO: 추후 5로 변경 필요
-            isLink: useLink,
-        };
-
-        const response = await api.post(`/api/{cocode}/alimtalk/getTemplateInfo`, body);
-        if (response.data?.status_code === 200 && response.data?.data) {
-            const data = response.data.data;
-            if (data.template_info && Array.isArray(data.template_info)) {
-                templateList.value = data.template_info;
-                // 템플릿 목록이 있으면 첫 번째 템플릿 자동 선택
-                if (templateList.value.length > 0) {
-                    selectedTemplate.value = templateList.value[0];
-                }
-            } else {
-                templateList.value = [];
-            }
-        }
-    } catch (error) {
-        console.error('템플릿 정보 조회 오류:', error);
-        templateList.value = [];
-    } finally {
-        isLoadingTemplates.value = false;
-    }
-};
-
-// 백엔드 복호화 테스트용: 프론트에서 암호화된 값을 그대로 던짐
+// 백엔드 복호화 테스트용
 const decryptAlimtalkData = async (encryptedData) => {
     try {
-        const response = await api.post(`/api/{cocode}/alimtalk/check`, {
-            encryptedData,
-        });
-        return response.data;
-    } catch (error) {
-        console.error('알림톡 복호화 테스트 오류:', error);
-        throw error;
+        const res = await api.post(`/api/{cocode}/alimtalk/check`, { encryptedData });
+        return res.data;
+    } catch (e) {
+        console.error('알림톡 복호화 테스트 오류:', e);
+        throw e;
     }
 };
 
-// SMS 템플릿 목록 조회 API 호출
-const getSmsTemplateList = async () => {
-    if (isLoadingSmsTemplates.value) return;
-    isLoadingSmsTemplates.value = true;
-    smsTemplateList.value = [];
-
-    try {
-        const response = await api.get(`/api/{cocode}/sms/template/list`);
-        if (response.data?.status_code === 200 && response.data?.data) {
-            const data = response.data.data;
-            if (data.template_list && Array.isArray(data.template_list)) {
-                smsTemplateList.value = data.template_list;
-                // 템플릿 목록이 있으면 첫 번째 템플릿 자동 선택
-                if (smsTemplateList.value.length > 0) {
-                    selectedSmsTemplate.value = smsTemplateList.value[0];
-                }
-            } else {
-                smsTemplateList.value = [];
-            }
-        }
-    } catch (error) {
-        console.error('SMS 템플릿 목록 조회 오류:', error);
-        smsTemplateList.value = [];
-    } finally {
-        isLoadingSmsTemplates.value = false;
-    }
-};
-
-// 탭 변경 감지하여 SMS 탭일 때 템플릿 목록 조회
-watch(activeTab, (newTab) => {
-    if (newTab === 'sms' && smsTemplateList.value.length === 0) {
-        // SMS 탭으로 변경되고 템플릿 목록이 없을 때만 조회
-        getSmsTemplateList();
-    }
-});
-
-// 부모 컴포넌트/콘솔에서 호출할 수 있도록 함수 노출
 defineExpose({
     getSmsPointInfo,
     checkAvailableApi,
