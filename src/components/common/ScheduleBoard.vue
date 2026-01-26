@@ -433,7 +433,7 @@ onUnmounted(() => {
                 tbody tr td:nth-child(2) table td {
                     min-width: 220px !important;
                     & > div {
-                        min-width: 220px !important;
+                        width: 100%;
                     }
                 }
                 width: auto !important;
