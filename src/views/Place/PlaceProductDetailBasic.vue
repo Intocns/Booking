@@ -152,13 +152,13 @@ watch(selectedDoctor, (newId) => {
 });
 
 // 만약 라디오 버튼이 '승인 시 배정'으로 돌아가면 값 초기화 -> 백에서 처리 260121
-// watch(doctorAssignType, (newType) => {
-//     if (newType === 'assign') {
-//         selectedDoctor.value = "";
-//         basicInput.value.doctorId = "";
-//         basicInput.value.doctor = "현장데스크(관리자)";
-//     }
-// });
+watch(doctorAssignType, (newType) => {
+    if (newType === 'assign') {
+        selectedDoctor.value = "";
+        basicInput.value.doctorId = "";
+        basicInput.value.doctor = "";
+    }
+});
 
 // 항목 추가 함수 (예시)
 const addDetailItem = () => {
@@ -590,38 +590,38 @@ onMounted(async() => {
             <div class="form-label required">담당의 설정</div>
             <div class="form-content">
                 <div class="doctor-setting-container">
-                <div class="segment-wrapper">
-                    <label class="segment">
-                    <input 
-                        type="radio" 
-                        name="doctorType" 
-                        value="assign" 
-                        v-model="doctorAssignType" 
-                    />
-                    <span class="label">승인 시 배정</span>
-                    </label>
-                    
-                    <label class="segment">
-                    <input 
-                        type="radio" 
-                        name="doctorType" 
-                        value="select" 
-                        v-model="doctorAssignType" 
-                    />
-                    <span class="label">기본 담당의 선택</span>
-                    </label>
-                </div>
+                    <div class="segment-wrapper">
+                        <label class="segment">
+                            <input 
+                                type="radio" 
+                                name="doctorType" 
+                                value="assign" 
+                                v-model="doctorAssignType" 
+                            />
+                            <span class="label">승인 시 배정</span>
+                        </label>
+                        
+                        <label class="segment">
+                            <input 
+                                type="radio" 
+                                name="doctorType" 
+                                value="select" 
+                                v-model="doctorAssignType" 
+                            />
+                            <span class="label">기본 담당의 선택</span>
+                        </label>
+                    </div>
 
-                <div v-if="doctorAssignType === 'select'" class="doctor-select-area">
-                    <CustomSingleSelect 
-                        v-model="selectedDoctor" 
-                        :options="doctorOptions" 
-                        placeholder="담당의를 선택해 주세요"
-                    />
+                    <div v-if="doctorAssignType === 'select'" class="doctor-select-area">
+                        <CustomSingleSelect 
+                            v-model="selectedDoctor" 
+                            :options="doctorOptions" 
+                            placeholder="담당의를 선택해 주세요"
+                        />
                     </div>
                 </div>
             </div>
-            </li>
+        </li>
     </ul>
 
     
@@ -759,8 +759,12 @@ onMounted(async() => {
     }
 
     .doctor-select-area {
-        position: absolute;
-        right: 4px;
-        width: 194px;
+        // position: absolute;
+        // right: 4px;
+        // width: 194px;
+        margin-top: 5px;
+    }
+    :deep(.select__box) {
+        height: 30px;
     }
 </style>
