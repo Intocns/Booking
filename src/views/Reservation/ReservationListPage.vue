@@ -123,7 +123,6 @@ const searchList = async () => {
     }
     
     reservationStore.getReservationList({
-        cocode: 2592, //TODO: 임시 데이터 추후 삭제
         status: convertFilterParam(reservationStatus.value),
         doctorId: convertFilterParam(doctorList.value),
         keyword: keyword.value?.trim() || null,

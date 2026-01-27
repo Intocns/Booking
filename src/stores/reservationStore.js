@@ -78,7 +78,7 @@ export const useReservationStore = defineStore("reservation", () => {
             start: item.startDate,     // startDate 값을 start 키로 추가
             end: item.endDate,          // endDate 값을 end 키로 추가
             resource: item.doctorId || "", // 리소스 키 추가,
-            id: idx, // TODO: 임시값 추가
+            id: idx, 
         }));
 
         reserveScheduleList.value = processedData;

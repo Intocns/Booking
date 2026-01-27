@@ -95,7 +95,6 @@ const searchList = async () => {
     }
     
     reservationStore.getPendingList({
-        cocode: 2592, //TODO: 임시 데이터 추후 삭제
         keyword: keyword.value?.trim() || null,
         reRoute: convertFilterParam(reservationChannel.value),
     });

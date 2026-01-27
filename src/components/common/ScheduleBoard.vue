@@ -15,7 +15,7 @@ import { useReservationStore } from "@/stores/reservationStore";
 
 const reservationStore = useReservationStore();
 
-// TODO: 상태 아이콘 매핑
+// 상태 아이콘 매핑
 const statusIcons = {
     0: icHold,
     1: icConfirm,
@@ -98,7 +98,6 @@ const config = ref({
     onBeforeEventRender: (args) => {
         const status = args.data.inState;
         
-        // TODO: 상태별 배경색
         const bgColors = {
             0: '#ffe9a5', // 대기
             1: '#cceaff', // 확정
