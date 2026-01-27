@@ -159,8 +159,8 @@ const processedRows = computed(() => {
     });
 });
 
-const handelReserveDetail = (reserveIdx) => {
-    reservationStore.getReserveInfo(reserveIdx);
+const handelReserveDetail = (row) => {
+    reservationStore.getReserveInfo(row.idx);
 };
 
 onMounted(async () => {
@@ -215,7 +215,7 @@ onMounted(async () => {
 
         <!-- 테이블 -->
         <template #table>
-            <CommonTable :columns="columns" :rows="processedRows">
+            <CommonTable :columns="columns" :rows="processedRows" @row-click="handelReserveDetail">
                 <!-- 예약상태 앞에 dot -->
                 <template #inStateTxt="{ row, value }">
                     <div class="status-cell">
@@ -232,7 +232,7 @@ onMounted(async () => {
                 </template>
                 <!-- 버튼 -->
                 <template #actions="{ row, rowIndex }">
-                        <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row.idx)">상세</button>
+                        <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail">상세</button>
                         <button class="btn btn--size-24 btn--black-outline" @click="openSmsModal(row)"><img :src="icSms" alt="SMS"></button>
                 </template>
             </CommonTable>
