@@ -17,6 +17,7 @@ const props = defineProps({
     noThead: {type: Boolean, default: false}, // thead 노출 여부
     tableTitleTooltip: {type: String, default: ''},
     tableEmptyBtnText : {type: String, default: ''},
+    tableTotal: {type: [String, Number], default: null}, 
 })
 
 //  에밋
@@ -54,6 +55,9 @@ const handleEmptyBtnClick = () => {
             <slot name="right"></slot>
         </div>
 
+        <!-- 리스트 수 -->
+        <div v-if="tableTotal" class="table-total body-l">전체: <span class="title-m">{{ tableTotal }}</span></div>
+        
         <div class="table-wrapper">
             <table class="table">
                 <colgroup>
@@ -133,7 +137,7 @@ const handleEmptyBtnClick = () => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    // gap: 16px;
     flex: 1 1 auto;
     min-height: 0;
     height: 100%;
@@ -147,6 +151,7 @@ const handleEmptyBtnClick = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 8px;
     
 
     .title-wrapper {
@@ -155,6 +160,10 @@ const handleEmptyBtnClick = () => {
         gap: 8px;
         z-index: 6;
     }
+}
+
+.table-total {
+    margin-bottom: 10px;
 }
 
 .table-wrapper {
