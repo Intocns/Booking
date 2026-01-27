@@ -24,3 +24,13 @@ export const formatPhone = (value) => {
 
     return value
 }
+
+/**
+ * 전화번호에서 하이픈 제거 (숫자만 반환)
+ * @param {string} phone - 전화번호
+ * @returns {string} 하이픈이 제거된 전화번호
+ */
+export const removePhoneHyphens = (phone) => {
+    if (!phone) return ''
+    return String(phone).replace(/\D/g, '')
+}

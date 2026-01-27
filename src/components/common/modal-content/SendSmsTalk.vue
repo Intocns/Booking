@@ -9,8 +9,9 @@ import { storeToRefs } from 'pinia';
 import { useModalStore } from '@/stores/modalStore';
 import { useTalkSmsStore } from '@/stores/talkSmsStore';
 import { api } from '@/api/axios';
+import { COCODE } from '@/constants/common';
 import { buildTemplateVariables, formatTemplateContent, getSmsByteLength } from '@/utils/alimtalkSmsTemplate.js';
-import { formatPhone } from '@/utils/phoneFormatter.js';
+import { formatPhone, removePhoneHyphens } from '@/utils/phoneFormatter.js';
 import { PET_GENDER_MAP } from '@/utils/reservation.js';
 import { showAlert } from '@/utils/ui';
 
@@ -69,6 +70,9 @@ const selectedSmsTemplate = ref(null);
 
 // 광고/무료수신거부 문구 추가 체크박스
 const includeAdText = ref(false);
+
+// 상수
+const OPT_OUT_PHONE = '0808517898'; // 무료수신거부 번호
 
 // 알림톡 템플릿 타입 (현재 5로 고정해 확인)
 const selectedTemplateType = ref(5); // TODO: 추후 변경 필요
@@ -170,15 +174,15 @@ const sendSms = async () => {
     if (isSending.value) return;
 
     if (!selectedSmsTemplate.value) {
-        alert('템플릿을 선택해주세요.');
+        showAlert('템플릿을 선택해주세요.');
         return;
     }
     if (!recipientPhone.value) {
-        alert('수신번호를 입력해주세요.');
+        showAlert('수신번호를 입력해주세요.');
         return;
     }
     if (!smsSenderPhone.value) {
-        alert('발신번호를 입력해주세요.');
+        showAlert('발신번호를 입력해주세요.');
         return;
     }
 
@@ -186,23 +190,22 @@ const sendSms = async () => {
     const messageContent = smsPreviewText.value;
 
     if (!messageContent || messageContent.trim() === '') {
-        alert('발송할 메시지 내용이 없습니다.');
+        showAlert('발송할 메시지 내용이 없습니다.');
         return;
     }
 
     isSending.value = true;
     try {
         const body = {
-            recipientNumber: recipientPhone.value.replace(/-/g, ''), // 하이픈 제거
-            senderNumber: smsSenderPhone.value.replace(/-/g, ''), // 하이픈 제거
+            recipientNumber: removePhoneHyphens(recipientPhone.value),
+            senderNumber: removePhoneHyphens(smsSenderPhone.value),
             content: messageContent,
             addOptOutPhrase: includeAdText.value,
         };
-        console.log(body);
         const response = await api.post(`/api/{cocode}/sms/send`, body);
 
         if (response.status <= 300 && response.data?.status_code === 200) {
-            alert('SMS 발송이 완료되었습니다.');
+            showAlert('SMS 발송이 완료되었습니다.');
             modalStore.smsModal.closeModal();
             // 포인트 정보 갱신
             await talkSmsStore.getSmsPointInfo();
@@ -210,10 +213,10 @@ const sendSms = async () => {
         }
 
         const errorMsg = response.data?.message || response.data?.data?.msg || 'SMS 발송에 실패했습니다.';
-        alert(errorMsg);
+        showAlert(errorMsg);
     } catch (error) {
         console.error('SMS 발송 오류:', error);
-        alert('SMS 발송 중 오류가 발생했습니다.');
+        showAlert('SMS 발송 중 오류가 발생했습니다.');
     } finally {
         isSending.value = false;
     }
@@ -247,9 +250,9 @@ const smsPreviewText = computed(() => {
     const vars = buildTemplateVariables(data);
     const templateContent = formatTemplateContent(selectedSmsTemplate.value?.sms_memo || '', vars, { mode: 'sms' });
     
-    // 광고/무료수신거부 문구 추가 체크 시: "(광고)" + 템플릿 내용 + "무료수신거부 0808517898"
+    // 광고/무료수신거부 문구 추가 체크 시: "(광고)" + 템플릿 내용 + "무료수신거부 {번호}"
     if (includeAdText.value) {
-        return `(광고)${templateContent}\n무료수신거부 0808517898`;
+        return `(광고)${templateContent}\n무료수신거부 ${OPT_OUT_PHONE}`;
     }
     return templateContent;
 });
@@ -277,31 +280,6 @@ defineExpose({
     decryptAlimtalkData,
 });
 
-// 툴팁용
-const isSmsTooltipVisible = ref(false);
-const isTalkTooltipVisible = ref(false);
-const tooltipCoords = ref({ x: 0, y: 0 });
-
-const handleMouseMove = (event, type) => {
-    tooltipCoords.value = { 
-        x: event.clientX, 
-        y: event.clientY 
-    };
-
-    if (type === 'sms') {
-        isSmsTooltipVisible.value = true;
-    } else if (type === 'talk') {
-        isTalkTooltipVisible.value = true;
-    }
-}
-
-const hideTooltip = (type) => {
-    if (type === 'sms') {
-        isSmsTooltipVisible.value = false;
-    } else if (type === 'talk') {
-        isTalkTooltipVisible.value = false;
-    }
-};
 </script>
 
 <template>
@@ -454,10 +432,6 @@ const hideTooltip = (type) => {
                             <p v-else class="empty-message">템플릿을 선택해주세요.</p>
                         </div>
 
-                        <!-- <div class="content-sms__editor-byte">
-                            <p class="body-m">{{ smsByteCount }} Byte / {{ smsMessageCount }}건</p>
-                        </div> -->
-
                         <div class="content-sms__editor-options">
                             <label class="checkbox">
                                 <input type="checkbox" v-model="includeAdText" />
@@ -517,23 +491,6 @@ const hideTooltip = (type) => {
             </div>
         </div>
 
-        <div 
-            class="tooltip-content" 
-            v-show="isSmsTooltipVisible || isTalkTooltipVisible"
-            :style="{ 
-                left: `${tooltipCoords.x}px`,
-                top: `${tooltipCoords.y + 10}px`
-            }"
-        >
-            <p class="body-s" v-if="isSmsTooltipVisible">
-                - 80Byte 이상 시 LMS로 발송되어 문자 건수가 2건씩 차감됩니다.<br/>
-                - 문자 발송 상태 확인까지 시간이 소요될 수 있으며, 확인 전까지 ‘대기’ 상태로 표시됩니다.
-                발송 내역은 ‘SMS/알림톡 발송내역’ 메뉴에서 확인할 수 있습니다.
-            </p>
-            <p class="body-s" v-else-if="isTalkTooltipVisible">
-                해당 알림톡은 인투링크 프로필로 발송됩니다
-            </p>
-        </div>
     </div>
 </template>
 
@@ -785,10 +742,6 @@ const hideTooltip = (type) => {
             }
 
             &-byte {
-                // @include flex;
-                // justify-content: flex-end;
-                // padding: 8px;
-                // border-bottom: 1px solid $gray-100;
                 color: $gray-500;
             }
     
