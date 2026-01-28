@@ -9,6 +9,7 @@ import CustomDatePicker from '@/components/common/CustomDatePicker.vue'
 
 import icArrowLeft from '@/assets/icons/ic_arrow_left.svg'
 import icArrowRight from '@/assets/icons/ic_arrow_right.svg'
+import icInformationB from '@/assets/icons/ic_infomation_b.svg'
 
 const props = defineProps({
     modelValue: {
@@ -24,7 +25,11 @@ const props = defineProps({
         default: true // 기본값이 기간 선택
     },
     // 기본으로 선택될 버튼 설정 (예: 'today', '7', '30')
-    defaultSelect: { type: String, default: '7' }
+    defaultSelect: { type: String, default: '7' },
+    hasTooltip: {type: Boolean, default: false}, // 라벨 옆에 툴팁 표시 해줌
+    tooltipText: {type: String, default: ''}, // 툴팁 텍스트
+    useLimit: { type: Boolean, default: false }, // 날짜 선택 기간 제한을 둘지 결정
+    limitMonths: { type: Number, default: 3 }, // 몇 개월 전까지 제한할지 결정
 });
 
 // 부모와 날짜를 동기화하기 위한 emit
@@ -138,8 +143,16 @@ onMounted(() => {
         <!-- 캘린더 선택 -->
         <div class="search-filter__date-range">
             <span class="search-filter__label title-s">일자</span>
+
+            <div v-if="hasTooltip" class="helper">
+                <img :src="icInformationB" alt="안내아이콘" class="helper__icon">
+                <div class="tooltip-content">
+                    {{ tooltipText }}
+                </div>
+            </div>
+
             <div class="search-filter__datepicker">
-                <CustomDatePicker v-model="dateRange" :range="props.isRange" />
+                <CustomDatePicker v-model="dateRange" :range="props.isRange" :use-limit="props.useLimit" :limit-months="props.limitMonths" />
             </div>
         </div>
 
@@ -194,5 +207,14 @@ onMounted(() => {
             display: flex;
             gap: 4px;
         }
+    }
+
+    :deep(.helper) {
+        z-index: 100000;
+    }
+    :deep(.tooltip-content) {
+        left: 5px;
+        top: 27px;
+        z-index: 100000;
     }
 </style>

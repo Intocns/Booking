@@ -1,7 +1,7 @@
 <script setup>
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import { ko } from 'date-fns/locale'
-import { startOfDay, subDays } from "date-fns";
+import { startOfDay, startOfToday, subDays, subMonths } from "date-fns";
 import { formatDate } from '@/utils/dateFormatter.js';
 
 import { ref, computed } from 'vue';
@@ -18,7 +18,7 @@ const props = defineProps({
             ? [subDays(startOfDay(new Date()), 7), startOfDay(new Date())]
             : null,
     },
-    range: {
+    range: { // 날짜 단일 선택이 아닌 기간 선택
         type: Boolean,
         default: true,
     },
@@ -26,10 +26,12 @@ const props = defineProps({
         type: String,
         default: '날짜 선택',
     },
-    pickerWidth: {
+    pickerWidth: { // 너비값
         type: [String, Number],
         default: '120',
     },
+    useLimit: { type: Boolean, default: false }, // 날짜 선택 기간 제한을 둘지 결정
+    limitMonths: { type: Number, default: 3 }, // 몇 개월 전까지 제한할지 결정
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -56,6 +58,16 @@ const hasValue = computed(() => {
         return props.modelValue instanceof Date;
     }
 });
+
+// 선택가능한 최소 날짜 계산
+const minDate = computed(() => {
+    if(!props.useLimit) return null;
+    return subMonths(startOfDay(new Date()), props.limitMonths);
+})
+const maxDate = computed(() => {
+    if(!props.useLimit) return null;
+    return startOfDay(new Date());
+})
 
 // 표시할 텍스트 포맷 (예: YYYY.MM.DD ~ YYYY.MM.DD)
 const formatDisplay = () => {
@@ -160,6 +172,8 @@ const onDateUpdate = (val) => {
             ref="dpRef"
             v-model="dateRange"
             :range="range"
+            :min-date="minDate"
+            :max-date="maxDate"
             :auto-apply="!range"
             partial-range
             :locale="ko"
@@ -227,6 +241,11 @@ const onDateUpdate = (val) => {
     color: $gray-700;
     @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
 }
+:deep(.dp__cell_disabled) { // 선택 할 수 없는 날짜
+    // pointer-events: none;
+    cursor: not-allowed;
+    color: $gray-100 !important;
+}
 :deep(.dp__range_start), // 선택 start날짜
 :deep(.dp__range_end), // 선택 end 날짜
 :deep(.dp__active_date) { // active 날짜
@@ -234,6 +253,9 @@ const onDateUpdate = (val) => {
     background-color: $primary-700 !important;
     border-radius: 50% !important;
     z-index: 1;
+}
+:deep(.dp__range_between) { // 기간에 해당하는 날짜
+    background-color: $gray-50;
 }
 :deep(.dp__cell_offset) {color: $gray-200;} // 해당 하는 월에 포함되지 않는 날짜 컬러
 :deep(.dp__action_row) {  // 캘렌더 아래 버튼 영역
