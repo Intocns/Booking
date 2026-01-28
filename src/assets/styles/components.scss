@@ -114,6 +114,12 @@
     width: 120px;
     padding: 0 12px;
 }
+
+.link-button {
+    @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
+    color: $primary-700;
+    text-decoration: underline;
+}
 // ======================================================================
 // radio/checkbox/toggle
 // ======================================================================
@@ -354,6 +360,7 @@
     display: inline-flex;
     align-items: center;
     cursor: pointer;
+    z-index: 1;
 
     &__icon {
         width: 16px;
