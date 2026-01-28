@@ -100,8 +100,9 @@ const handelCancel = () => {
         }
     }
     .confirm-modal {
-        min-width: 400px;
-        max-width: 500px;
+        // min-width: 400px;
+        // max-width: 500px;
+        width: 460px;
     }
 
     .modal-header {
