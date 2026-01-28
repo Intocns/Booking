@@ -167,11 +167,13 @@ api.interceptors.response.use(
                 showAlert('요청 시간이 초과되었습니다. 다시 시도해주세요', originalRequest)
                 break
             default:
-                if (errorData.message) {
-                    showAlert(`에러가 발생했습니다: ${errorData.message}\n관리자에게 문의 바랍니다.`)
-                } else {
-                    showAlert(`에러가 발생했습니다: ${error.message}\n관리자에게 문의 바랍니다.`, originalRequest)
-                }
+                // if (errorData.message) {
+                //     showAlert(`에러가 발생했습니다: ${errorData.message}\n관리자에게 문의 바랍니다.`)
+                // } else {
+                //     showAlert(`에러가 발생했습니다: ${error.message}\n관리자에게 문의 바랍니다.`, originalRequest)
+                // }
+                console.error(error)
+                showAlert(`에러가 발생했습니다.\n관리자에게 문의 바랍니다.`, originalRequest)
                 break
         }
         return Promise.reject(error)
