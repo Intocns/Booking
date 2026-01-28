@@ -406,7 +406,7 @@ onMounted(async() => {
 </script>
 
 <template>
-    <ul class="form-container" style="margin-bottom: 40px;">
+    <ul class="form-container">
         <!-- 상품명 -->
         <li class="form-item">
             <div class="form-label required">상품명</div>
@@ -586,7 +586,7 @@ onMounted(async() => {
         </li>
 
         <!-- 담당의 설정 -->
-        <li class="form-item">
+        <li class="form-item" style="margin-bottom: 30px;">
             <div class="form-label required">담당의 설정</div>
             <div class="form-content">
                 <div class="doctor-setting-container">
@@ -756,6 +756,9 @@ onMounted(async() => {
     .doctor-setting-container {
         position: relative;
         width: fit-content;
+        // display: flex;
+        // align-items: center;
+        // gap: 8px;
     }
 
     .doctor-select-area {

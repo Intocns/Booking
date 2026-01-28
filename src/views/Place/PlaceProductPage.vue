@@ -109,7 +109,7 @@ const importIntoPetRoom = async() => {
         await productStore.getLinkItemInfo(importIntoPetRoomIdx.value);
         modalStore.intoPetImportModal.closeModal();
     } catch(error) {
-        console.log(error)
+        console.error(error)
     }
 }
 // 상품 등록 페이지로 이동

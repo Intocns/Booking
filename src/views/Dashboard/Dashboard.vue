@@ -64,7 +64,7 @@ const hospitalColumns = [
     { key: 'addr', label: '주소', width: '120px' },
 ];
 
-// 공지사항 테이블 col (임시)
+// 공지사항 테이블 col
 const noticeColumns = [
     { key: 'title', label: '제목', width: '90%', text_align: 'left'},
     { key: 'createdAtTxt', label: '작성일', width: '10%'},
