@@ -151,7 +151,7 @@ const handleEmptyBtnClick = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
     
 
     .title-wrapper {
