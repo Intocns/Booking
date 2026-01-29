@@ -239,7 +239,7 @@ const handelReserveDetail = (reserveIdx) => {
     }
 
     td {
-        height: 114px;
+        height: 118px;
     }
 
     // 헤더 스타일
