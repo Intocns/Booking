@@ -9,7 +9,6 @@ import { storeToRefs } from 'pinia';
 import { useModalStore } from '@/stores/modalStore';
 import { useTalkSmsStore } from '@/stores/talkSmsStore';
 import { api } from '@/api/axios';
-import { COCODE } from '@/constants/common';
 import { buildTemplateVariables, formatTemplateContent, getSmsByteLength } from '@/utils/alimtalkSmsTemplate.js';
 import { formatPhone, removePhoneHyphens } from '@/utils/phoneFormatter.js';
 import { PET_GENDER_MAP } from '@/utils/reservation.js';
@@ -134,6 +133,18 @@ const sendTalk = async () => {
         btn_replace_array: selectedTemplate.value?.btn_setting || [],
     };
 
+    // 발송 내역 저장용 실제 텍스트 (미리보기용 HTML에서 태그 제거)
+    const previewHtml = formatTemplateContent(
+        selectedTemplate.value?.template_content || '',
+        contentVariables,
+        { mode: 'alimtalk' }
+    );
+    const historyText = previewHtml
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/?strong>/gi, '')
+        .replace(/<\/?[^>]+>/g, '')
+        .trim();
+
     isSending.value = true;
     try {
         const body = {
@@ -150,6 +161,7 @@ const sendTalk = async () => {
                 sms_send_tel: hospitalPhone, // TODO: 실제 값 연동
             },
             visitSourceTotalList: props.reservationData?.visitSourceTotalList || '',
+            messageText: historyText,
         };
 
 

@@ -2,7 +2,7 @@
 <script setup>
 import icSearch from '@/assets/icons/ic_search_w.svg';
 import icClear from '@/assets/icons/ic_clear.svg';
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 
 const props = defineProps({
     modelValue: { type: String, default: '' },

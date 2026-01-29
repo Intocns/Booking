@@ -82,7 +82,8 @@ const selectOption = (value) => {
 
         // 1. 'all'이 현재 선택된 상태였으면, 'all'을 먼저 해제하고 개별 선택 시작
         if (newValue.includes('all')) {
-            newValue = individualOptionValues.value.filter(v => v !== value);
+            // '전체' 상태에서 개별을 클릭하면 해당 값만 선택 상태로 전환
+            newValue = [value];
         } else {
             // 2. 일반적인 토글 로직
             if (exists) {

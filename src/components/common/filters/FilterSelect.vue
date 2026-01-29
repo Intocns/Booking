@@ -2,7 +2,7 @@
 <script setup>
 import CustomSelect from '../CustomSelect.vue';
 
-import { ref, computed, defineProps } from 'vue';
+import { computed } from 'vue';
 
 const props = defineProps({
     label: String,
