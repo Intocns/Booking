@@ -478,16 +478,6 @@ defineExpose({
                 </div>
 
             </div>
-            <div class="content-talk__buttons">
-                <button class="btn btn--size-40 btn--blue-outline modal-btn" @click="modalStore.smsModal.closeModal()">취소</button>
-                <button 
-                    class="btn btn--size-40 btn--blue modal-btn" 
-                    :disabled="isSending"
-                    @click="activeTab === 'talk' ? sendTalk() : sendSms()"
-                >
-                    {{ isSending ? '발송 중...' : '발송' }}
-                </button>
-            </div>
         </div>
     </div>
     <div class="modal-button-wrapper">
@@ -641,7 +631,7 @@ defineExpose({
                     padding: 8px 12px;
                     white-space: normal;
                     word-break: break-word;
-                    min-height: 48px;
+                    // min-height: 48px;
                     height: auto;
                     line-height: 1.4;
 
@@ -722,7 +712,7 @@ defineExpose({
                     padding: 8px 12px;
                     white-space: normal;
                     word-break: break-word;
-                    min-height: 48px;
+                    // min-height: 48px;
                     height: auto;
                     line-height: 1.4;
 
