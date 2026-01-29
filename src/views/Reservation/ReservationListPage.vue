@@ -3,7 +3,7 @@
 import { onMounted, ref, computed, watch, nextTick } from 'vue';
 import { startOfDay, subDays } from "date-fns";
 import { formatDate } from "@/utils/dateFormatter";
-import { RESERVE_STATUS_OPTIONS, RESERVE_ROUTE_OPTIONS } from "@/utils/reservation";
+import { RESERVE_STATUS_OPTIONS, RESERVE_ROUTE_OPTIONS } from "@/constants";
 import { useReservationStore } from '@/stores/reservationStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
 import { useModalStore } from '@/stores/modalStore';

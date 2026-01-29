@@ -24,7 +24,7 @@ import { nextTick, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 //util
-import { IS_IMP_TYPE } from "@/utils/product";
+import { IS_IMP_TYPE } from "@/constants";
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import { showAlert } from '@/utils/ui';
 

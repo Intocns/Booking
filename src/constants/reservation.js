@@ -37,11 +37,3 @@ export const RESERVE_ROUTE_MAP = {
     3: 'fitpet',
     4: '네이버예약'
 }
-
-export const PET_GENDER_MAP = {
-    1: 'Male',
-    2: 'FeMale',
-    3: 'Castrated Male',
-    4: 'Spayed Female',
-    5: 'Unknown',
-}

@@ -1,10 +1,5 @@
 import { formatDate } from '@/utils/dateFormatter';
 
-export const IS_IMP_TYPE = [
-    { label: '미노출', value: false },
-    { label: '노출중', value: true }
-]
-
 //운영일정, 운영시간 계산 작업
 export const setOperatingObject = (event, object, scheduleMode) => {
     //평일/주말 구분 리스트

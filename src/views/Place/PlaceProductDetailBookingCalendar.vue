@@ -15,7 +15,7 @@ import { useModalStore } from "@/stores/modalStore";
 import { useProductStore } from "@/stores/productStore";
 // 
 import { bitToTimeRanges } from "@/utils/schedule";
-import { DAYS_OPTIONS } from "@/utils/schedule";
+import { DAYS_OPTIONS } from "@/constants";
 
 
 const productStore = useProductStore();

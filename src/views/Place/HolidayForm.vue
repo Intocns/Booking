@@ -11,7 +11,7 @@ import icClear from '@/assets/icons/ic_clear.svg'
 // utils
 // import { formatDate } from 'date-fns';
 import { formatDate,  formatDateSplit } from '@/utils/dateFormatter';
-import { DAYS_OPTIONS, PUBLIC_HOLIDAYS_OPTIONS } from '@/utils/schedule';
+import { DAYS_OPTIONS, PUBLIC_HOLIDAYS_OPTIONS } from '@/constants';
 
 // 주 옵션 데이터 (임시)
 const weeksOptions = [

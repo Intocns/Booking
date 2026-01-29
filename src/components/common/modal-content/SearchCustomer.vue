@@ -5,8 +5,8 @@ import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import CommonTable from '@/components/common/CommonTable.vue';
 import { useReservationStore } from '@/stores/reservationStore';
-import { PET_GENDER_MAP } from '@/utils/reservation';
-import { CUSTOMER_SEARCH_TYPE_OPTIONS, getSearchTypeInt, toggleCustomerMatch as toggleCustomerMatchUtil } from '@/utils/customer';
+import { PET_GENDER_MAP, CUSTOMER_SEARCH_TYPE_OPTIONS } from '@/constants';
+import { getSearchTypeInt, toggleCustomerMatch as toggleCustomerMatchUtil } from '@/utils/customer';
 import { useModalStore } from '@/stores/modalStore';
 
 const emit = defineEmits(['customer-selected']);
