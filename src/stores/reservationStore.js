@@ -4,7 +4,7 @@ import { api} from "@/api/axios";
 import { ref } from "vue";
 import { formatDate, formatDateTime, formatTime} from "@/utils/dateFormatter";
 import { formatPhone } from "@/utils/phoneFormatter";
-import { RESERVE_ROUTE_MAP, RESERVE_STATUS_MAP} from "@/utils/reservation";
+import { RESERVE_ROUTE_MAP, RESERVE_STATUS_MAP} from "@/constants";
 import { useModalStore } from "./modalStore";
 
 export const useReservationStore = defineStore("reservation", () => {

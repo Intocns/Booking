@@ -13,7 +13,7 @@ import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
 
 import { ref, computed, onMounted, watch } from 'vue';
 import { startOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from "date-fns";
-import { RESERVE_ROUTE_OPTIONS, RESERVE_STATUS_OPTIONS } from '@/utils/reservation';
+import { RESERVE_ROUTE_OPTIONS, RESERVE_STATUS_OPTIONS } from '@/constants';
 // 아이콘
 import icReset from '@/assets/icons/ic_reset.svg'
 // 스토어

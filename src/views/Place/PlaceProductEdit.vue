@@ -22,7 +22,7 @@ import { DayPilot } from '@daypilot/daypilot-lite-vue';
 import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
 // utils
-import { DAYS_OPTIONS } from '@/utils/schedule';
+import { DAYS_OPTIONS } from '@/constants';
 import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();

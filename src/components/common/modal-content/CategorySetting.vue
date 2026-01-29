@@ -11,7 +11,7 @@ import icDel from '@/assets/icons/ic_del.svg';
 import { useModalStore } from '@/stores/modalStore';
 import { useCategoryStore } from '@/stores/categoryStore'
 //util
-import { CATEGORY_TYPE_OPTIONS} from "@/utils/category";
+import { CATEGORY_TYPE_OPTIONS} from "@/constants";
 import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();

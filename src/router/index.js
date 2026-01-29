@@ -40,7 +40,6 @@ const router = createRouter({
                     path: 'account', 
                     name: 'placeAccount', 
                     component: () => import('@/views/Place/PlaceAccountPage.vue'),
-                    meta: { isWaiting: true }, // 준비 중인 페이지 표시
                 },
                 
                 // 2. 상품 관리
@@ -81,7 +80,6 @@ const router = createRouter({
                     path: 'settings', 
                     name: 'placeSettings', 
                     component: () => import('@/views/Place/PlaceSettingsPage.vue'),
-                    meta: { isWaiting: true }, // 준비 중인 페이지 표시
                 }
             ]
         },

@@ -1,7 +1,7 @@
 <!-- 대기 예약 관리 -->
 <script setup>
 import { computed, ref, onMounted, watch, nextTick } from 'vue';
-import { RESERVE_ROUTE_OPTIONS, RESERVE_ROUTE_MAP } from "@/utils/reservation";
+import { RESERVE_ROUTE_OPTIONS, RESERVE_ROUTE_MAP } from "@/constants";
 import { useReservationStore } from '@/stores/reservationStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
 import { useModalStore } from '@/stores/modalStore';

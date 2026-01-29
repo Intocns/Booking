@@ -1,15 +1,5 @@
 // 고객 검색 관련 유틸리티
 
-// 고객 검색 타입 옵션
-export const CUSTOMER_SEARCH_TYPE_OPTIONS = [
-    { label: '전체', value: 'all' },
-    { label: '고객번호', value: 'userNo' },
-    { label: '고객명', value: 'userName' },
-    { label: '전화번호', value: 'userTel' },
-    { label: '동물번호', value: 'petNo' },
-    { label: '동물명', value: 'petName' },
-];
-
 // 검색 타입을 Int로 변환하는 함수 (백엔드 API용)
 export const getSearchTypeInt = (searchType) => {
     const typeMap = {

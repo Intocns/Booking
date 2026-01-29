@@ -25,7 +25,7 @@ import { useProductStore } from '@/stores/productStore';
 //util
 import { formatDateToDay } from '@/utils/dateFormatter';
 import { setOperatingObject } from '@/utils/product';
-import { DAYS_OPTIONS, PUBLIC_HOLIDAYS_OPTIONS } from '@/utils/schedule';
+import { DAYS_OPTIONS, PUBLIC_HOLIDAYS_OPTIONS } from '@/constants';
 import { validateTimeRanges } from '@/utils/common';
 import { DayPilot } from '@daypilot/daypilot-lite-vue';
 import { showAlert } from '@/utils/ui';
