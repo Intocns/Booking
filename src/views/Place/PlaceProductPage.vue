@@ -318,7 +318,7 @@ onMounted(async () => {
             <!-- 상품 리스트 테이블 -->
             <div v-for="product in dragList" class="item-box" :key="product.bizItemId">
                 <!-- top -->
-                <div class="top">
+                <div class="top" @click="goProductDetail(product.bizItemId)">
                     <div class="item-box__img">
 
                         <img
@@ -565,6 +565,7 @@ onMounted(async () => {
         .top {
             display: flex;
             flex-direction: column;
+            cursor: pointer;
         }
 
         &__img {
