@@ -12,7 +12,7 @@ import { api } from '@/api/axios';
 import { COCODE } from '@/constants/common';
 import { buildTemplateVariables, formatTemplateContent, getSmsByteLength } from '@/utils/alimtalkSmsTemplate.js';
 import { formatPhone, removePhoneHyphens } from '@/utils/phoneFormatter.js';
-import { PET_GENDER_MAP } from '@/utils/reservation.js';
+import { PET_GENDER_MAP } from '@/constants';
 import { showAlert } from '@/utils/ui';
 
 const props = defineProps({
@@ -345,7 +345,7 @@ defineExpose({
                                     v-for="template in templateList" 
                                     :key="template.sno || template.template_id"
                                     class="btn btn--size-32"
-                                    :class="selectedTemplate?.sno === template.sno || selectedTemplate?.template_id === template.template_id ? 'btn--blue' : 'btn--black-outline'"
+                                    :class="selectedTemplate?.sno === template.sno || selectedTemplate?.template_id === template.template_id ? 'active' : 'btn--black-outline'"
                                     @click="selectTemplate(template)"
                                 >
                                     {{ template.template_name || template.template_id }}
@@ -406,7 +406,7 @@ defineExpose({
                                 v-for="template in smsTemplateList" 
                                 :key="template.Group_Sno || template.Category"
                                 class="btn btn--size-32"
-                                :class="selectedSmsTemplate?.Group_Sno === template.Group_Sno ? 'btn--blue' : 'btn--black-outline'"
+                                :class="selectedSmsTemplate?.Group_Sno === template.Group_Sno ? 'active' : 'btn--black-outline'"
                                 @click="selectSmsTemplate(template)"
                             >
                                 {{ template.Category || template.sms_memo || '템플릿' }}
@@ -478,7 +478,6 @@ defineExpose({
                 </div>
 
             </div>
-            
             <div class="content-talk__buttons">
                 <button class="btn btn--size-40 btn--blue-outline modal-btn" @click="modalStore.smsModal.closeModal()">취소</button>
                 <button 
@@ -490,7 +489,18 @@ defineExpose({
                 </button>
             </div>
         </div>
-
+    </div>
+    <div class="modal-button-wrapper">
+        <div class="buttons">
+            <button class="btn btn--size-40 btn--blue-outline modal-btn" @click="modalStore.smsModal.closeModal()">취소</button>
+            <button 
+                class="btn btn--size-40 btn--blue modal-btn" 
+                :disabled="isSending"
+                @click="activeTab === 'talk' ? sendTalk() : sendSms()"
+            >
+                {{ isSending ? '발송 중...' : '발송' }}
+            </button>
+        </div>
     </div>
 </template>
 
@@ -634,6 +644,12 @@ defineExpose({
                     min-height: 48px;
                     height: auto;
                     line-height: 1.4;
+
+                    &.active {
+                        background-color: $primary-100;
+                        border: 1px solid $primary-700;
+                        color: $primary-700;
+                    }
                 }
             } 
             
@@ -709,6 +725,12 @@ defineExpose({
                     min-height: 48px;
                     height: auto;
                     line-height: 1.4;
+
+                    &.active {
+                        background-color: $primary-100;
+                        border: 1px solid $primary-700;
+                        color: $primary-700;
+                    }
                 }
             }
             
