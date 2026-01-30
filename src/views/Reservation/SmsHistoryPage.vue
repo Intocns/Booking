@@ -47,7 +47,7 @@ const toNumberFilter = (values) => {
     return values.map((v) => Number(v));
 };
 
-const fetchList = async () => {
+const fetchList = async (syncPending = false) => {
     try {
         const channelTypes = toNumberFilter(filterChannelType.value);
         const sendResults = toNumberFilter(filterSendResult.value);
@@ -57,6 +57,7 @@ const fetchList = async () => {
         if (channelTypes?.length) channelTypes.forEach((v) => params.append('channelTypes', v));
         if (sendResults?.length) sendResults.forEach((v) => params.append('sendResults', v));
         if (kw) params.append('keyword', kw);
+        if (syncPending) params.append('syncPending', 'true');
 
         const res = await api.get('/api/{cocode}/reserve/sms-history', { params });
         const data = res?.data?.data;
@@ -87,21 +88,23 @@ const filteredRows = computed(() => {
 
 const totalCount = computed(() => filteredRows.value.length);
 
-const searchList = async () => {
+/** 필터/키워드 검색 시에는 PENDING 동기화 없이 조회 */
+const searchList = async (syncPending = false) => {
     if (isChannelEmpty.value || isResultEmpty.value) {
         list.value = [];
         return;
     }
-    await fetchList();
+    await fetchList(syncPending);
 };
 
-// 검색 버튼 / 엔터 시: 키워드 포함하여 조회 트리거
-const doSearch = () => searchList();
+// 검색 버튼 클릭: 동기화 없이 조회
+const doSearch = () => searchList(false);
 
 const searchClear = () => {
     filterChannelType.value = ['all'];
     filterSendResult.value = ['all'];
     keyword.value = '';
+    searchList(true);
 };
 
 let isInitialMount = true;
@@ -113,7 +116,7 @@ watch([filterChannelType, filterSendResult], () => {
 }, { deep: true });
 
 onMounted(() => {
-    searchList();
+    searchList(true); // 최초 로드 시에만 PENDING 성공여부 동기화
     isInitialMount = false;
 });
 </script>
