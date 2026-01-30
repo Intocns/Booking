@@ -141,7 +141,10 @@ watch(() => newQuestion.type, (newType) => {
 const saveQuestion = async() => {
     if (!newQuestion.title) return showAlert('질문을 입력하세요.');
 
-    if (newQuestion.type !== 'TEXTAREA' && newQuestion.options.some(opt => !opt.trim())) {
+    if (newQuestion.type !== 'TEXTAREA' && newQuestion.options.some(opt => {
+        const val = typeof opt === 'object' ? opt.optionName : opt;
+        return !val || !val.trim(); 
+    })) {
         return showAlert('답변 항목을 모두 입력해주세요.');
     }
 
@@ -152,11 +155,13 @@ const saveQuestion = async() => {
         // 신규일 때만 마지막 순서로 배치, 수정일 때는 기존 순서 유지
         questionOrder: newQuestion.questionOrder,
         questionRequiredFlag: newQuestion.isRequired ? 1 : 0,
-        options: newQuestion.type === 'TEXTAREA' ? null : newQuestion.options.map((opt, idx) => ({
-            optionIdx: opt.optionsIdx || null,
-            optionName: opt,
-            optionOrder: idx + 1
-        }))
+        options: newQuestion.type === 'TEXTAREA' ? null : newQuestion.options.map((opt, idx) => {
+            return {
+                optionIdx: opt.optionIdx || null,
+                optionName: opt.optionName,
+                optionOrder: idx + 1
+            };
+        })
     }
 
     // console.log(params)

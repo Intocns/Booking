@@ -5,32 +5,75 @@ import { ref } from "vue";
 
 export const usePlaceStore = defineStore("place", () => {
     // 네이버 플레이스 관리>플레이스 설정>운영설정
-    const isAcceptingReservation = ref(0); // 예약받기 여부
-    const isTodayReservationEnabled = ref(0); // 당일예약받기 여부
+    const operationInfo = ref({}) // 운영 설정 데이터 저장
+    const historyData = ref(null); // 노출이력 데이터
 
-    // 네이버 플레이스 관리>플레이스 설정>알람설정
+    // 네이버 플레이스 관리>플레이스 설정>알림설정
 
     // 네이버 플레이스 관리>플레이스 설정>예약자 정보요청
     const isRequestMessageUsed = ref(0); // 기타 요청사항 받는지 여부
     const questionList = ref([]); // 사용자 정보 요청 질문 리스트
 
+    // -------------------------------------
     // 네이버 플레이스 관리>플레이스 설정>운영설정
+    // -------------------------------------
+
     // 운영설정 기본값 가져오기
     const getOperationInfo = async() => {
         const response = await api.get('/api/linkbusiness/{cocode}/setting/operation');
         const rawData = response.data.data;
 
-        isAcceptingReservation.value = rawData.alarmUseYn; // 예약받기 여부
-        isTodayReservationEnabled.value = rawData.isImp; // 당일예약받기 여부
+        operationInfo.value = {
+            isAcceptingReservation: rawData.isImp == '1', // '예약 받기' (isImp가 1이면 true)
+            isTodayReservationEnabled: rawData.alarmUseYn == 1, // '당일 예약' (alarmUseYn이 1이면 true)
+            alarmValue: rawData.alarmValue // '선택된 시간 값'
+        };
     }
 
+    // 운영 설정 예약 받기 값 변경 토글
+    const setAcceptingReservation = async(value) => {
+        const response = await api.get(`/api/linkbusiness/{cocode}/setting/operation/imp/${value}`);
+    }
+
+    // 당일 예약 받기 값 변경
+    const setTodayReservation = async(useYn, value) => {
+        const response = await api.get(`/api/linkbusiness/{cocode}/setting/operation/Ava/${useYn}/${value}`);
+    }
+
+    // 노출이력 확인
+    const getImpHistory = async() => {
+        const response = await api.get('/api/linkbusiness/{cocode}/setting/operation/impHis');
+        historyData.value = response.data.data;
+    }
+
+    // -------------------------------------
     // 네이버 플레이스 관리>플레이스 설정>알람설정
+    // -------------------------------------
+
     // 알람설정 기본값 가져오기
     const getAlarmInfo = async() => {
         const response = await api.get('/api/linkbusiness/{cocode}/setting/alarm');
     }
 
+    // 리마인드 알림 설정 값 변경
+    const setRemindAlarm = async(value) => {
+        const response = await api.get(`/api/linkbusiness/{cocode}/setting/alarm/${value}`);
+    }
+
+    // 예약 승인 알림문구 변경
+    const modifyAlarmGuide = async(params) => {
+        const response = await api.post('/api/linkbusiness/{cocode}/setting/alarm/guide/modify', params);
+    }
+
+    // 예약 취소 알림문구 변경
+    const modifyAlarmCancelGuide = async(params) => {
+        const response = await api.post('/api/linkbusiness/{cocode}/setting/alarm/cancelGuide/modify', params)
+    }
+
+    // -------------------------------------
     // 네이버 플레이스 관리>플레이스 설정>예약자 정보요청
+    // -------------------------------------
+
     // 사용자 정보 요청 질문 리스트 가져오기
     const getQuestionList = async() => {
         const response = await api.get('/api/{cocode}/question/list');
@@ -70,17 +113,24 @@ export const usePlaceStore = defineStore("place", () => {
     return {
         // 상태관리
         // 플레이스 설정 > 운영설정
-        isAcceptingReservation,
-        isTodayReservationEnabled,
+        operationInfo,
+        historyData,
         // 플레이스 설정 > 알림설정
         // 플레이스 설정 > 예약자 정보 요청 
         isRequestMessageUsed, 
         questionList,
+
         // api
         // 플레이스 설정 > 운영설정
         getOperationInfo,
+        setAcceptingReservation,
+        setTodayReservation,
+        getImpHistory,
         // 플레이스 설정 > 알림설정
         getAlarmInfo,
+        setRemindAlarm,
+        modifyAlarmGuide,
+        modifyAlarmCancelGuide,
         // 플레이스 설정 > 예약자 정보 요청 
         getQuestionList,
         addQuestion,

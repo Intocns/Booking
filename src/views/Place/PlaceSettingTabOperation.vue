@@ -12,7 +12,7 @@ import toggleOff from '@/assets/icons/toggle_off.svg'
 import imgPlaceOpen from '@/assets/images/img_place_open_preview.png'
 import imgPlaceClose from '@/assets/images/img_place_closed_preview.png'
 
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, reactive, watch, onBeforeUnmount } from 'vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { usePlaceStore } from '@/stores/placeStore';
@@ -20,11 +20,14 @@ import { usePlaceStore } from '@/stores/placeStore';
 const modalStore = useModalStore();
 const placeStore = usePlaceStore();
 
+const openTooltips = ref(false); // 노출이력 툴팁 노출 상태관리
+const tooltipPos = reactive({ x: 0, y: 0 }); // 노출이력 툴팁 위치
+const tooltipRef = ref(null); // 툴팁 요소 참조
 // 각 설정의 토글 상태 (기본값 true 또는 false)
 const isAcceptingReservation = ref(true); // 예약 받기
 const isTodayReservationEnabled = ref(true); // 당일 예약
 
-// TODO: 당일 예약 마감 시간 옵션 (임시)
+// 당일 예약 마감 시간 옵션 (임시)
 const todayReserveTimeOptions = [
     { label: '이전까지', value: '0' },
     { label: '1시간 전', value: '1' },
@@ -34,11 +37,82 @@ const todayReserveTimeOptions = [
 // 선택된 값을 저장할 변수
 const selectedTime = ref('');
 
-// TODO: 노출이력
+// 예약 받기 토글
+const handleToggleAcceptance = async() => {
+    const originalValue = !isAcceptingReservation.value; // 이전 상태 저장
+    const newStatus = isAcceptingReservation.value ? '1' : '0';
 
-onMounted(() => {
-    placeStore.getOperationInfo();
+    try {
+        await placeStore.setAcceptingReservation(newStatus);
+    } catch {
+        isAcceptingReservation.value = originalValue;
+    }
+}
+
+// 당일 예약 토글
+const handleUpdateTodayReserve = async() => {
+    // 이전 상태 저장
+    const prevYn = !isTodayReservationEnabled.value ? 1 : 0;
+    const prevTime = placeStore.operationInfo?.alarmValue || '0';
+
+    const newYn = isTodayReservationEnabled.value ? 1 : 0;
+    // 당일 예약을 끄는 경우 ''으로 보냄
+    const newSelectedTime = isTodayReservationEnabled.value ? selectedTime.value : '';
+    
+    try {
+        await placeStore.setTodayReservation(newYn, newSelectedTime);
+    } catch (error) {
+        // 에러 시 이전 값으로
+        isTodayReservationEnabled.value = prevYn === 1;
+        selectedTime.value = prevTime;
+    }
+}
+
+// 노출이력 버튼
+const handleGetHistory = (event) => {
+    tooltipPos.x = event.clientX + 20; 
+    tooltipPos.y = event.clientY;
+
+    placeStore.getImpHistory();
+    openTooltips.value = true;
+}
+
+// 툴팁 노출 상태 감시
+watch(openTooltips, (isOpen) => {
+    if (isOpen) {
+        // window 클릭 이벤트가 동시에 발생해서 바로 닫히는 것을 방지
+        setTimeout(() => {
+            window.addEventListener('click', closeTooltips);
+        }, 0);
+    } else {
+        window.removeEventListener('click', closeTooltips);
+    }
+});
+
+// 외부 클릭 시 툴팁 닫기
+const closeTooltips = (event) => {
+    // 클릭된 타겟이 툴팁 엘리먼트 내부에 포함되어 있지 않다면 닫기
+    if (tooltipRef.value && !tooltipRef.value.contains(event.target)) {
+        openTooltips.value = false;
+        window.removeEventListener('click', closeTooltips);
+    }
+};
+
+onMounted(async() => {
+    await placeStore.getOperationInfo();
+
+    const info = placeStore.operationInfo;
+    if (info) {
+        isAcceptingReservation.value = info.isAcceptingReservation;
+        isTodayReservationEnabled.value = info.isTodayReservationEnabled;
+        selectedTime.value = info.alarmValue || '0';
+    }
 })
+
+// 컴포넌트 언마운트 시 이벤트 제거
+onBeforeUnmount(() => {
+    window.removeEventListener('click', closeTooltips);
+});
 </script>
 
 <template>
@@ -55,7 +129,7 @@ onMounted(() => {
                     </div>
     
                     <label class="toggle">
-                        <input type="checkbox" v-model="isAcceptingReservation" />
+                        <input type="checkbox" v-model="isAcceptingReservation" @change="handleToggleAcceptance" />
                         <img class="toggle-img" />
                     </label>
                 </div>
@@ -68,7 +142,25 @@ onMounted(() => {
                                 : '서비스가 미노출 상태이므로. 예약을 받을 수 없습니다.' 
                             }}
                         </span>
-                        <button class="btn btn--size-24 btn--black-outline">노출 이력</button>
+                        <button class="btn btn--size-24 btn--black-outline" @click="handleGetHistory($event)">노출 이력</button>
+
+                        <!-- 노출이력 -->
+                        <div 
+                            v-if="openTooltips && placeStore.historyData" 
+                            ref="tooltipRef"
+                            class="history-tooltips" 
+                            :style="{ top: tooltipPos.y + 'px', left: tooltipPos.x + 'px' }"
+                            @click.stop
+                        >
+                            <div class="tooltip-box">
+                                <ul>
+                                    <li>변경주체 : {{ placeStore.historyData.editorSubject || '-' }}</li>
+                                    <li>변경일자 : {{ placeStore.historyData.editedDateTime || '-' }}</li>
+                                    <li>변경내역 : {{ placeStore.historyData.isImp ? '노출' : '미노출' }}</li>
+                                    <li>변경사유 : {{ placeStore.historyData.impHistoryReasonCode || '-' }}</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </li>
@@ -84,7 +176,7 @@ onMounted(() => {
                     </div>
     
                     <label class="toggle">
-                        <input type="checkbox" v-model="isTodayReservationEnabled" />
+                        <input type="checkbox" v-model="isTodayReservationEnabled" @change="handleUpdateTodayReserve" />
                         <img class="toggle-img" />
                     </label>
                 </div>
@@ -93,7 +185,12 @@ onMounted(() => {
                     <template v-if="isTodayReservationEnabled">
                         <div class="option-row">
                             <span class="body-m">당일 예약 시 이용시간</span>
-                            <CustomSingleSelect :options="todayReserveTimeOptions" select-width="100px" v-model="selectedTime" />
+                            <CustomSingleSelect 
+                                :options="todayReserveTimeOptions" 
+                                select-width="100px" 
+                                v-model="selectedTime" 
+                                @update:modelValue="handleUpdateTodayReserve"
+                            />
                             <span class="body-m">까지 예약을 받습니다.</span>
                         </div>
                         <p class="setting-item__caption caption"> 
@@ -218,5 +315,14 @@ onMounted(() => {
             
             .preview-img {margin-top: 16px;}
         }
+    }
+    
+    .history-tooltips {
+        position: fixed;
+        left: 0;
+    }
+    :deep(.tooltip-box) {
+        border: 1px solid $primary-700;
+        box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.15);
     }
 </style>                                      
