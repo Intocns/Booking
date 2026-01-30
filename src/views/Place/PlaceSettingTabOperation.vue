@@ -12,15 +12,18 @@ import toggleOff from '@/assets/icons/toggle_off.svg'
 import imgPlaceOpen from '@/assets/images/img_place_open_preview.png'
 import imgPlaceClose from '@/assets/images/img_place_closed_preview.png'
 
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
+import { usePlaceStore } from '@/stores/placeStore';
 
-const modalStore = useModalStore()
+const modalStore = useModalStore();
+const placeStore = usePlaceStore();
 
 // 각 설정의 토글 상태 (기본값 true 또는 false)
 const isAcceptingReservation = ref(true); // 예약 받기
 const isTodayReservationEnabled = ref(true); // 당일 예약
+
 // TODO: 당일 예약 마감 시간 옵션 (임시)
 const todayReserveTimeOptions = [
     { label: '이전까지', value: '0' },
@@ -32,6 +35,10 @@ const todayReserveTimeOptions = [
 const selectedTime = ref('');
 
 // TODO: 노출이력
+
+onMounted(() => {
+    placeStore.getOperationInfo();
+})
 </script>
 
 <template>

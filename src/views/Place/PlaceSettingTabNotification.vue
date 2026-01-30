@@ -7,12 +7,15 @@ import TextAreaBox from '@/components/common/TextAreaBox.vue';
 import icPlus from '@/assets/icons/ic_plus_black.svg'
 import icClose from '@/assets/icons/ic_btn_close_b.svg'
 
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
+import { usePlaceStore } from '@/stores/placeStore';
+
 import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();
+const placeStore = usePlaceStore();
 
 //  리마인드 알림 설정 상태값
 const remindType = ref('today'); // 'today' or 'yesterday'
@@ -58,6 +61,10 @@ const handleGuideSubmit = () => {
     
     modalStore.bookingGuideTextModal.closeModal()
 };
+
+onMounted(() => {
+    placeStore.getAlarmInfo();
+})
 </script>
 
 <template>
