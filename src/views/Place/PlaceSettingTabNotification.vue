@@ -6,8 +6,9 @@ import TextAreaBox from '@/components/common/TextAreaBox.vue';
 // 아이콘
 import icPlus from '@/assets/icons/ic_plus_black.svg'
 import icClose from '@/assets/icons/ic_btn_close_b.svg'
+import icEdit from '@/assets/icons/ic_edit.svg'
 
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, nextTick } from 'vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { usePlaceStore } from '@/stores/placeStore';
@@ -17,50 +18,130 @@ import { showAlert } from '@/utils/ui';
 const modalStore = useModalStore();
 const placeStore = usePlaceStore();
 
-//  리마인드 알림 설정 상태값
-const remindType = ref('today'); // 'today' or 'yesterday'
-const defaultConfirmIndex = ref(0);
-const defaultCancelIndex = ref(0);
-const confirmGuides = ref([
-    { id: 1, text: '예약이 확정되었습니다. 감사합니다.' },
-]);
-const cancelGuides = ref([
-    { id: 1, text: '재료 소진으로 인해 예약이 취소되었습니다.' },
-]);
 // 모달 제어 상태
 const currentGuideType = ref(''); // 'confirm' 또는 'cancel'
 const guideInputText = ref(''); // TextArea에 입력된 값
+const textAreaRef = ref(null); // TextArea 컴포넌트를 참조할 ref
 
+const isEditMode = ref(false); // 안내 문구 수정 mode인지 체크
+const editIndex = ref(null); // 수정하는 문구 index 저장
+
+// 문구 삭제 버튼 이벤트 핸들러
+const handelRemoveGuide = (type, index) => {
+    modalStore.confirmModal.openModal({
+        text: '해당 안내 문구를 삭제하시겠습니까?',
+        confirmBtnText: '삭제',
+        onConfirm: () => removeGuide(type, index),
+    })
+}
 
 // 문구 삭제 함수
-const removeGuide = (type, index) => {
-    const targetList = type === 'confirm' ? confirmGuides : cancelGuides;
-    targetList.value.splice(index, 1);
+const removeGuide = async(type, index) => {
+    const targetList = type === 'confirm' ? placeStore.guideList : placeStore.cancelGuideList;
+    targetList.splice(index, 1);
+
+    const params = targetList.map(item => ({
+        words: item.words,
+        isActive: item.isActive ? 1 : 0
+    }));
+
+    if (type === 'confirm') {
+        await placeStore.modifyAlarmGuide(params);
+    } else {
+        await placeStore.modifyAlarmCancelGuide(params);
+    }
+
+    await placeStore.getAlarmInfo();
 };
 
 // 모달 열기 함수
-const openGuideModal = (type) => {
-    const targetList = type === 'confirm' ? confirmGuides : cancelGuides;
-    if (targetList.value.length >= 10) return showAlert('최대 10개까지 등록 가능합니다.');
-    
+const openGuideModal = async(type, index = null) => {
+    const targetList = type === 'confirm' ? placeStore.guideList : placeStore.cancelGuideList;
     currentGuideType.value = type;
-    guideInputText.value = ''; // 초기화
-    modalStore.bookingGuideTextModal.setTitle(type === 'confirm' ? '예약 확정 시 안내' : '예약 취소 시 안내');
-    modalStore.bookingGuideTextModal.openModal()
+
+    if(index != null) {
+        // 수정
+        isEditMode.value = true;
+        editIndex.value = index;
+        guideInputText.value = targetList[index].words; // 기존 문구 세팅
+        modalStore.bookingGuideTextModal.setTitle(type === 'confirm' ? '예약 확정 문구 수정' : '예약 취소 문구 수정');
+    } else {
+        // 등록
+        if (targetList.length >= 10) return showAlert('최대 10개까지 등록 가능합니다.');
+        isEditMode.value = false;
+        editIndex.value = null;
+        guideInputText.value = ''; // 초기화
+        modalStore.bookingGuideTextModal.setTitle(type === 'confirm' ? '예약 확정 시 안내' : '예약 취소 시 안내');
+    }
+
+    modalStore.bookingGuideTextModal.openModal();
+
+    await nextTick();
+    if (textAreaRef.value) {
+        const el = textAreaRef.value.$el.querySelector('textarea') || textAreaRef.value.$el;
+        el.focus();
+    }
 };
 
 // 등록 완료 함수
-const handleGuideSubmit = () => {
+const handleGuideSubmit = async() => {
     if (!guideInputText.value.trim()) return showAlert('내용을 입력해주세요.');
     
-    const targetList = currentGuideType.value === 'confirm' ? confirmGuides : cancelGuides;
-    targetList.value.push({ 
-        id: Date.now(), 
-        text: guideInputText.value 
-    });
-    
-    modalStore.bookingGuideTextModal.closeModal()
+    const targetList = currentGuideType.value === 'confirm' ? placeStore.guideList : placeStore.cancelGuideList;
+
+    if (isEditMode.value && editIndex.value !== null) {
+        // 수정일 경우 해당 인덱스의 문구만 교체
+        targetList[editIndex.value].words = guideInputText.value;
+    } else {
+        // 신규일 경우 푸시
+        targetList.push({
+            words: guideInputText.value,
+            isActive: false,
+        });
+    }
+
+    // 서버로 보낼 때는 타입을 숫자로 변환 
+    const params = targetList.map(item => ({
+        words: item.words,
+        isActive: item.isActive ? 1 : 0 // true -> 1, false -> 0으로 치환
+    }));
+
+    // console.log(params);
+    // return false;
+
+    if(currentGuideType.value === 'confirm') {
+        await placeStore.modifyAlarmGuide(params);
+    } else {
+        await placeStore.modifyAlarmCancelGuide(params);
+    }
+
+    modalStore.bookingGuideTextModal.closeModal();
+    placeStore.getAlarmInfo();
 };
+
+// 문구 라디오버튼 선택 시 상태 변경 및 저장
+const handleStatusChange = async(type, selectedIndex) => {
+    const targetList = type === 'confirm' ? placeStore.guideList : placeStore.cancelGuideList;
+
+    const params = targetList.map((item, index) => ({
+        words: item.words,
+        isActive: index === selectedIndex ? 1 : 0
+    }));
+
+    if (type === 'confirm') {
+        await placeStore.modifyAlarmGuide(params);
+    } else {
+        await placeStore.modifyAlarmCancelGuide(params);
+    }
+
+    await placeStore.getAlarmInfo();
+}
+
+// 리마인드 알림 설정 변경
+const handleSetRemindType = async(value) => {
+    await placeStore.setRemindAlarm(value);
+    await placeStore.getAlarmInfo();
+}
 
 onMounted(() => {
     placeStore.getAlarmInfo();
@@ -82,14 +163,24 @@ onMounted(() => {
                 <div class="setting-item__content">
                     <div class="option-row">
                         <label class="radio">
-                            <input type="radio" value="today" v-model="remindType"/>
+                            <input 
+                                type="radio" 
+                                :value="0" 
+                                v-model="placeStore.remindType" 
+                                @change="handleSetRemindType(0)"
+                            />
                             <span class="circle"></span>
                             <span class="label">당일 방문 시각 3시간 전 발송</span>
                         </label>
                     </div>
                     <div class="option-row">
                         <label class="radio">
-                            <input type="radio" value="yesterday" v-model="remindType"/>
+                            <input 
+                                type="radio" 
+                                :value="1" 
+                                v-model="placeStore.remindType" 
+                                @change="handleSetRemindType(1)"
+                            />
                             <span class="circle"></span>
                             <span class="label">방문 전일 오전 9시 발송</span>
                         </label>
@@ -114,21 +205,32 @@ onMounted(() => {
                         </div>
     
                         <button class="btn btn--size-32 btn--black-outline add-guide-btn" 
-                            @click="openGuideModal('confirm')" :disabled="confirmGuides.length >= 10">
-                            <img :src="icPlus"> 안내 문구 추가({{ confirmGuides.length }}/10)
+                            @click="openGuideModal('confirm')" :disabled="placeStore.guideList.length >= 10">
+                            <img :src="icPlus"> 안내 문구 추가({{ placeStore.guideList.length }}/10)
                         </button>
     
                         <!-- 추가 문구 리스트 -->
                         <ul class="guide-list">
-                            <li v-for="(guide, index) in confirmGuides" :key="guide.id" class="guide-list__item">
+                            <li v-for="(guide, index) in placeStore.guideList" :key="index" class="guide-list__item">
                                 <label class="radio">
-                                    <input type="radio" :value="index" v-model="defaultConfirmIndex" />
+                                    <input 
+                                        type="radio" 
+                                        :name="'confirm-radio-group'"
+                                        :checked="guide.isActive" 
+                                        @change="handleStatusChange('confirm', index)"
+                                    />
                                     <span class="circle"></span>
-                                    <span class="label">{{ guide.text }}</span>
+                                    <span class="label">{{ guide.words }}</span>
                                 </label>
-                                <button class="delete-btn" @click="removeGuide('confirm', index)">
-                                    <img :src="icClose" alt="삭제">
-                                </button>
+
+                                <div class="d-flex align-center gap-4">
+                                    <button class="btn btn--size-24 btn--black-outline" @click="openGuideModal('confirm', index)">
+                                        수정
+                                    </button>
+                                    <button class="delete-btn" @click="handelRemoveGuide('confirm', index)">
+                                        <img :src="icClose" alt="삭제">
+                                    </button>
+                                </div>
                             </li>
                         </ul>
     
@@ -142,21 +244,32 @@ onMounted(() => {
                         </div>
     
                         <button class="btn btn--size-32 btn--black-outline add-guide-btn" 
-                            @click="openGuideModal('cancel')" :disabled="cancelGuides.length >= 10">
-                            <img :src="icPlus"> 안내 문구 추가({{ cancelGuides.length }}/10)
+                            @click="openGuideModal('cancel')" :disabled="placeStore.cancelGuideList.length >= 10">
+                            <img :src="icPlus"> 안내 문구 추가({{ placeStore.cancelGuideList.length }}/10)
                         </button>
     
                         <!-- 추가 문구 리스트 -->
                         <ul class="guide-list">
-                            <li v-for="(guide, index) in cancelGuides" :key="guide.id" class="guide-list__item">
+                            <li v-for="(guide, index) in placeStore.cancelGuideList" :key="index" class="guide-list__item">
                                 <label class="radio">
-                                    <input type="radio" :value="index" v-model="defaultCancelIndex" />
+                                    <input 
+                                        type="radio" 
+                                        :name="'cancel-radio-group'"
+                                        :checked="guide.isActive"
+                                        @change="handleStatusChange('cancel', index)"
+                                    />
                                     <span class="circle"></span>
-                                    <span class="label">{{ guide.text }}</span>
+                                    <span class="label">{{ guide.words }}</span>
                                 </label>
-                                <button class="delete-btn" @click="removeGuide('cancel', index)">
-                                    <img :src="icClose" alt="삭제">
-                                </button>
+
+                                <div class="d-flex align-center gap-4">
+                                    <button class="btn btn--size-24 btn--black-outline" @click="openGuideModal('cancel', index)">
+                                        수정
+                                    </button>
+                                    <button class="delete-btn" @click="handelRemoveGuide('cancel', index)">
+                                        <img :src="icClose" alt="삭제" />
+                                    </button>
+                                </div>
                             </li>
                         </ul>
     
@@ -175,7 +288,7 @@ onMounted(() => {
     >
         <div class="modal-contents-inner">
             <p class="modal-contents-body mt-0">안내 문구를 입력하거나 수정할 수 있습니다.</p>
-            <TextAreaBox :max-length="500" v-model="guideInputText"/>
+            <TextAreaBox ref="textAreaRef" :max-length="500" v-model="guideInputText"/>
         </div>
 
         <div class="modal-button-wrapper">
@@ -276,6 +389,12 @@ onMounted(() => {
 
             border-radius: 4px;
             background-color: $gray-50;
+
+            .label {
+                white-space: pre-line;
+                word-break: break-all;
+                line-height: 1.4;
+            }
         }
     }
 </style>

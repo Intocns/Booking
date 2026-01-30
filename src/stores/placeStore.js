@@ -9,6 +9,9 @@ export const usePlaceStore = defineStore("place", () => {
     const historyData = ref(null); // 노출이력 데이터
 
     // 네이버 플레이스 관리>플레이스 설정>알림설정
+    const remindType = ref(null); // 예약자 리마인드 알림 타입
+    const guideList = ref([]); // 예약 확정시 안내 문구리스트
+    const cancelGuideList = ref([]); // 예약 취소시 안내 문구 리스트
 
     // 네이버 플레이스 관리>플레이스 설정>예약자 정보요청
     const isRequestMessageUsed = ref(0); // 기타 요청사항 받는지 여부
@@ -53,6 +56,11 @@ export const usePlaceStore = defineStore("place", () => {
     // 알람설정 기본값 가져오기
     const getAlarmInfo = async() => {
         const response = await api.get('/api/linkbusiness/{cocode}/setting/alarm');
+        const rawData = response.data.data;
+
+        remindType.value = rawData.alarm;
+        guideList.value = rawData.guide;
+        cancelGuideList.value = rawData.cancelGuide;
     }
 
     // 리마인드 알림 설정 값 변경
@@ -112,15 +120,20 @@ export const usePlaceStore = defineStore("place", () => {
 
     return {
         // 상태관리
+
         // 플레이스 설정 > 운영설정
         operationInfo,
         historyData,
         // 플레이스 설정 > 알림설정
+        remindType,
+        guideList,
+        cancelGuideList,
         // 플레이스 설정 > 예약자 정보 요청 
         isRequestMessageUsed, 
         questionList,
 
         // api
+
         // 플레이스 설정 > 운영설정
         getOperationInfo,
         setAcceptingReservation,
