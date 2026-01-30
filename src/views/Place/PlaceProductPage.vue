@@ -42,6 +42,7 @@ const currentCopyId = ref(null); // 상품 복사 모달 > 현재 복사 대상 
 const copyOptionBooking = ref(1) // 상품 복사 모달 > 복사 옵션 예약정보
 const copyOptionItem = ref(1) // 상품 복사 모달 > 복사 옵션 기본정보
 const importIntoPetRoomIdx = ref(null) // 인투펫 진료실 불러오기 > 불러올 진료실 idx
+const productImpValue = ref(null); // 상품별 일괄 노출/미노출(노출:1, 미노출:0)
 
 // 미노출 제외 체크박스 감시
 watch(
@@ -139,10 +140,11 @@ const clickProductImpUpdateBtn = (async(itemId, isImp) => {
     }
 })
 // 상품별 일괄 노출/미노출 체크 변경
-const clickTotalProductImpUpdateBtn = (isImp) => {
+const clickTotalProductImpUpdateBtn = () => {
     modalStore.productVisibleUpdateModal.closeModal();
 
-    const config = isImp === 1 
+    
+    const config = productImpValue.value === 1 
         ? { title: '전체상품 노출', text: '전체 상품을 노출 하시겠습니까?', subText: '노출된 상품은 고객이 직접 예약할 수 있습니다.', btn: '노출' }
         : { title: '전체상품 미노출', text: '전체 상품을 미노출 하시겠습니까?', subText: '미노출된 상품은 예약할 수 없습니다.', btn: '미노출' };
 
@@ -153,7 +155,7 @@ const clickTotalProductImpUpdateBtn = (isImp) => {
         subText: config.subText,
         confirmBtnText: config.btn,
         onConfirm: () => {
-            totalProductImpUpdate(isImp);
+            totalProductImpUpdate(productImpValue.value);
         }
     });
     
@@ -417,14 +419,21 @@ onMounted(async () => {
     
                 <div class="segment-wrapper">
                     <label class="segment">
-                        <input type="radio" name="visibleStatus" @click="clickTotalProductImpUpdateBtn(1)"/>
+                        <input type="radio" name="visibleStatus" v-model="productImpValue" :value="1" />
                         <span class="label">노출</span>
                     </label>
                     <label class="segment">
-                        <input type="radio" name="visibleStatus" @click="clickTotalProductImpUpdateBtn(0)"/>
+                        <input type="radio" name="visibleStatus"  v-model="productImpValue" :value="0" />
                         <span class="label">미노출</span>
                     </label>
                 </div>
+            </div>
+        </div>
+
+        <div class="modal-button-wrapper">
+            <div class="buttons">
+                <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.productVisibleUpdateModal.closeModal()">취소</button>
+                <button class="btn btn--size-32 btn--blue" @click="clickTotalProductImpUpdateBtn">확인</button>
             </div>
         </div>
     </Modal>
