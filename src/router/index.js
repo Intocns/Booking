@@ -10,13 +10,8 @@ const router = createRouter({
             redirect: '/dashboard', 
             meta: { requiresAuth: true },
         },
-        // 대시보드
-        { 
-            path: '/dashboard', 
-            name: 'dashboard', 
-            component: () => import('@/views/Dashboard/Dashboard.vue'), 
-            meta: { requiresAuth: true },
-        },
+        { path: '/dashboard', name: 'dashboard', component: () => import('@/views/Dashboard/Dashboard.vue'), meta: { requiresAuth: true } },
+        { path: '/mylink/naverReserveCallBack', name: 'naverReserveCallBack', component: () => import('@/views/Place/NaverCallbackPage.vue'), meta: { requiresAuth: false } },
         // 예약 현황
         {
             path: '/reservation',
@@ -35,13 +30,8 @@ const router = createRouter({
             name: 'place',
             meta: { requiresAuth: true },
             children: [
-                // 1. 네이버 연동 계정 관리
-                { 
-                    path: 'account', 
-                    name: 'placeAccount', 
-                    component: () => import('@/views/Place/PlaceAccountPage.vue'),
-                },
-                
+                { path: 'account', name: 'placeAccount', component: () => import('@/views/Place/PlaceAccountPage.vue') },
+                { path: 'naver-callback', name: 'placeNaverCallback', component: () => import('@/views/Place/NaverCallbackPage.vue'), meta: { requiresAuth: false } },
                 // 2. 상품 관리
                 { 
                     path: 'product', 

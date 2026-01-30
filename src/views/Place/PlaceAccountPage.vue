@@ -1,25 +1,167 @@
 <!-- 네이버 플레이스 관리 > 네이버 연동 계정 관리 -->
 <script setup>
-// 컴포넌트
 import PageTitle from '@/components/common/PageTitle.vue';
 import TableLayout from '@/components/common/TableLayout.vue';
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import Modal from '@/components/common/Modal.vue';
-// 아이콘
-import icNaver from '@/assets/icons/ic_res_naver.svg'
-import icInfo from '@/assets/icons/ic_infomation_b.svg'
-import icSearch from '@/assets/icons/ic_search.svg'
-import icAddBtn from '@/assets/icons/ic_add_btn.svg'
-import icDragHandel from '@/assets/icons/ic_drag_handel.svg'
-import icClear from '@/assets/icons/ic_clear.svg'
-// 스토어
+import icInfo from '@/assets/icons/ic_infomation_b.svg';
+import icSearch from '@/assets/icons/ic_search.svg';
+import icAddBtn from '@/assets/icons/ic_add_btn.svg';
+import icDragHandel from '@/assets/icons/ic_drag_handel.svg';
+import icClear from '@/assets/icons/ic_clear.svg';
 import { useModalStore } from '@/stores/modalStore';
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { api } from '@/api/axios';
+import { COCODE } from '@/constants/common';
+import { NAVER_CLIENT_ID, getMappingUrl, getNaverCallbackUrl, buildProfilePayload } from '@/constants/naver';
+import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();
+const hasNaverAccount = ref(false);
+const naverId = ref('');
+const businessId = ref('');
+const hosIdx = ref(0);
 
-// 상태관리
-const hasNaverAccount = ref(false); // TODO: 네이버 계정 연동 값 임시
+async function fetchAccountInfo() {
+    try {
+        const res = await api.get(`/api/linkbusiness/{cocode}`);
+        const body = res.data;
+        const data = body?.data ?? body;
+        if (!data || typeof data !== 'object') return;
+        const nid = data.naverId ?? data.naver_id ?? '';
+        const bid = data.businessId ?? data.business_id;
+        const hasData = nid !== '' || bid != null;
+        if (hasData) {
+            hasNaverAccount.value = true;
+            naverId.value = String(nid);
+            businessId.value = bid != null ? String(bid) : '';
+            hosIdx.value = data.hosIdx != null ? Number(data.hosIdx) : (data.hos_idx != null ? Number(data.hos_idx) : 0);
+
+            console.log(naverId.value);
+
+
+        }
+    } catch {
+        hasNaverAccount.value = false;
+    }
+}
+
+function onToggleNaverReserve() {
+    if (!hasNaverAccount.value) return;
+    modalStore.confirmModal.openModal({
+        title: '연동 해제',
+        text: '연동을 해제하시겠습니까?',
+        cancelBtnText: '취소',
+        confirmBtnText: '연동해제하기',
+        onConfirm: () => saveMappingUnlink(),
+        onCancel: () => {},
+    });
+}
+
+async function saveMappingUnlink() {
+    modalStore.confirmModal.closeModal();
+    try {
+        const res = await api.post('/api/linkbusiness/mapping', {
+            cocode: Number(COCODE),
+            hosIdx: hosIdx.value,
+            code: 2,
+            naverId: naverId.value,
+            businessId: businessId.value ? Number(businessId.value) : null,
+        });
+        const code = res.data?.status_code ?? res.data?.code;
+        if (code === 200 || res.data?.data) {
+            hasNaverAccount.value = false;
+            naverId.value = '';
+            businessId.value = '';
+            showAlert('연동이 해제되었습니다.');
+            fetchAccountInfo();
+            initNaverLogin();
+        } else {
+            const msg = res.data?.message ?? '연동 해제에 실패했습니다.';
+            showAlert(msg);
+        }
+    } catch (err) {
+        console.error(err);
+        showAlert('연동 해제 중 오류가 발생했습니다.');
+    }
+}
+
+const JQUERY_URL = 'https://code.jquery.com/jquery-3.7.1.min.js';
+const NAVER_LOGIN_SCRIPT_URL = 'https://static.nid.naver.com/js/naverLogin_implicit-1.0.3.js';
+
+function loadScript(src, opts = {}) {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = src;
+        if (opts.integrity) script.integrity = opts.integrity;
+        if (opts.crossOrigin) script.crossOrigin = opts.crossOrigin;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+        document.body.appendChild(script);
+    });
+}
+
+function ensureNaverLoginScripts() {
+    return loadScript(JQUERY_URL, {
+        integrity: 'sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=',
+        crossOrigin: 'anonymous',
+    }).then(() => loadScript(NAVER_LOGIN_SCRIPT_URL));
+}
+
+function initNaverLogin() {
+    if (typeof window.naver_id_login === 'undefined') return;
+    const mappingUrl = getMappingUrl();
+    const callbackUrl = getNaverCallbackUrl();
+    const naverLogin = new window.naver_id_login(NAVER_CLIENT_ID, callbackUrl);
+    naverLogin.setButton('white', 2, 40);
+    naverLogin.setDomain(mappingUrl);
+    naverLogin.setState(naverLogin.getUniqState());
+    naverLogin.setPopup();
+    naverLogin.init_naver_id_login();
+    // TODO: 추후 get_naver_userprofile 호출 여부/시점 재검토
+    // naverLogin.get_naver_userprofile('naverSignInCallback');
+}
+
+function handleNaverMessage(event) {
+    if (event.origin !== window.location.origin) return;
+    const { type, profile, error } = event.data || {};
+    if (type !== 'naver-profile') return;
+    if (error) {
+        showAlert(error);
+        return;
+    }
+    const payload = buildProfilePayload(profile, Number(COCODE));
+    if (!payload) return;
+    (async () => {
+        try {
+            await api.post('/api/linkbusiness/profile', payload);
+            hasNaverAccount.value = true;
+            // 서버에 반영된 naverId, businessId를 API로 다시 조회해서 표시
+            await fetchAccountInfo();
+            modalStore.naverConnectNoticeModal.openModal();
+        } catch (err) {
+            console.error(err);
+        }
+    })();
+}
+
+onMounted(() => {
+    window.addEventListener('message', handleNaverMessage);
+    fetchAccountInfo();
+    ensureNaverLoginScripts()
+        .then(() => initNaverLogin())
+        .catch((err) => {
+            console.error(err);
+            showAlert('네이버 로그인 스크립트를 불러오지 못했습니다.');
+        });
+});
+onUnmounted(() => {
+    window.removeEventListener('message', handleNaverMessage);
+});
 </script>
 
 <template>
@@ -28,32 +170,24 @@ const hasNaverAccount = ref(false); // TODO: 네이버 계정 연동 값 임시
     <TableLayout>
 
         <template #filter>  
-            <div class="account-sync">
+            <div class="account-sync" :key="`account-${hasNaverAccount}-${naverId}-${businessId}`">
                 <section class="account-sync__login">
                     <div class="sync-header">
                         <h3 class="sync-header__title title-m">네이버 계정 연동하기</h3>
-                        <!-- 네이버 계정 연동 완료인 경우 -->
                         <template v-if="hasNaverAccount">
                             <label class="toggle">
-                                <input type="checkbox" :checked="hasNaverAccount" />
+                                <input type="checkbox" :checked="hasNaverAccount" @click.prevent="onToggleNaverReserve" />
                                 <img class="toggle-img" />
                             </label>
-
                         </template>
-                        <!-- 네이버 계정 연동 전인 경우 -->
                         <template v-else>
-                            <button class="btn btn--size-32 btn--black-outline sync-header__btn">
-                                <img :src="icNaver" alt="네이버아이콘" class="sync-header__icon">
-                                로그인
-                            </button>
+                            <div id="naver_id_login"></div>
                         </template>
                     </div>
 
-                    <!-- 네이버 계정 연동 완료인 경우 -->
                     <template v-if="hasNaverAccount">
                         <p class="account-sync__desc caption">연동이 완료되었습니다.</p>
                     </template>
-                    <!-- 네이버 계정 연동 전인 경우 -->
                     <template v-else>
                         <p class="account-sync__desc caption">
                             ※ 네이버 계정으로 로그인하시면 현재 사용 중인 네이버 ID와 네이버 스마트 플레이스 비즈니스 ID가 자동으로 조회되어 표시됩니다.
@@ -67,13 +201,13 @@ const hasNaverAccount = ref(false); // TODO: 네이버 계정 연동 값 임시
                     <div class="form-row">
                         <label class="form-row__label title-s">네이버 ID</label>
                         <div class="form-row__input">
-                            <InputTextBox :disabled="true"  />
+                            <InputTextBox :model-value="naverId" :disabled="true" placeholder="네이버 ID" :key="'naver-' + naverId" @update:model-value="naverId = $event" />
                         </div>
                     </div>
                     <div class="form-row">
                         <label class="form-row__label title-s">네이버 스마트 플레이스 비즈니스 ID</label>
                         <div class="form-row__input">
-                            <InputTextBox :disabled="true" />
+                            <InputTextBox :model-value="businessId" :disabled="true" placeholder="비즈니스 ID" :key="'biz-' + businessId" @update:model-value="businessId = $event" />
                         </div>
                     </div>
                 </section>
