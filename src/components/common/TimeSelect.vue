@@ -27,6 +27,7 @@ const DEFAULT_PLACEHOLDER = '시간 선택';
 const isDropdownVisible = ref(false); // 드롭다운 표시 상태
 const wrapperRef = ref(null); // 컴포넌트 외부 클릭 감지를 위한 ref
 const triggerRef = ref(null); // .input-display 참조
+const dropdownRef = ref(null); // 드롭다운을 위한 ref
 // --- 드론다운 스크롤 제어 ref ---
 const hourColumnRef = ref(null); // ul 태그 참조
 const minuteColumnRef = ref(null); // ul 태그 참조
@@ -80,7 +81,7 @@ const toggleDropdown = () => {
 const applySelection = () => {
     const newTime = `${tempSelectedHour.value}:${tempSelectedMinute.value}`;
     emit('update:modelValue', newTime);
-    isDropdownVisible.value = false;
+    // isDropdownVisible.value = false; // 시간,분을 선택해도 드롭다운은 닫히지 않도록 주석처리함 바깥영역 클릭시에만 닫힘 (요청사항) 261030 hyerin
 };
 
 const cancelSelection = () => {
@@ -124,9 +125,12 @@ const clearTime = (event) => {
 
 // --- 외부 클릭 감지 (드롭다운 닫기) ---
 const handleClickOutside = (event) => {
-    if (wrapperRef.value && !wrapperRef.value.contains(event.target)) {
-        // 임시 변경 사항을 롤백하고 닫기
-        cancelSelection(); 
+    const isTriggerClick = wrapperRef.value && wrapperRef.value.contains(event.target);
+    const isDropdownClick = dropdownRef.value && dropdownRef.value.contains(event.target);
+
+    // 입력창 클릭도 아니고, 드롭다운 내부 클릭도 아닐 때만 닫기
+    if (!isTriggerClick && !isDropdownClick) {
+        cancelSelection();
     }
 };
 
@@ -196,34 +200,35 @@ onUnmounted(() => {
                 {{ modelValue || DEFAULT_PLACEHOLDER }}
             </span>
 
+            <!-- 시계 아이콘 항상 표시되도록 수정 (요청사항) 260130 hyerin -->
             <div class="icon-area">
                 <img 
-                    v-if="!modelValue" 
                     :src="icClock" 
                     alt="시간 선택 아이콘" 
                     class="icon icon--clock"
                 />
 
-                <button 
+                <!-- 시간 선택 초기화 버튼 주석처리 (요청사항) 260130 hyerin -->
+                <!-- <button 
                     v-else 
                     class="icon-button" 
                     @click="clearTime"
                     aria-label="선택 시간 초기화"
                 >
                     <img :src="icClear" alt="초기화 아이콘" class="icon icon--clear" />
-                </button>
+                </button> -->
             </div>
         </div>
 
         <teleport to='body'>
-            <div v-if="isDropdownVisible" class="time-picker-dropdown" :style="dropdownStyle">
+            <div v-if="isDropdownVisible" class="time-picker-dropdown" :style="dropdownStyle" ref="dropdownRef" @click.stop>
                 <div class="time-columns-container">
                     <ul class="time-column hour-column" ref="hourColumnRef">
                         <li
                             v-for="(hour, index) in hourOptions"
                             :key="hour"
                             :class="{ 'selected': tempSelectedHour === hour }"
-                            @click="handleHourClick(hour)"
+                            @click.stop="handleHourClick(hour)"
                         >
                             {{ hour }}
                         </li>
@@ -234,7 +239,7 @@ onUnmounted(() => {
                             v-for="(minute, index) in minuteOptions"
                             :key="minute"
                             :class="{ 'selected': tempSelectedMinute === minute }"
-                            @click="handleMinuteClick(minute)"
+                            @click.stop="handleMinuteClick(minute)"
                         >
                             {{ minute }}
                         </li>
