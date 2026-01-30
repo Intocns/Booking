@@ -9,11 +9,18 @@ import PlaceSettingTabRequest from './PlaceSettingTabRequest.vue';
 // 아이콘
 import icEmpty from '@/assets/icons/ic_empty.svg'
 
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 import TextAreaBox from '@/components/common/TextAreaBox.vue';
 import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 
 // 스토어
+import { usePlaceStore } from '@/stores/placeStore';
+
+const placeStore = usePlaceStore();
+
+// 미리보기 사용 상태관리
+const previewValues = reactive({});
+const requestMessageValue = ref('');
 
 const tabs = [
   { id: 'operation', label: '운영설정' },
@@ -71,67 +78,53 @@ const currentTab = ref('operation'); // 탭 버튼
                         <div class="preview-section">
                             
                             <!-- 추가정보 영역 -->
-                            <div class="request-section">
+                            <div v-if="placeStore.questionList.length > 0" class="request-section">
                                 <p class="title-l">추가정보</p>
-                                <!-- 동물이름 -->
-                                <div class="request-section__item">
+
+                                <div 
+                                    v-for="q in placeStore.questionList"
+                                    :key="q.questionIdx"
+                                    class="request-section__item"
+                                >
                                     <div class="request-section__title">
-                                        <p class="title-m">동물 이름을 입력해주세요</p>
-                                        <span class="required">필수</span>
+                                        <p class="title-m">{{ q.questionTitle }}</p>
+                                        <span v-if="q.questionRequiredFlag == 1" class="required">필수</span>
                                     </div>
 
-                                    <TextAreaBox />
-                                </div>
-                                <!-- 종 선택 -->
-                                <div class="request-section__item">
-                                    <div class="request-section__title">
-                                        <p class="title-m">종을 선택해 주세요.</p>
-                                        <span class="required">필수</span>
-                                    </div>
+                                    <template v-if="q.questionType == 'TEXTAREA'">
+                                        <TextAreaBox v-model="previewValues[q.questionIdx]" />
+                                    </template>
 
-                                    <CustomSingleSelect />
-                                </div>
-                                <!-- 품종 선택 -->
-                                <div class="request-section__item">
-                                    <div class="request-section__title">
-                                        <p class="title-m">품종을 선택해 주세요.</p>
-                                        <span class="required">필수</span>
-                                    </div>
+                                    <template v-if="q.questionType == 'SELECT'">
+                                        <CustomSingleSelect 
+                                            v-model="previewValues[q.questionIdx]" 
+                                            :options="q.uiQuestionOptions" 
+                                        />
+                                    </template>
 
-                                    <CustomSingleSelect />
-                                </div>
-                                <!-- 성별 선택 -->
-                                <div class="request-section__item">
-                                    <div class="request-section__title">
-                                        <p class="title-m">성별을 선택해 주세요.</p>
-                                        <span class="required">필수</span>
-                                    </div>
-
-                                    <CustomSingleSelect />
-                                </div>
-                                <!-- 복수 선택 가능한 옵션 -->
-                                <div class="request-section__item">
-                                    <div class="request-section__title">
-                                        <p class="title-m">복수 선택 가능한 옵션</p>
-                                    </div>
-
-                                    <div class="options-list">
-                                        <label class="checkbox">
-                                            <input type="checkbox" />
-                                            <span class="box-naver"></span>
-                                            <span class="label">옵션1</span>
-                                        </label>
-                                        <label class="checkbox">
-                                            <input type="checkbox" />
-                                            <span class="box-naver"></span>
-                                            <span class="label">옵션2</span>
-                                        </label>
-                                    </div>
+                                    <template v-if="q.questionType == 'CHECKBOX'">
+                                        <ul v-for="opt in q.options">
+                                            <li class="options-list">
+                                                <label class="checkbox">
+                                                    <input type="checkbox" />
+                                                    <span class="box-naver"></span>
+                                                    <span class="label">{{ opt.optName }}</span>
+                                                </label>
+                                            </li>
+                                        </ul>
+                                    </template>
                                 </div>
                             </div>
 
+                            <!-- 추가 정보 없을 때 -->
+                            <div v-else class="empty-box request-section">
+                                <img :src="icEmpty" alt="비어있음 아이콘">
+                                <span class="title-s">등록된 질문이 없습니다.</span>
+                                <p class="body-m">예약자에게 요청할 정보를 추가해 주세요.</p>
+                            </div>
+
                             <!-- 예약자 정보 영역 -->
-                            <div  class="request-section">
+                            <div v-if="placeStore.isRequestMessageUsed" class="request-section">
                                 <p class="title-l">예약자 정보</p>
 
                                 <div class="request-section__item">
@@ -139,7 +132,7 @@ const currentTab = ref('operation'); // 탭 버튼
                                         <p class="title-m">요청사항</p>
                                     </div>
 
-                                    <TextAreaBox />
+                                    <TextAreaBox v-model="requestMessageValue" />
                                 </div>
                             </div>
 
@@ -219,10 +212,10 @@ const currentTab = ref('operation'); // 탭 버튼
         gap: 16px;
 
         padding: 24px 0;
-        border-bottom: 1px solid $gray-200;
+        border-top: 1px solid $gray-200;
 
-        &:nth-child(1) {padding-top: 0;}
-        &:nth-child(2) {padding-bottom: 0; border-bottom: 0;}
+        &:nth-child(1) {padding-top: 0; border-top: 0;}
+        &:nth-child(2) {padding-bottom: 0;}
 
         &__item {
             display: flex;
