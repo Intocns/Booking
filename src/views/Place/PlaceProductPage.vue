@@ -318,8 +318,8 @@ onMounted(async () => {
             <!-- 상품 리스트 테이블 -->
             <div v-for="product in dragList" class="item-box" :key="product.bizItemId">
                 <!-- top -->
-                <div class="top" @click="goProductDetail(product.bizItemId)">
-                    <div class="item-box__img">
+                <div class="top">
+                    <div class="item-box__img" @click="goProductDetail(product.bizItemId)">
 
                         <img
                             v-if="JSON.parse(product.imageUrls)?.length"
