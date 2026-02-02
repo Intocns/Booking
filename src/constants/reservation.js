@@ -1,10 +1,10 @@
 //예약상태 define
 export const RESERVE_STATUS_OPTIONS = [
     { label: '전체', value: 'all' },
-    { label: '예약 대기', value: 0 },
-    { label: '예약 승인', value: 1 },
-    { label: '예약 취소', value: 2 },
-    { label: '예약 거절', value: 3 },
+    { label: '예약대기', value: 0 },
+    { label: '예약확정', value: 1 },
+    { label: '예약취소', value: 2 },
+    { label: '예약거절', value: 3 },
 ]
 
 export const RESERVE_STATUS_MAP = {
