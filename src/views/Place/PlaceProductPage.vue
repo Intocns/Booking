@@ -216,7 +216,11 @@ const clickDeleteItem = ((itemName, itemId) => {
 })
 
 // 상품 복사 버튼 클릭 이벤트
-const clickCopyItem = ((id) => {
+const clickCopyItem = ((id, imageUrls) => {
+    if(!imageUrls || imageUrls.length == 0) {
+        showAlert('상품 이미지가 존재하지 않는 상품은 복사가 불가합니다.');
+        return;
+    }
     currentCopyId.value = id; // 대상 id 저장
     copyProductName.value = ''; // 상품명 입력필드 초기화
     copyOptionItem.value = 1; // 열 때마다 초기화
@@ -350,7 +354,7 @@ onMounted(async () => {
                 <div class="bottom">
                     <div class="d-flex gap-16">
                         <button title="수정" @click="goProductDetail(product.bizItemId)"><img :src="icEdit" alt="수정아이콘" width="16"></button>
-                        <button title="복사" @click="clickCopyItem(product.bizItemId)"><img :src="icCopy" alt="복사아이콘"></button>
+                        <button title="복사" @click="clickCopyItem(product.bizItemId, JSON.parse(product.imageUrls))"><img :src="icCopy" alt="복사아이콘"></button>
                         <button title="삭제" @click="clickDeleteItem(product.name, product.bizItemId)"><img :src="icDel" alt="삭제 아이콘"></button>
                     </div>
 
