@@ -25,7 +25,7 @@ const weeksOptions = [
 /**
  * 상태관리
  */
-const holidayType = ref('WEEKLY'); // 'WEEKLY', 'BI_WEEKLY', 'MONTHLY' 연결용
+const holidayType = ref(''); // 'WEEKLY', 'BI_WEEKLY', 'MONTHLY' 연결용
 const selectedDays = ref([]); // 매주/격주용 요일
 const startDate = ref(null); // 격주 선택 시 시작일 저장
 const monthlyRules = ref([ // 매달 선택 시 규칙 초기값 세팅
@@ -88,7 +88,7 @@ const handleAllPublicHolidays = (e) => {
 const handleHolidayOnly = (e) => {
     if (e.target.checked) {
         // 설날 당일, 추석 당일만 필터링 
-        const targets = [ 2, 11 ]; // 임시 value값임
+        const targets = [ 2, 12 ]; // 임시 value값임
         selectedPublicHolidays.value = PUBLIC_HOLIDAYS_OPTIONS
             .filter(h => targets.includes(h.value))
             .map(h => h.value);
@@ -114,7 +114,7 @@ const isAllChecked = computed(() => {
 });
 
 const isHolidayOnlyChecked = computed(() => {
-    const targets = [ 2, 11 ]; // 임시 value값임
+    const targets = [ 2, 12 ]; // 임시 value값임
     // 선택된 개수가 2개이고, 그게 설날/추석 당일일 때만 체크 표시
     return selectedPublicHolidays.value.length === 2 && 
            selectedPublicHolidays.value.every(v => targets.includes(v));
@@ -152,10 +152,6 @@ const setSaveFormat = () => {
 
     switch(holidayType.value){
         case "WEEKLY" :
-            if(selectedDays.value.length === 0){
-                //매주 휴무일이 하나도 선택되지 않은 경우 빈 객체 반환
-                return {};
-            }
             regularHoliday = {
                 week : [{
                     ...baseHoliday,
@@ -164,10 +160,6 @@ const setSaveFormat = () => {
             };
             break;
         case "BI_WEEKLY" :
-            if(selectedDays.value.length === 0 || !startDate.value){
-                //격주 휴무일이 하나도 선택되지 않았거나 시작일이 지정되지 않은 경우 빈 객체 반환
-                return {};
-            }
             regularHoliday = {
                 week : [{
                     ...baseHoliday,
@@ -177,10 +169,6 @@ const setSaveFormat = () => {
             };
             break;
         case "MONTHLY" :
-            if(monthlyRules.value.length === 0 || monthlyRules.value.every(data => data.selectedDays.length === 0 || data.selectedWeeks.length === 0)){
-                //매달 휴무 규칙이 없거나 모든 규칙에서 요일 또는 주차가 하나도 선택되지 않은 경우 빈 객체 반환
-                return {};
-            }
             regularHoliday = {
                 mon: monthlyRules.value.map(data => ({
                     ...baseHoliday,

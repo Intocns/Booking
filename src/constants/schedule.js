@@ -22,8 +22,8 @@ export const PUBLIC_HOLIDAYS_OPTIONS = [
     { label: '광복절', value: 8 },
     { label: '개천절', value: 9 },
     { label: '한글날', value: 10 },
-    { label: '크리스마스', value: 11 },
-    { label: '추석 전날', value: 12, apiValue: '추석 연휴1' },
-    { label: '추석 당일', value: 13 },
-    { label: '추석 다음날', value: 14, apiValue: '추석 연휴2' }
+    { label: '추석 전날', value: 11, apiValue: '추석 연휴1' },
+    { label: '추석 당일', value: 12 },
+    { label: '추석 다음날', value: 13, apiValue: '추석 연휴2' },
+    { label: '크리스마스', value: 14 },
 ]
