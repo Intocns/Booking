@@ -16,6 +16,10 @@ const props = defineProps({
         type: String,
         default: '100%', // 기본값은 100%
     },
+    disabled: {
+        type: Boolean,
+        default: false,
+    }
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -191,7 +195,7 @@ onUnmounted(() => {
     <div class="custom-time-picker-wrapper" ref="wrapperRef">
         <div 
             class="input-display"
-            :class="{ '--active': isDropdownVisible, '--placeholder': !modelValue }"
+            :class="{ '--active': isDropdownVisible, '--placeholder': !modelValue,  '--disabled' : disabled }"
             @click="toggleDropdown"
             :style="{ width: selectWidth }"
             ref="triggerRef"
@@ -320,6 +324,13 @@ onUnmounted(() => {
 
     &.--placeholder {
         color: $gray-400; 
+    }
+
+    &.--disabled {
+        background-color: $gray-50;
+        color: $gray-700;
+        cursor: default;
+        pointer-events: none;
     }
 }
 

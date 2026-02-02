@@ -714,13 +714,28 @@ const handleViewChart = () => {
                     <div class="info-item">
                         <p class="label">예약 방문일</p>
                         <div class="d-flex gap-8" style="flex:2;">
-                            <CustomDatePicker ref="reserveDateRef" v-model="reserveDate" :range="false" />
+                            <CustomDatePicker 
+                                ref="reserveDateRef" 
+                                v-model="reserveDate" 
+                                :range="false" 
+                                :disabled="isCancelled"
+                            />
 
                             <!-- 시간 선택 ( 00: 00 ~ 00: 00) -->
                             <div class="d-flex align-center gap-4" style="flex:2;">
-                                <TimeSelect ref="startTimeRef" v-model="startTime" class="time-select-wrap"/>
+                                <TimeSelect 
+                                    ref="startTimeRef" 
+                                    v-model="startTime" 
+                                    class="time-select-wrap"
+                                    :disabled="isCancelled"
+                                />
                                 <span class="time-separator">-</span>
-                                <TimeSelect ref="endTimeRef" v-model="endTime" class="time-select-wrap"/>
+                                <TimeSelect 
+                                    ref="endTimeRef" 
+                                    v-model="endTime" 
+                                    class="time-select-wrap"
+                                    :disabled="isCancelled"
+                                />
                             </div>
                         </div>
                     </div>
@@ -734,6 +749,7 @@ const handleViewChart = () => {
                                 :options="doctorOptions"
                                 placeholder="담당의 선택"
                                 select-width="100%"
+                                :disabled="isCancelled"
                             />
                         </div>
                     </div>

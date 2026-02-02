@@ -32,6 +32,7 @@ const props = defineProps({
     },
     useLimit: { type: Boolean, default: false }, // 날짜 선택 기간 제한을 둘지 결정
     limitMonths: { type: Number, default: 3 }, // 몇 개월 전까지 제한할지 결정
+    disabled: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -143,14 +144,13 @@ const onDateUpdate = (val) => {
         
         <div 
             class="fake-input" 
-            :class="{ '--has-value': hasValue }"
+            :class="{ '--has-value': hasValue, '--disabled': disabled }"
             @click="openDatePicker"
         >
             <span class="display-text">{{ formatDisplay() }}</span>
 
             <div class="icon-area">
-                <img 
-                    v-if="!hasValue" 
+                <img  
                     :src="icCalendar" 
                     alt="달력 아이콘" 
                     class="icon icon--calendar"
@@ -182,6 +182,7 @@ const onDateUpdate = (val) => {
             :hide-input="true"
             :teleport-center="false"
             class="hidden-datepicker-instance"
+            :disabled="disabled"
             @update:model-value="onDateUpdate"
         >
             <template v-if="range" #action-row="{ selectDate, closeMenu }">
@@ -309,6 +310,11 @@ const onDateUpdate = (val) => {
     
     &.--has-value {
         color: $gray-900;
+    }
+    &.--disabled {
+        background-color: $gray-50;
+        color: $gray-700;
+        cursor: default;
     }
 }
 

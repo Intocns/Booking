@@ -174,7 +174,7 @@ onBeforeUnmount(() => {
 
         .select__box {
             background-color: $gray-50;
-            color: $gray-500;
+            color: $gray-700;
         }
     }
 
