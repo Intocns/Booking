@@ -103,12 +103,27 @@ const updatePosition = async () => {
         }
     }
 };
+
+// 스크롤 시 닫기
+const handleScroll = (e) => {
+    if (dropdownRef.value && dropdownRef.value.contains(e.target)) {
+        return;
+    }
+    if (isOpen.value) {
+        isOpen.value = false;
+    }
+};
+
 onMounted(() => {
     document.addEventListener("click", handleClickOutside, true);
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleScroll); 
 });
 
 onBeforeUnmount(() => {
     document.removeEventListener("click", handleClickOutside, true);
+    window.removeEventListener("scroll", handleScroll, true);
+    window.removeEventListener("resize", handleScroll);
 });
 </script>
 
