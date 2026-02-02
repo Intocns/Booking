@@ -90,9 +90,10 @@ const saveItemOption = (async() => {
             // 상품 노출설정 여부 체크
             modalStore.confirmModal.openModal({
                 title: '상품 노출 설정',
-                text: '옵션 설정이 완료되었습니다.\n상품을 예약받을 수 있도록 노출하시겠습니까?',
+                text: '상품이 정상적으로 등록 되었습니다.\n상품을 예약받을 수 있도록 노출하시겠습니까?',
                 confirmBtnText: '노출',
                 cancelBtnText: '미노출',
+                showCloseButton: true,
                 onConfirm: async () => {
                     // 상품 노출
                     await clickProductImpUpdateBtn(props.savedItemId, true);

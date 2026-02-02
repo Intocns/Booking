@@ -2,10 +2,12 @@
 <script setup>
 import icBtnCloseB from '@/assets/icons/ic_btn_close_b.svg'
 import { useModalStore } from '@/stores/modalStore';
-import { Transition } from 'vue';
+import { ref, Transition, computed } from 'vue';
 
 const modalStore = useModalStore();
 const modal = modalStore.confirmModal;
+
+const isCloseButtonVisible = computed(() => !!modal.data?.showCloseButton);
 
 const handleConfirm = () => {
     // store 데이터에 담긴 onConfirm 함수 실행
@@ -33,9 +35,9 @@ const handelCancel = () => {
                     <!-- 모달 헤더 -->
                     <div class="modal-header">
                         <p class="modal-header__title heading-s">{{ modal.data?.title }}</p>
-                        <!-- <button class="modal-close" @click="modal.closeModal()">
+                        <button v-if="isCloseButtonVisible" class="modal-close" @click="modal.closeModal()">
                             <img :src="icBtnCloseB" alt="닫기 버튼">
-                        </button> -->
+                        </button>
                     </div>
                     <div class="modal-contents">
                         <!-- 각 모달 별 콘텐츠 들어감 -->
