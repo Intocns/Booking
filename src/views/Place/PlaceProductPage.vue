@@ -102,7 +102,7 @@ const clickIntoPetImportBtn = (async () => {
 });
 // 인투펫 진료실 불러오기(선택한 진료실을 불러옴)
 const importIntoPetRoom = async() => {
-    if(!importIntoPetRoomIdx.value) {
+    if(importIntoPetRoomIdx.value === null) {
         showAlert('진료실을 선택해주세요.')
         return;
     }
