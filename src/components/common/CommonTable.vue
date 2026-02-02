@@ -18,6 +18,7 @@ const props = defineProps({
     tableTitleTooltip: {type: String, default: ''},
     tableEmptyBtnText : {type: String, default: ''},
     tableTotal: {type: [String, Number], default: null}, 
+    isClickAble: {type: Boolean, default: false}
 })
 
 //  에밋
@@ -56,7 +57,7 @@ const handleEmptyBtnClick = () => {
         </div>
 
         <!-- 리스트 수 -->
-        <div v-if="tableTotal" class="table-total body-l">전체: <span class="title-m">{{ tableTotal }}</span></div>
+        <div v-if="tableTotal" class="table-total body-l">전체 <span class="title-m">{{ tableTotal }}</span></div>
         
         <div class="table-wrapper">
             <table class="table">
@@ -86,8 +87,9 @@ const handleEmptyBtnClick = () => {
                         v-for="(row, rIndex) in rows" 
                         :key="rIndex" 
                         @click="$emit('row-click', row)" 
-                        :class="row.rowClass"
-                        style="cursor: pointer"
+                        :class="[row.rowClass,
+                            {'is-clickable' : isClickAble}
+                        ]"
                     >
                         <td
                             v-for="col in columns"
@@ -163,7 +165,10 @@ const handleEmptyBtnClick = () => {
 }
 
 .table-total {
+    color: $gray-700;
     margin-bottom: 10px;
+
+    .title-m {color: $gray-900;}
 }
 
 .table-wrapper {
@@ -227,6 +232,8 @@ const handleEmptyBtnClick = () => {
         &--canceled {
             td { color: $gray-400; }
         }
+
+        &.is-clickable {cursor: pointer;}
 
         // &:last-child td {border-bottom: none;}
     }
