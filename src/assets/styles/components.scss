@@ -590,9 +590,9 @@
 .dp__input_icon {display: none !important;}
 .dp__arrow_top {display: none;}
 
-.dp--menu-wrapper,
-.dp__menu,
-.dp__menu > div {width:240px !important; min-width: 240px !important;}
+// .dp--menu-wrapper,
+// .dp__menu,
+// .dp__menu > div {width:240px !important; min-width: 240px !important;}
 
 .dp__month_year_wrap .dp__month_year_wrap {flex-direction: row-reverse;} // 월 이동 버튼 자리 바꿈
 .dp__month_year_select { // 월, 년도 선택 버튼

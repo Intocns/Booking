@@ -104,7 +104,7 @@ const handleClose = () => {
 <template>
     <teleport to="#app">
         <div v-if="isModalOpen" class="modal-backdrop" @click="handleClose">
-            <div class="modal-container" @click.stop style="min-width: 240px;">
+            <div class="modal-container" @click.stop style="min-width: 250px;">
                 <div class="modal-header"></div>
                 <div class="modal-contents">
                     <div v-if="title" class="modal-header-custom">
@@ -209,7 +209,11 @@ const handleClose = () => {
 
         border-top: 1px solid $gray-200;
     }
+    :deep(.dp__outer_menu_wrap) {
+        min-width: 250px;
+    }
     :deep(.dp__menu) {
+        min-width: 250px !important;
         border-radius: 4px 4px 0 0;
         border: none;
     }
