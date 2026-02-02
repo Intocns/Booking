@@ -226,7 +226,7 @@ const saveAllData = async() => {
     }
     const params = {
         isRequestMessageUsed: requestMessageUsed.value, // '네/아니오' 라디오 버튼 값 (Computed getter 이용)
-        questionsList: questions.value, // 현재 화면에 표시된 질문 리스트 전체 (순서가 포함된 최신 상태)
+        questionList: questions.value, // 현재 화면에 표시된 질문 리스트 전체 (순서가 포함된 최신 상태)
     }
 
     // console.log(params);
