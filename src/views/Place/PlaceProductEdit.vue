@@ -15,7 +15,7 @@ import TimeSelect from '@/components/common/TimeSelect.vue';
 // 아이콘
 import icClear from '@/assets/icons/ic_clear.svg'
 // 
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { DayPilot } from '@daypilot/daypilot-lite-vue';
 // 스토어
@@ -34,6 +34,7 @@ const route = useRoute();
  */
 const currentTab = ref('basic'); // 상단 탭메뉴 상태 저장
 const itemId = ref(route.params.id); // 상품아이디
+const timeErrors = ref([]); // 각 시간 설정별 에러 메시지 저장
 
 // 예약 가능 동물 수 옵션 (임시 1~10)
 const animalCountOptions = Array.from({ length: 10 }, (_, i) => ({ label: String(i + 1), value: i + 1 }));
@@ -50,6 +51,13 @@ const previewData = reactive({
 /**
  * 진료가능 예약수, 운영시간 설정 모달 관련
  */
+
+ // 시간 비교 함수 (문자열 HH:mm 비교)
+const isTimeInvalid = (start, end) => {
+    if (!start || !end) return false;
+    return start >= end; // 시작 시간이 종료 시간보다 같거나 늦으면 true
+};
+
 // 모달 타이틀 선택한 날짜 보여줌
 const dynamicModalTitle = computed(() => {
     const data = modalStore.setOperationRuleModal.data;
@@ -80,12 +88,31 @@ const selectedDay = computed(() => {
 const addTimeSetting = () => {
     // data.times 배열에 새 객체 추가
     modalStore.setOperationRuleModal.data.times.push({ startTime: "", endTime: "" });
+    timeErrors.value.push("");
 };
 
 // 운영 시간 삭제 로직
 const removeTimeSetting = (index) => {
     modalStore.setOperationRuleModal.data.times.splice(index, 1);
 };
+
+// modalStore 내부의 times 배열
+watch(
+    () => modalStore.setOperationRuleModal.data?.times,
+    (newTimes) => {
+        if (!newTimes) return;
+        
+        // 각 시간 항목별로 검증 후 에러 메시지 할당
+        timeErrors.value = newTimes.map(time => {
+            if (isTimeInvalid(time.startTime, time.endTime)) {
+                return "마지막 시간은 시작 시간보다 빠를 수 없습니다.";
+            }
+            return "";
+        });
+    },
+    { deep: true }
+);
+
 
 // 저장 로직
 const handleModalSave = async () => {
@@ -94,6 +121,10 @@ const handleModalSave = async () => {
     // 유효성 검사
     if (!data.stock || data.stock <= 0) return showAlert("진료 가능 동물 수를 선택해주세요.");
     if (data.times.some(t => !t.startTime || !t.endTime)) return showAlert("운영시간을 모두 입력해주세요.");
+
+    if (timeErrors.value.some(msg => msg !== "")) {
+        return; // 에러 메시지가 있으면 저장 중단
+    }
 
     const params = {
         day: data.date,
@@ -217,20 +248,26 @@ const handleModalSave = async () => {
             <div style="min-height: 220px;margin-top: 32px;">
                 <!-- 시간 설정 -->
                 <div class="d-flex flex-col gap-16">
-                    <div v-for="(time, index) in modalStore.setOperationRuleModal.data.times" :key="index" class="set-time-item">
-                        <span class="title-s">시작</span>
-                        <TimeSelect v-model="time.startTime" />
-                        -
-                        <span class="title-s">마지막</span>
-                        <TimeSelect v-model="time.endTime" />
+                    <div v-for="(time, index) in modalStore.setOperationRuleModal.data.times" :key="index">
+                        <div class="set-time-item">
+                            <span class="title-s">시작</span>
+                            <TimeSelect v-model="time.startTime" :is-error="!!timeErrors[index]" />
+                            -
+                            <span class="title-s">마지막</span>
+                            <TimeSelect v-model="time.endTime" :is-error="!!timeErrors[index]" />
+    
+                            <!-- 삭제버튼 -->
+                            <button 
+                                v-if="index > 0" 
+                                class="btn-clear" 
+                                @click="removeTimeSetting(index)">
+                                <img :src="icClear" alt="삭제" />
+                            </button>
+                        </div>
 
-                        <!-- 삭제버튼 -->
-                        <button 
-                            v-if="index > 0" 
-                            class="btn-clear" 
-                            @click="removeTimeSetting(index)">
-                            <img :src="icClear" alt="삭제" />
-                        </button>
+                        <p v-if="timeErrors[index]" class="error-text">
+                            {{ timeErrors[index] }}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -289,5 +326,11 @@ const handleModalSave = async () => {
             right:-7px;
             top: -7px;
         }
+    }
+
+    .error-text {
+        color: $warning-500;
+        @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line);
+        padding: 5px 5px 0 0;
     }
 </style>

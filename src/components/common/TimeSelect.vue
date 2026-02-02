@@ -19,6 +19,10 @@ const props = defineProps({
     disabled: {
         type: Boolean,
         default: false,
+    },
+    isError: {
+        type: Boolean,
+        default: false,
     }
 });
 
@@ -195,7 +199,7 @@ onUnmounted(() => {
     <div class="custom-time-picker-wrapper" ref="wrapperRef">
         <div 
             class="input-display"
-            :class="{ '--active': isDropdownVisible, '--placeholder': !modelValue,  '--disabled' : disabled }"
+            :class="{ '--active': isDropdownVisible, '--placeholder': !modelValue,  '--disabled' : disabled, '--is-error': isError }"
             @click="toggleDropdown"
             :style="{ width: selectWidth }"
             ref="triggerRef"
@@ -331,6 +335,10 @@ onUnmounted(() => {
         color: $gray-700;
         cursor: default;
         pointer-events: none;
+    }
+
+    &.--is-error {
+        border-color: $warning-500;
     }
 }
 

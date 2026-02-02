@@ -197,7 +197,7 @@ const updateItemSchedule = (async(type) => {
         }
 
         if (!validateTimeRanges(allRanges)) {
-            showAlert('마감 시간은 시작 시간보다 이후여야 합니다.');
+            showAlert('마지막 시간은 시작 시간보다 빠를 수 없습니다.');
             return; // 저장 중단
         }
     }

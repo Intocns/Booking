@@ -6,6 +6,8 @@ import icPlus from '@/assets/icons/ic_plus_black.svg';
 import icPlusBlue from '@/assets/icons/ic_plus_blue.svg';
 import icDel from '@/assets/icons/ic_del.svg';
 import { watch, computed } from 'vue';
+import { getTimeError } from '@/utils/schedule';
+
 const props = defineProps({
     modelValue: Object,
     idx: { type: Number, default: 0 }
@@ -105,192 +107,210 @@ const getDisabledDays = (currentGIdx) => {
 
         <!-- 운영 시간 > 모든 영업일 동일 -->
         <div v-if="modelValue.operatingMode === 'all'" class="d-flex flex-col gap-8">
-            <div v-for="(time, tIdx) in modelValue.allDaysTime" :key="tIdx" class="d-flex align-center gap-8">
-                <!-- 시간 설정 영역 -->
+            <div v-for="(time, tIdx) in modelValue.allDaysTime" :key="tIdx">
                 <div class="d-flex align-center gap-8">
-                    <span class="title-s">시작</span>
-                    <TimeSelect v-model="time.startTime" select-width="94px" />
-                    -
-                    <span class="title-s">마지막</span>
-                    <TimeSelect v-model="time.endTime" select-width="94px" />
+                    <!-- 시간 설정 영역 -->
+                    <div class="d-flex align-center gap-8">
+                        <span class="title-s">시작</span>
+                        <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
+                        -
+                        <span class="title-s">마지막</span>
+                        <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
+                    </div>
+    
+                    <!-- 버튼 영역 -->
+                    <div class="d-flex align-center gap-8">
+                        <!-- 시간 추가 버튼 -->
+                        <button 
+                            v-if="tIdx === 0" 
+                            @click="addTimeRange(modelValue.allDaysTime)" 
+                            class="btn btn--size-24 btn--black-outline"
+                        >
+                            <img :src="icPlus" alt="아이콘">시간 추가
+                        </button>
+                        <!-- 삭제 버튼 -->
+                        <button 
+                            v-else 
+                            @click="removeTimeRange(modelValue.allDaysTime, tIdx)" 
+                            class="btn btn--size-24 btn--black-outline"
+                        >
+                            <img :src="icDel" width="14">삭제
+                        </button>
+                    </div>
                 </div>
 
-                <!-- 버튼 영역 -->
-                <div class="d-flex align-center gap-8">
-                    <!-- 시간 추가 버튼 -->
-                    <button 
-                        v-if="tIdx === 0" 
-                        @click="addTimeRange(modelValue.allDaysTime)" 
-                        class="btn btn--size-24 btn--black-outline"
-                    >
-                        <img :src="icPlus" alt="아이콘">시간 추가
-                    </button>
-                    <!-- 삭제 버튼 -->
-                    <button 
-                        v-else 
-                        @click="removeTimeRange(modelValue.allDaysTime, tIdx)" 
-                        class="btn btn--size-24 btn--black-outline"
-                    >
-                        <img :src="icDel" width="14">삭제
-                    </button>
-                </div>
-
+                <p v-if="getTimeError(time.startTime, time.endTime)" class="error-text">{{ getTimeError(time.startTime, time.endTime) }}</p>
             </div>
         </div>
 
         <!-- 운영 시간 > 평일/주말 운영 시간 구분 -->
         <div v-else-if="modelValue.operatingMode === 'split'" class="d-flex flex-col gap-8">
-            <div v-for="(time, tIdx) in modelValue.splitTime.weekday" :key="'wd'+tIdx" class="d-flex align-center gap-8">
-                <!-- 시간 설정 영역 -->
+            <div v-for="(time, tIdx) in modelValue.splitTime.weekday" :key="'wd'+tIdx">
                 <div class="d-flex align-center gap-8">
-                    <span class="title-s" style="width:90px;">
-                        <template v-if="tIdx === 0">평일(월~금)</template>
-                    </span>
-                    <span class="title-s">시작</span>
-                    <TimeSelect v-model="time.startTime" select-width="94px" />
-                    -
-                    <span class="title-s">마지막</span>
-                    <TimeSelect v-model="time.endTime" select-width="94px" />
+                    <!-- 시간 설정 영역 -->
+                    <div class="d-flex align-center gap-8">
+                        <span class="title-s" style="width:90px;">
+                            <template v-if="tIdx === 0">평일(월~금)</template>
+                        </span>
+                        <span class="title-s">시작</span>
+                        <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
+                        -
+                        <span class="title-s">마지막</span>
+                        <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
+                    </div>
+    
+                    <!-- 버튼 영역 -->
+                    <div class="d-flex gap-8">
+                        <!-- 시간 추가 버튼 -->
+                        <button 
+                            v-if="tIdx === 0" 
+                            @click="addTimeRange(modelValue.splitTime.weekday)" 
+                            class="btn btn--size-24 btn--black-outline"
+                        >
+                            <img :src="icPlus" alt="아이콘">시간 추가
+                        </button>
+                        <!-- 삭제 버튼 -->
+                        <button 
+                            v-else 
+                            @click="removeTimeRange(modelValue.splitTime.weekday, tIdx)" 
+                            class="btn btn--size-24 btn--black-outline"
+                        >
+                            <img :src="icDel" width="14">삭제
+                        </button>
+                    </div>
                 </div>
 
-                <!-- 버튼 영역 -->
-                <div class="d-flex gap-8">
-                    <!-- 시간 추가 버튼 -->
-                    <button 
-                        v-if="tIdx === 0" 
-                        @click="addTimeRange(modelValue.splitTime.weekday)" 
-                        class="btn btn--size-24 btn--black-outline"
-                    >
-                        <img :src="icPlus" alt="아이콘">시간 추가
-                    </button>
-                    <!-- 삭제 버튼 -->
-                    <button 
-                        v-else 
-                        @click="removeTimeRange(modelValue.splitTime.weekday, tIdx)" 
-                        class="btn btn--size-24 btn--black-outline"
-                    >
-                        <img :src="icDel" width="14">삭제
-                    </button>
-                </div>
+                <p v-if="getTimeError(time.startTime, time.endTime)" class="error-text">{{ getTimeError(time.startTime, time.endTime) }}</p>
             </div>
             
             <!-- 주말, 토/일 구분 영역 -->
             <!-- 주말 -->
             <template v-if="modelValue.splitMode === 'weekend_all'">
-                <div v-for="(time, tIdx) in modelValue.splitTime.weekend" :key="'we'+tIdx" class="d-flex align-center gap-8">
-                    <!-- 시간 설정 영역 -->
+                <div v-for="(time, tIdx) in modelValue.splitTime.weekend" :key="'we'+tIdx">
                     <div class="d-flex align-center gap-8">
-                        
-                        <div style="width:90px;">
-                            <CustomSingleSelect v-if="tIdx === 0" v-model="modelValue.splitMode" :options="weekendOptions" select-width="90px" />
+                        <!-- 시간 설정 영역 -->
+                        <div class="d-flex align-center gap-8">
+                            <div style="width:90px;">
+                                <CustomSingleSelect v-if="tIdx === 0" v-model="modelValue.splitMode" :options="weekendOptions" select-width="90px" />
+                            </div>
+                            <span class="title-s">시작</span>
+                            <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
+                            -
+                            <span class="title-s">마지막</span>
+                            <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
                         </div>
-                        <span class="title-s">시작</span>
-                        <TimeSelect v-model="time.startTime" select-width="94px" />
-                        -
-                        <span class="title-s">마지막</span>
-                        <TimeSelect v-model="time.endTime" select-width="94px" />
+    
+                        <!-- 버튼 영역 -->
+                        <div class="d-flex align-center gap-8">
+                            <!-- 시간 추가 버튼 -->
+                            <button 
+                                v-if="tIdx === 0" 
+                                @click="addTimeRange(modelValue.splitTime.weekend)" 
+                                class="btn btn--size-24 btn--black-outline"
+                            >
+                                <img :src="icPlus" alt="아이콘">시간 추가
+                            </button>
+                            <!-- 삭제 버튼 -->
+                            <button 
+                                v-else 
+                                @click="removeTimeRange(modelValue.splitTime.weekend, tIdx)" 
+                                class="btn btn--size-24 btn--black-outline"
+                            >
+                                <img :src="icDel" width="14">삭제
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- 버튼 영역 -->
-                    <div class="d-flex align-center gap-8">
-                        <!-- 시간 추가 버튼 -->
-                        <button 
-                            v-if="tIdx === 0" 
-                            @click="addTimeRange(modelValue.splitTime.weekend)" 
-                            class="btn btn--size-24 btn--black-outline"
-                        >
-                            <img :src="icPlus" alt="아이콘">시간 추가
-                        </button>
-                        <!-- 삭제 버튼 -->
-                        <button 
-                            v-else 
-                            @click="removeTimeRange(modelValue.splitTime.weekend, tIdx)" 
-                            class="btn btn--size-24 btn--black-outline"
-                        >
-                            <img :src="icDel" width="14">삭제
-                        </button>
-                    </div>
+                    <p v-if="getTimeError(time.startTime, time.endTime)" class="error-text">{{ getTimeError(time.startTime, time.endTime) }}</p>
                 </div>
             </template>
             <!-- 토/일 구분 -->
             <template v-else>
                 <!-- 토 -->
-                <div v-for="(time, tIdx) in modelValue.splitTime.sat" :key="'sat'+tIdx" class="d-flex align-center gap-8">
-                    <!-- 시간 설정 영역 -->
+                <div v-for="(time, tIdx) in modelValue.splitTime.sat" :key="'sat'+tIdx">
                     <div class="d-flex align-center gap-8">
-                        <div style="width:90px;">
-                            <CustomSingleSelect 
-                                v-if="tIdx === 0" 
-                                :model-value="'sat'" 
-                                :options="satOptions" 
-                                select-width="90px" 
-                                @update:modelValue="handleWeekendMerge"
-                            />
+                        <!-- 시간 설정 영역 -->
+                        <div class="d-flex align-center gap-8">
+                            <div style="width:90px;">
+                                <CustomSingleSelect 
+                                    v-if="tIdx === 0" 
+                                    :model-value="'sat'" 
+                                    :options="satOptions" 
+                                    select-width="90px" 
+                                    @update:modelValue="handleWeekendMerge"
+                                />
+                            </div>
+                            <span class="title-s">시작</span>
+                            <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
+                            - 
+                            <span class="title-s">마지막</span>
+                            <TimeSelect v-model="time.endTime":is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
                         </div>
-                        <span class="title-s">시작</span>
-                        <TimeSelect v-model="time.startTime" select-width="94px" />
-                        - 
-                        <span class="title-s">마지막</span>
-                        <TimeSelect v-model="time.endTime" select-width="94px" />
+    
+                        <!-- 버튼 영역 -->
+                        <div class="d-flex align-center gap-8">
+                            <!-- 시간 추가 버튼 -->
+                            <button 
+                                v-if="tIdx === 0" 
+                                @click="addTimeRange(modelValue.splitTime.sat)" 
+                                class="btn btn--size-24 btn--black-outline"
+                            >
+                                <img :src="icPlus" alt="아이콘">시간 추가
+                            </button>
+                            <!-- 삭제 버튼 -->
+                            <button 
+                                v-else 
+                                @click="removeTimeRange(modelValue.splitTime.sat, tIdx)" 
+                                class="btn btn--size-24 btn--black-outline"
+                            >
+                                <img :src="icDel" width="14">삭제
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- 버튼 영역 -->
-                    <div class="d-flex align-center gap-8">
-                        <!-- 시간 추가 버튼 -->
-                        <button 
-                            v-if="tIdx === 0" 
-                            @click="addTimeRange(modelValue.splitTime.sat)" 
-                            class="btn btn--size-24 btn--black-outline"
-                        >
-                            <img :src="icPlus" alt="아이콘">시간 추가
-                        </button>
-                        <!-- 삭제 버튼 -->
-                        <button 
-                            v-else 
-                            @click="removeTimeRange(modelValue.splitTime.sat, tIdx)" 
-                            class="btn btn--size-24 btn--black-outline"
-                        >
-                            <img :src="icDel" width="14">삭제
-                        </button>
-                    </div>
+                    <p v-if="getTimeError(time.startTime, time.endTime)" class="error-text">{{ getTimeError(time.startTime, time.endTime) }}</p>
                 </div>
                 <!-- 일 -->
-                <div v-for="(time, tIdx) in modelValue.splitTime.sun" :key="'sun'+tIdx" class="d-flex align-center gap-8">
-                    <!-- 시간 설정 영역 -->
+                <div v-for="(time, tIdx) in modelValue.splitTime.sun" :key="'sun'+tIdx">
                     <div class="d-flex align-center gap-8">
-                        <div style="width:90px;">
-                            <CustomSingleSelect 
-                                v-if="tIdx === 0" 
-                                :model-value="'sun'" 
-                                :options="sunOptions" 
-                                select-width="90px" 
-                                @update:modelValue="handleWeekendMerge" 
-                            />
+                        <!-- 시간 설정 영역 -->
+                        <div class="d-flex align-center gap-8">
+                            <div style="width:90px;">
+                                <CustomSingleSelect 
+                                    v-if="tIdx === 0" 
+                                    :model-value="'sun'" 
+                                    :options="sunOptions" 
+                                    select-width="90px" 
+                                    @update:modelValue="handleWeekendMerge" 
+                                />
+                            </div>
+                            <span class="title-s">시작</span>
+                            <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
+                            -
+                            <span class="title-s">마지막</span>
+                            <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
                         </div>
-                        <span class="title-s">시작</span>
-                        <TimeSelect v-model="time.startTime" select-width="94px" />
-                        -
-                        <span class="title-s">마지막</span>
-                        <TimeSelect v-model="time.endTime" select-width="94px" />
+    
+                        <!-- 버튼 영역 -->
+                        <div class="d-flex align-center gap-8">
+                            <button 
+                                v-if="tIdx === 0" 
+                                @click="addTimeRange(modelValue.splitTime.sun)" 
+                                class="btn btn--size-24 btn--black-outline"
+                            >
+                                <img :src="icPlus" alt="아이콘">시간 추가
+                            </button>
+                            <button 
+                                v-else 
+                                @click="removeTimeRange(modelValue.splitTime.sun, tIdx)" 
+                                class="btn btn--size-24 btn--black-outline"
+                            >
+                                <img :src="icDel" width="14">삭제
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- 버튼 영역 -->
-                    <div class="d-flex align-center gap-8">
-                        <button 
-                            v-if="tIdx === 0" 
-                            @click="addTimeRange(modelValue.splitTime.sun)" 
-                            class="btn btn--size-24 btn--black-outline"
-                        >
-                            <img :src="icPlus" alt="아이콘">시간 추가
-                        </button>
-                        <button 
-                            v-else 
-                            @click="removeTimeRange(modelValue.splitTime.sun, tIdx)" 
-                            class="btn btn--size-24 btn--black-outline"
-                        >
-                            <img :src="icDel" width="14">삭제
-                        </button>
-                    </div>
+                    <p v-if="getTimeError(time.startTime, time.endTime)" class="error-text">{{ getTimeError(time.startTime, time.endTime) }}</p>
                 </div>
             </template>
         </div>
@@ -327,43 +347,46 @@ const getDisabledDays = (currentGIdx) => {
 
                 <!-- 시간 설정 영역 -->
                 <div class="d-flex flex-col gap-8">
-                    <div v-for="(time, tIdx) in group.times" :key="tIdx" class="d-flex align-center gap-8">
-                        <!-- 시간 설정 영역 -->
+                    <div v-for="(time, tIdx) in group.times" :key="tIdx">
                         <div class="d-flex align-center gap-8">
-                            <span class="title-s">시작</span>
-                            <TimeSelect v-model="time.startTime" select-width="94px" />
-                            -
-                            <span class="title-s">마지막</span>
-                            <TimeSelect v-model="time.endTime" select-width="94px" />
-                        </div>
-    
-                        <!-- 버튼 영역 -->
-                        <div class="d-flex align-center gap-8">
-                            <button 
-                                v-if="tIdx === 0" 
-                                @click="addTimeRange(group.times)" 
-                                class="btn btn--size-24 btn--black-outline"
-                            >
-                                <img :src="icPlus" alt="아이콘">시간 추가
-                            </button>
+                            <!-- 시간 설정 영역 -->
+                            <div class="d-flex align-center gap-8">
+                                <span class="title-s">시작</span>
+                                <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
+                                -
+                                <span class="title-s">마지막</span>
+                                <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(time.startTime, time.endTime)" select-width="94px" />
+                            </div>
         
-                            <button 
-                                v-if="tIdx === 0 && gIdx > 0" 
-                                @click="removeDailyGroup(gIdx)" 
-                                class="btn btn--size-24 btn--black-outline"
-                            >
-                                <img :src="icDel" width="14">요일 삭제
-                            </button>
-        
-                            <button 
-                                v-if="tIdx > 0" 
-                                @click="removeTimeRange(group.times, tIdx)" 
-                                class="btn btn--size-24 btn--black-outline"
-                            >
-                                <img :src="icDel" width="14">삭제
-                            </button>
+                            <!-- 버튼 영역 -->
+                            <div class="d-flex align-center gap-8">
+                                <button 
+                                    v-if="tIdx === 0" 
+                                    @click="addTimeRange(group.times)" 
+                                    class="btn btn--size-24 btn--black-outline"
+                                >
+                                    <img :src="icPlus" alt="아이콘">시간 추가
+                                </button>
+            
+                                <button 
+                                    v-if="tIdx === 0 && gIdx > 0" 
+                                    @click="removeDailyGroup(gIdx)" 
+                                    class="btn btn--size-24 btn--black-outline"
+                                >
+                                    <img :src="icDel" width="14">요일 삭제
+                                </button>
+            
+                                <button 
+                                    v-if="tIdx > 0" 
+                                    @click="removeTimeRange(group.times, tIdx)" 
+                                    class="btn btn--size-24 btn--black-outline"
+                                >
+                                    <img :src="icDel" width="14">삭제
+                                </button>
+                            </div>
                         </div>
-    
+                        
+                        <p v-if="getTimeError(time.startTime, time.endTime)" class="error-text">{{ getTimeError(time.startTime, time.endTime) }}</p>
                     </div>
                 </div>
 
@@ -382,5 +405,11 @@ const getDisabledDays = (currentGIdx) => {
 
         border-radius: 5px;
         border: 1px solid $gray-200;
+    }
+    .error-text {
+        display: block;
+        color: $warning-500;
+        @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line);
+        padding: 5px 5px 0 0;
     }
 </style>

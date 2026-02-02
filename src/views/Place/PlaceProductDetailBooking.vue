@@ -19,6 +19,7 @@ import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
 import { useRouter } from 'vue-router';
 import { showAlert } from '@/utils/ui';
+import { validateTimeRanges } from '@/utils/common';
 
 const productStore = useProductStore();
 const modalStore = useModalStore();
@@ -139,6 +140,30 @@ const clickNextBtn = (async() => {
             return;
         }
     }
+
+    // --- 시간 유효성 검사 추가 ---
+    for (const config of configs.value) {
+        let allRanges = [];
+
+        if (config.operatingMode === 'all') {
+            allRanges = config.allDaysTime;
+        } else if (config.operatingMode === 'split') {
+            allRanges = [
+                ...config.splitTime.weekday,
+                ...config.splitTime.weekend,
+                ...config.splitTime.sat,
+                ...config.splitTime.sun
+            ];
+        } else if (config.operatingMode === 'daily') {
+            allRanges = config.dailyGroups.flatMap(g => g.times);
+        }
+
+        if (!validateTimeRanges(allRanges)) {
+            showAlert('마지막 시간은 시작 시간보다 빠를 수 없습니다.');
+            return; // 저장 중단
+        }
+    }
+    // --------------------------
 
     // 운영시간 설정 체크
     const isRegular = scheduleMode.value === 'regular';

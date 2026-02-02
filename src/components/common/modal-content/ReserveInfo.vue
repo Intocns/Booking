@@ -611,6 +611,24 @@ watch(startTime, (newStartTime) => {
     }
 });
 
+// 종료 시간 수동 변경 시 검증 (추가)
+watch(endTime, (newEnd) => {
+    if (!startTime.value || !newEnd) return;
+
+    const startMin = formatTimeToMinutes(startTime.value);
+    const endMin = formatTimeToMinutes(newEnd);
+
+    if (startMin !== null && endMin !== null && endMin <= startMin) {
+        showAlert('마지막 시간은 시작 시간보다 빠를 수 없습니다.');
+
+        // 값을 다시 시작 시간 +30분으로 강제 보정 
+        const correctedEnd = startMin + 30;
+        const h = Math.floor(correctedEnd / 60);
+        const m = correctedEnd % 60;
+        endTime.value = `${String(h % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+});
+
 // 차트보기 버튼 클릭 핸들러
 const handleViewChart = () => {
     if (singlePetData.value?.petSno) {

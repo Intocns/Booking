@@ -39,3 +39,13 @@ export const bitToTimeRanges = (bitString) => {
     // console.log(bitString, ranges);
     return ranges.length > 0 ? ranges : [{ startTime: '', endTime: '' }];
 };
+
+/**
+ * 시간 유효성 검사 함수
+ */
+export const getTimeError = (start, end) => {
+    if (!start || !end) return "";
+
+    if (start >= end) return "마지막 시간은 시작 시간보다 빠를 수 없습니다.";
+    return "";
+};
