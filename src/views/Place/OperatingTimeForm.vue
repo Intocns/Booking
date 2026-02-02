@@ -49,7 +49,7 @@ const sunOptions = [{ label: '일요일', value: 'sun' }, { label: '토,일 합�
 const addTimeRange = (arr) => arr.push({ startTime: '', endTime: '' });
 const removeTimeRange = (arr, i) => arr.splice(i, 1);
 
-const handleWeekendMerge = (val) => { if (val === 'merge') config.splitMode = 'weekend_all'; };
+const handleWeekendMerge = (val) => { if (val === 'merge') config.value.splitMode = 'weekend_all'; };
 
 const addDailyGroup = () => config.value.dailyGroups.push({ selectedDays: [], times: [{ startTime: '', endTime: '' }] });
 const removeDailyGroup = (i) => config.value.dailyGroups.splice(i, 1);
