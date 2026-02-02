@@ -60,12 +60,12 @@ const createDefaultConfig = () => ({
 });
 
 // [데이터] 이벤트 기간/설정용
-const eventDates = ref([[]]);
+const eventDates = ref([[new Date(), '']]);
 // 운영 설정 데이터 (하나로 관리)
 const configs = ref([createDefaultConfig()]);
 
 const addEventPeriod = () => {
-    eventDates.value.push([]);
+    eventDates.value.push([new Date(), '']);
     configs.value.push(createDefaultConfig());
 };
 

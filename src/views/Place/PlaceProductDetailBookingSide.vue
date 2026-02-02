@@ -62,7 +62,7 @@ const selectedAnimalCount = ref(null); // 예약 가능 동물 수 선택
 const isHolidayEnabled = ref(false); // 휴무일 설정 여부 (Toggle)
 const scheduleMode = ref('regular'); // 운영 일정 : 'regular', 'event'
 const applyMode = ref('all'); // 적용 기간 : 'all', 'period'
-const eventDates = ref([[]]); // 이벤트 기간/설정용
+const eventDates = ref([[new Date(), '']]); // 이벤트 기간/설정용
 
 const configs = ref([createDefaultConfig()]); // 운영 설정 데이터 (하나로 관리)
 const temporarySchedules = computed(() => productStore.temporarySchedules); //임시운영 데이터 스토어 직접참조
@@ -79,7 +79,7 @@ const settingType = ref(''); // 현재 어떤 설정을 하고 있는지 저장
 
 // 기간 추가 
 const addEventPeriod = () => {
-    eventDates.value.push([]);
+    eventDates.value.push([new Date(), '']);
     configs.value.push(createDefaultConfig());
 };
 // 기간 삭제
