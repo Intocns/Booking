@@ -119,6 +119,7 @@ const handleClose = () => {
                             :hide-input="true"
                             :time-config="{ enableTimePicker: false }"
                             :locale="ko"
+                            week-start="0"
                             :disabled-dates="disabledDates"
                         />
 

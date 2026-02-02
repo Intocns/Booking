@@ -177,6 +177,7 @@ const onDateUpdate = (val) => {
             :auto-apply="!range"
             partial-range
             :locale="ko"
+            week-start="0"
             :time-config="{ enableTimePicker: false }"
             :hide-input="true"
             :teleport-center="false"
