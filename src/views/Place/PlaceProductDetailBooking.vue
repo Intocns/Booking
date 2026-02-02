@@ -56,7 +56,7 @@ const createDefaultConfig = () => ({
         weekday: [{ startTime: '', endTime: '' }], weekend: [{ startTime: '', endTime: '' }],
         sat: [{ startTime: '', endTime: '' }], sun: [{ startTime: '', endTime: '' }]
     },
-    dailyGroups: [{ selectedDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], times: [{ startTime: '', endTime: '' }] }]
+    dailyGroups: [{ selectedDays: [], times: [{ startTime: '', endTime: '' }] }]
 });
 
 // [데이터] 이벤트 기간/설정용

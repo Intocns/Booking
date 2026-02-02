@@ -296,7 +296,7 @@ const getDisabledDays = (currentGIdx) => {
         </div>
 
         <!-- 운영 시간 > 요일별 설정 -->
-        <div v-else-if="modelValue.operatingMode === 'daily'" class="d-flex flex-col gap-16">
+        <div v-else-if="modelValue.operatingMode === 'daily'" class="d-flex flex-col gap-8">
             <!-- 요일 추가 버튼 -->
             <button 
                 type="button" 
@@ -375,7 +375,8 @@ const getDisabledDays = (currentGIdx) => {
 
 <style lang="scss" scoped>
     .add-item-btn {
-        width: 100%;
+        width: 255px;
+        padding: 0 20px;
         height: 32px;
         margin-bottom: 4px;
 

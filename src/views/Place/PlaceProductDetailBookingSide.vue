@@ -54,7 +54,7 @@ const createDefaultConfig = () => ({
         weekday: [{ startTime: '', endTime: '' }], weekend: [{ startTime: '', endTime: '' }],
         sat: [{ startTime: '', endTime: '' }], sun: [{ startTime: '', endTime: '' }]
     },
-    dailyGroups: [{ selectedDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], times: [{ startTime: '', endTime: '' }] }]
+    dailyGroups: [{ selectedDays: [], times: [{ startTime: '', endTime: '' }] }]
 });
 
 // 상태관리
