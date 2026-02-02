@@ -87,14 +87,21 @@ export const usePlaceStore = defineStore("place", () => {
         const response = await api.get('/api/{cocode}/question/list');
         const rawData = response.data.data;
 
-        questionList.value = rawData.questionList.map(q => ({
-            ...q,
-            // UI에서 바로 쓸 수 있게 매핑
-            uiQuestionOptions: q.options ? q.options.map(opt => ({
-                label: opt.optionName,
-                value: opt.optionIdx
-            })) : [],
-        }));
+        questionList.value = rawData.questionList.map(q => {
+            const sortedOptions = q.options 
+            ? [...q.options].sort((a, b) => a.optionOrder - b.optionOrder) 
+            : [];
+
+            return {
+                ...q,
+                options: sortedOptions,
+                // UI에서 바로 쓸 수 있게 매핑
+                uiQuestionOptions: sortedOptions.map(opt => ({
+                    label: opt.optionName,
+                    value: opt.optionIdx
+                }))
+            }
+        });
         isRequestMessageUsed.value = rawData.isRequestMessageUsed;
     }
 

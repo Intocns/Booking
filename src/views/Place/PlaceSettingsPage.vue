@@ -108,7 +108,7 @@ const currentTab = ref('operation'); // 탭 버튼
                                                 <label class="checkbox">
                                                     <input type="checkbox" />
                                                     <span class="box-naver"></span>
-                                                    <span class="label">{{ opt.optName }}</span>
+                                                    <span class="label">{{ opt.optionName }}</span>
                                                 </label>
                                             </li>
                                         </ul>

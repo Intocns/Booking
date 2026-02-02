@@ -123,20 +123,18 @@ const addOption = async() => {
 // 옵션 삭제
 const removeOption = (index) => newQuestion.options.splice(index, 1);
 
-// 답변 방식(type)이 변경될 때마다 초기화(필요없으면 삭제)
-watch(() => newQuestion.type, (newType) => {
-    if (newType === 'text') {
-        // 직접입력형일 경우 항목 자체가 필요 없으므로 빈 배열로 초기화
+// 답변 방식(type)이 변경될 때마다 초기화
+const handleTypeChange = (newType) => {
+    // 사용자가 UI에서 직접 타입을 바꿀 때만 호출되도록 변경
+    if (newType === 'TEXTAREA') {
         newQuestion.options = [];
     } else {
-        // 단수/복수 선택형일 경우 사용자가 입력할 수 있도록 기본 입력칸 1개 생성
-        newQuestion.options = [
-            { optionIdx: null, optionName: '', optionOrder: 1 } // 기본 구조
-        ]
+        // 이미 데이터가 채워져 있는 수정 모드라면 초기화하지 않음
+        if (newQuestion.options.length === 0 || !newQuestion.options[0].optionName) {
+            newQuestion.options = [{ optionIdx: null, optionName: '', optionOrder: 1 }];
+        }
     }
-
-});
-
+};
 // 질문 추가(단건) 저장 로직
 const saveQuestion = async() => {
     if (!newQuestion.title) return showAlert('질문을 입력하세요.');
@@ -199,7 +197,7 @@ watch(() => modalStore.addRequestModal.data, (newData) => {
         
         // 옵션 데이터 복사 (TEXTAREA가 아닐 경우)
         if (newData.options) {
-            newQuestion.options = newData.options.map(opt => opt.optionName);
+            newQuestion.options = newData.options.map(opt => ({ ...opt }));
         } else {
             newQuestion.options = [
                 { optionIdx: null, optionName: '', optionOrder: 1 } // 기본 구조
@@ -398,6 +396,7 @@ onMounted(() => {
                     <CustomSingleSelect
                         v-model="newQuestion.type" 
                         :options="answerTypes"
+                        @update:modelValue="handleTypeChange"
                     />
                 </div>
                 <div v-if="newQuestion.type !== 'TEXTAREA'" class="d-flex flex-col gap-8">
@@ -415,7 +414,8 @@ onMounted(() => {
                     <draggable
                         v-model="newQuestion.options"
                         item-key="optionOrder"
-                        handel=".option-drag-handel"
+                        handle=".option-drag-handle"
+                        :force-fallback="true" 
                         :animation="200"
                         tag="div"
                         class="d-flex flex-col gap-8"
@@ -424,7 +424,7 @@ onMounted(() => {
                             <div class="d-flex gap-4">
                                 <button
                                     v-if=" newQuestion.options.length > 1"
-                                    class="btn btn--size-32 btn--black-outline drag-handel"
+                                    class="btn btn--size-32 btn--black-outline option-drag-handle"
                                     style="cursor:grab;"
                                 >
                                     <img :src="icDragHandel" alt="드래그핸들">
