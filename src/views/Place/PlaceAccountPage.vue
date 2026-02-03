@@ -25,6 +25,7 @@ const hosIdx = ref(0);
 async function fetchAccountInfo() {
     try {
         const res = await api.get(`/api/linkbusiness/{cocode}`);
+        res = null; //TODO:임시로 오류 발생 시 빈 값 반환
         const body = res.data;
         const data = body?.data ?? body;
         if (!data || typeof data !== 'object') return;
