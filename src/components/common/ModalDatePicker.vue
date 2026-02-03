@@ -5,7 +5,7 @@ import { ko } from 'date-fns/locale'
 import { format, isBefore, startOfDay } from "date-fns";
 import { formatDate } from '@/utils/dateFormatter.js';
 
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue';
 // 아이콘
 import icBtnClose from '@/assets/icons/ic_btn_close_w.svg'
 
@@ -24,14 +24,30 @@ const emit = defineEmits(['close', 'add']);
 const selectedDate = ref(null); // 데이트피커 선택 값
 const repeatType = ref('DAILY'); // 'YEARLY', 'MONTHLY', 'DAILY'
 
-// 모달이 열릴 때 부모가 넘겨준 이전 날짜를 세팅합니다.
-watch(() => props.isModalOpen, (newVal) => {
+// 모달이 열릴 때 부모가 넘겨준 이전 날짜를 세팅
+watch(() => props.isModalOpen, async (newVal) => {
     if (newVal) {
-        // 부모에게서 받은 initialDate가 있다면 Date 객체로 변환해서 할당
+        // 기존 날짜 세팅 로직
         if (props.initialDate) {
             selectedDate.value = new Date(props.initialDate);
         } else {
-            selectedDate.value = null; // 없다면 비움
+            selectedDate.value = null;
+        }
+
+        // DOM이 렌더링된 후 휠 이벤트 차단
+        await nextTick();
+        const menu = document.querySelector('.dp__menu');
+        if (menu) {
+            menu.addEventListener('wheel', preventScroll, { 
+                passive: false, 
+                capture: true 
+            });
+        }
+    } else {
+        // 모달 닫힐 때 이벤트 제거
+        const menu = document.querySelector('.dp__menu');
+        if (menu) {
+            menu.removeEventListener('wheel', preventScroll, { capture: true });
         }
     }
 });
@@ -99,6 +115,23 @@ const handleClose = () => {
 //         selectedDate.value = new Date();
 //     }
 // });
+
+// 스크롤 방지 핸들러
+const preventScroll = (e) => {
+    // 월/년 선택 오버레이 내부 스크롤은 허용하기 위해
+    const isOverlay = e.target.closest('.dp__overlay');
+    if (!isOverlay) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+};
+
+onBeforeUnmount(() => {
+    const menu = document.querySelector('.dp__menu');
+    if (menu) {
+        menu.removeEventListener('wheel', preventScroll, { capture: true });
+    }
+});
 </script>
 
 <template>
