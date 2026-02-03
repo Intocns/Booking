@@ -419,23 +419,23 @@ defineExpose({ setSaveFormat, initFormData })//부모 화면에서 사용하기 
                 <div class="title-s">공휴일 휴무</div>
                 
                 <div class="d-flex gap-16 mb-8">
-                    <label class="radio">
+                    <label class="checkbox">
                         <input 
-                            type="radio" 
+                            type="checkbox" 
                             :checked="isAllChecked" 
                             @change="handleAllPublicHolidays" 
                         />
-                        <span class="circle"></span>
+                        <span class="box"></span>
                         <span class="label">전체 휴무</span>
                     </label>
     
-                    <label class="radio">
+                    <label class="checkbox">
                         <input 
-                            type="radio" 
+                            type="checkbox" 
                             :checked="isHolidayOnlyChecked" 
                             @change="handleHolidayOnly" 
                         />
-                        <span class="circle"></span>
+                        <span class="box"></span>
                         <span class="label">설, 추석 당일만 휴무</span>
                     </label>
                 </div> 
