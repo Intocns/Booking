@@ -22,11 +22,13 @@ import { useNoticeStore } from '@/stores/noticeStore'
 import { storeToRefs } from 'pinia'
 import { formatCount } from '@/utils/countFormatter'
 import { formatDateDot } from '@/utils/dateFormatter'
+import { useTalkSmsStore } from '@/stores/talkSmsStore';
 
 // 스토어
 import { useModalStore } from '@/stores/modalStore'
 
 const modalStore = useModalStore();
+const talkSmsStore = useTalkSmsStore();
 
 const todayDate = ref(''); // 오늘 날짜 저장
 
@@ -40,6 +42,29 @@ const noticeStore = useNoticeStore();
 
 // storeToRefs를 사용하여 reserveCount를 반응형 ref로 가져옴
 const { reserveCount: count } = storeToRefs(reservationStore); // 'count'라는 이름으로 사용
+
+// SMS 모달 컴포넌트 ref 및 선택된 예약 데이터
+const sendSmsTalkRef = ref(null);
+const selectedReservation = ref(null);
+
+// 문자 발송 모달 열기
+const openSmsModal = (row) => {
+    // row 객체 전체를 전달하고 필요한 필드만 추가 매핑
+    selectedReservation.value = {
+        ...row, // row 객체의 모든 필드 포함
+        petName: row?.petName,
+        reservationDate: row?.reTimeTxt,
+        reservationTime: row?.reTimeHisTxt,
+        productName: row?.roomName,
+        hospitalPhone: row?.hospitalPhone, //TODO: cocode 기반 실제 병원명으로 교체
+        phoneTxt: row?.phoneTxt, // 수신번호용 전화번호
+        protectorName: row?.userName, // 고객명
+        visitSource: row?.reRouteTxt, // 예약경로 텍스트
+        visitSourceText: '', // 방문경로(기타일 경우 text 입력 값)
+    };
+
+    modalStore.smsModal.openModal();
+};
 
 // 대기중인 예약 테이블 col 정의
 const columns = [
@@ -92,6 +117,9 @@ onMounted(() => {
 
     // 공지사항 리스트 가져오기
     noticeStore.getNoticeList();
+
+    //템플릿 정보
+    talkSmsStore.preloadTemplatesAndPoint();
 
     todayDate.value = getTodayDate();
 })
@@ -208,7 +236,7 @@ onMounted(() => {
                 <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row.idx)">
                     상세
                 </button>
-                <button class="btn btn--size-24 btn--black-outline" @click="modalStore.smsModal.openModal()">
+                <button class="btn btn--size-24 btn--black-outline" @click="openSmsModal(row)">
                     <img :src="icSms" alt="SMS">
                 </button>
             </template>
@@ -265,10 +293,10 @@ onMounted(() => {
     <Modal 
         v-if="modalStore.smsModal.isVisible"
         size="s"
-        title="문자 발송"
+        title="알림톡/SMS 발송"
         :modalState="modalStore.smsModal"
     >
-        <SendSmsTalk />
+        <SendSmsTalk ref="sendSmsTalkRef" :reservationData="selectedReservation" />
     </Modal>
 </template>
 
