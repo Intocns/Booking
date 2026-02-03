@@ -195,6 +195,7 @@ const onClose = () => {
         
         <!-- :range="range" 로 수정해놓음 -->
         <VueDatePicker
+            :key="range"
             ref="dpRef"
             v-model="dateRange"
             :range="range"
