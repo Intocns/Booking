@@ -192,7 +192,7 @@ watch(() => modalStore.addRequestModal.data, (newData) => {
         newQuestion.questionIdx = newData.questionIdx; // 수정 시 필요
         newQuestion.title = newData.questionTitle;
         newQuestion.type = newData.questionType;
-        newQuestion.isRequired = newData.questionRequiredFlag;
+        newQuestion.isRequired = newData.questionRequiredFlag == 1;
         newQuestion.questionOrder = newData.questionOrder;
         
         // 옵션 데이터 복사 (TEXTAREA가 아닐 경우)
