@@ -179,6 +179,12 @@ const saveTimeSetting = () => {
  */
 // 상품 수정 >> 일정 설정 >> 예약 정보 저장(예약일정)
 const updateItemSchedule = (async(type) => {
+    // 동물 수 미선택 체크
+    if (!selectedAnimalCount.value) {
+        showAlert("예약 가능 동물 수를 선택해주세요.");
+        return;
+    }
+    
     // --- 시간 유효성 검사 추가 ---
     for (const config of configs.value) {
         let allRanges = [];
