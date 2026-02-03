@@ -12,9 +12,9 @@ export const DAYS_OPTIONS = [
 // 공휴일 데이터
 export const PUBLIC_HOLIDAYS_OPTIONS = [
     { label: '신정', value: 0 },
-    { label: '설날 전날', value: 1, apiValue: '설날 연휴1' },
+    { label: '설날 전날', value: 1, apiValue: '설 연휴1' },
     { label: '설날 당일', value: 2 },
-    { label: '설날 다음날', value: 3, apiValue: '설날 연휴2' },
+    { label: '설날 다음날', value: 3, apiValue: '설 연휴2' },
     { label: '삼일절', value: 4 },
     { label: '석가탄신일', value: 5 },
     { label: '어린이날', value: 6 },

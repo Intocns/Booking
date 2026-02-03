@@ -525,12 +525,14 @@ const mapImposConfig = (impos) => {
     let pubText = '';
 
     if (hoDay.length > 0) {
-        PUBLIC_HOLIDAYS_OPTIONS.forEach(opt => {
-            if (hoDay.includes(opt.apiValue || opt.label)) {
-                pubText += (pubText ? ', ' : '') + opt.label;
-            }
+        const mappedLabels = hoDay.map(serverVal => {
+            // 옵션 리스트에서 apiValue 또는 label이 서버값과 일치하는 항목 찾기
+            const matchedOpt = PUBLIC_HOLIDAYS_OPTIONS.find(opt => 
+                opt.apiValue === serverVal || opt.label === serverVal
+            );
+            return matchedOpt ? matchedOpt.label : serverVal;
         });
-        pubText = hoDay.join(', ');
+        pubText = mappedLabels.join(', ');
     }
 
     // 3. 그외 휴무일(spDay) 처리
