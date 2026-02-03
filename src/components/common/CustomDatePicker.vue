@@ -4,7 +4,7 @@ import { ko } from 'date-fns/locale'
 import { startOfDay, startOfToday, subDays, subMonths } from "date-fns";
 import { formatDate } from '@/utils/dateFormatter.js';
 
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 
 import icCalendar from '@/assets/icons/ic_calendar.svg'
 import icClear from '@/assets/icons/ic_clear.svg'
@@ -137,6 +137,32 @@ const onDateUpdate = (val) => {
         dpRef.value?.closeMenu();
     }
 };
+
+const preventScroll = (e) => {
+    const isOverlay = e.target.closest('.dp__overlay');
+    if (!isOverlay) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+};
+
+const onOpen = () => {
+    nextTick(() => {
+        // 캘린더 전체 팝업 요소를 찾습니다.
+        const menu = document.querySelector('.dp__menu');
+        if (menu) {
+            // capture: true를 주면 라이브러리 내부 로직보다 우리가 먼저 이벤트를 뺏어옵니다.
+            menu.addEventListener('wheel', preventScroll, { passive: false, capture: true });
+        }
+    });
+};
+
+const onClose = () => {
+    const menu = document.querySelector('.dp__menu');
+    if (menu) {
+        menu.removeEventListener('wheel', preventScroll, { capture: true });
+    }
+};
 </script>
 
 <template>
@@ -184,6 +210,8 @@ const onDateUpdate = (val) => {
             class="hidden-datepicker-instance"
             :disabled="disabled"
             @update:model-value="onDateUpdate"
+            @open="onOpen" 
+            @closed="onClose"
         >
             <template v-if="range" #action-row="{ selectDate, closeMenu }">
                 <button class="btn btn--size-24 btn--black-outline" @click="dpRef && dpRef.closeMenu()">취소</button>
