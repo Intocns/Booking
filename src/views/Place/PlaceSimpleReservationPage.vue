@@ -201,16 +201,33 @@ const handleAllStatusChange = async (bizItemId, status) => {
     
     if (!schedule) return;
 
-    // 전체를 '1'로 채우거나 '0'으로 채움
-    const newBitArray = new Array(48).fill(status === 'all-open' ? '1' : '0');
-    
+    const newBitArray = new Array(48).fill('0'); // 배열 하나 초기화
+
+    // 운영 시간(startTime, endTime)을 인덱스로 변환
+    const getIndex = (timeStr) => {
+        if (!timeStr) return 0;
+        const [h, m] = timeStr.split(':').map(Number);
+        return (h * 60 + m) / 30;
+    };
+
+    const startIndex = getIndex(schedule.startTime || "00:00");
+    const endIndex = getIndex(schedule.endTime || "24:00");
+
+    if (status === 'all-open') { // 전체 가능 > 운영 시간 내의 bit값을 1로
+        for (let i = startIndex; i < endIndex; i++) {
+            if (i >= 0 && i < 48) {
+                newBitArray[i] = '1';
+            }
+        }
+    }
+
     await updateScheduleBit(
         bizItemId, 
         day, 
         newBitArray, 
         schedule.startTime || "00:00", 
         schedule.endTime || "24:00", 
-        schedule.scheduleId
+        // schedule.scheduleId
     );
 };
 
