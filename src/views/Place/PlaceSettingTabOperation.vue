@@ -12,7 +12,7 @@ import toggleOff from '@/assets/icons/toggle_off.svg'
 import imgPlaceOpen from '@/assets/images/img_place_open_preview.png'
 import imgPlaceClose from '@/assets/images/img_place_closed_preview.png'
 
-import { onMounted, ref, reactive, watch, onBeforeUnmount } from 'vue';
+import { onMounted, ref, reactive, watch, onBeforeUnmount, computed } from 'vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { usePlaceStore } from '@/stores/placeStore';
@@ -36,6 +36,21 @@ const todayReserveTimeOptions = [
 ];
 // 선택된 값을 저장할 변수
 const selectedTime = ref('');
+
+// 선택된 시간에 따른 동적 캡션 문구
+const dynamicCaption = computed(() => {
+    const timeMap = {
+        '0': '오후 5시', // 이전까지 (0시간 전)
+        '1': '오후 4시', // 1시간 전
+        '2': '오후 3시', // 2시간 전
+        '3': '오후 2시', // 3시간 전
+    };
+
+    // 선택된 값에 맞는 시간을 가져오고, 없으면 기본값 설정
+    const targetTime = timeMap[selectedTime.value] || '오후 4시';
+    
+    return `[예시] 이용시간이 오후 5시인 경우, ${targetTime}까지 예약 가능`;
+});
 
 // 예약 받기 토글
 const handleToggleAcceptance = async() => {
@@ -194,7 +209,7 @@ onBeforeUnmount(() => {
                             <span class="body-m">까지 예약을 받습니다.</span>
                         </div>
                         <p class="setting-item__caption caption"> 
-                            [예시] 이용시간이 오후 5시인 경우, 오후 4시까지 예약 가능
+                            {{ dynamicCaption }}
                         </p>
                     </template>
     
