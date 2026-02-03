@@ -1,7 +1,7 @@
 <script setup>
 import { VueDatePicker } from '@vuepic/vue-datepicker';
 import { ko } from 'date-fns/locale'
-import { startOfDay, startOfToday, subDays, subMonths } from "date-fns";
+import { startOfDay, startOfToday, subDays, subMonths, addDays } from "date-fns";
 import { formatDate } from '@/utils/dateFormatter.js';
 
 import { ref, computed, nextTick } from 'vue';
@@ -13,10 +13,10 @@ const props = defineProps({
     modelValue: {
         // 단일 날짜: Date | null, 범위: Date[] | null
         type: [Array, Date, null], 
-        // 기본값: range=true일 경우 7일 전 ~ 오늘, range=false일 경우 null (단일 날짜)
+        // 기본값: range=true일 경우 오늘 ~ 7일 후, range=false일 경우 null (단일 날짜)
         default: (props) => props.range 
-            ? [subDays(startOfDay(new Date()), 7), startOfDay(new Date())]
-            : null,
+            ? [startOfDay(new Date()), addDays(startOfDay(new Date()), 7)]
+            : startOfDay(new Date()),
     },
     range: { // 날짜 단일 선택이 아닌 기간 선택
         type: Boolean,

@@ -51,8 +51,8 @@ const setRange = (days) => {
         end = today;
     } else {
         const d = days === '30' ? 30 : Number(days); // 1개월 처리
-        start = subDays(today, d);
-        end = today;
+        start = today;
+        end = addDays(today, d);
     }
 
     // isRange 값에 따라 배열 혹은 단일 객체로 전송
@@ -118,10 +118,10 @@ const activeQuick = computed(() => {
     if (!start || !end) return null;
     
     // 종료일이 오늘인지 확인 (오늘 기준 빠른 선택일 경우)
-    const isEndToday = startOfDay(new Date(end)).getTime() === today.getTime();
-    if (!isEndToday) return null;
+    const isStartToday = startOfDay(new Date(start)).getTime() === today.getTime();
+    if (!isStartToday) return null;
 
-    const diff = differenceInDays(today, startOfDay(new Date(start)));
+    const diff = differenceInDays(startOfDay(new Date(end)), today);
     if (diff === 0) return 'today';
     if (diff === 7) return '7';
     if (diff === 15) return '15';
