@@ -76,10 +76,12 @@ const reserveSummary = computed(() => {
         }
     });
 
-    return Object.keys(RESERVE_ROUTE_MAP).map(key => ({
-        label: RESERVE_ROUTE_MAP[key],
-        value: String(counts[key]).padStart(2, '0'),
-    }));
+    return Object.keys(RESERVE_ROUTE_MAP)
+        .filter(key => key !== '1') // '1'번 키를 제외하는 필터 추가 (intoVetGe는 대기 예약이 없어서 제외함)
+        .map(key => ({
+            label: RESERVE_ROUTE_MAP[key],
+            value: String(counts[key]).padStart(2, '0'),
+        }));
 });
 
 // 필터 값 변환 헬퍼 함수 ('all'이 포함되어 있으면 null로 변환)
