@@ -67,7 +67,7 @@ const handleApply = async() => {
                 "name": item.name,
                 "selectionTypeCode": item.selectionTypeCode, //NUMBER, CHECK
                 "categoryId": item.categoryId,
-                "useFlag": item.use_flag, //1:수정일 시, 0:삭제일 시
+                "useFlag": item.useFlag, //1:수정일 시, 0:삭제일 시
                 "idx": item.idx,
                 "order": item.order
         })
