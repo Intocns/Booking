@@ -574,6 +574,13 @@ const openHolidayModal = async () => {
     }, 100);
 };
 
+const handleToggleChange = (event) => {
+    // 체크박스가 체크된 상태(on)일 때만 모달 열기
+    if (event.target.checked) {
+        openHolidayModal();
+    }
+};
+
 // 데이터 매핑 함수
 const initDataMapping = async () => {
     // API 호출 
@@ -807,7 +814,7 @@ onMounted(async() => {
                     <div class="form-content">
                         <div class="d-flex align-center justify-between">
                             <label class="toggle">
-                                <input type="checkbox" v-model="isHolidayEnabled" />
+                                <input type="checkbox" v-model="isHolidayEnabled" @change="handleToggleChange" />
                                 <span class="toggle-img"></span>
                             </label>
                             <button 
