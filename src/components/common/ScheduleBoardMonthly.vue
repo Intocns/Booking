@@ -146,6 +146,14 @@ const config = ref({
     },
 
     onBeforeCellRender: (args) => {
+        // 셀 헤더 표시 수정 (1일의 'n월 1일'에서 월 제거)
+        let header = args.cell.properties.headerHtml || "";
+
+        if (header.includes("월")) {
+            const parts = header.split("월");
+            args.cell.properties.headerHtml = parts[1].trim();
+        }
+
         // 기준이 되는 달 (props.startDate 기준)
         const currentMonth = new DayPilot.Date(props.startDate).getMonth();
         const cellMonth = args.cell.start.getMonth();
