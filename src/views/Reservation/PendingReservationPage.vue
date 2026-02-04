@@ -165,8 +165,8 @@ onMounted(() => {
                 </template>
                 <!-- 버튼 -->
                 <template #actions="{ row, rowIndex }">
-                    <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row)">상세</button>
-                    <button class="btn btn--size-24 btn--black-outline" @click="openSmsModal(row)"><img :src="icSms" alt="SMS"></button>
+                    <button class="btn btn--size-24 btn--black-outline" @click.stop="handelReserveDetail(row)">상세</button>
+                    <button class="btn btn--size-24 btn--black-outline" @click.stop="openSmsModal(row)"><img :src="icSms" alt="SMS"></button>
                 </template>
     
             </CommonTable>
