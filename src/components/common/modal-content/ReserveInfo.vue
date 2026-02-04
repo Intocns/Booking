@@ -850,99 +850,110 @@ const handleViewChart = () => {
                 </div>
 
                 <div class="info-lists-wrapper">
-                    <!-- 고객 정보 (왼쪽) - 테이블 형태 -->
-                    <ul class="form-container">
-                        <li class="form-item">
-                            <div class="form-label">고객번호</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singleCustomerData?.userNo || '' }}</span>
-                            </div>
-                        </li>
-                        <li class="form-item">
-                            <div class="form-label">고객명</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singleCustomerData?.userName || '' }}</span>
-                            </div>
-                        </li>
-                        <li class="form-item">
-                            <div class="form-label">연락처</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singleCustomerData?.userTel || '' }}</span>
-
-                            </div>
-                        </li>
-                        <li class="form-item">
-                            <div class="form-label">주소</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singleCustomerData?.userAddr || '' }}</span>
-                            </div>
-                        </li>
-                        <li class="form-item">
-                            <div class="form-label">상세주소</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singleCustomerData?.userAddr2 || '' }}</span>
-                            </div>
-                        </li>
-                    </ul>
-
-                    <!-- 동물 정보 (오른쪽) - 2열 테이블 형태 -->
-                    <ul class="form-container">
-                        <li class="form-item">
-                            <div class="form-label">동물번호</div>
-                            <div class="form-content">
-                                <div class="d-flex align-center justify-between">
-                                    <span class="body-s">{{ singlePetData?.petSno || '' }}</span>
-
-                                    <button class="btn btn--size-24 btn--black-outline" @click="handleViewChart">차트보기</button>
+                    <div class="d-flex flex-col gap-6" style="flex:1;">
+                        <div class="d-flex align-center" style="height: 24px;">
+                            <p class="title-s">고객정보</p>
+                        </div>
+                        <!-- 고객 정보 (왼쪽) - 테이블 형태 -->
+                        <ul class="form-container">
+                            <li class="form-item">
+                                <div class="form-label">고객번호</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singleCustomerData?.userNo || '' }}</span>
                                 </div>
-                            </div>
-                            <div class="form-label" style="width:92px;">체중</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.petBw ? `${singlePetData.petBw}kg` : '' }}</span>
-                            </div>
-                        </li>
+                            </li>
+                            <li class="form-item">
+                                <div class="form-label">고객명</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singleCustomerData?.userName || '' }}</span>
+                                </div>
+                            </li>
+                            <li class="form-item">
+                                <div class="form-label">연락처</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singleCustomerData?.userTel || '' }}</span>
+    
+                                </div>
+                            </li>
+                            <li class="form-item">
+                                <div class="form-label">주소</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singleCustomerData?.userAddr || '' }}</span>
+                                </div>
+                            </li>
+                            <li class="form-item">
+                                <div class="form-label">상세주소</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singleCustomerData?.userAddr2 || '' }}</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
 
-                        <li class="form-item">
-                            <div class="form-label">동물이름</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.petName || '' }}</span>
-                            </div>
-                            <div class="form-label" style="width:92px;">동물등록번호</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.rfid ? singlePetData.rfid : '-' }}</span>
-                            </div>
-                        </li>
-                        <li class="form-item">
-                            <div class="form-label">종</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.speciesName || '' }}</span>
-                            </div>
-                            <div class="form-label" style="width:92px;">등록일</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.petInsertDate ? formatDateDot(singlePetData.petInsertDate) : '' }}</span>
-                            </div>
-                        </li>
-                        <li class="form-item">
-                            <div class="form-label">품종</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.breedName || '' }}</span>
-                            </div>
-                            <div class="form-label" style="width:92px;">최근방문일</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.lastVisitDate ? formatDateDot(singlePetData.lastVisitDate) : '' }}</span>
-                            </div>
-                        </li>
-                        <li class="form-item">
-                            <div class="form-label">성별</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.sex ? (PET_GENDER_MAP[singlePetData.sex] || '') : '' }}</span>
-                            </div>
-                            <div class="form-label" style="width:92px;">담당의사</div>
-                            <div class="form-content">
-                                <span class="body-s">{{ singlePetData?.petDoctor || '' }}</span>
-                            </div>
-                        </li>
-                    </ul>
+                    <div class="d-flex flex-col gap-6" style="flex:1;">
+                        <!-- 동물 정보 (오른쪽) - 2열 테이블 형태 -->
+                        <div class="d-flex align-center justify-between">
+                            <p class="title-s">동물 정보</p>
+                            <button class="btn btn--size-24 btn--black-outline" @click="unmatchCustomer">매칭해제</button>
+                        </div>
+                        <ul class="form-container">
+                            <li class="form-item">
+                                <div class="form-label">동물번호</div>
+                                <div class="form-content">
+                                    <div class="d-flex align-center justify-between">
+                                        <span class="body-s">{{ singlePetData?.petSno || '' }}</span>
+    
+                                        <button class="btn btn--size-24 btn--black-outline" @click="handleViewChart">차트보기</button>
+                                    </div>
+                                </div>
+                                <div class="form-label" style="width:92px;">체중</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singlePetData?.petBw ? `${singlePetData.petBw}kg` : '' }}</span>
+                                </div>
+                            </li>
+    
+                            <li class="form-item">
+                                <div class="form-label">동물이름</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singlePetData?.petName || '' }}</span>
+                                </div>
+                                <div class="form-label" style="width:92px;">동물등록번호</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singlePetData?.rfid ? singlePetData.rfid : '-' }}</span>
+                                </div>
+                            </li>
+                            <li class="form-item">
+                                <div class="form-label">종</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singlePetData?.speciesName || '' }}</span>
+                                </div>
+                                <div class="form-label" style="width:92px;">등록일</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singlePetData?.petInsertDate ? formatDateDot(singlePetData.petInsertDate) : '' }}</span>
+                                </div>
+                            </li>
+                            <li class="form-item">
+                                <div class="form-label">품종</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singlePetData?.breedName || '' }}</span>
+                                </div>
+                                <div class="form-label" style="width:92px;">최근방문일</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singlePetData?.lastVisitDate ? formatDateDot(singlePetData.lastVisitDate) : '' }}</span>
+                                </div>
+                            </li>
+                            <li class="form-item">
+                                <div class="form-label">성별</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singlePetData?.sex ? (PET_GENDER_MAP[singlePetData.sex] || '') : '' }}</span>
+                                </div>
+                                <div class="form-label" style="width:92px;">담당의사</div>
+                                <div class="form-content">
+                                    <span class="body-s">{{ singlePetData?.petDoctor || '' }}</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </template>
 
@@ -981,8 +992,7 @@ const handleViewChart = () => {
                         <!-- 고객매칭 버튼 슬롯 -->
                         <template #action="{ row, rowIndex }">
                             <button 
-                                class="btn btn--size-24"
-                                :class="row.isMatched ? 'btn--blue' : 'btn--black-outline'"
+                                class="btn btn--size-24 btn--black-outline"
                                 @click.stop="toggleCustomerMatch(row)"
                             >
                                 {{ row.isMatched ? '고객매칭 해제' : '고객매칭' }}
@@ -1111,7 +1121,9 @@ const handleViewChart = () => {
     .modal-contents-inner {
         display: flex;
         flex-direction: column;
-        gap: 16px; // 24px -> 16px로 줄임
+        gap: 8px; // 24px -> 16px로 줄임
+        padding: 28px 32px;
+        padding-bottom: 18px;
 
         flex-grow: 1;
         // overflow: hidden; // 전체 스크롤 제거
@@ -1137,8 +1149,8 @@ const handleViewChart = () => {
         flex:1;
         display: flex;
         flex-direction: column;
-        gap: 6px; // 8px -> 6px로 줄임
-        padding: 14px 12px; // 20px 16px -> 16px 12px로 줄임
+        gap: 5px;
+        padding: 12px; // 20px 16px -> 16px 12px로 줄임
 
         border-radius: 8px;
         border: 1px solid $gray-200;
@@ -1167,8 +1179,12 @@ const handleViewChart = () => {
         }
     }
 
-    :deep(.dp__input_wrap) {height: 32px !important;}
-    :deep(.dp__input) {height: 32px !important;}
+    :deep(.dp__input_wrap) {height: 30px !important;}
+    :deep(.dp__input) {height: 30px !important;}
+    :deep(.fake-input) {height: 30px !important;}
+    :deep(.select__box) {height: 30px !important;}
+    :deep(.input-text-box) {height: 30px;}
+    :deep(.input-display) {height: 30px;}
 
     .select-wrapper {
         flex: 1;
@@ -1184,12 +1200,21 @@ const handleViewChart = () => {
         overflow: hidden;
         min-height: 200px; // 최소 2명의 고객 정보가 보이도록 최소 높이 설정 (헤더 40px + 행 2개 72px + 여유공간)
 
-        // .info-lists-wrapper {
-        //     padding: 16px 12px;
+        .info-lists-wrapper {
+            padding: 12px;
+            overflow-y: visible;
 
-        //     border: 1px solid $gray-200;
-        //     border-radius: 8px;
-        // }
+            border: 1px solid $gray-200;
+            border-radius: 8px;
+
+            .form-container {
+                overflow-y: visible;
+                li {
+                    min-height: 30px;
+                    height: 30px;
+                }
+            }
+        }
     }
 
     .customer-info-table-wrapper { 
