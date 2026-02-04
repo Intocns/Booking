@@ -3,6 +3,7 @@
 import icTooltip from '@/assets/icons/ic_tooltip.svg'
 import icEmpty from '@/assets/icons/ic_empty.svg'
 import TalkPreview from '../TalkPreview.vue';
+import icSms from '@/assets/icons/ic_sms.svg'
 
 import { ref, computed, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
@@ -331,8 +332,14 @@ defineExpose({
                         v-if="smsRemainingCount !== null"
                         @click="getSmsPointInfo"
                     >
-                        <span class="body-m">잔여건수: </span>
-                        <span class="body-m count-value">{{ smsRemainingCount.toLocaleString() }}건</span>
+                        <span class="title-s d-flex gap-4">
+                            <img :src="icSms" alt="아이콘">
+                            문자 잔여 건수
+                        </span>
+                        <div class="d-flex gap-4 align-center">
+                            <span class="title-s count-value">{{ smsRemainingCount.toLocaleString() }}</span>
+                            <span class="body-m">건</span>
+                        </div>
                     </div>
                     <div class="sms-remaining-count" v-else-if="isLoadingSmsPoint">
                         <span class="body-m">잔여건수 조회 중...</span>
@@ -540,17 +547,18 @@ defineExpose({
             .sms-remaining-count {
                 @include flex;
                 align-items: center;
-                gap: 4px;
-                padding: 4px 8px;
-                border-radius: 4px;
-                background-color: $primary-50;
-                border: 1px solid $primary-200;
-                color: $primary-700;
-                font-weight: 600;
+                gap: 8px;
+                color: $gray-700;
+
+                // padding: 4px 8px;
+                // border-radius: 4px;
+                // background-color: $primary-50;
+                // border: 1px solid $primary-200;
+                // color: $primary-700;
+                // font-weight: 600;
 
                 .count-value {
                     color: $primary-700;
-                    font-weight: 700;
                 }
 
                 &--clickable {
