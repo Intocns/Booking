@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 // 컴포넌트
 import CustomSingleSelect from '@/components/common/CustomSingleSelect.vue';
 import CustomDatePicker from '@/components/common/CustomDatePicker.vue';
@@ -43,6 +43,8 @@ const emit = defineEmits(['update:nextTab'])
 const holidayFormRef = ref(null)//저장 시 api에 맞춰 request형식으로 format하는 함수를 호출
 
 // 상태 관리
+const hasOptions = ref(null); // 옵션리스트 있는지 확인 -> 값에 따라 버튼명, 다음 로직이 바뀜
+
 const selectedAnimalCount = ref(null); // 예약 가능 동물 수 선택
 const scheduleMode = ref('regular'); // 운영 일정 : 'regular', 'event'
 const applyMode = ref('all'); // 적용 기간 : 'all', 'period'
@@ -224,19 +226,16 @@ const clickNextBtn = (async() => {
             response = await productStore.updateItemReservationInfo(props.savedItemId, params);
         }
 
-        // 옵션 리스트 조회
-        await optionStore.getOptionList(props.savedItemId);
-        const hasOptions = optionStore.optionList && optionStore.optionList.length > 0;
-
-        if(hasOptions) {
+        if(hasOptions.value) {
             // 옵션이 있는 경우: 옵션 탭으로 이동
             emit('update:nextTab', 'option' , props.savedItemId,props.isSavedSchedule);//다음 페이지 이동
         } else {
             modalStore.confirmModal.openModal({
-                title: '상품 노출 여부 설정',
-                text: '상품을 예약받을 수 있도록 노출하시겠습니까?',
+                title: '상품 노출 설정',
+                text: '상품이 정상적으로 등록되었습니다.\n상품을 예약받을 수 있도록 노출하시겠습니까?',
                 confirmBtnText: '노출',
                 cancelBtnText: '미노출',
+                showCloseButton: true,
                 onConfirm: async () => {
                     // 노출 설정 로직
                     await clickProductImpUpdateBtn(props.savedItemId, true);
@@ -263,6 +262,12 @@ const clickPrevBtn = (() => {
         onConfirm: () => {emit('update:nextTab', 'basic');} //이전 페이지 이동
     })
     
+})
+
+onMounted(async() => {
+    // 옵션 리스트 조회
+    await optionStore.getOptionList(props.savedItemId);
+    hasOptions.value = optionStore.optionList && optionStore.optionList.length > 0;
 })
 </script>
 
@@ -403,7 +408,7 @@ const clickPrevBtn = (() => {
 
     <div class="button-wrapper">
         <button class="btn btn--size-40 btn--black" @click="clickPrevBtn()">이전으로</button>
-        <button class="btn btn--size-40 btn--blue" @click="clickNextBtn()">다음</button>
+        <button class="btn btn--size-40 btn--blue" @click="clickNextBtn()">{{ hasOptions ? '다음' : '저장' }}</button>
     </div>
 </template>
 

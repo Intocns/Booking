@@ -33,6 +33,8 @@ const selectedDoctor = ref(""); // 선택된 담당의 ID
 // const currentTab = ref('basic');
 // 저장 버튼이 한 번이라도 눌렸는지 확인하는 상태
 const isSubmitted = ref(false);
+// 수정한 데이터가 있는지 비교하기 위한 원본 데이터 저장용
+const originalData = ref('');
 
 // 담당의 옵션 (CustomSingleSelect용)
 const doctorOptions = computed(() => {
@@ -237,17 +239,9 @@ const clickNextBtn = (async() => {
         response = await productStore.addItem(params);
     }
 
-    //다음 페이지로 이동
     if(props.viewType == 'update'){
         //수정
-        modalStore.confirmModal.openModal({
-            text: '수정이 완료되었습니다.',
-            noCancelBtn: true,
-            onConfirm: () => {
-                //수정 완료 시 이동
-                router.push({ name: 'placeProduct' });
-            }
-        })
+        showAlert('수정이 완료되었습니다.');
     }else{
         //등록
         let finalBizItemId = props.bizItemId;
@@ -279,7 +273,22 @@ const goToList = () => {
             }
         })
     } else {
-        router.push({ name: 'placeProduct'});
+        const currentData = JSON.stringify({
+            basic: basicInput.value,
+            details: detailList.value
+        });
+        if (originalData.value !== currentData) {
+            // 데이터가 변경된 경우
+            modalStore.confirmModal.openModal({
+                title: '목록으로 이동',
+                text: '수정된 내용이 저장되지 않았습니다.\n목록으로 이동하시겠습니까?',
+                confirmBtnText: '목록으로',
+                onConfirm: () => router.push({ name: 'placeProduct' })
+            });
+        } else {
+            // 변경사항이 없는 경우 바로 이동
+            router.push({ name: 'placeProduct' });
+        }
     }
     
 }
@@ -391,6 +400,12 @@ const setInputData = (async() => {
     //담당의 세팅
     doctorAssignType.value = (basicInput.value.doctorId == "") ? "assign" : "select";
     selectedDoctor.value = basicInput.value.doctorId??"";
+
+    // 세팅이 완료된 후, 현재 상태를 원본으로 저장 (비교용)
+    originalData.value = JSON.stringify({
+        basic: basicInput.value,
+        details: detailList.value
+    });
 })
 
 //초기 세팅

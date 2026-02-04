@@ -271,12 +271,11 @@ const loadPreviewOptionsData = async (productId) => {
 const updatePreviewFromStore = () => {
     const selectedOptions = [];
 
-    optionStore.optionList.forEach(category => {
+    optionStore.optionList?.forEach(category => {
         const checkedOptionsInCategory = category.options.filter(opt => opt.checked);
 
         checkedOptionsInCategory.forEach(opt => {
             const meta = categoryMetaMap.value[category.categoryId] || {};
-            // 여기 requiredType 없지않음?
 
             selectedOptions.push({
                 optionId: opt.optionId, //

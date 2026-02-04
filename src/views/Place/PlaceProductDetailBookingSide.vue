@@ -58,6 +58,8 @@ const createDefaultConfig = () => ({
 });
 
 // 상태관리
+const originalSnapshot = ref(''); // 변경 사항 비교를 위한 원본 데이터 스냅샷
+
 const selectedAnimalCount = ref(null); // 예약 가능 동물 수 선택
 const isHolidayEnabled = ref(false); // 휴무일 설정 여부 (Toggle)
 const scheduleMode = ref('regular'); // 운영 일정 : 'regular', 'event'
@@ -640,12 +642,53 @@ const initDataMapping = async () => {
     resetSelection('OPEN_DATE');
     resetSelection('EXPOSURE_START');
     resetSelection('EXPOSURE_END');
+
+    // 현재 상태를 원본으로 저장 (비교용)
+    originalSnapshot.value = JSON.stringify({
+        selectedAnimalCount: selectedAnimalCount.value,
+        isHolidayEnabled: isHolidayEnabled.value,
+        scheduleMode: scheduleMode.value,
+        applyMode: applyMode.value,
+        eventDates: eventDates.value,
+        configs: configs.value,
+        selectionData: selectionData // 모달로 수정한 날짜 정보 포함
+    });
 };
 
 // 운영시간 초기화 버튼
 const onClearConfig = () => {
     configs.value = [createDefaultConfig()];
 }
+
+// 목록으로 이동 버튼
+const goToList = () => {
+    // 목록 이동 전 변경사항 체크
+    // 현재 상태 데이터
+    const currentSnapshot = JSON.stringify({
+        selectedAnimalCount: selectedAnimalCount.value,
+        isHolidayEnabled: isHolidayEnabled.value,
+        scheduleMode: scheduleMode.value,
+        applyMode: applyMode.value,
+        eventDates: eventDates.value,
+        configs: configs.value,
+        selectionData: selectionData
+    });
+
+    // 변경사항이 있는지 비교
+    if (originalSnapshot.value !== currentSnapshot) {
+        modalStore.confirmModal.openModal({
+            title: '목록으로 이동',
+            text: '수정된 내용이 저장되지 않았습니다.\n목록으로 이동하시겠습니까?',
+            confirmBtnText: '목록으로',
+            onConfirm: () => {
+                router.push({ name: 'placeProduct' });
+            }
+        });
+    } else {
+        // 변경사항 없으면 바로 이동
+        router.push({ name: 'placeProduct' });
+    }
+};
 
 onMounted(async() => {
     initDataMapping();
@@ -908,7 +951,7 @@ onMounted(async() => {
         </section>
 
         <div class="button-wrapper">
-            <button class="btn btn--size-40 btn--black" @click="router.push({ name: 'placeProduct'})">목록으로</button>
+            <button class="btn btn--size-40 btn--black" @click="goToList">목록으로</button>
             <button class="btn btn--size-40 btn--blue" @click="updateItemSchedule('operating')">저장</button>
         </div>
     </div>

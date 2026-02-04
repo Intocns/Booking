@@ -190,18 +190,16 @@ const handleModalSave = async () => {
 
             <!-- 콘텐츠 -->
             <div class="contents-wrapper">
-                <keep-alive>
-                    <component 
-                        :is="currentTab === 'basic' ? ProductTabBasic : currentTab === 'booking' ? ProductTabBookingCalendar : ProductTabOption"
-                        v-model:preview-name="previewData.name"
-                        v-model:preview-desc="previewData.desc"
-                        v-model:preview-details="previewData.details"
-                        v-model:preview-notice="previewData.notice"
-                        :saved-item-id="itemId"
-                        :view-type="'update'"
-                        @update:preview-main-image="previewData.mainImage = $event"
-                    />
-                </keep-alive>
+                <component 
+                    :is="currentTab === 'basic' ? ProductTabBasic : currentTab === 'booking' ? ProductTabBookingCalendar : ProductTabOption"
+                    v-model:preview-name="previewData.name"
+                    v-model:preview-desc="previewData.desc"
+                    v-model:preview-details="previewData.details"
+                    v-model:preview-notice="previewData.notice"
+                    :saved-item-id="itemId"
+                    :view-type="'update'"
+                    @update:preview-main-image="previewData.mainImage = $event"
+                />
             </div>
         </div>
 

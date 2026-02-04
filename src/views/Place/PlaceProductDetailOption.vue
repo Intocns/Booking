@@ -32,6 +32,7 @@ const props = defineProps({
     previewNotice: { type: String }
 })
 
+const originalSnapshot = ref(''); // 변경 사항 비교를 위한 원본 데이터 스냅샷
 // 현재 어떤 카테고리가 열려있는지 index를 저장 (null이면 모두 닫힘)
 const expandedIndexes = ref([]); // 열려있는 인덱스들을 담는 배열
 
@@ -106,14 +107,46 @@ const saveItemOption = (async() => {
                 }
             });
         } else {
-            showAlert('옵션 설정이 완료되었습니다.')
-            router.push({ name: 'placeProduct' });
+            showAlert('옵션 설정이 완료되었습니다.');
         }
     } catch(e) {
         console.error(e);
     }
 
 })
+
+// 목록으로 이동 함수
+const goToList = () => {
+    if(props.viewType == 'update'){
+        // 수정
+        const currentSnapshot = JSON.stringify(
+            optionStore.optionList.map(cat => ({
+                categoryId: cat.categoryId,
+                options: cat.options.map(opt => ({ optionId: opt.optionId, checked: opt.checked }))
+            }))
+        );
+        if (originalSnapshot.value !== currentSnapshot) {
+            modalStore.confirmModal.openModal({
+                title: '목록으로 이동',
+                text: '수정된 내용이 저장되지 않았습니다.\n목록으로 이동하시겠습니까?',
+                confirmBtnText: '목록으로',
+                onConfirm: () => {
+                    router.push({ name: 'placeProduct' });
+                }
+            });
+        } else {
+            router.push({ name: 'placeProduct' });
+        }
+    } else {
+        // 등록
+        modalStore.confirmModal.openModal({
+            title: '이전 단계 이동',
+            text: '이전 단계로 이동하시겠습니까?\n저장 하지 않고 이전 단계로 이동시 입력한 정보는 모두 사라집니다.',
+            onConfirmBtnText: '이전으로',
+            onConfirm: () => {emit('update:nextTab', 'basic');} //이전 페이지 이동
+        })
+    }
+}
 
 onMounted(async() => {
     // const selectedData =  await optionStore.getOptionListByItemId(props.savedItemId);
@@ -145,6 +178,14 @@ onMounted(async() => {
     //         checked : selectedOptionMap[item.categoryId]?.includes(detail.optionId) ?? false
     //     }))
     // }))
+
+    // 현재 상태를 원본으로 저장 (비교용)
+    originalSnapshot.value = JSON.stringify(
+        optionStore.optionList.map(cat => ({
+            categoryId: cat.categoryId,
+            options: cat.options.map(opt => ({ optionId: opt.optionId, checked: opt.checked }))
+        }))
+    );
 
     //아코디언 토글 디폴트로 열어주기 위함
     expandedIndexes.value = (optionStore.optionList ?? []).map((_, index) => index)
@@ -234,7 +275,7 @@ const toggleOption = (optionDetail) => {
             </div>
             
             <div class="button-wrapper">
-                <button class="btn btn--size-40 btn--black" @click="router.push({ name: 'placeProduct'})">목록으로</button>
+                <button class="btn btn--size-40 btn--black" @click="goToList">{{ props.viewType == 'update' ? '목록으로' : '이전으로'}}</button>
                 <button class="btn btn--size-40 btn--blue" @click="saveItemOption()">저장</button>
             </div>
         </div>
