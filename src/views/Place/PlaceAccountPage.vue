@@ -22,6 +22,7 @@ import {
     ensureNaverLoginScripts,
 } from '@/constants/naver';
 import { showAlert } from '@/utils/ui';
+import { formatPhone } from '@/utils/phoneFormatter';
 
 // --- 상태 ---
 const modalStore = useModalStore();
@@ -50,6 +51,10 @@ const address = ref('');
 const detailAddress = ref('');
 const email = ref('');
 const representativeImageUrl = ref('');
+// 저장 시 필요(백엔드 BusinessDetailDto): 주소 원본 값 보존
+const jibun = ref('');
+const posLat = ref(null);
+const posLong = ref(null);
 
 function parseJson(val) {
     if (val == null) return null;
@@ -90,24 +95,27 @@ async function fetchAccountInfo() {
 
         if (nid !== '' || (bid != null && bid !== 0)) {
             hasNaverAccount.value = true;
+            existingAccountMode.value = false;
             naverId.value = String(nid);
             businessId.value = bid != null && bid !== 0 ? String(bid) : '';
         }
 
         // 네이버 플레이스 상세: 폼 필드 채우기 (API 필드 → 화면 라벨)
-        // serviceName = 서비스명, name = 병원명, promotionDesc = 서비스 소개, reprOwnerName = 대표자명
+        // serviceName = 서비스명, name = 병원명, desc = 서비스 소개, reprOwnerName = 대표자명
         serviceName.value = data.serviceName ?? '';
         console.log('servidceName = ',  data.serviceName )
         placeName.value = data.name ?? '';
-        serviceDesc.value = data.promotionDesc ?? '';
+        serviceDesc.value = data.desc ?? '';
         reprOwnerName.value = data.reprOwnerName ?? '';
         email.value = data.email ?? '';
 
         const phoneInfo = parseJson(data.phoneInformationJson);
         if (phoneInfo) {
             const list = phoneInfo.phoneList;
-            reservationPhone.value = Array.isArray(list) && list[0] ? list[0] : (phoneInfo.reprPhone ?? '');
-            adminPhone.value = phoneInfo.reprPhone ?? '';
+            const rawReservation = Array.isArray(list) && list[0] ? list[0] : (phoneInfo.reprPhone ?? '');
+            const rawAdmin = phoneInfo.reprPhone ?? '';
+            reservationPhone.value = formatPhone(rawReservation);
+            adminPhone.value = formatPhone(rawAdmin);
         } else {
             reservationPhone.value = '';
             adminPhone.value = '';
@@ -116,10 +124,16 @@ async function fetchAccountInfo() {
         const addr = parseJson(data.addressJson);
         if (addr && typeof addr === 'object') {
             address.value = addr.roadAddr ?? addr.jibun ?? '';
+            jibun.value = addr.jibun ?? '';
             detailAddress.value = addr.detail ?? '';
+            posLat.value = addr.posLat != null ? Number(addr.posLat) : null;
+            posLong.value = addr.posLong != null ? Number(addr.posLong) : null;
         } else {
             address.value = '';
+            jibun.value = '';
             detailAddress.value = '';
+            posLat.value = null;
+            posLong.value = null;
         }
 
         const resources = parseJson(data.businessResources);
@@ -135,6 +149,7 @@ async function fetchAccountInfo() {
 }
 
 function clearPlaceFields() {
+    existingAccountMode.value = false;
     serviceName.value = '';
     placeName.value = '';
     serviceDesc.value = '';
@@ -142,9 +157,49 @@ function clearPlaceFields() {
     reservationPhone.value = '';
     adminPhone.value = '';
     address.value = '';
+    jibun.value = '';
+    posLat.value = null;
+    posLong.value = null;
     detailAddress.value = '';
     email.value = '';
     representativeImageUrl.value = '';
+}
+
+async function savePlaceDetail() {
+    try {
+        const images = representativeImageUrl.value?.trim() ? [representativeImageUrl.value.trim()] : [];
+        const dto = {
+            businessId: businessId.value ? Number(businessId.value) : null,
+            naverId: naverId.value || null,
+            serviceName: serviceName.value || null,
+            desc: serviceDesc.value || null,
+            jibun: jibun.value || null,
+            roadAddr: address.value || null,
+            posLat: posLat.value != null ? Number(posLat.value) : null,
+            posLong: posLong.value != null ? Number(posLong.value) : null,
+            addressDetail: detailAddress.value || null,
+            hospitalName: placeName.value || null,
+            ownerName: reprOwnerName.value || null,
+            // 백엔드는 reprPhone만 사용해서 phoneList를 구성
+            reprPhone: adminPhone.value || null,
+            phonNumber: reservationPhone.value || null,
+            email: email.value || null,
+            images,
+        };
+
+        console.log('dto ::', dto);
+
+        const res = await api.post(`/api/linkbusiness/{cocode}/modify`, dto);
+        if (isApiSuccess(res)) {
+            showAlert('저장되었습니다.');
+            await fetchAccountInfo();
+        } else {
+            const msg = res.data?.message ?? '저장에 실패했습니다.';
+            showAlert(msg);
+        }
+    } catch (err) {
+        showAlert('저장 중 오류가 발생했습니다.');
+    }
 }
 
 function onToggleNaverReserve() {
@@ -248,6 +303,7 @@ function handleNaverMessage(event) {
         try {
             const res = await api.post('/api/linkbusiness/profile', payload);
             hasNaverAccount.value = true;
+            existingAccountMode.value = false;
             naverId.value = String(payload.naverId ?? payload.id ?? '');
             // 백엔드 profile API가 생성 후 응답에 business_id를 담아 보냄 (SDK 프로필에는 없음)
             const resData = res.data?.data ?? res.data;
@@ -350,16 +406,16 @@ onUnmounted(() => {
             <div class="contents-wrapper">
                 <ul class="form-container">
                     <li class="form-item">
-                        <!-- 서비스명 (API: serviceName) -->
+                        <!-- 서비스명 (API: serviceName) - 수정 불가 -->
                         <div class="form-label">서비스명</div>
                         <div class="form-content">
-                            <InputTextBox v-model="serviceName" placeholder="서비스명" />
+                            <InputTextBox v-model="serviceName" placeholder="서비스명" disabled />
                         </div>
 
-                        <!-- 병원명 (API: name) -->
+                        <!-- 병원명 (API: name) - 수정 불가 -->
                         <div class="form-label">병원명</div>
                         <div class="form-content">
-                            <InputTextBox v-model="placeName" placeholder="병원명" />
+                            <InputTextBox v-model="placeName" placeholder="병원명" disabled />
                         </div>
                     </li>
 
@@ -421,14 +477,22 @@ onUnmounted(() => {
                             <div class="d-flex border-bottom">
                                 <div class="form-label">예약문의 번호</div>
                                 <div class="form-content">
-                                    <InputTextBox v-model="reservationPhone" placeholder="예약문의 번호" />
+                                    <InputTextBox
+                                        :model-value="reservationPhone"
+                                        placeholder="예약문의 번호"
+                                        @update:model-value="reservationPhone = formatPhone($event)"
+                                    />
                                 </div>
                             </div>
                             <!-- 관리자 번호 -->
                             <div class="d-flex border-bottom">
                                 <div class="form-label">관리자 번호</div>
                                 <div class="form-content">
-                                    <InputTextBox v-model="adminPhone" placeholder="관리자 번호" />
+                                    <InputTextBox
+                                        :model-value="adminPhone"
+                                        placeholder="관리자 번호"
+                                        @update:model-value="adminPhone = formatPhone($event)"
+                                    />
                                 </div>
                             </div>
                             <!-- 주소 -->
@@ -463,7 +527,7 @@ onUnmounted(() => {
                 </ul>
 
                 <div class="button-wrapper">
-                    <button class="btn btn--size-40 btn--blue">저장</button>
+                    <button class="btn btn--size-40 btn--blue" type="button" @click="savePlaceDetail">저장</button>
                 </div>
             </div>
         </template>
