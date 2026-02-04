@@ -30,6 +30,29 @@ const naverId = ref('');
 const businessId = ref('');
 const hosIdx = ref(0);
 
+// GET /api/linkbusiness/{cocode} 응답으로 채우는 플레이스 상세 필드
+const serviceName = ref('');
+const placeName = ref('');
+const serviceDesc = ref('');
+const reprOwnerName = ref('');
+const reservationPhone = ref('');
+const adminPhone = ref('');
+const address = ref('');
+const detailAddress = ref('');
+const email = ref('');
+const representativeImageUrl = ref('');
+
+function parseJson(val) {
+    if (val == null) return null;
+    if (typeof val === 'object') return val;
+    if (typeof val !== 'string') return null;
+    try {
+        return JSON.parse(val);
+    } catch {
+        return null;
+    }
+}
+
 /** API 응답이 성공으로 간주되는지 (status_code 200 또는 data 존재) */
 function isApiSuccess(res) {
     const code = res?.data?.status_code ?? res?.data?.code;
@@ -43,9 +66,13 @@ function isApiSuccess(res) {
  */
 async function fetchAccountInfo() {
     try {
-        const res = await api.get(`/api/linkbusiness/${COCODE}`);
+        const res = await api.get(`/api/linkbusiness/{cocode}`);
         const data = res.data?.data ?? res.data;
-        if (!data || typeof data !== 'object') return;
+        console.log('data ::', data);
+        if (!data || typeof data !== 'object') {
+            clearPlaceFields();
+            return;
+        }
 
         const nid = data.naverId ?? data.naver_id ?? '';
         const bid = data.businessId ?? data.business_id;
@@ -57,9 +84,58 @@ async function fetchAccountInfo() {
             naverId.value = String(nid);
             businessId.value = bid != null && bid !== 0 ? String(bid) : '';
         }
+
+        // 네이버 플레이스 상세: 폼 필드 채우기 (API 필드 → 화면 라벨)
+        // serviceName = 서비스명, name = 병원명, promotionDesc = 서비스 소개, reprOwnerName = 대표자명
+        serviceName.value = data.serviceName ?? '';
+        console.log('servidceName = ',  data.serviceName )
+        placeName.value = data.name ?? '';
+        serviceDesc.value = data.promotionDesc ?? '';
+        reprOwnerName.value = data.reprOwnerName ?? '';
+        email.value = data.email ?? '';
+
+        const phoneInfo = parseJson(data.phoneInformationJson);
+        if (phoneInfo) {
+            const list = phoneInfo.phoneList;
+            reservationPhone.value = Array.isArray(list) && list[0] ? list[0] : (phoneInfo.reprPhone ?? '');
+            adminPhone.value = phoneInfo.reprPhone ?? '';
+        } else {
+            reservationPhone.value = '';
+            adminPhone.value = '';
+        }
+
+        const addr = parseJson(data.addressJson);
+        if (addr && typeof addr === 'object') {
+            address.value = addr.roadAddr ?? addr.jibun ?? '';
+            detailAddress.value = addr.detail ?? '';
+        } else {
+            address.value = '';
+            detailAddress.value = '';
+        }
+
+        const resources = parseJson(data.businessResources);
+        if (Array.isArray(resources) && resources[0]?.resourceUrl) {
+            representativeImageUrl.value = resources[0].resourceUrl;
+        } else {
+            representativeImageUrl.value = '';
+        }
     } catch {
         hasNaverAccount.value = false;
+        clearPlaceFields();
     }
+}
+
+function clearPlaceFields() {
+    serviceName.value = '';
+    placeName.value = '';
+    serviceDesc.value = '';
+    reprOwnerName.value = '';
+    reservationPhone.value = '';
+    adminPhone.value = '';
+    address.value = '';
+    detailAddress.value = '';
+    email.value = '';
+    representativeImageUrl.value = '';
 }
 
 function onToggleNaverReserve() {
@@ -251,30 +327,30 @@ onUnmounted(() => {
             <div class="contents-wrapper">
                 <ul class="form-container">
                     <li class="form-item">
-                        <!-- 서비스명 -->
+                        <!-- 서비스명 (API: serviceName) -->
                         <div class="form-label">서비스명</div>
                         <div class="form-content">
-                            <InputTextBox />
+                            <InputTextBox v-model="serviceName" placeholder="서비스명" />
                         </div>
 
-                        <!-- 병원명 -->
+                        <!-- 병원명 (API: name) -->
                         <div class="form-label">병원명</div>
                         <div class="form-content">
-                            <InputTextBox />
+                            <InputTextBox v-model="placeName" placeholder="병원명" />
                         </div>
                     </li>
 
                     <li class="form-item">
-                        <!-- 서비스 소개 -->
+                        <!-- 서비스 소개 (API: promotionDesc) -->
                         <div class="form-label">서비스 소개</div>
                         <div class="form-content">
-                            <InputTextBox />
+                            <InputTextBox v-model="serviceDesc" placeholder="서비스 소개" />
                         </div>
-                        
-                        <!-- 대표자(원장)명 -->
+
+                        <!-- 대표자(원장)명 (API: reprOwnerName) -->
                         <div class="form-label">대표자(원장)명</div>
                         <div class="form-content">
-                            <InputTextBox />
+                            <InputTextBox v-model="reprOwnerName" placeholder="대표자(원장)명" />
                         </div>
                     </li>
 
@@ -301,7 +377,7 @@ onUnmounted(() => {
                                     </label>
 
                                     <div class="photo-upload__item">
-                                        <img src="" alt="업로드 이미지" class="preview-img"> 
+                                        <img :src="representativeImageUrl || ''" alt="업로드 이미지" class="preview-img">
                                         <!-- 드래그핸들 -->
                                         <div class="drag-handle"><img :src="icDragHandel" alt="드래그아이콘"></div>
                                         <!-- 삭제 버튼 -->
@@ -322,14 +398,14 @@ onUnmounted(() => {
                             <div class="d-flex border-bottom">
                                 <div class="form-label">예약문의 번호</div>
                                 <div class="form-content">
-                                    <InputTextBox />
+                                    <InputTextBox v-model="reservationPhone" placeholder="예약문의 번호" />
                                 </div>
                             </div>
                             <!-- 관리자 번호 -->
                             <div class="d-flex border-bottom">
                                 <div class="form-label">관리자 번호</div>
                                 <div class="form-content">
-                                    <InputTextBox />
+                                    <InputTextBox v-model="adminPhone" placeholder="관리자 번호" />
                                 </div>
                             </div>
                             <!-- 주소 -->
@@ -337,7 +413,7 @@ onUnmounted(() => {
                                 <div class="form-label">주소</div>
                                 <div class="form-content">
                                     <div class="d-flex gap-4">
-                                        <InputTextBox />
+                                        <InputTextBox v-model="address" placeholder="주소" />
                                         <button class="btn btn--size-32 btn--black-outline">
                                             <img :src="icSearch" alt="검색 아이콘">
                                             주소 검색
@@ -352,13 +428,13 @@ onUnmounted(() => {
                         <!-- 이메일 -->
                         <div class="form-label">이메일</div>
                         <div class="form-content">
-                            <InputTextBox />
+                            <InputTextBox v-model="email" placeholder="이메일" />
                         </div>
 
                         <!-- 상세주소 -->
                         <div class="form-label">상세주소</div>
                         <div class="form-content">
-                            <InputTextBox />
+                            <InputTextBox v-model="detailAddress" placeholder="상세주소" />
                         </div>
                     </li>
                 </ul>
