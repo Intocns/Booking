@@ -86,7 +86,7 @@ const initializeClientList = () => {
             // 품종: breedName 사용 (백엔드에서 br.Name2 AS breedName으로 제공)
             breed: item.breedName || '',
             // 성별: PET_GENDER_MAP으로 변환
-            sex: PET_GENDER_MAP[item.sex] || item.sex || '',
+            sex: PET_GENDER_MAP[item.sex] || '',
             // 주소 정보 (1건인 경우 사용)
             userAddr: item.userAddr || '',
             userAddr2: item.userAddr2 || '',

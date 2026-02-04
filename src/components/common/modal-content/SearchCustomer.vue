@@ -88,7 +88,7 @@ const handleSearch = async () => {
                 isMatched: isMatched,
                 rowClass: isMatched ? 'row-matched' : '',
                 breed: item.breedName || '',
-                sex: PET_GENDER_MAP[item.sex] || item.sex || '',
+                sex: PET_GENDER_MAP[item.sex] || '',
             };
         });
     } catch (error) {
