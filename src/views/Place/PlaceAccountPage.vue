@@ -10,7 +10,7 @@ import icAddBtn from '@/assets/icons/ic_add_btn.svg';
 import icDragHandel from '@/assets/icons/ic_drag_handel.svg';
 import icClear from '@/assets/icons/ic_clear.svg';
 import { useModalStore } from '@/stores/modalStore';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { api } from '@/api/axios';
 import { COCODE } from '@/constants/common';
 import {
@@ -29,6 +29,15 @@ const hasNaverAccount = ref(false);
 const naverId = ref('');
 const businessId = ref('');
 const hosIdx = ref(0);
+
+/** 기존 계정 연동 버튼 클릭 시 true → 우측 네이버 ID·비즈니스 ID 입력란 활성화 (초기: 비활성화) */
+const existingAccountMode = ref(false);
+const existingAccountBtnRef = ref(null);
+
+function onExistingAccountClick() {
+    existingAccountMode.value = !existingAccountMode.value;
+    nextTick(() => existingAccountBtnRef.value?.focus());
+}
 
 // GET /api/linkbusiness/{cocode} 응답으로 채우는 플레이스 상세 필드
 const serviceName = ref('');
@@ -286,6 +295,15 @@ onUnmounted(() => {
                         <template v-else>
                             <div id="naver_id_login"></div>
                         </template>
+                        <button
+                            ref="existingAccountBtnRef"
+                            type="button"
+                            class="btn btn--size-40"
+                            :class="existingAccountMode ? 'btn--blue' : 'btn--black-outline'"
+                            @click="onExistingAccountClick"
+                        >
+                            기존 계정 연동
+                        </button>
                     </div>
 
                     <template v-if="hasNaverAccount">
@@ -304,19 +322,14 @@ onUnmounted(() => {
                     <div class="form-row">
                         <label class="form-row__label title-s">네이버 ID</label>
                         <div class="form-row__input">
-                            <InputTextBox :model-value="naverId" :disabled="hasNaverAccount" placeholder="네이버 ID" :key="'naver-' + hasNaverAccount" @update:model-value="naverId = $event" />
+                            <InputTextBox :model-value="naverId" :disabled="hasNaverAccount || !existingAccountMode" placeholder="네이버 ID" :key="'naver-' + hasNaverAccount + '-' + existingAccountMode" @update:model-value="naverId = $event" />
                         </div>
                     </div>
                     <div class="form-row">
                         <label class="form-row__label title-s">네이버 스마트 플레이스 비즈니스 ID</label>
-                        <div class="form-row__input">
-                            <InputTextBox :model-value="businessId" :disabled="hasNaverAccount" placeholder="비즈니스 ID" :key="'biz-' + hasNaverAccount" @update:model-value="businessId = $event" />
-                        </div>
-                    </div>
-                    <!-- 미연동 시: 네이버 ID·비즈니스 ID 입력 후 연동 버튼 → POST /api/linkbusiness/conn -->
-                    <div v-if="!hasNaverAccount" class="form-row">
-                        <div class="form-row__input">
-                            <button type="button" class="btn btn--size-40 btn--blue" @click="requestConnect">연동</button>
+                        <div class="form-row__input form-row__input--with-btn">
+                            <InputTextBox :model-value="businessId" :disabled="hasNaverAccount || !existingAccountMode" placeholder="비즈니스 ID" :key="'biz-' + hasNaverAccount + '-' + existingAccountMode" @update:model-value="businessId = $event" />
+                            <button v-if="!hasNaverAccount" type="button" class="btn btn--size-40 btn--blue" :disabled="!existingAccountMode" @click="requestConnect">연동</button>
                         </div>
                     </div>
                 </section>
@@ -545,6 +558,12 @@ onUnmounted(() => {
 
         &__input {
             flex: 1;
+
+            &--with-btn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
         }
     }
 
