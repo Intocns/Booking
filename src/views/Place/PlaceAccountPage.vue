@@ -294,16 +294,17 @@ onUnmounted(() => {
                         </template>
                         <template v-else>
                             <div id="naver_id_login"></div>
+                            <button
+                                v-if="!hasNaverAccount"
+                                ref="existingAccountBtnRef"
+                                type="button"
+                                class="btn btn--size-40"
+                                :class="existingAccountMode ? 'btn--blue' : 'btn--black-outline'"
+                                @click="onExistingAccountClick"
+                            >
+                                기존 계정 연동
+                            </button>
                         </template>
-                        <button
-                            ref="existingAccountBtnRef"
-                            type="button"
-                            class="btn btn--size-40"
-                            :class="existingAccountMode ? 'btn--blue' : 'btn--black-outline'"
-                            @click="onExistingAccountClick"
-                        >
-                            기존 계정 연동
-                        </button>
                     </div>
 
                     <template v-if="hasNaverAccount">
