@@ -13,15 +13,22 @@ const props = defineProps({
     data: { type: Object, default: () => ({}) }, 
     maxHeight: { type: Number, default: null }
 })
+
+const openTarget = (tableLink) => {
+    window.open(tableLink)
+}
 </script>
 
 <template>
     <div class="table-section">
         <div v-if="title" class="table-title">
             <p class="heading-s">{{ title }}</p>
-            <a v-if="tableLink" :href="tableLink" target="_blank" class="table-link">
+            <!-- <a v-if="tableLink" :href="tableLink" target="_blank" class="table-link">
                 <img :src="icMore" alt="더보기">
-            </a>
+            </a> -->
+            <div v-if="tableLink" class="table-link" @click="openTarget(tableLink)">
+                <img :src="icMore" alt="더보기">
+            </div>
         </div>
 
         <div class="table-wrapper" :style="{ maxHeight: maxHeight ? `${maxHeight}px` : 'auto' }">
@@ -67,6 +74,9 @@ const props = defineProps({
     display: flex;
     align-items: center;
     gap: 8px;
+}
+.table-link {
+    cursor: pointer;
 }
 .table-wrapper {
     width: 100%;
