@@ -329,7 +329,16 @@ onUnmounted(() => {
                         <label class="form-row__label title-s">네이버 스마트 플레이스 비즈니스 ID</label>
                         <div class="form-row__input form-row__input--with-btn">
                             <InputTextBox :model-value="businessId" :disabled="hasNaverAccount || !existingAccountMode" placeholder="비즈니스 ID" :key="'biz-' + hasNaverAccount + '-' + existingAccountMode" @update:model-value="businessId = $event" />
-                            <button v-if="!hasNaverAccount" type="button" class="btn btn--size-40 btn--blue" :disabled="!existingAccountMode" @click="requestConnect">연동</button>
+                            <button
+                                v-if="!hasNaverAccount"
+                                type="button"
+                                class="btn btn--size-40"
+                                :class="existingAccountMode ? 'btn--blue' : 'btn--gray'"
+                                :disabled="!existingAccountMode"
+                                @click="requestConnect"
+                            >
+                                연동
+                            </button>
                         </div>
                     </div>
                 </section>
@@ -608,6 +617,14 @@ onUnmounted(() => {
                 opacity: 1;
             }
         }
+    }
+
+    /* 연동 버튼 비활성화 시 회색 */
+    .btn--gray {
+        background-color: $gray-300;
+        border-color: $gray-300;
+        color: $gray-600;
+        cursor: not-allowed;
     }
 
     .button-wrapper {
