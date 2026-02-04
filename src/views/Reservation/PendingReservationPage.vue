@@ -114,8 +114,8 @@ watch([reservationChannel], () => {
     nextTick(() => searchList());
 }, { deep: true });
 
-const handelReserveDetail = (reserveIdx) => {
-    reservationStore.getReserveInfo(reserveIdx);
+const handelReserveDetail = (row) => {
+    reservationStore.getReserveInfo(row.idx);
 };
 
 onMounted(() => {
@@ -155,7 +155,7 @@ onMounted(() => {
         
         <!-- 테이블 -->
         <template #table>
-            <CommonTable :columns="columns" :rows="reservationStore.reservePendingList">
+            <CommonTable :columns="columns" :rows="reservationStore.reservePendingList" @row-click="handelReserveDetail" :is-click-able="true">
                 <!-- 예약경로 앞에 dot -->
                 <template #reRouteTxt="{ row, value }">
                     <div class="status-cell">
@@ -165,7 +165,7 @@ onMounted(() => {
                 </template>
                 <!-- 버튼 -->
                 <template #actions="{ row, rowIndex }">
-                    <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row.idx)">상세</button>
+                    <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row)">상세</button>
                     <button class="btn btn--size-24 btn--black-outline" @click="openSmsModal(row)"><img :src="icSms" alt="SMS"></button>
                 </template>
     

@@ -101,8 +101,8 @@ const openNoticeDetail = (row) => {
 }
 
 // 예약 상세보기 핸들러
-const handelReserveDetail = (reserveIdx) => {
-    reservationStore.getReserveInfo(reserveIdx)
+const handelReserveDetail = (row) => {
+    reservationStore.getReserveInfo(row.idx)
 }
 
 onMounted(() => {
@@ -222,9 +222,11 @@ onMounted(() => {
             :table-route="{ name: 'pendingList' }"
             :columns="columns" 
             :rows="reservationStore.reservePendingList"
+            @row-click="handelReserveDetail" 
+            :is-click-able="true"
         >
             <!-- 예약경로 앞에 dot -->
-            <template #re_route_txt="{ row, value }">
+            <template #reRouteTxt="{ row, value }">
                 <div class="status-cell">
                     <span class="dot" :class="`dot--route-${row.reRoute}`"></span>
                     {{ value }}
@@ -233,7 +235,7 @@ onMounted(() => {
             
             <!-- 버튼 -->
             <template #actions="{ row, rowIndex }">
-                <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row.idx)">
+                <button class="btn btn--size-24 btn--black-outline" @click="handelReserveDetail(row)">
                     상세
                 </button>
                 <button class="btn btn--size-24 btn--black-outline" @click="openSmsModal(row)">
