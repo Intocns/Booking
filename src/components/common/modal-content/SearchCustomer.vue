@@ -187,8 +187,7 @@ const customerColumns = [
                 >
                     <template #action="{ row }">
                         <button 
-                            class="btn btn--size-24"
-                            :class="row.isMatched ? 'btn--blue' : 'btn--black-outline'"
+                            class="btn btn--size-24 btn--black-outline"
                             @click.stop="toggleCustomerMatch(row)"
                         >
                             {{ row.isMatched ? '고객매칭 해제' : '고객매칭' }}
