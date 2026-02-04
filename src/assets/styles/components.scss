@@ -621,17 +621,66 @@
 .dp__range_start, // 선택 start날짜
 .dp__range_end, // 선택 end 날짜
 .dp__active_date { // active 날짜
+    position: relative;
     color: $gray-00 !important;
-    background-color: $primary-700 !important;
-    border-radius: 50% !important;
+    background-color: transparent !important;
+    border: none !important;
     z-index: 1;
 }
+// 실제 파란색 동그라미 배경 (before)
+.dp__range_start::before,
+.dp__range_end::before,
+.dp__active_date::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    background-color: $primary-700 !important;
+    border-radius: 50%;
+    z-index: -1; /* 숫자보다 뒤로 */
+}
+/* 시작 날짜의 오른쪽 사각 배경 (after) */
+.dp__range_start::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background-color: $gray-50 !important;
+    z-index: -2; /* 동그라미보다 더 뒤로 */
+}
+/* 종료 날짜의 왼쪽 사각 배경 (after) */
+.dp__range_end::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background-color: $gray-50 !important;
+    z-index: -2;
+}
+
+.dp__cell_disabled { // 선택 할 수 없는 날짜
+    // pointer-events: none;
+    cursor: not-allowed;
+    color: $gray-100 !important;
+}
+.dp__range_between { // 기간에 해당하는 날짜
+    background-color: $gray-50;
+}
+
 .dp__cell_offset {color: $gray-200;} // 해당 하는 월에 포함되지 않는 날짜 컬러
 .dp__action_row {  // 캘렌더 아래 버튼 영역
     border-top: 1px solid $gray-200;
     justify-content: flex-end;
     gap: 4px;
 }
+
 .dp__action_row .bt {width: 40px;}
 .dp__selection_preview {display: none;} // 선택 날짜 미리보기
 .dp__action_button { // 액션 버튼 공통
