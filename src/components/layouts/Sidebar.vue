@@ -54,12 +54,17 @@ const onClickChild = (child) => {
     router.push(child.path);
 };
 
-const isActiveMenu = (menu) => {
-    if (menu.path && route.path === menu.path) return true;
-    if (menu.children) {
-        return menu.children.some(child => child.path === route.path);
+const isActiveMenu = (menu, index) => {
+    // 현재 클릭해서 열려있는 메뉴가 있다면, 그 인덱스만 활성화함
+    if (openMenu.value !== null) {
+        return openMenu.value === index;
     }
-    return false;
+
+    // 클릭해서 열린 메뉴가 없을 때만(처음 로드 등) 현재 경로를 기준으로 활성화
+    const isRouteActive = (menu.path && route.path === menu.path) || 
+                         (menu.children?.some(child => child.path === route.path));
+    
+    return isRouteActive;
 };
 
 const isActiveChild = (child) => {
@@ -115,7 +120,7 @@ onMounted(() => {
                     class="menu-wrapper"
                     @click="onClickMenu(menu, index)"
                 >
-                    <div class="menu" :class="{'menu--active': isActiveMenu(menu)}" >
+                    <div class="menu" :class="{'menu--active': isActiveMenu(menu, index)}" >
                         <div class="menu-name-wrapper">
                             <div class="menu-name title-m">
                                 <img :src="icons[menu.icon]" alt="메뉴 아이콘">
