@@ -837,15 +837,13 @@
     align-items: center;
     gap: 6px;
 
+    &--state-1 { color: $primary-700; } // 확정
+
     .dot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
         display: inline-block;
-
-        &--state-1 { background-color: $primary-700; } // 확정
-        &--state-0 { background-color: $status-onHold_text; } // 대기(노랑)
-        &--state-2, &--state-3 { background-color: $warning-500; } // 취소/거절(빨강)
 
         &--route-1 { background-color: $primary-700; } // ge
         &--route-2 { background-color: $brand-intoPet; } // 인투펫

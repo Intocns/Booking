@@ -217,8 +217,7 @@ onMounted(async () => {
             <CommonTable :columns="columns" :rows="processedRows" @row-click="handelReserveDetail" :is-click-able="true">
                 <!-- 예약상태 앞에 dot -->
                 <template #inStateTxt="{ row, value }">
-                    <div class="status-cell">
-                        <span class="dot" :class="`dot--state-${row.inState}`"></span>
+                    <div class="status-cell" :class="`status-cell--state-${row.inState}`">
                         {{ value }}
                     </div>
                 </template>
