@@ -299,7 +299,7 @@ onMounted(() => {
                             <template #item="{element: q, index}">
                                 <li 
                                     class="guide-item" 
-                                    :class="{ required: q.questionRequiredFlag == 1, 'reorder-active': isReorderMode }"
+                                    :class="{ default: q.questionDefaultFlag == 1, 'reorder-active': isReorderMode }"
                                 >
                                     <div class="d-flex align-center gap-8">
                                         <div v-if="isReorderMode" class="drag-handle" style="cursor: grab;">
@@ -562,7 +562,7 @@ onMounted(() => {
         border: 1px solid $gray-200;
         background-color: $gray-00;
 
-        &.required {background-color: $gray-50;}
+        &.default {background-color: $gray-50;}
 
         .label {color: $gray-900;}
     }
