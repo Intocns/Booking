@@ -203,7 +203,7 @@ const customerColumns = [
     <div class="modal-button-wrapper">
         <div class="buttons">
             <button 
-                class="btn btn--size-40 btn--blue-outline"
+                class="btn btn--size-40 btn--black"
                 @click="handleNewPetRegistration"
             >
                 신규 동물 등록
