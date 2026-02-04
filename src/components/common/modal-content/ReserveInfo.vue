@@ -103,6 +103,22 @@ const reserveClientList = ref(initializeClientList());
 // 고객 매칭 토글 함수 (단일 선택: 하나 선택 시 기존 선택 해제)
 const toggleCustomerMatch = (row) => {
     toggleCustomerMatchUtil(reserveClientList.value, row);
+    // 사용자가 리스트에서 직접 버튼을 눌렀으므로, 
+    // 상세 뷰로 자동 전환되지 않도록 수동 조작 상태를 true로 설정
+    isManualUnmatched.value = true;
+};
+
+// 매칭해제 전용 함수 (상세 뷰에서 클릭 시)
+const unmatchCustomer = () => {
+    const matchedItem = reserveClientList.value.find(item => item.isMatched);
+    
+    if (matchedItem) {
+        // 매칭 해제
+        toggleCustomerMatchUtil(reserveClientList.value, matchedItem);
+        
+        // 매칭을 수동으로 풀었으므로 테이블 뷰를 보여주기 위해 true 설정
+        isManualUnmatched.value = true;
+    }
 };
 
 const startTime = ref(null);
@@ -127,6 +143,9 @@ const reserveDateRef = ref(null);
 const startTimeRef = ref(null);
 const endTimeRef = ref(null);
 const doctorSelectRef = ref(null);
+
+// 사용자가 수동으로 매칭을 조작했는지 여부
+const isManualUnmatched = ref(false);
 
 // 예약 방문일과 시간 초기화
 if (reserveData.reTime) {
@@ -511,16 +530,28 @@ const customerInfoColumns = [
 
 // 예약 확정 상태일 때는 매칭된 고객만 필터링
 const matchedClientList = computed(() => {
-    if (reserveData.inState === 1) {
-        // 예약 확정 상태: 매칭된 고객만 반환
-        return reserveClientList.value.filter(item => item.isMatched);
-    }
+    // if (reserveData.inState === 1) {
+    //     // 예약 확정 상태: 매칭된 고객만 반환
+    //     return reserveClientList.value.filter(item => item.isMatched);
+    // }
     // 예약 확정 전: 전체 리스트 반환
     return reserveClientList.value;
 });
 
 // 조회 결과가 1건인지 확인 (예약 확정 상태일 때는 매칭된 고객만 고려)
-const isSingleResult = computed(() => matchedClientList.value.length === 1)
+// const isSingleResult = computed(() => matchedClientList.value.length === 1)
+
+// 상세 뷰(고객/동물 정보 카드)를 보여줄 조건
+const isSingleResult = computed(() => {
+    // 수동으로 해제했거나 리스트에서 직접 매칭 중이라면 상세 뷰 차단 (테이블 유지)
+    if (isManualUnmatched.value) {
+        return false;
+    }
+
+    // 리스트가 딱 1개라면 (예약확정 상태든 아니든) 상세 뷰를 보여줌
+    // initializeClientList에서 1개일 때 자동 매칭(isMatched: true) 처리가 이미 되어 있으므로 개수만 체크
+    return reserveClientList.value.length === 1;
+});
 
 // 예약 확정 상태 여부
 const isConfirmed = computed(() => reserveData.inState === 1);
@@ -894,7 +925,8 @@ const handleViewChart = () => {
                         <!-- 동물 정보 (오른쪽) - 2열 테이블 형태 -->
                         <div class="d-flex align-center justify-between">
                             <p class="title-s">동물 정보</p>
-                            <button class="btn btn--size-24 btn--black-outline" @click="unmatchCustomer">매칭해제</button>
+                            <button class="btn btn--size-24 btn--black-outline" :class="{'is-disabled':isCancelled}"
+                            :disabled="isCancelled" @click="unmatchCustomer">매칭해제</button>
                         </div>
                         <ul class="form-container">
                             <li class="form-item">
