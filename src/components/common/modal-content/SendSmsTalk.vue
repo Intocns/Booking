@@ -10,6 +10,7 @@ import { useModalStore } from '@/stores/modalStore';
 import { useTalkSmsStore } from '@/stores/talkSmsStore';
 import { api } from '@/api/axios';
 import { buildTemplateVariables, formatTemplateContent, getSmsByteLength } from '@/utils/alimtalkSmsTemplate.js';
+import { COCODE } from '@/constants/common';
 import { formatPhone, removePhoneHyphens } from '@/utils/phoneFormatter.js';
 import { PET_GENDER_MAP } from '@/constants';
 import { showAlert } from '@/utils/ui';
@@ -34,7 +35,7 @@ const {
 } = storeToRefs(talkSmsStore);
 
 const activeTab = ref('talk');
-const cocode = '2592'; // TODO: 임시
+const cocode = COCODE; // TODO: 임시
 const compEnrolNum = '1231212345'; // TODO: 임시
 const hospitalName = '인투병원'; // TODO: 임시
 const hospitalPhone = '01089380571'; // TODO: 임시

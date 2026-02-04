@@ -13,34 +13,49 @@ import { useModalStore } from '@/stores/modalStore';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { api } from '@/api/axios';
 import { COCODE } from '@/constants/common';
-import { NAVER_CLIENT_ID, getMappingUrl, getNaverCallbackUrl, buildProfilePayload } from '@/constants/naver';
+import {
+    NAVER_CLIENT_ID,
+    getMappingUrl,
+    getNaverCallbackUrl,
+    buildConnectPayload,
+    buildUnlinkPayload,
+    ensureNaverLoginScripts,
+} from '@/constants/naver';
 import { showAlert } from '@/utils/ui';
 
+// --- 상태 ---
 const modalStore = useModalStore();
 const hasNaverAccount = ref(false);
 const naverId = ref('');
 const businessId = ref('');
 const hosIdx = ref(0);
 
+/** API 응답이 성공으로 간주되는지 (status_code 200 또는 data 존재) */
+function isApiSuccess(res) {
+    const code = res?.data?.status_code ?? res?.data?.code;
+    return code === 200 || !!res?.data?.data;
+}
+
+/**
+ * GET /api/linkbusiness/{cocode} 로 연동 정보 조회 후 폼 상태 반영
+ * - 연동됐으면 naverId, businessId, hosIdx 채움
+ * - 미연동이어도 hosIdx는 있으면 채움 (연동 버튼용)
+ */
 async function fetchAccountInfo() {
     try {
-        const res = await api.get(`/api/linkbusiness/{cocode}`);
-        res = null; //TODO:임시로 오류 발생 시 빈 값 반환
-        const body = res.data;
-        const data = body?.data ?? body;
+        const res = await api.get(`/api/linkbusiness/${COCODE}`);
+        const data = res.data?.data ?? res.data;
         if (!data || typeof data !== 'object') return;
+
         const nid = data.naverId ?? data.naver_id ?? '';
         const bid = data.businessId ?? data.business_id;
-        const hasData = nid !== '' || bid != null;
-        if (hasData) {
+        const numHosIdx = data.hosIdx != null ? Number(data.hosIdx) : Number(data.hos_idx ?? 0);
+        hosIdx.value = numHosIdx;
+
+        if (nid !== '' || (bid != null && bid !== 0)) {
             hasNaverAccount.value = true;
             naverId.value = String(nid);
-            businessId.value = bid != null ? String(bid) : '';
-            hosIdx.value = data.hosIdx != null ? Number(data.hosIdx) : (data.hos_idx != null ? Number(data.hos_idx) : 0);
-
-            console.log(naverId.value);
-
-
+            businessId.value = bid != null && bid !== 0 ? String(bid) : '';
         }
     } catch {
         hasNaverAccount.value = false;
@@ -59,18 +74,51 @@ function onToggleNaverReserve() {
     });
 }
 
+async function requestConnect() {
+    const nid = naverId.value?.trim();
+    const bid = businessId.value?.trim();
+    if (!nid || !bid) {
+        showAlert('네이버 ID와 비즈니스 ID를 입력해 주세요.');
+        return;
+    }
+    const hosIdxVal = hosIdx.value ?? 0;
+    if (!hosIdxVal) {
+        showAlert('병원 정보를 불러올 수 없습니다. 페이지를 새로고침하거나, 연동된 계정이 있으면 먼저 조회 후 연동 해제 시나리오를 사용해 주세요.');
+        return;
+    }
+    try {
+        const payload = buildConnectPayload({
+            cocode: Number(COCODE),
+            hosIdx: hosIdxVal,
+            naverId: nid,
+            businessId: Number(bid),
+        });
+        const res = await api.post('/api/linkbusiness/conn', payload);
+        if (isApiSuccess(res)) {
+            hasNaverAccount.value = true;
+            await fetchAccountInfo();
+            modalStore.naverConnectNoticeModal.openModal();
+        } else {
+            const msg = res.data?.message ?? '연동에 실패했습니다.';
+            showAlert(msg);
+        }
+    } catch (err) {
+        showAlert('연동 요청 중 오류가 발생했습니다.');
+    }
+}
+
+/** POST /api/linkbusiness/mapping (code: 2 자체 매핑 해제) 후 로컬 상태 초기화 */
 async function saveMappingUnlink() {
     modalStore.confirmModal.closeModal();
     try {
-        const res = await api.post('/api/linkbusiness/mapping', {
+        const payload = buildUnlinkPayload({
             cocode: Number(COCODE),
             hosIdx: hosIdx.value,
-            code: 2,
             naverId: naverId.value,
-            businessId: businessId.value ? Number(businessId.value) : null,
+            businessId: Number(businessId.value),
         });
-        const code = res.data?.status_code ?? res.data?.code;
-        if (code === 200 || res.data?.data) {
+        const res = await api.post('/api/linkbusiness/mapping', payload);
+        if (isApiSuccess(res)) {
             hasNaverAccount.value = false;
             naverId.value = '';
             businessId.value = '';
@@ -87,32 +135,7 @@ async function saveMappingUnlink() {
     }
 }
 
-const JQUERY_URL = 'https://code.jquery.com/jquery-3.7.1.min.js';
-const NAVER_LOGIN_SCRIPT_URL = 'https://static.nid.naver.com/js/naverLogin_implicit-1.0.3.js';
-
-function loadScript(src, opts = {}) {
-    return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`)) {
-            resolve();
-            return;
-        }
-        const script = document.createElement('script');
-        script.src = src;
-        if (opts.integrity) script.integrity = opts.integrity;
-        if (opts.crossOrigin) script.crossOrigin = opts.crossOrigin;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-        document.body.appendChild(script);
-    });
-}
-
-function ensureNaverLoginScripts() {
-    return loadScript(JQUERY_URL, {
-        integrity: 'sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=',
-        crossOrigin: 'anonymous',
-    }).then(() => loadScript(NAVER_LOGIN_SCRIPT_URL));
-}
-
+/** 네이버 SDK로 로그인 버튼·팝업·프로필 콜백 등록 (SDK 로드 후 호출) */
 function initNaverLogin() {
     if (typeof window.naver_id_login === 'undefined') return;
     const mappingUrl = getMappingUrl();
@@ -123,8 +146,7 @@ function initNaverLogin() {
     naverLogin.setState(naverLogin.getUniqState());
     naverLogin.setPopup();
     naverLogin.init_naver_id_login();
-    // TODO: 추후 get_naver_userprofile 호출 여부/시점 재검토
-    // naverLogin.get_naver_userprofile('naverSignInCallback');
+    naverLogin.get_naver_userprofile('naverSignInCallback');
 }
 
 function handleNaverMessage(event) {
@@ -135,17 +157,21 @@ function handleNaverMessage(event) {
         showAlert(error);
         return;
     }
-    const payload = buildProfilePayload(profile, Number(COCODE));
-    if (!payload) return;
+    if (!profile) return;
+    const payload = profile;
     (async () => {
         try {
-            await api.post('/api/linkbusiness/profile', payload);
+            const res = await api.post('/api/linkbusiness/profile', payload);
             hasNaverAccount.value = true;
-            // 서버에 반영된 naverId, businessId를 API로 다시 조회해서 표시
+            naverId.value = String(payload.naverId ?? payload.id ?? '');
+            // 백엔드 profile API가 생성 후 응답에 business_id를 담아 보냄 (SDK 프로필에는 없음)
+            const resData = res.data?.data ?? res.data;
+            const bid = resData?.business_id ?? resData?.businessId;
+            businessId.value = bid != null && bid !== 0 ? String(bid) : '';
             await fetchAccountInfo();
             modalStore.naverConnectNoticeModal.openModal();
         } catch (err) {
-            console.error(err);
+            showAlert('연동 처리 중 오류가 발생했습니다.');
         }
     })();
 }
@@ -171,7 +197,7 @@ onUnmounted(() => {
     <TableLayout>
 
         <template #filter>  
-            <div class="account-sync" :key="`account-${hasNaverAccount}-${naverId}-${businessId}`">
+            <div class="account-sync" :key="'account-' + hasNaverAccount">
                 <section class="account-sync__login">
                     <div class="sync-header">
                         <h3 class="sync-header__title title-m">네이버 계정 연동하기</h3>
@@ -202,13 +228,19 @@ onUnmounted(() => {
                     <div class="form-row">
                         <label class="form-row__label title-s">네이버 ID</label>
                         <div class="form-row__input">
-                            <InputTextBox :model-value="naverId" :disabled="true" placeholder="네이버 ID" :key="'naver-' + naverId" @update:model-value="naverId = $event" />
+                            <InputTextBox :model-value="naverId" :disabled="hasNaverAccount" placeholder="네이버 ID" :key="'naver-' + hasNaverAccount" @update:model-value="naverId = $event" />
                         </div>
                     </div>
                     <div class="form-row">
                         <label class="form-row__label title-s">네이버 스마트 플레이스 비즈니스 ID</label>
                         <div class="form-row__input">
-                            <InputTextBox :model-value="businessId" :disabled="true" placeholder="비즈니스 ID" :key="'biz-' + businessId" @update:model-value="businessId = $event" />
+                            <InputTextBox :model-value="businessId" :disabled="hasNaverAccount" placeholder="비즈니스 ID" :key="'biz-' + hasNaverAccount" @update:model-value="businessId = $event" />
+                        </div>
+                    </div>
+                    <!-- 미연동 시: 네이버 ID·비즈니스 ID 입력 후 연동 버튼 → POST /api/linkbusiness/conn -->
+                    <div v-if="!hasNaverAccount" class="form-row">
+                        <div class="form-row__input">
+                            <button type="button" class="btn btn--size-40 btn--blue" @click="requestConnect">연동</button>
                         </div>
                     </div>
                 </section>

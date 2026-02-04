@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => {
             },
         },
         server: {
+            host: true,  // 로컬환경에서 ip로 붙을수 있도록 추가(네이버 예약 연동 테스트 시 사용)
             proxy: {
                 '/api': {
                     target: env.VITE_DEV_API,

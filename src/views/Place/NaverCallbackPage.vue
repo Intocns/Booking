@@ -1,38 +1,54 @@
-<!-- 네이버 로그인 콜백 (팝업): SDK 프로필 수신 후 opener로 postMessage -->
+<!-- 네이버 로그인 콜백: SDK로 프로필 조회 후 opener에 postMessage -->
 <script setup>
 import { onMounted } from 'vue';
 import { COCODE } from '@/constants/common';
-import { NAVER_CLIENT_ID, getMappingUrl, getNaverCallbackUrl, buildProfilePayload } from '@/constants/naver';
+import { NAVER_CLIENT_ID, getNaverCallbackUrl, buildProfilePayload, ensureNaverLoginScripts } from '@/constants/naver';
 
-const mappingUrl = getMappingUrl();
 const callbackUrl = getNaverCallbackUrl();
+
+function sendError(msg) {
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: 'naver-profile', error: msg }, window.location.origin);
+    }
+    window.close();
+}
 
 function sendToOpener(profile) {
     if (!window.opener || window.opener.closed) return;
     const payload = buildProfilePayload(profile, Number(COCODE));
     if (!payload) return;
     window.opener.postMessage({ type: 'naver-profile', profile: payload }, window.location.origin);
+    window.close();
 }
 
 onMounted(() => {
-    window.naverSignInCallback = function (profile) {
-        if (profile) sendToOpener(profile);
-        window.close();
-    };
-
-    if (typeof window.naver_id_login === 'undefined') {
-        window.opener && !window.opener.closed &&
-            window.opener.postMessage({ type: 'naver-profile', error: 'SDK 로드 실패' }, window.location.origin);
-        window.close();
-        return;
-    }
-
-    const naverLogin = new window.naver_id_login(NAVER_CLIENT_ID, callbackUrl);
-    naverLogin.setDomain(mappingUrl);
-    naverLogin.setState(naverLogin.getUniqState());
-    naverLogin.setPopup();
-    naverLogin.init_naver_id_login();
-    // naverLogin.get_naver_userprofile('naverSignInCallback');
+    ensureNaverLoginScripts()
+        .then(() => {
+            if (typeof window.naver_id_login === 'undefined') {
+                sendError('SDK 로드 실패');
+                return;
+            }
+            const naver_id_login = new window.naver_id_login(NAVER_CLIENT_ID, callbackUrl);
+            window.naverSignInCallback = function () {
+                const id = naver_id_login.getProfileData('id');
+                const email = naver_id_login.getProfileData('email');
+                const profile = {
+                    id,
+                    naverId: id,
+                    email,
+                    nickname: naver_id_login.getProfileData('nickname'),
+                    name: naver_id_login.getProfileData('name'),
+                    profile_image: naver_id_login.getProfileData('profile_image'),
+                    age: naver_id_login.getProfileData('age'),
+                    birthday: naver_id_login.getProfileData('birthday'),
+                    gender: naver_id_login.getProfileData('gender'),
+                    birthyear: naver_id_login.getProfileData('birthyear'),
+                };
+                sendToOpener(profile);
+            };
+            naver_id_login.get_naver_userprofile('naverSignInCallback()');
+        })
+        .catch(() => sendError('SDK 로드 실패'));
 });
 </script>
 
