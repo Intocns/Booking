@@ -26,6 +26,7 @@ import { formatPhone } from '@/utils/phoneFormatter';
 import { openKakaoAddrSearch } from '@/utils/kakaoAddrSearch';
 import { validatePlaceDetail, formatPlaceDetailErrors } from '@/utils/placeAccountValidation';
 import { uploadImage } from '@/utils/fileUpload';
+import draggable from 'vuedraggable';
 
 // --- 상태 ---
 const modalStore = useModalStore();
@@ -53,7 +54,8 @@ const adminPhone = ref('');
 const address = ref('');
 const detailAddress = ref('');
 const email = ref('');
-const representativeImageUrl = ref('');
+/** 업체 사진 URL 목록 (여러 장, 첫 번째가 대표 이미지) */
+const placeImages = ref([]);
 // 저장 시 필요(백엔드 BusinessDetailDto): 주소 원본 값 보존
 const jibun = ref('');
 const posLat = ref(null);
@@ -92,18 +94,27 @@ function focusFirstInvalidField(errorKeys) {
     });
 }
 
-/** 업체 사진(대표 이미지) 업로드 */
+/** 업체 사진 업로드 (multiple 선택 시 선택한 파일 전부 업로드 후 배열에 추가) */
 async function handlePlaceImageUpload(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files?.length) return;
     try {
-        const url = await uploadImage(file);
-        if (url) representativeImageUrl.value = url;
+        const urls = [];
+        for (let i = 0; i < files.length; i++) {
+            const url = await uploadImage(files[i]);
+            if (url) urls.push(url);
+        }
+        if (urls.length) placeImages.value = [...placeImages.value, ...urls];
     } catch (err) {
         showAlert('이미지 업로드에 실패했습니다.');
     } finally {
         event.target.value = '';
     }
+}
+
+/** 업체 사진 삭제 */
+function removePlaceImage(index) {
+    placeImages.value = placeImages.value.filter((_, i) => i !== index);
 }
 
 /** 병원주소 → 카카오 주소검색 API 실행 (유틸 사용) */
@@ -197,10 +208,10 @@ async function fetchAccountInfo() {
         }
 
         const resources = parseJson(data.businessResources);
-        if (Array.isArray(resources) && resources[0]?.resourceUrl) {
-            representativeImageUrl.value = resources[0].resourceUrl;
+        if (Array.isArray(resources) && resources.length > 0) {
+            placeImages.value = resources.map((r) => r?.resourceUrl ?? '').filter(Boolean);
         } else {
-            representativeImageUrl.value = '';
+            placeImages.value = [];
         }
     } catch {
         hasNaverAccount.value = false;
@@ -242,7 +253,7 @@ function getPlaceFormForValidation() {
 
 /** 저장 API용 DTO 생성 */
 function buildPlaceDetailDto() {
-    const images = representativeImageUrl.value?.trim() ? [representativeImageUrl.value.trim()] : [];
+    const images = placeImages.value.map((url) => (url && String(url).trim()) || '').filter(Boolean);
     return {
         businessId: businessId.value ? Number(businessId.value) : null,
         naverId: naverId.value || null,
@@ -350,7 +361,7 @@ async function saveMappingUnlink() {
             businessId.value = '';
             showAlert('연동이 해제되었습니다.');
             fetchAccountInfo();
-            initNaverLogin();
+            nextTick(() => initNaverLogin());
         } else {
             const msg = res.data?.message ?? '연동 해제에 실패했습니다.';
             showAlert(msg);
@@ -361,9 +372,10 @@ async function saveMappingUnlink() {
     }
 }
 
-/** 네이버 SDK로 로그인 버튼·팝업·프로필 콜백 등록 (SDK 로드 후 호출) */
+/** 네이버 SDK로 로그인 버튼·팝업·프로필 콜백 등록 (SDK 로드 후 호출). #naver_id_login div가 DOM에 있을 때만 실행 */
 function initNaverLogin() {
     if (typeof window.naver_id_login === 'undefined') return;
+    if (!document.getElementById('naver_id_login')) return;
     const mappingUrl = getMappingUrl();
     const callbackUrl = getNaverCallbackUrl();
     const naverLogin = new window.naver_id_login(NAVER_CLIENT_ID, callbackUrl);
@@ -405,9 +417,13 @@ function handleNaverMessage(event) {
 
 onMounted(() => {
     window.addEventListener('message', handleNaverMessage);
-    fetchAccountInfo();
-    ensureNaverLoginScripts()
-        .then(() => initNaverLogin())
+    Promise.all([
+        fetchAccountInfo().catch(() => {}),
+        ensureNaverLoginScripts(),
+    ])
+        .then(() => {
+            if (!hasNaverAccount.value) nextTick(() => initNaverLogin());
+        })
         .catch((err) => {
             console.error(err);
             showAlert('네이버 로그인 스크립트를 불러오지 못했습니다.');
@@ -567,20 +583,31 @@ onUnmounted(() => {
                                         >
                                         <img :src="icAddBtn" alt="추가" class="icon-plus" width="32">
                                     </label>
-
-                                    <div class="photo-upload__item">
-                                        <img :src="representativeImageUrl || ''" alt="업로드 이미지" class="preview-img">
-                                        <!-- 드래그핸들 -->
-                                        <div class="drag-handle"><img :src="icDragHandel" alt="드래그아이콘"></div>
-                                        <!-- 삭제 버튼 -->
-                                        <button class="delete-btn">
-                                            <img :src="icClear" alt="삭제" width="20">
-                                        </button>
-                                        <!-- 대표 이미지의 경우 -->
-                                        <div class="main-badge">
-                                            <span class="caption">대표이미지</span>
-                                        </div>
-                                    </div>
+                                    <draggable
+                                        v-model="placeImages"
+                                        :item-key="(url) => url"
+                                        class="draggable-container"
+                                        handle=".drag-handle"
+                                        ghost-class="ghost"
+                                        drag-class="drag-item-moving"
+                                        :force-fallback="true"
+                                        :scroll="true"
+                                        :scroll-sensitivity="100"
+                                        :animation="200"
+                                    >
+                                        <template #item="{ element, index }">
+                                            <div class="photo-upload__item">
+                                                <img :src="element || ''" alt="업로드 이미지" class="preview-img">
+                                                <div class="drag-handle"><img :src="icDragHandel" alt="드래그아이콘"></div>
+                                                <button type="button" class="delete-btn" @click="removePlaceImage(index)">
+                                                    <img :src="icClear" alt="삭제" width="20">
+                                                </button>
+                                                <div v-if="index === 0" class="main-badge">
+                                                    <span class="caption">대표이미지</span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </draggable>
                                 </div>
                             </div>
                         </div>
@@ -824,5 +851,24 @@ onUnmounted(() => {
         button {
             width: 400px;
         }
+    }
+
+    /* 업체 사진 드래그 정렬 (place/product/edit 동일) */
+    .draggable-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .ghost {
+        opacity: 0.5;
+        background: $primary-50 !important;
+        border: 1px dashed $primary-500 !important;
+    }
+    .drag-item-moving {
+        opacity: 1 !important;
+        background-color: $gray-00 !important;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        border: 1px solid $primary-500 !important;
+        z-index: 9999;
     }
 </style>
