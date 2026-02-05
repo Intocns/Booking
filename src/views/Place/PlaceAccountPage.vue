@@ -127,7 +127,7 @@ function isApiSuccess(res) {
  */
 async function fetchAccountInfo() {
     try {
-        const res = await api.get(`/api/linkbusiness/${COCODE}`);
+        const res = await api.get(`/api/linkbusiness/{cocode}`);
         const data = res.data?.data ?? res.data;
         if (!data || typeof data !== 'object') {
             clearPlaceFields();
@@ -261,7 +261,7 @@ async function savePlaceDetail() {
 
     try {
         const dto = buildPlaceDetailDto();
-        const res = await api.post(`/api/linkbusiness/${COCODE}/modify`, dto);
+        const res = await api.post(`/api/linkbusiness/{cocode}/modify`, dto);
         if (isApiSuccess(res)) {
             showAlert('저장되었습니다.');
             await fetchAccountInfo();
