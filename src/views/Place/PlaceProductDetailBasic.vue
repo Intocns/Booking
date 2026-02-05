@@ -242,6 +242,12 @@ const clickNextBtn = (async() => {
     if(props.viewType == 'update'){
         //수정
         showAlert('수정이 완료되었습니다.');
+
+        // 수정이 완료된 후, 현재 상태를 원본으로 저장 (비교용)
+        originalData.value = JSON.stringify({
+            basic: basicInput.value,
+            details: detailList.value
+        });
     }else{
         //등록
         let finalBizItemId = props.bizItemId;
