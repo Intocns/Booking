@@ -22,7 +22,8 @@ import {
     ensureNaverLoginScripts,
 } from '@/constants/naver';
 import { showAlert } from '@/utils/ui';
-import { formatPhone } from '@/utils/phoneFormatter';
+import { formatPhone, removePhoneHyphens } from '@/utils/phoneFormatter';
+import { openKakaoAddrSearch } from '@/utils/kakaoAddrSearch';
 
 // --- 상태 ---
 const modalStore = useModalStore();
@@ -55,6 +56,18 @@ const representativeImageUrl = ref('');
 const jibun = ref('');
 const posLat = ref(null);
 const posLong = ref(null);
+
+/** 병원주소 → 카카오 주소검색 API 실행 (유틸 사용) */
+function openPostCode() {
+    openKakaoAddrSearch({
+        popupTitle: 'booking intocns',
+        onComplete: (data) => {
+            address.value = data.roadAddress ?? data.address ?? '';
+            jibun.value = data.jibunAddress ?? '';
+        },
+        onError: () => showAlert('주소 검색을 불러올 수 없습니다.'),
+    });
+}
 
 function parseJson(val) {
     if (val == null) return null;
@@ -500,8 +513,8 @@ onUnmounted(() => {
                                 <div class="form-label">주소</div>
                                 <div class="form-content">
                                     <div class="d-flex gap-4">
-                                        <InputTextBox v-model="address" placeholder="주소" />
-                                        <button class="btn btn--size-32 btn--black-outline">
+                                        <InputTextBox v-model="address" placeholder="주소" disabled />
+                                        <button type="button" class="btn btn--size-32 btn--black-outline" @click="openPostCode">
                                             <img :src="icSearch" alt="검색 아이콘">
                                             주소 검색
                                         </button>
