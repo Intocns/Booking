@@ -22,9 +22,10 @@ import {
     ensureNaverLoginScripts,
 } from '@/constants/naver';
 import { showAlert } from '@/utils/ui';
-import { formatPhone, removePhoneHyphens } from '@/utils/phoneFormatter';
+import { formatPhone } from '@/utils/phoneFormatter';
 import { openKakaoAddrSearch } from '@/utils/kakaoAddrSearch';
 import { validatePlaceDetail, formatPlaceDetailErrors } from '@/utils/placeAccountValidation';
+import { uploadImage } from '@/utils/fileUpload';
 
 // --- 상태 ---
 const modalStore = useModalStore();
@@ -91,6 +92,20 @@ function focusFirstInvalidField(errorKeys) {
     });
 }
 
+/** 업체 사진(대표 이미지) 업로드 */
+async function handlePlaceImageUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+        const url = await uploadImage(file);
+        if (url) representativeImageUrl.value = url;
+    } catch (err) {
+        showAlert('이미지 업로드에 실패했습니다.');
+    } finally {
+        event.target.value = '';
+    }
+}
+
 /** 병원주소 → 카카오 주소검색 API 실행 (유틸 사용) */
 function openPostCode() {
     openKakaoAddrSearch({
@@ -149,7 +164,6 @@ async function fetchAccountInfo() {
         // 네이버 플레이스 상세: 폼 필드 채우기 (API 필드 → 화면 라벨)
         // serviceName = 서비스명, name = 병원명, desc = 서비스 소개, reprOwnerName = 대표자명
         serviceName.value = data.serviceName ?? '';
-        console.log('servidceName = ',  data.serviceName )
         placeName.value = data.name ?? '';
         serviceDesc.value = data.desc ?? '';
         reprOwnerName.value = data.reprOwnerName ?? '';
@@ -241,8 +255,8 @@ function buildPlaceDetailDto() {
         addressDetail: detailAddress.value || null,
         hospitalName: placeName.value || null,
         ownerName: reprOwnerName.value || null,
-        reprPhone: removePhoneHyphens(adminPhone.value) || null,
-        phonNumber: removePhoneHyphens(reservationPhone.value) || null,
+        reprPhone: adminPhone.value || null,
+        phonNumber: reservationPhone.value || null,
         email: email.value || null,
         images,
     };
@@ -544,11 +558,12 @@ onUnmounted(() => {
                             <div class="form-content">
                                 <div class="photo-upload__grid">
                                     <label class="photo-upload__btn">
-                                        <input 
-                                            type="file" 
-                                            hidden 
-                                            multiple 
+                                        <input
+                                            type="file"
+                                            hidden
+                                            multiple
                                             accept="image/*"
+                                            @change="handlePlaceImageUpload"
                                         >
                                         <img :src="icAddBtn" alt="추가" class="icon-plus" width="32">
                                     </label>
