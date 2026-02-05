@@ -24,6 +24,7 @@ import {
 import { showAlert } from '@/utils/ui';
 import { formatPhone, removePhoneHyphens } from '@/utils/phoneFormatter';
 import { openKakaoAddrSearch } from '@/utils/kakaoAddrSearch';
+import { validatePlaceDetail, formatPlaceDetailErrors } from '@/utils/placeAccountValidation';
 
 // --- 상태 ---
 const modalStore = useModalStore();
@@ -56,6 +57,39 @@ const representativeImageUrl = ref('');
 const jibun = ref('');
 const posLat = ref(null);
 const posLong = ref(null);
+
+/** 검증 실패 시 에러 메시지·하이라이트용 */
+const validationErrors = ref(null);
+
+/** 검증 실패 시 포커스용 ref */
+const serviceNameRef = ref(null);
+const serviceDescRef = ref(null);
+const placeNameRef = ref(null);
+const reprOwnerNameRef = ref(null);
+const addressSearchBtnRef = ref(null);
+const emailRef = ref(null);
+const reservationPhoneRef = ref(null);
+const adminPhoneRef = ref(null);
+
+const ERROR_KEY_ORDER = ['serviceName', 'desc', 'placeName', 'reprOwnerName', 'address', 'email', 'reservationPhone', 'adminPhone'];
+const FIELD_REFS = [
+    serviceNameRef, serviceDescRef, placeNameRef, reprOwnerNameRef,
+    addressSearchBtnRef, emailRef, reservationPhoneRef, adminPhoneRef,
+];
+
+function focusFirstInvalidField(errorKeys) {
+    const firstKey = errorKeys[0];
+    const idx = ERROR_KEY_ORDER.indexOf(firstKey);
+    if (idx < 0) return;
+    const el = FIELD_REFS[idx]?.value;
+    if (!el) return;
+    nextTick(() => {
+        setTimeout(() => {
+            const input = el?.$el?.querySelector?.('input');
+            (input && typeof input.focus === 'function' ? input : el)?.focus?.();
+        }, 100);
+    });
+}
 
 /** 병원주소 → 카카오 주소검색 API 실행 (유틸 사용) */
 function openPostCode() {
@@ -93,9 +127,8 @@ function isApiSuccess(res) {
  */
 async function fetchAccountInfo() {
     try {
-        const res = await api.get(`/api/linkbusiness/{cocode}`);
+        const res = await api.get(`/api/linkbusiness/${COCODE}`);
         const data = res.data?.data ?? res.data;
-        console.log('data ::', data);
         if (!data || typeof data !== 'object') {
             clearPlaceFields();
             return;
@@ -178,31 +211,57 @@ function clearPlaceFields() {
     representativeImageUrl.value = '';
 }
 
+/** 검증용 폼 스냅샷 */
+function getPlaceFormForValidation() {
+    return {
+        serviceName: serviceName.value,
+        desc: serviceDesc.value,
+        placeName: placeName.value,
+        reprOwnerName: reprOwnerName.value,
+        address: address.value,
+        jibun: jibun.value,
+        email: email.value,
+        reservationPhone: reservationPhone.value,
+        adminPhone: adminPhone.value,
+    };
+}
+
+/** 저장 API용 DTO 생성 */
+function buildPlaceDetailDto() {
+    const images = representativeImageUrl.value?.trim() ? [representativeImageUrl.value.trim()] : [];
+    return {
+        businessId: businessId.value ? Number(businessId.value) : null,
+        naverId: naverId.value || null,
+        serviceName: serviceName.value || null,
+        desc: serviceDesc.value || null,
+        jibun: jibun.value || null,
+        roadAddr: address.value || null,
+        posLat: posLat.value != null ? Number(posLat.value) : null,
+        posLong: posLong.value != null ? Number(posLong.value) : null,
+        addressDetail: detailAddress.value || null,
+        hospitalName: placeName.value || null,
+        ownerName: reprOwnerName.value || null,
+        reprPhone: removePhoneHyphens(adminPhone.value) || null,
+        phonNumber: removePhoneHyphens(reservationPhone.value) || null,
+        email: email.value || null,
+        images,
+    };
+}
+
 async function savePlaceDetail() {
+    const form = getPlaceFormForValidation();
+    const { valid, errors } = validatePlaceDetail(form);
+    if (!valid) {
+        validationErrors.value = errors;
+        showAlert(formatPlaceDetailErrors(errors));
+        focusFirstInvalidField(Object.keys(errors));
+        return;
+    }
+    validationErrors.value = null;
+
     try {
-        const images = representativeImageUrl.value?.trim() ? [representativeImageUrl.value.trim()] : [];
-        const dto = {
-            businessId: businessId.value ? Number(businessId.value) : null,
-            naverId: naverId.value || null,
-            serviceName: serviceName.value || null,
-            desc: serviceDesc.value || null,
-            jibun: jibun.value || null,
-            roadAddr: address.value || null,
-            posLat: posLat.value != null ? Number(posLat.value) : null,
-            posLong: posLong.value != null ? Number(posLong.value) : null,
-            addressDetail: detailAddress.value || null,
-            hospitalName: placeName.value || null,
-            ownerName: reprOwnerName.value || null,
-            // 백엔드는 reprPhone만 사용해서 phoneList를 구성
-            reprPhone: adminPhone.value || null,
-            phonNumber: reservationPhone.value || null,
-            email: email.value || null,
-            images,
-        };
-
-        console.log('dto ::', dto);
-
-        const res = await api.post(`/api/linkbusiness/{cocode}/modify`, dto);
+        const dto = buildPlaceDetailDto();
+        const res = await api.post(`/api/linkbusiness/${COCODE}/modify`, dto);
         if (isApiSuccess(res)) {
             showAlert('저장되었습니다.');
             await fetchAccountInfo();
@@ -422,13 +481,27 @@ onUnmounted(() => {
                         <!-- 서비스명 (API: serviceName) - 수정 불가 -->
                         <div class="form-label">서비스명</div>
                         <div class="form-content">
-                            <InputTextBox v-model="serviceName" placeholder="서비스명" disabled />
+                            <InputTextBox
+                                ref="serviceNameRef"
+                                v-model="serviceName"
+                                placeholder="서비스명"
+                                disabled
+                                :is-error="!!validationErrors?.serviceName"
+                                :error-message="validationErrors?.serviceName"
+                            />
                         </div>
 
                         <!-- 병원명 (API: name) - 수정 불가 -->
                         <div class="form-label">병원명</div>
                         <div class="form-content">
-                            <InputTextBox v-model="placeName" placeholder="병원명" disabled />
+                            <InputTextBox
+                                ref="placeNameRef"
+                                v-model="placeName"
+                                placeholder="병원명"
+                                disabled
+                                :is-error="!!validationErrors?.placeName"
+                                :error-message="validationErrors?.placeName"
+                            />
                         </div>
                     </li>
 
@@ -436,13 +509,25 @@ onUnmounted(() => {
                         <!-- 서비스 소개 (API: promotionDesc) -->
                         <div class="form-label">서비스 소개</div>
                         <div class="form-content">
-                            <InputTextBox v-model="serviceDesc" placeholder="서비스 소개" />
+                            <InputTextBox
+                                ref="serviceDescRef"
+                                v-model="serviceDesc"
+                                placeholder="서비스 소개"
+                                :is-error="!!validationErrors?.desc"
+                                :error-message="validationErrors?.desc"
+                            />
                         </div>
 
                         <!-- 대표자(원장)명 (API: reprOwnerName) -->
                         <div class="form-label">대표자(원장)명</div>
                         <div class="form-content">
-                            <InputTextBox v-model="reprOwnerName" placeholder="대표자(원장)명" />
+                            <InputTextBox
+                                ref="reprOwnerNameRef"
+                                v-model="reprOwnerName"
+                                placeholder="대표자(원장)명"
+                                :is-error="!!validationErrors?.reprOwnerName"
+                                :error-message="validationErrors?.reprOwnerName"
+                            />
                         </div>
                     </li>
 
@@ -491,8 +576,11 @@ onUnmounted(() => {
                                 <div class="form-label">예약문의 번호</div>
                                 <div class="form-content">
                                     <InputTextBox
+                                        ref="reservationPhoneRef"
                                         :model-value="reservationPhone"
                                         placeholder="예약문의 번호"
+                                        :is-error="!!validationErrors?.reservationPhone"
+                                        :error-message="validationErrors?.reservationPhone"
                                         @update:model-value="reservationPhone = formatPhone($event)"
                                     />
                                 </div>
@@ -502,8 +590,11 @@ onUnmounted(() => {
                                 <div class="form-label">관리자 번호</div>
                                 <div class="form-content">
                                     <InputTextBox
+                                        ref="adminPhoneRef"
                                         :model-value="adminPhone"
                                         placeholder="관리자 번호"
+                                        :is-error="!!validationErrors?.adminPhone"
+                                        :error-message="validationErrors?.adminPhone"
                                         @update:model-value="adminPhone = formatPhone($event)"
                                     />
                                 </div>
@@ -513,8 +604,8 @@ onUnmounted(() => {
                                 <div class="form-label">주소</div>
                                 <div class="form-content">
                                     <div class="d-flex gap-4">
-                                        <InputTextBox v-model="address" placeholder="주소" disabled />
-                                        <button type="button" class="btn btn--size-32 btn--black-outline" @click="openPostCode">
+                                        <InputTextBox v-model="address" placeholder="주소" disabled :is-error="!!validationErrors?.address" :error-message="validationErrors?.address" />
+                                        <button ref="addressSearchBtnRef" type="button" class="btn btn--size-32 btn--black-outline" @click="openPostCode">
                                             <img :src="icSearch" alt="검색 아이콘">
                                             주소 검색
                                         </button>
@@ -528,7 +619,13 @@ onUnmounted(() => {
                         <!-- 이메일 -->
                         <div class="form-label">이메일</div>
                         <div class="form-content">
-                            <InputTextBox v-model="email" placeholder="이메일" />
+                            <InputTextBox
+                                ref="emailRef"
+                                v-model="email"
+                                placeholder="이메일"
+                                :is-error="!!validationErrors?.email"
+                                :error-message="validationErrors?.email"
+                            />
                         </div>
 
                         <!-- 상세주소 -->
