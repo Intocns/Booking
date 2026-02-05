@@ -18,7 +18,6 @@ import {
     getMappingUrl,
     getNaverCallbackUrl,
     buildConnectPayload,
-    buildUnlinkPayload,
     ensureNaverLoginScripts,
 } from '@/constants/naver';
 import { showAlert } from '@/utils/ui';
@@ -344,17 +343,12 @@ async function requestConnect() {
     }
 }
 
-/** POST /api/linkbusiness/mapping (code: 2 자체 매핑 해제) 후 로컬 상태 초기화 */
+/** GET /api/linkbusiness/{cocode}/place/setting/0 (연동 해지) 후 로컬 상태 초기화 */
 async function saveMappingUnlink() {
     modalStore.confirmModal.closeModal();
+    return;
     try {
-        const payload = buildUnlinkPayload({
-            cocode: Number(COCODE),
-            hosIdx: hosIdx.value,
-            naverId: naverId.value,
-            businessId: Number(businessId.value),
-        });
-        const res = await api.post('/api/linkbusiness/mapping', payload);
+        // const res = await api.get(`/api/linkbusiness/${COCODE}/place/setting/0`);
         if (isApiSuccess(res)) {
             hasNaverAccount.value = false;
             naverId.value = '';
