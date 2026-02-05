@@ -440,7 +440,7 @@ onUnmounted(() => {
                         <h3 class="sync-header__title title-m">네이버 계정 연동하기</h3>
                         <template v-if="hasNaverAccount">
                             <label class="toggle">
-                                <input type="checkbox" :checked="hasNaverAccount" @click.prevent="onToggleNaverReserve" />
+                                <input type="checkbox" :checked="hasNaverAccount"  />
                                 <img class="toggle-img" />
                             </label>
                         </template>
