@@ -757,7 +757,7 @@ const handleViewChart = () => {
                     <div class="info-item align-start">
                         <p class="label" style="padding-top: 10px;">고객 메모</p>
                         <TextAreaBox 
-                            :model-value="reserveClientPet?.clientMemo || ''"
+                            :model-value="reserveData?.reMemo || ''"
                             :disabled="true"
                             placeholder="고객 메모"/>
                     </div>
