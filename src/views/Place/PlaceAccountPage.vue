@@ -13,7 +13,7 @@ import { useModalStore } from '@/stores/modalStore';
 import { usePlaceStore } from '@/stores/placeStore';
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { api } from '@/api/axios';
-import { COCODE } from '@/constants/common';
+import { COCODE, HOS_IDX } from '@/constants/common';
 import {
     NAVER_CLIENT_ID,
     PLACE_SETTING_UNLINK,
@@ -353,18 +353,14 @@ async function requestConnect() {
         showAlert('네이버 ID와 비즈니스 ID를 입력해 주세요.');
         return;
     }
-    const hosIdxVal = hosIdx.value ?? 0;
-    if (!hosIdxVal) {
-        showAlert('병원 정보를 불러올 수 없습니다. 페이지를 새로고침하거나, 연동된 계정이 있으면 먼저 조회 후 연동 해제 시나리오를 사용해 주세요.');
-        return;
-    }
     try {
         const payload = buildConnectPayload({
-            cocode: Number(COCODE),
-            hosIdx: hosIdxVal,
+            cocode: Number(COCODE), // TODO: 개발 사용 임시 cocode
+            hosIdx: Number(HOS_IDX), // TODO: 개발 사용 임시 hosIdx
             naverId: nid,
             businessId: Number(bid),
         });
+
         const res = await api.post('/api/linkbusiness/conn', payload);
         if (isApiSuccess(res)) {
             hasNaverAccount.value = true;

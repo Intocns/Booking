@@ -95,14 +95,14 @@ export function buildProfilePayload(profile, cocode = 0) {
     const hosIdxVal = num(profile.hosIdx);
     return {
         cocode: num(profile.cocode) || cocode,
-        hosIdx: hosIdxVal > 0 ? hosIdxVal : 1,
+        hosIdx: hosIdxVal > 0 ? hosIdxVal : 0,
         code: num(profile.code) || 0,
         itemId: num(profile.itemId) || 0,
-        naverId: str(profile.naverId) || idVal || 'temp',
-        id: idVal || 'temp',
+        naverId: str(profile.naverId) || idVal || '',
+        id: idVal || '',
         agencyBizItemId: num(profile.agencyBizItemId) || 0,
         businessId: (num(profile.businessId) || 0) === 0 ? null : num(profile.businessId),
         flag: num(profile.flag) || 0,
-        email: emailVal || 'temp@temp.com',
+        email: emailVal || '',
     };
 }
