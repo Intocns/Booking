@@ -856,12 +856,13 @@ onUnmounted(() => {
         <div class="modal-contents-inner naver-unlink-notice-modal">
             <p class="naver-unlink-notice-modal__title title-s">연동 해제 주의사항</p>
             <ul class="naver-unlink-notice-modal__list body-m">
-                <li>네이버를 통한 예약 접수 및 확인이 불가합니다.</li>
-                <li>등록된 상품 관리 및 신규 상품 등록이 불가합니다.</li>
+                <li> ㆍ 네이버를 통한 예약 접수 및 확인이 불가합니다.</li>
+                <li> ㆍ 등록된 상품 관리 및 신규 상품 등록이 불가합니다.</li>
             </ul>
             <p class="naver-unlink-notice-modal__title title-s">예약만 받고싶지 않다면</p>
             <p class="naver-unlink-notice-modal__desc body-m">
-                <span class="naver-unlink-notice-modal__link">플레이스 관리</span> &gt; <span class="naver-unlink-notice-modal__link">운영 설정</span> &gt; <span class="naver-unlink-notice-modal__link">예약받기</span> 메뉴에서 예약받기 토글을 OFF로 설정해 주세요.
+                <span class="naver-unlink-notice-modal__link">플레이스 관리</span> &gt; <span class="naver-unlink-notice-modal__link">운영 설정</span> &gt; <span class="naver-unlink-notice-modal__link">예약받기</span> 메뉴에서 
+                <br/>예약받기 토글을 OFF로 설정해 주세요.
             </p>
             <div class="naver-unlink-notice-modal__buttons">
                 <button
