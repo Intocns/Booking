@@ -1,6 +1,10 @@
 /** 네이버 로그인(implicit) - 클라이언트 ID, 콜백 URL */
 
 export const NAVER_CLIENT_ID = 'EcJRARpxNIYe682MRl2I';
+
+/** GET /api/linkbusiness/{cocode}/place/setting/{value} 의 설정값: 0=연동 해지, 1=연동 */
+export const PLACE_SETTING_UNLINK = 0;
+export const PLACE_SETTING_LINK = 1;
 /** 프론트 기준 콜백 경로 (라우터 path) */
 export const NAVER_CALLBACK_PATH = 'mylink/naverReserveCallBack';
 

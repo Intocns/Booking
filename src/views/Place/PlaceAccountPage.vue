@@ -15,6 +15,8 @@ import { api } from '@/api/axios';
 import { COCODE } from '@/constants/common';
 import {
     NAVER_CLIENT_ID,
+    PLACE_SETTING_UNLINK,
+    PLACE_SETTING_LINK,
     getMappingUrl,
     getNaverCallbackUrl,
     buildConnectPayload,
@@ -30,6 +32,8 @@ import draggable from 'vuedraggable';
 // --- 상태 ---
 const modalStore = useModalStore();
 const hasNaverAccount = ref(false);
+/** GET /api/linkbusiness/{cocode} 응답의 useFlag: null=처음 등록, 0=연동해지(계정 재연동), 1=연동중(연동관리) */
+const naverUseFlag = ref(null);
 const naverId = ref('');
 const businessId = ref('');
 const hosIdx = ref(0);
@@ -155,6 +159,7 @@ async function fetchAccountInfo() {
         const res = await api.get(`/api/linkbusiness/{cocode}`);
         const data = res.data?.data ?? res.data;
         if (!data || typeof data !== 'object') {
+            naverUseFlag.value = null;
             clearPlaceFields();
             return;
         }
@@ -163,6 +168,9 @@ async function fetchAccountInfo() {
         const bid = data.businessId ?? data.business_id;
         const numHosIdx = data.hosIdx != null ? Number(data.hosIdx) : Number(data.hos_idx ?? 0);
         hosIdx.value = numHosIdx;
+
+        const useFlagVal = data.useFlag ?? data.use_flag ?? null;
+        naverUseFlag.value = useFlagVal != null ? Number(useFlagVal) : null;
 
         if (nid !== '' || (bid != null && bid !== 0)) {
             hasNaverAccount.value = true;
@@ -219,6 +227,7 @@ async function fetchAccountInfo() {
 }
 
 function clearPlaceFields() {
+    naverUseFlag.value = null;
     existingAccountMode.value = false;
     serviceName.value = '';
     placeName.value = '';
@@ -298,16 +307,24 @@ async function savePlaceDetail() {
     }
 }
 
-function onToggleNaverReserve() {
+function openNaverManageModal() {
     if (!hasNaverAccount.value) return;
-    modalStore.confirmModal.openModal({
-        title: '연동 해제',
-        text: '연동을 해제하시겠습니까?',
-        cancelBtnText: '취소',
-        confirmBtnText: '연동해제하기',
-        onConfirm: () => saveMappingUnlink(),
-        onCancel: () => {},
-    });
+    modalStore.naverConnectManageModal.openModal();
+}
+
+/** useFlag가 0일 때 "계정 재연동" 버튼 클릭 → 재연동 API 호출 */
+function onReconnectAccount() {
+    savePlaceSetting(PLACE_SETTING_LINK);
+}
+
+function onUnlinkFromManageModal() {
+    modalStore.naverConnectManageModal.closeModal();
+    modalStore.naverConnectUnlinkNoticeModal.openModal();
+}
+
+function onConfirmUnlinkFromNoticeModal() {
+    modalStore.naverConnectUnlinkNoticeModal.closeModal();
+    savePlaceSetting(PLACE_SETTING_UNLINK);
 }
 
 async function requestConnect() {
@@ -343,27 +360,39 @@ async function requestConnect() {
     }
 }
 
-/** GET /api/linkbusiness/{cocode}/place/setting/0 (연동 해지) 후 로컬 상태 초기화 */
-async function saveMappingUnlink() {
+/**
+ * GET /api/linkbusiness/{cocode}/place/setting/{placeSettingValue}
+ * @param {number} placeSettingValue - PLACE_SETTING_UNLINK(0)=연동 해지, PLACE_SETTING_LINK(1)=연동
+ */
+async function savePlaceSetting(placeSettingValue) {
     modalStore.confirmModal.closeModal();
-    return;
     try {
-        // const res = await api.get(`/api/linkbusiness/${COCODE}/place/setting/0`);
+        const res = await api.get(`/api/linkbusiness/{cocode}/place/setting/${placeSettingValue}`);
         if (isApiSuccess(res)) {
-            hasNaverAccount.value = false;
-            naverId.value = '';
-            businessId.value = '';
-            showAlert('연동이 해제되었습니다.');
-            fetchAccountInfo();
-            nextTick(() => initNaverLogin());
+            if (placeSettingValue === PLACE_SETTING_UNLINK) {
+                hasNaverAccount.value = false;
+                naverId.value = '';
+                businessId.value = '';
+                showAlert('연동이 해제되었습니다.');
+                fetchAccountInfo();
+                nextTick(() => initNaverLogin());
+            } else if (placeSettingValue === PLACE_SETTING_LINK) {
+                showAlert('계정이 재연동되었습니다.');
+                await fetchAccountInfo();
+            }
         } else {
-            const msg = res.data?.message ?? '연동 해제에 실패했습니다.';
+            const msg = res.data?.message ?? (placeSettingValue === PLACE_SETTING_UNLINK ? '연동 해제에 실패했습니다.' : '연동에 실패했습니다.');
             showAlert(msg);
         }
     } catch (err) {
         console.error(err);
-        showAlert('연동 해제 중 오류가 발생했습니다.');
+        showAlert(placeSettingValue === PLACE_SETTING_UNLINK ? '연동 해제 중 오류가 발생했습니다.' : '연동 중 오류가 발생했습니다.');
     }
+}
+
+/** 연동 해제 시 호출 */
+function saveMappingUnlink() {
+    savePlaceSetting(PLACE_SETTING_UNLINK);
 }
 
 /** 네이버 SDK로 로그인 버튼·팝업·프로필 콜백 등록 (SDK 로드 후 호출). #naver_id_login div가 DOM에 있을 때만 실행 */
@@ -439,10 +468,22 @@ onUnmounted(() => {
                     <div class="sync-header">
                         <h3 class="sync-header__title title-m">네이버 계정 연동하기</h3>
                         <template v-if="hasNaverAccount">
-                            <label class="toggle">
-                                <input type="checkbox" :checked="hasNaverAccount"  />
-                                <img class="toggle-img" />
-                            </label>
+                            <button
+                                v-if="naverUseFlag === 0"
+                                type="button"
+                                class="btn btn--size-40 btn--blue"
+                                @click="onReconnectAccount"
+                            >
+                                계정 재연동
+                            </button>
+                            <button
+                                v-else
+                                type="button"
+                                class="btn btn--size-40 btn--blue"
+                                @click="openNaverManageModal"
+                            >
+                                연동관리
+                            </button>
                         </template>
                         <template v-else>
                             <div id="naver_id_login"></div>
@@ -730,9 +771,128 @@ onUnmounted(() => {
             </div>
         </div>
     </Modal>
+
+    <!-- 네이버 계정 연동 관리 팝업 -->
+    <Modal
+        v-if="modalStore.naverConnectManageModal.isVisible"
+        title="네이버 계정 연동 관리"
+        size="xs"
+        :modal-state="modalStore.naverConnectManageModal"
+    >
+        <div class="modal-contents-inner naver-manage-modal">
+            <p class="modal-contents-body naver-manage-modal__desc">
+                네이버 예약 연동에 대한 설정을 변경할 수 있습니다.
+            </p>
+            <div class="naver-manage-modal__row">
+                <span class="naver-manage-modal__label title-s">연동 상태</span>
+                <div class="naver-manage-modal__status">
+                    <span class="naver-manage-modal__status-text">연동 중</span>
+                    <button
+                        type="button"
+                        class="btn btn--size-40 btn--black-outline"
+                        @click="onUnlinkFromManageModal"
+                    >
+                        연동 해제
+                    </button>
+                </div>
+            </div>
+        </div>
+    </Modal>
+
+    <!-- 연동 해제 주의사항 모달 (연동 해제 클릭 시) -->
+    <Modal
+        v-if="modalStore.naverConnectUnlinkNoticeModal.isVisible"
+        title="네이버 계정 연동 관리"
+        size="xs"
+        :modal-state="modalStore.naverConnectUnlinkNoticeModal"
+    >
+        <div class="modal-contents-inner naver-unlink-notice-modal">
+            <p class="naver-unlink-notice-modal__title title-s">연동 해제 주의사항</p>
+            <ul class="naver-unlink-notice-modal__list body-m">
+                <li>네이버를 통한 예약 접수 및 확인이 불가합니다.</li>
+                <li>등록된 상품 관리 및 신규 상품 등록이 불가합니다.</li>
+            </ul>
+            <p class="naver-unlink-notice-modal__title title-s">예약만 받고싶지 않다면</p>
+            <p class="naver-unlink-notice-modal__desc body-m">
+                <span class="naver-unlink-notice-modal__link">플레이스 관리</span> &gt; <span class="naver-unlink-notice-modal__link">운영 설정</span> &gt; <span class="naver-unlink-notice-modal__link">예약받기</span> 메뉴에서 예약받기 토글을 OFF로 설정해 주세요.
+            </p>
+            <div class="naver-unlink-notice-modal__buttons">
+                <button
+                    type="button"
+                    class="btn btn--size-40 btn--black-outline"
+                    @click="modalStore.naverConnectUnlinkNoticeModal.closeModal()"
+                >
+                    취소
+                </button>
+                <button
+                    type="button"
+                    class="btn btn--size-40 btn--blue"
+                    @click="onConfirmUnlinkFromNoticeModal"
+                >
+                    해제하기
+                </button>
+            </div>
+        </div>
+    </Modal>
 </template>
 
 <style lang="scss" scoped>
+    .naver-manage-modal {
+        .naver-manage-modal__desc {
+            margin-bottom: 20px;
+        }
+        .naver-manage-modal__row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .naver-manage-modal__label {
+            color: $gray-800;
+        }
+        .naver-manage-modal__status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .naver-manage-modal__status-text {
+            color: $gray-700;
+            @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+        }
+    }
+    .naver-unlink-notice-modal {
+        .naver-unlink-notice-modal__title {
+            font-weight: 700;
+            color: $gray-900;
+            margin-bottom: 8px;
+            &:not(:first-child) {
+                margin-top: 20px;
+            }
+        }
+        .naver-unlink-notice-modal__list {
+            color: $gray-800;
+            margin: 0 0 0 16px;
+            padding: 0;
+            line-height: 1.5;
+            li { margin-bottom: 4px; }
+        }
+        .naver-unlink-notice-modal__desc {
+            color: $gray-800;
+            margin: 0;
+            line-height: 1.5;
+        }
+        .naver-unlink-notice-modal__link {
+            color: $primary-700;
+            font-weight: 600;
+        }
+        .naver-unlink-notice-modal__buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 24px;
+            padding-top: 16px;
+        }
+    }
     :deep(.search-filter) {
         width: 100%;
     }
