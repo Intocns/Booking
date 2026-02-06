@@ -524,7 +524,7 @@ const onHolidayCheckChange = (e) => {
                     <template v-if="config.set_reserve === 3">
                         <div v-for="day in allDays" :key="day.key" class="schedule-row">
                             <div class="days-box">
-                                <span>{{ day.label }}</span>
+                                <span class="flag flag--black">{{ day.label }}</span>
                             </div>
                             
                             <div class="times-rows">
@@ -636,9 +636,10 @@ const onHolidayCheckChange = (e) => {
                         <div class="days-box"><span class="flag flag--black">마감</span></div>
                         
                         <div class="times-rows">
-                            <div class="time-row">
+                            <div v-for="(time, idx) in config.pos.monday" :key="'all'+idx" class="time-row">
                                 <div class="time-box">
                                     <TimeSelect 
+                                        v-if="idx == 0"
                                         :model-value="`${config.pos.monday[0].deadline_hour.replace('시','')}:${config.pos.monday[0].deadline_min.replace('분','')}`"
                                         @update:model-value="(val) => updateTime('monday', 0, 'deadline', val)"
                                     />
