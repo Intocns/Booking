@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
 import { formatSelectedLabels } from '@/utils/selectFormatter';
 import icSelectBoxOpenClosed from '@/assets/icons/ic_selectbox_OpenClosed.svg';
 
@@ -27,7 +27,10 @@ const individualOptionValues = computed(() => {
 
 /* 토글 */
 const toggle = () => {
-    if (!props.disabled) isOpen.value = !isOpen.value;
+    if (!props.disabled) {
+        isOpen.value = !isOpen.value;
+        if (isOpen.value) updatePosition();
+    }
 };
 
 // select box에 표시할 라벨 계산 
@@ -117,12 +120,50 @@ const handleClickOutside = (e) => {
   }
 };
 
+const triggerRef = ref(null); // .select__box 참조
+const dropdownRef = ref(null);
+const dropdownStyle = ref({
+    position: 'fixed',
+    top: '0px',
+    left: '0px',
+    width: '0px',
+    zIndex: 9999
+});
+
+const updatePosition = async () => {
+    await nextTick();
+    if (triggerRef.value) {
+        const rect = triggerRef.value.getBoundingClientRect();
+        const dropdownHeight = 220; 
+        const windowHeight = window.innerHeight;
+        const spaceBelow = windowHeight - rect.bottom;
+        const showUpward = spaceBelow < dropdownHeight + 10;
+
+        dropdownStyle.value = {
+            position: 'fixed',
+            left: `${rect.left}px`,
+            width: `${rect.width}px`,
+            top: showUpward ? 'auto' : `${rect.bottom}px`,
+            bottom: showUpward ? `${windowHeight - rect.top}px` : 'auto',
+            zIndex: 9999
+        };
+    }
+};
+
+// 스크롤 시 닫기
+const handleScroll = (e) => {
+    if (dropdownRef.value && dropdownRef.value.contains(e.target)) return;
+    if (isOpen.value) isOpen.value = false;
+};
+
 onMounted(() => {
-  document.addEventListener("click", handleClickOutside);
+    document.addEventListener("click", handleClickOutside, true);
+    window.addEventListener("scroll", handleScroll, true);
 });
 
 onBeforeUnmount(() => {
-  document.removeEventListener("click", handleClickOutside);
+    document.removeEventListener("click", handleClickOutside, true);
+    window.removeEventListener("scroll", handleScroll, true);
 });
 </script>
 
@@ -130,7 +171,7 @@ onBeforeUnmount(() => {
     <div class="select" :class="{ disabled }" ref="wrapper">
 
         <!-- select box -->
-        <div class="select__box" :class="{ open: isOpen }" @click="toggle">
+        <div class="select__box" :class="{ open: isOpen }" @click="toggle" ref="triggerRef">
             <span 
                 class="select__text"
                 :class="{'is-placeholder' : !selectedLabels.length }"
@@ -146,27 +187,29 @@ onBeforeUnmount(() => {
         <!-- 힌트 메세지 -->
         <span v-show="caption" class="caption">{{ caption }}</span>
 
-        <!-- Dropdown -->
-        <div class="select__dropdown" v-if="isOpen">
-            <div 
-                v-for="opt in options" 
-                :key="opt.value"
-                class="select__option"
-                :class="{ selected: modelValue.includes(opt.value) || (modelValue.includes('all') && opt.value !== 'all') }"
-                @click.stop="selectOption(opt.value)"
-            >
-                <label class="checkbox">
-                    <input 
-                        type="checkbox" 
-                        :checked="modelValue.includes(opt.value) || (modelValue.includes('all') && opt.value !== 'all')"
-                        @click.stop.prevent
-                    />
-                    <span class="box"></span>
-                    <span class="label body-m">{{ opt.label }}</span>
-                </label>
-
+        <teleport to="body">
+            <!-- Dropdown -->
+            <div class="select__dropdown" v-if="isOpen" ref="dropdownRef" :style="dropdownStyle">
+                <div 
+                    v-for="opt in options" 
+                    :key="opt.value"
+                    class="select__option"
+                    :class="{ selected: modelValue.includes(opt.value) || (modelValue.includes('all') && opt.value !== 'all') }"
+                    @click.stop="selectOption(opt.value)"
+                >
+                    <label class="checkbox">
+                        <input 
+                            type="checkbox" 
+                            :checked="modelValue.includes(opt.value) || (modelValue.includes('all') && opt.value !== 'all')"
+                            @click.stop.prevent
+                        />
+                        <span class="box"></span>
+                        <span class="label body-m">{{ opt.label }}</span>
+                    </label>
+    
+                </div>
             </div>
-        </div>
+        </teleport>
     </div>
 </template>
 

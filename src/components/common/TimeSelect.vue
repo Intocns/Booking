@@ -186,12 +186,32 @@ const updatePosition = async () => {
     }
 };
 
+// --- 스크롤/리사이즈 시 닫기 로직 추가 ---
+const handleScroll = (e) => {
+    // 드롭다운 내부의 스크롤(시간/분 선택 리스트)은 무시해야 함
+    if (dropdownRef.value && dropdownRef.value.contains(e.target)) {
+        return;
+    }
+    
+    // 드롭다운이 열려있을 때만 작동
+    if (isDropdownVisible.value) {
+        // 취소 로직(기존 값 복구)을 실행하며 닫음
+        cancelSelection(); 
+    }
+};
+
 onMounted(() => {
     document.addEventListener('click', handleClickOutside, true);
+    // 외부 스크롤 및 윈도우 리사이즈 감지 추가
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleScroll);
 });
 
 onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside, true);
+    // 이벤트 리스너 제거
+    window.removeEventListener("scroll", handleScroll, true);
+    window.removeEventListener("resize", handleScroll);
 });
 </script>
 

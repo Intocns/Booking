@@ -23,7 +23,7 @@
 
         &:hover {background-color: $primary-800; box-shadow: $shadow-button-hover}
         &:active {background-color: $primary-800; color: $primary-100;}
-        &.is-disabled {background-color: $gray-200; color: $gray-400;}
+        &.is-disabled {background-color: $gray-200; color: $gray-400; pointer-events: none;}
     }
     // outline blue
     &--blue-outline {
@@ -33,7 +33,7 @@
 
         &:hover {background-color: $primary-50; box-shadow: $shadow-button-hover}
         &:active {background-color: $primary-100;}
-        &.is-disabled {border-color: $gray-300; background-color: $gray-200; color: $gray-400;}
+        &.is-disabled {border-color: $gray-300; background-color: $gray-200; color: $gray-400; pointer-events: none;}
     }
     // solid black
     &--black {
@@ -42,7 +42,7 @@
 
         &:hover {background-color: $gray-900;box-shadow: $shadow-button-hover}
         &:active {background-color: $gray-900;}
-        &.is-disabled {background-color: $gray-200; color: $gray-400;}
+        &.is-disabled {background-color: $gray-200; color: $gray-400; pointer-events: none;}
     }
     // outline black
     &--black-outline {
@@ -53,7 +53,7 @@
         &:hover {background: $gray-100; box-shadow: $shadow-button-hover}
         &:active {background: $gray-100; border-color: $gray-700;}
         &.selected {background: $gray-100; border-color: $gray-700;}
-        &.is-disabled {border-color: $gray-300; background-color: $gray-200; color: $gray-400;}
+        &.is-disabled {border-color: $gray-300; background-color: $gray-50; color: $gray-400; pointer-events: none;}
     }
 }
 
@@ -766,6 +766,17 @@
     justify-content: center;
     gap: 16px;
     padding: 4px 10px;
+
+    &.form-no-padding {padding: 0; gap:0;}
+}
+.form-title-box {
+    @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
+    height: 100%;
+    width: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $gray-700;
 }
 .form-footer {
     display: flex;
@@ -834,6 +845,20 @@
         }
 
         .drag-handle {
+            position: absolute;
+            top: 4px;
+            left:4px;
+
+            width: 16px;
+            height: 16px;
+            cursor: grab;
+            
+            border-radius: 2px;
+            background-color: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .drag-image-handle {
             position: absolute;
             top: 4px;
             left:4px;

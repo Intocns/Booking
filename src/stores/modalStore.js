@@ -66,6 +66,9 @@ export const useModalStore = defineStore("modalStore", () => {
     const setOperationRuleModal = createModalState() // 상품 수정 > 예약 정보 > 운영 설정 모달 > 진료 가능 동물 수, 운영시간 변경하기
     const setTimeSettingModal = createModalState() // 상품 수정 > 예약오픈,예약 노출, 예약미노출 시작일 시간 설정 모달
 
+    // 인투펫 관리
+    const intoPetRoomSettingModal = createModalState() // 진료실 관리 > 진료실 노출 설정 모달
+
     return {
         smsModal,
         confirmModal,
@@ -99,5 +102,7 @@ export const useModalStore = defineStore("modalStore", () => {
         setDateSettingModal,
         setOperationRuleModal,
         setTimeSettingModal,
+        // 인투펫 관리
+        intoPetRoomSettingModal,
     }
 })

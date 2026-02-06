@@ -11,6 +11,7 @@ import icBtnClose from '@/assets/icons/ic_btn_close_w.svg'
 
 const props = defineProps({
     isModalOpen: {type: Boolean, default: false},
+    repeatMode: { type: String, default: 'all' }, // 인투펫 관리 > 진료실 관리에서 사용하는 mode 체크 위한 값
     showRepeatOptions: { type: Boolean, default: true }, // 주기 선택 영역 노출 여부
     title: { type: String, default: '' },               // 모달 상단 타이틀
     initialDate: { type: [Date, String, null], default: null }, // 초기 선택 날짜 (Date 또는 'yyyy-MM-dd' 형식 문자열)
@@ -23,6 +24,23 @@ const emit = defineEmits(['close', 'add']);
  */
 const selectedDate = ref(null); // 데이트피커 선택 값
 const repeatType = ref('DAILY'); // 'YEARLY', 'MONTHLY', 'DAILY'
+
+// 부모가 넘겨준 mode에 따라 화면에 보여줄 라디오 버튼 필터링
+const displayOptions = computed(() => {
+    const options = [
+        { label: '매년', value: 'YEARLY' },
+        { label: '매달', value: 'MONTHLY' },
+        { label: '한번만', value: 'DAILY' }
+    ];
+
+    if (props.repeatMode === 'annual') { // 인투펫 관리 > 진료실 관리에서는 한번만, 매년 두가지 옵션만 사용.
+        return options.filter(opt => opt.value !== 'MONTHLY');
+    }
+    if (props.repeatMode === 'none') {
+        return [];
+    }
+    return options; // 'all'인 경우 전체 반환
+});
 
 // 모달이 열릴 때 부모가 넘겨준 이전 날짜를 세팅
 watch(() => props.isModalOpen, async (newVal) => {
@@ -159,18 +177,10 @@ onBeforeUnmount(() => {
                         <div class="select-date-option">
 
                             <!-- 매년/매달/한번만 선택 -->
-                            <div v-if="showRepeatOptions" class="segment-wrapper">
-                                <label class="segment">
-                                    <input type="radio" v-model="repeatType" value="YEARLY" />
-                                    <span class="label">매년</span>
-                                </label>
-                                <label class="segment">
-                                    <input type="radio" v-model="repeatType" value="MONTHLY" />
-                                    <span class="label">매달</span>
-                                </label>
-                                <label class="segment">
-                                    <input type="radio" v-model="repeatType" value="DAILY" />
-                                    <span class="label">한번만</span>
+                            <div v-if="showRepeatOptions && displayOptions.length > 0" class="segment-wrapper">
+                                <label v-for="opt in displayOptions" :key="opt.value" class="segment">
+                                    <input type="radio" v-model="repeatType" :value="opt.value" />
+                                    <span class="label">{{ opt.label }}</span>
                                 </label>
                             </div>
         
