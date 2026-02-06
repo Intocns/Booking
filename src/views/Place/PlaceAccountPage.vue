@@ -312,8 +312,14 @@ function openNaverManageModal() {
     modalStore.naverConnectManageModal.openModal();
 }
 
-/** useFlag가 0일 때 "계정 재연동" 버튼 클릭 → 재연동 API 호출 */
+/** useFlag가 0일 때 "계정 재연동" 버튼 클릭 → 확인 모달 오픈 */
 function onReconnectAccount() {
+    modalStore.naverReconnectConfirmModal.openModal();
+}
+
+/** 재연동 확인 모달에서 "연동하기" 클릭 → 모달 닫고 재연동 API 호출 */
+function onConfirmReconnect() {
+    modalStore.naverReconnectConfirmModal.closeModal();
     savePlaceSetting(PLACE_SETTING_LINK);
 }
 
@@ -834,6 +840,41 @@ onUnmounted(() => {
             </div>
         </div>
     </Modal>
+
+    <!-- 계정 재연동 확인 모달 (계정 재연동 버튼 클릭 시) -->
+    <Modal
+        v-if="modalStore.naverReconnectConfirmModal.isVisible"
+        title="네이버 계정 연동 관리"
+        size="xs"
+        :modal-state="modalStore.naverReconnectConfirmModal"
+    >
+        <div class="modal-contents-inner naver-reconnect-confirm-modal">
+            <p class="naver-reconnect-confirm-modal__heading title-m">네이버 계정 재연동</p>
+            <p class="naver-reconnect-confirm-modal__desc body-m">
+                네이버 계정을 다시 연동하면 네이버 예약 및 상품 관리 기능을 사용할 수 있습니다.<br/>
+                계정 재연동을 진행하시겠습니까?
+            </p>
+            <p class="naver-reconnect-confirm-modal__disclaimer caption">
+                * 재연동은 기존 연동 계정으로만 가능합니다. 신규 계정으로 연동을 희망하시는 경우, 고객센터로 연락 부탁드립니다.
+            </p>
+            <div class="naver-reconnect-confirm-modal__buttons">
+                <button
+                    type="button"
+                    class="btn btn--size-40 btn--black-outline"
+                    @click="modalStore.naverReconnectConfirmModal.closeModal()"
+                >
+                    취소
+                </button>
+                <button
+                    type="button"
+                    class="btn btn--size-40 btn--blue"
+                    @click="onConfirmReconnect"
+                >
+                    연동하기
+                </button>
+            </div>
+        </div>
+    </Modal>
 </template>
 
 <style lang="scss" scoped>
@@ -891,6 +932,28 @@ onUnmounted(() => {
             gap: 8px;
             margin-top: 24px;
             padding-top: 16px;
+        }
+    }
+    .naver-reconnect-confirm-modal {
+        .naver-reconnect-confirm-modal__heading {
+            font-weight: 700;
+            color: $gray-900;
+            margin-bottom: 12px;
+        }
+        .naver-reconnect-confirm-modal__desc {
+            color: $gray-800;
+            margin: 0 0 16px;
+            line-height: 1.5;
+        }
+        .naver-reconnect-confirm-modal__disclaimer {
+            color: $gray-600;
+            margin: 0 0 24px;
+            line-height: 1.5;
+        }
+        .naver-reconnect-confirm-modal__buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
         }
     }
     :deep(.search-filter) {
