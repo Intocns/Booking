@@ -10,6 +10,7 @@ import icAddBtn from '@/assets/icons/ic_add_btn.svg';
 import icDragHandel from '@/assets/icons/ic_drag_handel.svg';
 import icClear from '@/assets/icons/ic_clear.svg';
 import { useModalStore } from '@/stores/modalStore';
+import { usePlaceStore } from '@/stores/placeStore';
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { api } from '@/api/axios';
 import { COCODE } from '@/constants/common';
@@ -31,6 +32,7 @@ import draggable from 'vuedraggable';
 
 // --- 상태 ---
 const modalStore = useModalStore();
+const placeStore = usePlaceStore();
 const hasNaverAccount = ref(false);
 /** GET /api/linkbusiness/{cocode} 응답의 useFlag: null=처음 등록, 0=연동해지(계정 재연동), 1=연동중(연동관리) */
 const naverUseFlag = ref(null);
@@ -165,6 +167,7 @@ async function fetchAccountInfo() {
         const data = res.data?.data ?? res.data;
         if (!data || typeof data !== 'object') {
             naverUseFlag.value = null;
+            placeStore.naverUseFlag = null;
             clearPlaceFields();
             return;
         }
@@ -176,6 +179,7 @@ async function fetchAccountInfo() {
 
         const useFlagVal = data.useFlag ?? data.use_flag ?? null;
         naverUseFlag.value = useFlagVal != null ? Number(useFlagVal) : null;
+        placeStore.naverUseFlag = naverUseFlag.value;
 
         if (nid !== '' || (bid != null && bid !== 0)) {
             hasNaverAccount.value = true;
@@ -227,12 +231,15 @@ async function fetchAccountInfo() {
         }
     } catch {
         hasNaverAccount.value = false;
+        naverUseFlag.value = null;
+        placeStore.naverUseFlag = null;
         clearPlaceFields();
     }
 }
 
 function clearPlaceFields() {
     naverUseFlag.value = null;
+    placeStore.naverUseFlag = null;
     existingAccountMode.value = false;
     serviceName.value = '';
     placeName.value = '';
@@ -512,7 +519,7 @@ onUnmounted(() => {
                         </template>
                     </div>
 
-                    <template v-if="hasNaverAccount">
+                    <template v-if="naverUseFlag === 1">
                         <p class="account-sync__desc caption">연동이 완료되었습니다.</p>
                     </template>
                     <template v-else>
@@ -824,17 +831,17 @@ onUnmounted(() => {
                 네이버 예약 연동에 대한 설정을 변경할 수 있습니다.
             </p>
             <div class="naver-manage-modal__row">
-                <span class="naver-manage-modal__label title-s">연동 상태</span>
-                <div class="naver-manage-modal__status">
+                <div class="naver-manage-modal__status-group">
+                    <span class="naver-manage-modal__label title-s">연동 상태</span>
                     <span class="naver-manage-modal__status-text">연동 중</span>
-                    <button
-                        type="button"
-                        class="btn btn--size-40 btn--black-outline"
-                        @click="onUnlinkFromManageModal"
-                    >
-                        연동 해제
-                    </button>
                 </div>
+                <button
+                    type="button"
+                    class="btn btn--size-40 btn--black-outline naver-manage-modal__unlink-btn"
+                    @click="onUnlinkFromManageModal"
+                >
+                    연동 해제
+                </button>
             </div>
         </div>
     </Modal>
@@ -885,11 +892,14 @@ onUnmounted(() => {
         <div class="modal-contents-inner naver-reconnect-confirm-modal">
             <p class="naver-reconnect-confirm-modal__heading title-m">네이버 계정 재연동</p>
             <p class="naver-reconnect-confirm-modal__desc body-m">
-                네이버 계정을 다시 연동하면 네이버 예약 및 상품 관리 기능을 사용할 수 있습니다.<br/>
+                네이버 계정을 다시 연동하면 <br/>
+                네이버 예약 및 상품 관리 기능을 사용할 수 있습니다.<br/>
+                <br/>
                 계정 재연동을 진행하시겠습니까?
             </p>
             <p class="naver-reconnect-confirm-modal__disclaimer caption">
-                * 재연동은 기존 연동 계정으로만 가능합니다. 신규 계정으로 연동을 희망하시는 경우, 고객센터로 연락 부탁드립니다.
+                * 재연동은 기존 연동 계정으로만 가능합니다. <br/>
+                <span class="naver-reconnect-confirm-modal__disclaimer-link">신규 계정으로 연동을 희망</span>하시는 경우, 고객센터로 연락 부탁드립니다.
             </p>
             <div class="naver-reconnect-confirm-modal__buttons">
                 <button
@@ -922,17 +932,27 @@ onUnmounted(() => {
             justify-content: space-between;
             gap: 16px;
         }
-        .naver-manage-modal__label {
-            color: $gray-800;
-        }
-        .naver-manage-modal__status {
+        .naver-manage-modal__status-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
+        }
+        .naver-manage-modal__label {
+            color: $gray-800;
         }
         .naver-manage-modal__status-text {
             color: $gray-700;
             @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+        }
+        .naver-manage-modal__unlink-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .naver-manage-modal__unlink-icon {
+            width: 18px;
+            height: 18px;
+            display: block;
         }
     }
     .naver-unlink-notice-modal {
@@ -984,6 +1004,9 @@ onUnmounted(() => {
             margin: 0 0 24px;
             line-height: 1.5;
         }
+        .naver-reconnect-confirm-modal__disclaimer-link {
+            color: $primary-700;
+        }
         .naver-reconnect-confirm-modal__buttons {
             display: flex;
             justify-content: flex-end;
@@ -1007,6 +1030,10 @@ onUnmounted(() => {
         position: relative;
         .form-label {
             color: $gray-500;
+        }
+        /* 비활성 입력란 전체(아이콘 영역 포함) 동일 회색으로 맞춰 오른쪽 흰 띠 제거 */
+        :deep(.input-text-box.--disabled) {
+            background-color: $gray-100 !important;
         }
         :deep(.input-text-box-wrapper input:disabled),
         :deep(.input-text-box-wrapper input[readonly]) {

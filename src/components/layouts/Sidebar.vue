@@ -17,12 +17,19 @@ import icCs from '@/assets/icons/ic_lnb_cs.svg'
 import icLogout from '@/assets/icons/ic_lnb_logout.svg'
 // 스토어
 import { useHospitalStore } from '@/stores/hospitalStore';
+import { usePlaceStore } from '@/stores/placeStore';
+import { useModalStore } from '@/stores/modalStore';
 
 const hospitalStore = useHospitalStore();
+const placeStore = usePlaceStore();
+const modalStore = useModalStore();
 
 const router = useRouter();
 const route = useRoute();
 const openMenu = ref(null); // 열려있는 1뎁스 메뉴 index 저장
+
+/** useFlag 1일 때만 접근 가능한 네이버 플레이스 하위 경로 */
+const PLACE_MENUS_REQUIRE_LINK = ['/place/product', '/place/option', '/place/simple-reservation', '/place/settings'];
 
 const icons = {
     icDashboard,
@@ -51,6 +58,12 @@ const onClickMenu = (menu, index) => {
 
 // 2뎁스 클릭 핸들러
 const onClickChild = (child) => {
+    const path = child.path || '';
+    const requiresLink = PLACE_MENUS_REQUIRE_LINK.some((p) => path === p || path.startsWith(p + '/'));
+    if (requiresLink && placeStore.naverUseFlag !== 1) {
+        modalStore.naverConnectRequiredModal.openModal();
+        return;
+    }
     router.push(child.path);
 };
 
@@ -77,6 +90,7 @@ const goToCsCenter = () => {
 
 onMounted(() => {
     hospitalStore.getHospitalInfo();
+    placeStore.fetchNaverLinkUseFlag();
 })
 </script>
 
