@@ -99,13 +99,13 @@ const setInitData = () => {
     isReserve.value = reservationStore.operatorSettingInfo.isReserve;
 
     //예약 승인방식
-    visitPurposes.value = reservationStore.operatorSettingInfo.reserveInfo.map(item => ({ 
+    visitPurposes.value = reservationStore.operatorSettingInfo.reserveInfo?.map(item => ({ 
         id: purPoseIdx.value++, 
         title: item.title,
         rec: item.rec
     }));
     //알림톡 수신번호 설정
-    receiverPhones.value = reservationStore.operatorSettingInfo.alimTalk.map(item => ({
+    receiverPhones.value = reservationStore.operatorSettingInfo.alimTalk?.map(item => ({
         id: receiverIdx.value++, 
         phone: item
     }))
