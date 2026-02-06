@@ -47,6 +47,7 @@ export const useModalStore = defineStore("modalStore", () => {
     const naverConnectManageModal = createModalState(); // 네이버 계정 연동 관리 팝업
     const naverConnectUnlinkNoticeModal = createModalState(); // 연동 해제 주의사항 모달
     const naverReconnectConfirmModal = createModalState(); // 계정 재연동 확인 모달
+    const naverConnectRequiredModal = createModalState(); // 네이버 연동 필요 (상품/옵션 등 메뉴 접근 시)
 
     // 플레이스 설정
     const bookingGuideModal = createModalState(); // 운영 설정 > 예약 받기 > 자세히 설명 모달
@@ -82,6 +83,7 @@ export const useModalStore = defineStore("modalStore", () => {
         naverConnectManageModal,
         naverConnectUnlinkNoticeModal,
         naverReconnectConfirmModal,
+        naverConnectRequiredModal,
         // 플레이스 설정
         bookingGuideModal,
         bookingGuideTextModal,

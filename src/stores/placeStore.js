@@ -1,9 +1,12 @@
 // placeStore.js
 import { defineStore } from "pinia";
-import { api} from "@/api/axios";
+import { api } from "@/api/axios";
 import { ref } from "vue";
 
 export const usePlaceStore = defineStore("place", () => {
+    /** GET /api/linkbusiness/{cocode} 응답의 useFlag: null=미연동, 0=연동해지, 1=연동중 (상품/옵션/간단예약/플레이스설정 메뉴 접근 허용은 1일 때만) */
+    const naverUseFlag = ref(null);
+
     // 네이버 플레이스 관리>플레이스 설정>운영설정
     const operationInfo = ref({}) // 운영 설정 데이터 저장
     const historyData = ref(null); // 노출이력 데이터
@@ -125,7 +128,25 @@ export const usePlaceStore = defineStore("place", () => {
         const response = await api.post('/api/{cocode}/question/set', params);
     }
 
+    /** 네이버 연동 useFlag 조회 (사이드바·라우터에서 메뉴 접근 제어용) */
+    const fetchNaverLinkUseFlag = async () => {
+        try {
+            const res = await api.get(`/api/linkbusiness/{cocode}`);
+            const data = res.data?.data ?? res.data;
+            if (data && typeof data === 'object') {
+                const v = data.useFlag ?? data.use_flag ?? null;
+                naverUseFlag.value = v != null ? Number(v) : null;
+            } else {
+                naverUseFlag.value = null;
+            }
+        } catch {
+            naverUseFlag.value = null;
+        }
+    };
+
     return {
+        naverUseFlag,
+        fetchNaverLinkUseFlag,
         // 상태관리
 
         // 플레이스 설정 > 운영설정
@@ -157,5 +178,5 @@ export const usePlaceStore = defineStore("place", () => {
         modifyQuestion,
         modifyQuestionOrder,
         setQuestion,
-    }
+    };
 })
