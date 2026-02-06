@@ -124,9 +124,9 @@ const handleRoomChange = (nextRoom) => {
 
     
     if (isDirty) {
-        console.log(original)
-        console.log(selectedRoom.value)
-        
+        // console.log(original)
+        // console.log(selectedRoom.value)
+
         modalStore.confirmModal.openModal({
             text: '수정된 내용이 있습니다. 저장하지 않고 이동하시겠습니까?',
             confirmBtnText: '이동',
