@@ -10,7 +10,7 @@ import icAddBtn from '@/assets/icons/ic_add_btn.svg';
 import icDragHandel from '@/assets/icons/ic_drag_handel.svg';
 import icClear from '@/assets/icons/ic_clear.svg';
 import { useModalStore } from '@/stores/modalStore';
-import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { api } from '@/api/axios';
 import { COCODE } from '@/constants/common';
 import {
@@ -34,6 +34,8 @@ const modalStore = useModalStore();
 const hasNaverAccount = ref(false);
 /** GET /api/linkbusiness/{cocode} 응답의 useFlag: null=처음 등록, 0=연동해지(계정 재연동), 1=연동중(연동관리) */
 const naverUseFlag = ref(null);
+/** useFlag가 0 또는 null이면 인풋·업체사진·주소·저장 등 폼 전체 비활성화 */
+const isFormLockedByUseFlag = computed(() => naverUseFlag.value === 0 || naverUseFlag.value === null);
 const naverId = ref('');
 const businessId = ref('');
 const hosIdx = ref(0);
@@ -99,6 +101,7 @@ function focusFirstInvalidField(errorKeys) {
 
 /** 업체 사진 업로드 (multiple 선택 시 선택한 파일 전부 업로드 후 배열에 추가) */
 async function handlePlaceImageUpload(event) {
+    if (isFormLockedByUseFlag.value) return;
     const files = event.target.files;
     if (!files?.length) return;
     try {
@@ -117,11 +120,13 @@ async function handlePlaceImageUpload(event) {
 
 /** 업체 사진 삭제 */
 function removePlaceImage(index) {
+    if (isFormLockedByUseFlag.value) return;
     placeImages.value = placeImages.value.filter((_, i) => i !== index);
 }
 
 /** 병원주소 → 카카오 주소검색 API 실행 (유틸 사용) */
 function openPostCode() {
+    if (isFormLockedByUseFlag.value) return;
     openKakaoAddrSearch({
         popupTitle: 'booking intocns',
         onComplete: (data) => {
@@ -282,6 +287,7 @@ function buildPlaceDetailDto() {
 }
 
 async function savePlaceDetail() {
+    if (isFormLockedByUseFlag.value) return;
     const form = getPlaceFormForValidation();
     const { valid, errors } = validatePlaceDetail(form);
     if (!valid) {
@@ -518,17 +524,30 @@ onUnmounted(() => {
                     </template>
                 </section>
 
+                <!-- 네이버 ID·비즈니스 ID 영역은 항상 표시, 연동된 경우(useFlag 1)에만 값 노출 -->
                 <section class="account-sync__form">
                     <div class="form-row">
                         <label class="form-row__label title-s">네이버 ID</label>
                         <div class="form-row__input">
-                            <InputTextBox :model-value="naverId" :disabled="hasNaverAccount || !existingAccountMode" placeholder="네이버 ID" :key="'naver-' + hasNaverAccount + '-' + existingAccountMode" @update:model-value="naverId = $event" />
+                            <InputTextBox
+                                :model-value="naverUseFlag === 1 ? naverId : (existingAccountMode ? naverId : '')"
+                                placeholder="네이버 ID"
+                                :disabled="naverUseFlag === 1 || !existingAccountMode"
+                                :key="'naver-' + hasNaverAccount + '-' + existingAccountMode + '-' + naverUseFlag"
+                                @update:model-value="naverId = $event"
+                            />
                         </div>
                     </div>
                     <div class="form-row">
                         <label class="form-row__label title-s">네이버 스마트 플레이스 비즈니스 ID</label>
                         <div class="form-row__input form-row__input--with-btn">
-                            <InputTextBox :model-value="businessId" :disabled="hasNaverAccount || !existingAccountMode" placeholder="비즈니스 ID" :key="'biz-' + hasNaverAccount + '-' + existingAccountMode" @update:model-value="businessId = $event" />
+                            <InputTextBox
+                                :model-value="naverUseFlag === 1 ? businessId : (existingAccountMode ? businessId : '')"
+                                placeholder="비즈니스 ID"
+                                :disabled="naverUseFlag === 1 || !existingAccountMode"
+                                :key="'biz-' + hasNaverAccount + '-' + existingAccountMode + '-' + naverUseFlag"
+                                @update:model-value="businessId = $event"
+                            />
                             <button
                                 v-if="!hasNaverAccount"
                                 type="button"
@@ -546,7 +565,7 @@ onUnmounted(() => {
         </template>
 
         <template #table>
-            <div class="contents-wrapper">
+            <div class="contents-wrapper" :class="{ 'contents-wrapper--locked': isFormLockedByUseFlag }">
                 <ul class="form-container">
                     <li class="form-item">
                         <!-- 서비스명 (API: serviceName) - 수정 불가 -->
@@ -584,6 +603,7 @@ onUnmounted(() => {
                                 ref="serviceDescRef"
                                 v-model="serviceDesc"
                                 placeholder="서비스 소개"
+                                :disabled="isFormLockedByUseFlag"
                                 :is-error="!!validationErrors?.desc"
                                 :error-message="validationErrors?.desc"
                             />
@@ -596,6 +616,7 @@ onUnmounted(() => {
                                 ref="reprOwnerNameRef"
                                 v-model="reprOwnerName"
                                 placeholder="대표자(원장)명"
+                                :disabled="isFormLockedByUseFlag"
                                 :is-error="!!validationErrors?.reprOwnerName"
                                 :error-message="validationErrors?.reprOwnerName"
                             />
@@ -612,14 +633,15 @@ onUnmounted(() => {
                                     사진을 드래그하여 순서를 변경할 수 있습니다.
                                 </div>
                             </div>
-                            <div class="form-content">
+                            <div class="form-content" :class="{ 'form-content--locked': isFormLockedByUseFlag }">
                                 <div class="photo-upload__grid">
-                                    <label class="photo-upload__btn">
+                                    <label class="photo-upload__btn" :class="{ 'is-disabled': isFormLockedByUseFlag }" @click="(e) => { if (isFormLockedByUseFlag) e.preventDefault(); }">
                                         <input
                                             type="file"
                                             hidden
                                             multiple
                                             accept="image/*"
+                                            :disabled="isFormLockedByUseFlag"
                                             @change="handlePlaceImageUpload"
                                         >
                                         <img :src="icAddBtn" alt="추가" class="icon-plus" width="32">
@@ -635,12 +657,13 @@ onUnmounted(() => {
                                         :scroll="true"
                                         :scroll-sensitivity="100"
                                         :animation="200"
+                                        :disabled="isFormLockedByUseFlag"
                                     >
                                         <template #item="{ element, index }">
                                             <div class="photo-upload__item">
                                                 <img :src="element || ''" alt="업로드 이미지" class="preview-img">
                                                 <div class="drag-handle"><img :src="icDragHandel" alt="드래그아이콘"></div>
-                                                <button type="button" class="delete-btn" @click="removePlaceImage(index)">
+                                                <button type="button" class="delete-btn" :disabled="isFormLockedByUseFlag" @click="removePlaceImage(index)">
                                                     <img :src="icClear" alt="삭제" width="20">
                                                 </button>
                                                 <div v-if="index === 0" class="main-badge">
@@ -662,6 +685,7 @@ onUnmounted(() => {
                                         ref="reservationPhoneRef"
                                         :model-value="reservationPhone"
                                         placeholder="예약문의 번호"
+                                        :disabled="isFormLockedByUseFlag"
                                         :is-error="!!validationErrors?.reservationPhone"
                                         :error-message="validationErrors?.reservationPhone"
                                         @update:model-value="reservationPhone = formatPhone($event)"
@@ -676,6 +700,7 @@ onUnmounted(() => {
                                         ref="adminPhoneRef"
                                         :model-value="adminPhone"
                                         placeholder="관리자 번호"
+                                        :disabled="isFormLockedByUseFlag"
                                         :is-error="!!validationErrors?.adminPhone"
                                         :error-message="validationErrors?.adminPhone"
                                         @update:model-value="adminPhone = formatPhone($event)"
@@ -688,7 +713,7 @@ onUnmounted(() => {
                                 <div class="form-content">
                                     <div class="d-flex gap-4">
                                         <InputTextBox v-model="address" placeholder="주소" disabled :is-error="!!validationErrors?.address" :error-message="validationErrors?.address" />
-                                        <button ref="addressSearchBtnRef" type="button" class="btn btn--size-32 btn--black-outline" @click="openPostCode">
+                                        <button ref="addressSearchBtnRef" type="button" class="btn btn--size-32 btn--black-outline" :disabled="isFormLockedByUseFlag" @click="openPostCode">
                                             <img :src="icSearch" alt="검색 아이콘">
                                             주소 검색
                                         </button>
@@ -706,6 +731,7 @@ onUnmounted(() => {
                                 ref="emailRef"
                                 v-model="email"
                                 placeholder="이메일"
+                                :disabled="isFormLockedByUseFlag"
                                 :is-error="!!validationErrors?.email"
                                 :error-message="validationErrors?.email"
                             />
@@ -714,13 +740,21 @@ onUnmounted(() => {
                         <!-- 상세주소 -->
                         <div class="form-label">상세주소</div>
                         <div class="form-content">
-                            <InputTextBox v-model="detailAddress" placeholder="상세주소" />
+                            <InputTextBox v-model="detailAddress" placeholder="상세주소" :disabled="isFormLockedByUseFlag" />
                         </div>
                     </li>
                 </ul>
 
                 <div class="button-wrapper">
-                    <button class="btn btn--size-40 btn--blue" type="button" @click="savePlaceDetail">저장</button>
+                    <button
+                        class="btn btn--size-40"
+                        :class="isFormLockedByUseFlag ? 'btn--gray' : 'btn--blue'"
+                        type="button"
+                        :disabled="isFormLockedByUseFlag"
+                        @click="savePlaceDetail"
+                    >
+                        저장
+                    </button>
                 </div>
             </div>
         </template>
@@ -954,6 +988,37 @@ onUnmounted(() => {
             display: flex;
             justify-content: flex-end;
             gap: 8px;
+        }
+    }
+    .photo-upload__btn.is-disabled {
+        pointer-events: none;
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .form-content--locked .delete-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    /* useFlag 0/null 시 폼 영역 전체 회색 비활성화 표시 */
+    .contents-wrapper--locked {
+        background-color: $gray-100;
+        border-radius: 8px;
+        padding: 20px;
+        position: relative;
+        .form-label {
+            color: $gray-500;
+        }
+        :deep(.input-text-box-wrapper input:disabled),
+        :deep(.input-text-box-wrapper input[readonly]) {
+            background-color: $gray-100;
+            color: $gray-500;
+            cursor: not-allowed;
+        }
+        .btn:disabled {
+            background-color: $gray-200 !important;
+            border-color: $gray-300 !important;
+            color: $gray-500 !important;
+            cursor: not-allowed;
         }
     }
     :deep(.search-filter) {
