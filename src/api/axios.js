@@ -85,7 +85,7 @@ api.interceptors.response.use(
         }
 
         const status = error.response.status;
-        const errorData = error.response.data; // 서버에서 보내준 에러 객체
+        const errorData = error.response?.data; // 서버에서 보내준 에러 객체
 
         switch (status) {
             case 401: // 토큰만료
@@ -172,8 +172,14 @@ api.interceptors.response.use(
                 // } else {
                 //     showAlert(`에러가 발생했습니다: ${error.message}\n관리자에게 문의 바랍니다.`, originalRequest)
                 // }
-                console.error(error)
-                showAlert(`에러가 발생했습니다.\n관리자에게 문의 바랍니다.`, originalRequest)
+
+                let alertMessage = `에러가 발생했습니다.\n관리자에게 문의 바랍니다.`;
+
+                if(errorData.err_code == 998 && errorData.err_message?.trim()){
+                    alertMessage = errorData.err_message
+                }
+
+                showAlert(alertMessage, originalRequest)
                 break
         }
         return Promise.reject(error)
