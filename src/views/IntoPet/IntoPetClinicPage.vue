@@ -116,7 +116,27 @@ const hasHolidayData = computed(() => {
     return Object.values(selectedRoom.value.impos).some(arr => arr && arr.length > 0);
 });
 
-// TODO: 진료실 버튼 눌러서 변경할때 수정했던 정보를 초기화할것..
+// 진료실 목록 버튼 클릭 이벤트
+const handleRoomChange = (nextRoom) => {
+    // 현재 수정 중인 복사본과 원본 리스트의 데이터를 비교 (단순 비교용)
+    const original = intoPetRoomList.value.find(r => r.idx === selectedRoom.value.idx);
+    const isDirty = JSON.stringify(original) !== JSON.stringify(selectedRoom.value);
+
+    
+    if (isDirty) {
+        console.log(original)
+        console.log(selectedRoom.value)
+        
+        modalStore.confirmModal.openModal({
+            text: '수정된 내용이 있습니다. 저장하지 않고 이동하시겠습니까?',
+            confirmBtnText: '이동',
+            onConfirm: () => selectRoom(nextRoom) // 저장 안 하고 그냥 이동
+        });
+    } else {
+        selectRoom(nextRoom);
+    }
+};
+
 // 진료실 바뀌거나 데이터가 생겼을 때 데이터를 자식에게 전달
 watch([selectedRoom, hasHolidayData], async ([newRoom, hasData]) => {
     if (hasData) {
@@ -492,6 +512,15 @@ const saveIntoPetRoomInfo = async() => {
         }
     }
 
+    // 2. 현재 수정 중인 '복사본'을 '원본 리스트'에 업데이트
+    // idx 
+    const targetIdx = intoPetRoomList.value.findIndex(r => r.idx === selectedRoom.value.idx);
+    
+    if (targetIdx > -1) {
+        // 원본 리스트의 해당 위치에 내가 수정한 내용을 덮어씌움
+        intoPetRoomList.value[targetIdx] = JSON.parse(JSON.stringify(selectedRoom.value));
+    }
+
     try {
         const params = {
             idx: intoPetStore.intoPetRoomIdx,
@@ -506,22 +535,33 @@ const saveIntoPetRoomInfo = async() => {
         await intoPetStore.setIntoPetInfo(params);
         showAlert('저장되었습니다.');
         await intoPetStore.getIntoPetInfo();
+
+        // 다시 현재 보고 있던 방을 최신 데이터로 업데이트 (참조 유지를 위해)
+        const updatedRoom = intoPetRoomList.value.find(r => r.idx === selectedRoom.value.idx);
+        if (updatedRoom) {
+            selectRoom(updatedRoom); 
+        }
     } catch(error) {
         console.log(error);
     }
 }
 
+//  ** store원본데이터 아닌 복사본 사용하도록
+const selectRoom = (room) => {
+    // 원본 데이터(store)와의 연결을 끊고 독립적인 복사본을 만듦
+    selectedRoom.value = JSON.parse(JSON.stringify(room));
+};
+
 onMounted(async() => {
     await hospitalStore.getDoctorList(); // 담당의 리스트 불러오기
     await intoPetStore.getIntoPetInfo(); // 인투펫 진료실 리스트정보 불러오기
 
-    const firstActiveRoom = intoPetRoomList.value.find(room => room.use_flag === 1); // 화면에 처음으로 보여줄 진료실 정보(미노출 진료실 제외하고 첫번쨰 요소 선택)
+    // 화면에 처음으로 보여줄 진료실 정보(미노출 진료실 제외하고 첫번쨰 요소 선택)
+    const firstActiveRoom = intoPetRoomList.value.find(room => room.use_flag === 1) 
+                         || intoPetRoomList.value[0];
 
     if (firstActiveRoom) {
-        selectedRoom.value = firstActiveRoom;
-    } else if (intoPetRoomList.value.length > 0) {
-        // 만약 활성화된 방이 하나도 없다면 첫 번째 방이라도 선택 
-        selectedRoom.value = intoPetRoomList.value[0];
+        selectRoom(firstActiveRoom); // 참조가 아닌 복사본 할당
     }
 })
 </script>
@@ -547,7 +587,7 @@ onMounted(async() => {
                     'disabled' : room.use_flag !== 1,
                     'active' : selectedRoom.idx === room.idx // 선택된 방 표시
                 }"
-                @click="selectedRoom = room"
+                @click="handleRoomChange(room)"
             >
                 <div class="room-index">
                     <span class="title-m">{{ (index + 1) }}</span>

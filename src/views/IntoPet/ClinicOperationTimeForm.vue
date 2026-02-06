@@ -42,7 +42,7 @@ const modeOptions = [
 const dayToNumMap = { monday: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 7, holiday: 8 };
 const dayKeys = ['tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'holiday'];
 const weekdays = ['tue', 'wed', 'thu', 'fri']; // 월요일 제외
-const weekends = ['sun', 'holiday']; // 토요일 제외
+const weekends = ['sun']; // 토요일 제외
 
 // '모든 영업일 동일'의 경우 > '월요일'데이터를 대표로 ui에 그려줌
 // > 월요일 데이터가 변할 때 다른 요일로 전부 복사 ('모든 영업일 동일' 일때만)
@@ -70,7 +70,8 @@ watch(() => config.value.pos?.monday, (newVal, oldVal) => {
 
 
 // 운영 모드 변경 감시
-watch(() => config.value.set_reserve, (newMode) => {
+watch(() => config.value.set_reserve, (newMode, oldMode) => {
+    if (oldMode === undefined) return;
     if (!config.value.pos?.monday) return;
     
     // 월요일/토요일 데이터 복사본 생성
@@ -100,7 +101,7 @@ watch(() => config.value.set_reserve, (newMode) => {
             }));
         });
     }
-});
+}, { immediate: false });
 
 // '평일/주말 운영 시간 구분' 일 경우 > '평일'은 '월요일'데이터를 대표로 ui에 그려줌
 // 해당 데이터(월요일) 이 변할 때 > 화~금에 복사
