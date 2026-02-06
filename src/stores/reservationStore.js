@@ -171,6 +171,12 @@ export const useReservationStore = defineStore("reservation", () => {
         }
     }
 
+    // 고객 검색 (고객 매칭용)
+    async function saveOperatorSetting(params) {
+        const response = await api.post(`/api/{cocode}/reserve/setting/operator`, params);
+        return response.data;
+    }
+
     return {
         // 
         reserveList,
@@ -189,5 +195,6 @@ export const useReservationStore = defineStore("reservation", () => {
         confirmReservation, // 예약 확정
         cancelReservation, // 예약 취소
         getOperatorSetting, //운영 설정 조회
+        saveOperatorSetting, //운영 설정 저장
     };
 });

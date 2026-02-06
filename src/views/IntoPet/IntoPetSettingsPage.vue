@@ -47,7 +47,7 @@ const addPurpose = () => {
     visitPurposes.value.push({
         id: purPoseIdx.value++,
         title: '',
-        rec: ''
+        rec: 0
     });
 };
 
@@ -75,18 +75,22 @@ const removeReceiver = (id) => {
 };
 
 //운영설정 저장
-const saveOperator = () => {
+const saveOperator = (async() => {
     const params = {
         hosIdx: reservationStore.operatorSettingInfo.hosIdx,
         reserveCnt: selectedAnimalCount.value,
-        reserveInfo: visitPurposes.value,
+        reserveInfo: visitPurposes.value.map(({ id, ...rest }) => rest),
         alimTalkFlag: isAlimtalk.value ? 1 : 0, // boolean → int
         isReserve: isReserve.value,
         alimTalk: receiverPhones.value.map(item => item.phone) // {id, phone} → [phone]
     };
+    
+    const response = await reservationStore.saveOperatorSetting(params);
 
-    console.log(params);
-};
+    if(response.status_code <= 300){
+        showAlert('저장 되었습니다.');
+    }
+});
 
 //데이터 초기 세팅
 const setInitData = () => {
@@ -249,14 +253,14 @@ onMounted(async() => {
                             <div v-for="(item, index) in receiverPhones" :key="item.id" class="receiver-item">
                                 <div class="receiver-input-group">
                                     <span class="title-s">번호 {{ index + 1 }}</span>
-                                    <InputTextBox v-model="item.phone" />
+                                    <InputTextBox v-model="item.phone" :disabled="!isAlimtalk"/>
                                 </div>
 
                                 <div class="receiver-action">
-                                    <button v-if="index === 0" class="btn btn--size-24 btn--black-outline" @click="addReceiver()">
+                                    <button v-if="index === 0" class="btn btn--size-24 btn--black-outline" :class="{'is-disabled':!isAlimtalk}" @click="addReceiver()">
                                         <img :src="icPlus" alt="아이콘">번호 추가
                                     </button>
-                                    <button v-else class="btn btn--size-24 btn--black-outline" @click="removeReceiver(item.id)">
+                                    <button v-else class="btn btn--size-24 btn--black-outline" :class="{'is-disabled':!isAlimtalk}" @click="removeReceiver(item.id)">
                                         <img :src="icDel" alt="아이콘" width="14">삭제
                                     </button>
                                 </div>
