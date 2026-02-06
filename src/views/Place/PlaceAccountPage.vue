@@ -409,10 +409,6 @@ async function savePlaceSetting(placeSettingValue) {
     }
 }
 
-/** 연동 해제 시 호출 */
-function saveMappingUnlink() {
-    savePlaceSetting(PLACE_SETTING_UNLINK);
-}
 
 /** 네이버 SDK로 로그인 버튼·팝업·프로필 콜백 등록 (SDK 로드 후 호출). #naver_id_login div가 DOM에 있을 때만 실행 */
 function initNaverLogin() {
