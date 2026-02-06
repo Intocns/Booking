@@ -13,6 +13,7 @@ import imgPlaceOpen from '@/assets/images/img_place_open_preview.png'
 import imgPlaceClose from '@/assets/images/img_place_closed_preview.png'
 
 import { onMounted, ref, reactive, watch, onBeforeUnmount, computed } from 'vue';
+import { showAlert } from '@/utils/ui';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { usePlaceStore } from '@/stores/placeStore';
@@ -52,34 +53,49 @@ const dynamicCaption = computed(() => {
     return `[예시] 이용시간이 오후 5시인 경우, ${targetTime}까지 예약 가능`;
 });
 
-// 예약 받기 토글
-const handleToggleAcceptance = async() => {
-    const originalValue = !isAcceptingReservation.value; // 이전 상태 저장
-    const newStatus = isAcceptingReservation.value ? '1' : '0';
+// 예약 받기 토글 => 260206 JJB 저장 통합으로 합치면서 아래 저장 부분 주석처리
+// const handleToggleAcceptance = async() => {
+//     const originalValue = !isAcceptingReservation.value; // 이전 상태 저장
+//     const newStatus = isAcceptingReservation.value ? '1' : '0';
 
-    try {
-        await placeStore.setAcceptingReservation(newStatus);
-    } catch {
-        isAcceptingReservation.value = originalValue;
-    }
-}
+//     try {
+//         await placeStore.setAcceptingReservation(newStatus);
+//     } catch {
+//         isAcceptingReservation.value = originalValue;
+//     }
+// }
 
-// 당일 예약 토글
-const handleUpdateTodayReserve = async() => {
-    // 이전 상태 저장
-    const prevYn = !isTodayReservationEnabled.value ? 1 : 0;
-    const prevTime = placeStore.operationInfo?.alarmValue || '0';
+// 당일 예약 토글 => 260206 JJB 저장 통합으로 합치면서 아래 저장 부분 주석처리
+// const handleUpdateTodayReserve = async() => {
+//     // 이전 상태 저장
+//     const prevYn = !isTodayReservationEnabled.value ? 1 : 0;
+//     const prevTime = placeStore.operationInfo?.alarmValue || '0';
 
-    const newYn = isTodayReservationEnabled.value ? 1 : 0;
-    // 당일 예약을 끄는 경우 ''으로 보냄
-    const newSelectedTime = isTodayReservationEnabled.value ? selectedTime.value : '';
+//     const newYn = isTodayReservationEnabled.value ? 1 : 0;
+//     // 당일 예약을 끄는 경우 ''으로 보냄
+//     const newSelectedTime = isTodayReservationEnabled.value ? selectedTime.value : '';
     
-    try {
-        await placeStore.setTodayReservation(newYn, newSelectedTime);
-    } catch (error) {
-        // 에러 시 이전 값으로
-        isTodayReservationEnabled.value = prevYn === 1;
-        selectedTime.value = prevTime;
+//     try {
+//         await placeStore.setTodayReservation(newYn, newSelectedTime);
+//     } catch (error) {
+//         // 에러 시 이전 값으로
+//         isTodayReservationEnabled.value = prevYn === 1;
+//         selectedTime.value = prevTime;
+//     }
+// }
+
+const saveOperatorSetting = async() => {
+    let params = {
+        serveiceUseYn : isAcceptingReservation.value ? 1 : 0, //예약받기
+        todayUseYn : isTodayReservationEnabled.value ? 1 : 0, //예약받기
+        todayValue : isTodayReservationEnabled.value ? selectedTime.value : '', //예약받기
+    }
+
+    const response = await placeStore.setOperatorSetting(params);
+    console.log('저장');
+
+    if(response.status_code <= 300){
+        showAlert('저장 되었습니다.');
     }
 }
 
@@ -144,6 +160,7 @@ onBeforeUnmount(() => {
                     </div>
     
                     <label class="toggle">
+                        <!-- <input type="checkbox" v-model="isAcceptingReservation" @change="handleToggleAcceptance" /> -->
                         <input type="checkbox" v-model="isAcceptingReservation" @change="handleToggleAcceptance" />
                         <img class="toggle-img" />
                     </label>
@@ -191,7 +208,8 @@ onBeforeUnmount(() => {
                     </div>
     
                     <label class="toggle">
-                        <input type="checkbox" v-model="isTodayReservationEnabled" @change="handleUpdateTodayReserve" />
+                        <!-- <input type="checkbox" v-model="isTodayReservationEnabled" @change="handleUpdateTodayReserve" /> -->
+                        <input type="checkbox" v-model="isTodayReservationEnabled" />
                         <img class="toggle-img" />
                     </label>
                 </div>
@@ -204,7 +222,6 @@ onBeforeUnmount(() => {
                                 :options="todayReserveTimeOptions" 
                                 select-width="100px" 
                                 v-model="selectedTime" 
-                                @update:modelValue="handleUpdateTodayReserve"
                             />
                             <span class="body-m">까지 예약을 받습니다.</span>
                         </div>
@@ -221,6 +238,10 @@ onBeforeUnmount(() => {
                 </div>
             </li>
         </ul>
+
+        <div class="button-wrapper">
+            <button class="btn btn--size-40 btn--blue" @click="saveOperatorSetting()">저장</button>
+        </div>
     </div>
 
     <!-- 예약 받기 자세히 모달 -->

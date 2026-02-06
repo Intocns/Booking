@@ -35,23 +35,23 @@ const handelRemoveGuide = (type, index) => {
     })
 }
 
-// 문구 삭제 함수
+// 문구 삭제 함수 => 260206 JJB 저장 통합으로 합치면서 아래 저장 부분 주석처리
 const removeGuide = async(type, index) => {
     const targetList = type === 'confirm' ? placeStore.guideList : placeStore.cancelGuideList;
     targetList.splice(index, 1);
 
-    const params = targetList.map(item => ({
-        words: item.words,
-        isActive: item.isActive ? 1 : 0
-    }));
+    // const params = targetList.map(item => ({
+    //     words: item.words,
+    //     isActive: item.isActive ? 1 : 0
+    // }));
 
-    if (type === 'confirm') {
-        await placeStore.modifyAlarmGuide(params);
-    } else {
-        await placeStore.modifyAlarmCancelGuide(params);
-    }
+    // if (type === 'confirm') {
+    //     await placeStore.modifyAlarmGuide(params);
+    // } else {
+    //     await placeStore.modifyAlarmCancelGuide(params);
+    // }
 
-    await placeStore.getAlarmInfo();
+    // await placeStore.getAlarmInfo();
 };
 
 // 모달 열기 함수
@@ -83,7 +83,7 @@ const openGuideModal = async(type, index = null) => {
     }
 };
 
-// 등록 완료 함수
+// 등록 완료 함수 => 260206 JJB 저장 통합으로 합치면서 아래 저장 부분 주석처리
 const handleGuideSubmit = async() => {
     if (!guideInputText.value.trim()) return showAlert('내용을 입력해주세요.');
     
@@ -101,25 +101,24 @@ const handleGuideSubmit = async() => {
     }
 
     // 서버로 보낼 때는 타입을 숫자로 변환 
-    const params = targetList.map(item => ({
-        words: item.words,
-        isActive: item.isActive ? 1 : 0 // true -> 1, false -> 0으로 치환
-    }));
-
-    // console.log(params);
-    // return false;
-
-    if(currentGuideType.value === 'confirm') {
-        await placeStore.modifyAlarmGuide(params);
-    } else {
-        await placeStore.modifyAlarmCancelGuide(params);
-    }
+    // const params = targetList.map(item => ({
+    //     words: item.words,
+    //     isActive: item.isActive ? 1 : 0 // true -> 1, false -> 0으로 치환
+    // }));
 
     modalStore.bookingGuideTextModal.closeModal();
-    placeStore.getAlarmInfo();
+
+    // if(currentGuideType.value === 'confirm') {
+    //     await placeStore.modifyAlarmGuide(params);
+    // } else {
+    //     await placeStore.modifyAlarmCancelGuide(params);
+    // }
+
+    // modalStore.bookingGuideTextModal.closeModal();
+    // placeStore.getAlarmInfo();
 };
 
-// 문구 라디오버튼 선택 시 상태 변경 및 저장
+// 문구 라디오버튼 선택 시 상태 변경 및 저장 => 260206 JJB 저장 통합으로 합치면서 아래 저장 부분 주석처리
 const handleStatusChange = async(type, selectedIndex) => {
     const targetList = type === 'confirm' ? placeStore.guideList : placeStore.cancelGuideList;
 
@@ -128,19 +127,47 @@ const handleStatusChange = async(type, selectedIndex) => {
         isActive: index === selectedIndex ? 1 : 0
     }));
 
-    if (type === 'confirm') {
-        await placeStore.modifyAlarmGuide(params);
-    } else {
-        await placeStore.modifyAlarmCancelGuide(params);
-    }
+    // if (type === 'confirm') {
+    //     await placeStore.modifyAlarmGuide(params);
+    // } else {
+    //     await placeStore.modifyAlarmCancelGuide(params);
+    // }
 
-    await placeStore.getAlarmInfo();
+    // await placeStore.getAlarmInfo();
 }
 
-// 리마인드 알림 설정 변경
-const handleSetRemindType = async(value) => {
-    await placeStore.setRemindAlarm(value);
-    await placeStore.getAlarmInfo();
+// 리마인드 알림 설정 변경 => 260206 JJB 저장 통합으로 합치면서 아래 저장 부분 주석처리
+// const handleSetRemindType = async(value) => {
+//     await placeStore.setRemindAlarm(value);
+//     await placeStore.getAlarmInfo();
+// }
+
+const saveNotificationSetting = async(type, selectedIndex) => {
+    const toMsgPayload = list =>
+        list.map(({ words, isActive }) => ({
+            words,
+            isActive: Number(isActive) // true -> 1
+        }));
+
+    const params = {
+        guideMsg: toMsgPayload(placeStore.guideList),
+        cancelMsg: toMsgPayload(placeStore.cancelGuideList),
+        remind: placeStore.remindType
+    };
+
+    const response = await placeStore.setNotificationSetting(params);
+
+    if(response.status_code <= 300){
+        showAlert('저장 되었습니다.');
+    }
+
+    // if (type === 'confirm') {
+    //     await placeStore.modifyAlarmGuide(params);
+    // } else {
+    //     await placeStore.modifyAlarmCancelGuide(params);
+    // }
+
+    // await placeStore.getAlarmInfo();
 }
 
 onMounted(() => {
@@ -167,7 +194,6 @@ onMounted(() => {
                                 type="radio" 
                                 :value="0" 
                                 v-model="placeStore.remindType" 
-                                @change="handleSetRemindType(0)"
                             />
                             <span class="circle"></span>
                             <span class="label">당일 방문 시각 3시간 전 발송</span>
@@ -179,7 +205,6 @@ onMounted(() => {
                                 type="radio" 
                                 :value="1" 
                                 v-model="placeStore.remindType" 
-                                @change="handleSetRemindType(1)"
                             />
                             <span class="circle"></span>
                             <span class="label">방문 전일 오전 9시 발송</span>
@@ -277,6 +302,10 @@ onMounted(() => {
                 </div>
             </li>
         </ul>
+
+        <div class="button-wrapper">
+            <button class="btn btn--size-40 btn--blue" @click="saveNotificationSetting()">저장</button>
+        </div>
     </div>
 
     <!-- 예약 확정시 안내 문구 추가 모달 -->

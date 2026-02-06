@@ -36,14 +36,20 @@ export const usePlaceStore = defineStore("place", () => {
         };
     }
 
-    // 운영 설정 예약 받기 값 변경 토글
-    const setAcceptingReservation = async(value) => {
-        const response = await api.get(`/api/linkbusiness/{cocode}/setting/operation/imp/${value}`);
-    }
+    // // 운영 설정 예약 받기 값 변경 토글
+    // const setAcceptingReservation = async(value) => {
+    //     const response = await api.get(`/api/linkbusiness/{cocode}/setting/operation/imp/${value}`);
+    // }
 
-    // 당일 예약 받기 값 변경
-    const setTodayReservation = async(useYn, value) => {
-        const response = await api.get(`/api/linkbusiness/{cocode}/setting/operation/Ava/${useYn}/${value}`);
+    // // 당일 예약 받기 값 변경
+    // const setTodayReservation = async(useYn, value) => {
+    //     const response = await api.get(`/api/linkbusiness/{cocode}/setting/operation/Ava/${useYn}/${value}`);
+    // }
+
+    // 플레이스 설정 > 운영설정 저장
+    const setOperatorSetting = async(params) => {
+        const response = await api.post(`/api/linkbusiness/{cocode}/setting/operation/modify`, params);
+        return response.data;
     }
 
     // 노출이력 확인
@@ -79,6 +85,12 @@ export const usePlaceStore = defineStore("place", () => {
     // 예약 취소 알림문구 변경
     const modifyAlarmCancelGuide = async(params) => {
         const response = await api.post('/api/linkbusiness/{cocode}/setting/alarm/cancelGuide/modify', params)
+    }
+
+    // 플레이스 설정 > 알림설정 저장
+    const setNotificationSetting = async(params) => {
+        const response = await api.post(`/api/linkbusiness/{cocode}/setting/alarm/modify`, params);
+        return response.data;
     }
 
     // -------------------------------------
@@ -164,14 +176,16 @@ export const usePlaceStore = defineStore("place", () => {
 
         // 플레이스 설정 > 운영설정
         getOperationInfo,
-        setAcceptingReservation,
-        setTodayReservation,
+        // setAcceptingReservation,
+        // setTodayReservation,
+        setOperatorSetting, // setAcceptingReservation + setTodayReservation 통합
         getImpHistory,
         // 플레이스 설정 > 알림설정
         getAlarmInfo,
         setRemindAlarm,
         modifyAlarmGuide,
         modifyAlarmCancelGuide,
+        setNotificationSetting ,
         // 플레이스 설정 > 예약자 정보 요청 
         getQuestionList,
         addQuestion,
