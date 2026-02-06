@@ -23,12 +23,12 @@ const sendResultOptions = MESSAGE_HISTORY_SEND_RESULT_OPTIONS;
 // sms/알림톡 발송 내역 테이블 col 정의
 const columns = [
     { key: 'idx', label: 'No.', width: '4%' },
-    { key: 'cocode', label: '회사코드', width: '4%' },
+    // { key: 'cocode', label: '회사코드', width: '4%' },
     { key: 'send_date', label: '발송일자', width: '10%' },
     { key: 'user_name', label: '고객명', width: '7%' },
     { key: 'phone_number', label: '전화번호', width: '10%' },
     { key: 'pet_name', label: '동물명', width: '7%' },
-    { key: 'message', label: '발송내역', width: '48%' },
+    { key: 'message', label: '발송내역', width: '52%' },
     { key: 'send_type', label: '발송구분', width: '5%' },
     { key: 'status', label: '발송결과', width: '5%' },
 ];
