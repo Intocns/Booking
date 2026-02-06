@@ -14,6 +14,7 @@ export const useReservationStore = defineStore("reservation", () => {
     let reservePendingList = ref([]); // 대기 예약 리스트
     let reserveCount = ref({}) // 예약별 카운트
     let reserveScheduleList = ref([]); // 예약 일정 리스트
+    let operatorSettingInfo = ref({});
     
     let reserveInfo = ref({})
 
@@ -157,6 +158,19 @@ export const useReservationStore = defineStore("reservation", () => {
         }
     }
 
+    // 운영 설정 조회
+    async function getOperatorSetting() {
+        try {
+            const response = await api.get(`/api/{cocode}/reserve/setting/operator`)
+            if(response.data.status_code <= 300) {
+                let data = response.data.data
+                operatorSettingInfo.value = data;
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     return {
         // 
         reserveList,
@@ -164,6 +178,7 @@ export const useReservationStore = defineStore("reservation", () => {
         reserveCount, // 예약별 카운트
         reserveScheduleList, // 예약 일정 리스트
         reserveInfo,
+        operatorSettingInfo,
         // 
         getReservationList,
         getPendingList, // 대기 예약 리스트 불러오기
@@ -173,5 +188,6 @@ export const useReservationStore = defineStore("reservation", () => {
         searchClientMapping, // 고객 검색
         confirmReservation, // 예약 확정
         cancelReservation, // 예약 취소
+        getOperatorSetting, //운영 설정 조회
     };
 });

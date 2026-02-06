@@ -12,21 +12,26 @@ import icPlus from '@/assets/icons/ic_plus_black.svg'
 import icDel from '@/assets/icons/ic_del.svg'
 import icSms from '@/assets/icons/ic_sms.svg'
 
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { showAlert } from '@/utils/ui';
+
+// 스토어
+import { useReservationStore } from '@/stores/reservationStore';
+import { useTalkSmsStore } from '@/stores/talkSmsStore';
+
+const reservationStore = useReservationStore();
+const talkSmsStore = useTalkSmsStore();
+const isReserve =  ref(0);
 
 const MAX_PURPOSES = 6;
 
 // 방문 목적 데이터 리스트
 const purPoseIdx = ref(1);
-const visitPurposes = ref([
-    { id: 0, title: '', approvalType: 'admin' } // 기본 항목 1
-])
+const visitPurposes = ref([])
 // 알림톡 수신번호 데이터 
+const isAlimtalk = ref(false);
 const receiverIdx = ref(1);
-const receiverPhones = ref([
-    { id: 0, phone: '' } // 기본 번호 1
-]);
+const receiverPhones = ref([]);
 
 const selectedAnimalCount = ref(null); // 예약 가능 동물 수 선택
 // 예약 가능 동물 수 (임시 1~10)
@@ -42,7 +47,7 @@ const addPurpose = () => {
     visitPurposes.value.push({
         id: purPoseIdx.value++,
         title: '',
-        approvalType: 'admin'
+        rec: ''
     });
 };
 
@@ -50,6 +55,7 @@ const addPurpose = () => {
 const removePurpose = (id) => {
     if (visitPurposes.value.length > 1) {
         visitPurposes.value = visitPurposes.value.filter(item => item.id !== id);
+        console.log(visitPurposes.value)
     }
 };
 
@@ -67,6 +73,46 @@ const removeReceiver = (id) => {
         receiverPhones.value = receiverPhones.value.filter(item => item.id !== id);
     }
 };
+
+//운영설정 저장
+const saveOperator = () => {
+    const params = {
+        hosIdx: reservationStore.operatorSettingInfo.hosIdx,
+        reserveCnt: selectedAnimalCount.value,
+        reserveInfo: visitPurposes.value,
+        alimTalkFlag: isAlimtalk.value ? 1 : 0, // boolean → int
+        isReserve: isReserve.value,
+        alimTalk: receiverPhones.value.map(item => item.phone) // {id, phone} → [phone]
+    };
+
+    console.log(params);
+};
+
+//데이터 초기 세팅
+const setInitData = () => {
+    selectedAnimalCount.value = reservationStore.operatorSettingInfo.reserveCnt;// 예약가능 동물 수
+    isAlimtalk.value = (reservationStore.operatorSettingInfo.alimTalkFlag == 1 ? true : false); // 알림톡 수신번호 설정
+    isReserve.value = reservationStore.operatorSettingInfo.isReserve;
+
+    //예약 승인방식
+    visitPurposes.value = reservationStore.operatorSettingInfo.reserveInfo.map(item => ({ 
+        id: purPoseIdx.value++, 
+        title: item.title,
+        rec: item.rec
+    }));
+    //알림톡 수신번호 설정
+    receiverPhones.value = reservationStore.operatorSettingInfo.alimTalk.map(item => ({
+        id: receiverIdx.value++, 
+        phone: item
+    }))
+}
+
+onMounted(async() => {
+    await reservationStore.getOperatorSetting();
+    await talkSmsStore.getSmsPointInfo();
+
+    setInitData();
+});
 </script>
 
 <template>
@@ -78,12 +124,12 @@ const removeReceiver = (id) => {
             <div class="line"></div>
             <div class="d-flex align-center gap-16">
                 <label class="radio">
-                    <input type="radio" />
+                    <input type="radio" v-model="isReserve" :value="1"/>
                     <span class="circle"></span>
                     <span class="label">운영</span>
                 </label>
                 <label class="radio">
-                    <input type="radio" />
+                    <input type="radio" v-model="isReserve" :value="0"/>
                     <span class="circle"></span>
                     <span class="label">중지</span>
                 </label>
@@ -117,12 +163,20 @@ const removeReceiver = (id) => {
 
                             <div class="purpose-radio-group">
                                 <label class="radio">
-                                    <input type="radio" :name="'approval-' + item.id" value="admin" v-model="item.approvalType" />
+                                    <input type="radio" 
+                                            :name="'approval-' + item.id" 
+                                            :value="0"
+                                            v-model.number="item.rec" 
+                                    />
                                     <span class="circle"></span>
                                     <span class="label">관리자 승인</span>
                                 </label>
                                 <label class="radio">
-                                    <input type="radio" :name="'approval-' + item.id" value="instant" v-model="item.approvalType" />
+                                    <input type="radio" 
+                                            :name="'approval-' + item.id" 
+                                            :value="1"
+                                            v-model.number="item.rec" 
+                                    />
                                     <span class="circle"></span>
                                     <span class="label">즉시 승인</span>
                                 </label>
@@ -175,12 +229,12 @@ const removeReceiver = (id) => {
                         <div class="d-flex align-center gap-10">
                             <span class="body-s">서비스 이용 ON</span>
                             <label class="toggle">
-                                <input type="checkbox" />
+                                <input type="checkbox" v-model="isAlimtalk"/>
                                 <img class="toggle-img" />
                             </label>
                         </div>
                         <div class="d-flex align-center gap-8">
-                            <button class="text-button text-button--blue">잔여건수: 16,000</button>
+                            <button class="text-button text-button--blue">잔여건수: {{ Number(talkSmsStore.smsRemainingCount??"0").toLocaleString() }}</button>
                             <button class="btn btn--size-24 btn--black-outline">
                                 <img :src="icSms" alt="아이콘" width="14">SMS 충전하기</button>
                         </div>
@@ -199,7 +253,7 @@ const removeReceiver = (id) => {
                                 </div>
 
                                 <div class="receiver-action">
-                                    <button v-if="index === 0" class="btn btn--size-24 btn--black-outline" @click="addReceiver">
+                                    <button v-if="index === 0" class="btn btn--size-24 btn--black-outline" @click="addReceiver()">
                                         <img :src="icPlus" alt="아이콘">번호 추가
                                     </button>
                                     <button v-else class="btn btn--size-24 btn--black-outline" @click="removeReceiver(item.id)">
@@ -227,6 +281,10 @@ const removeReceiver = (id) => {
                 </div>
             </li>
         </ul>
+
+        <div class="button-wrapper">
+            <button class="btn btn--size-40 btn--blue" @click="saveOperator">저장</button>
+        </div>
     </div>
 </template>
 
