@@ -86,7 +86,7 @@ const dynamicCaption = computed(() => {
 
 const saveOperatorSetting = async() => {
     let params = {
-        serveiceUseYn : isAcceptingReservation.value ? 1 : 0, //예약받기
+        serviceUseYn : isAcceptingReservation.value ? 1 : 0, //예약받기
         todayUseYn : isTodayReservationEnabled.value ? 1 : 0, //예약받기
         todayValue : isTodayReservationEnabled.value ? selectedTime.value : '', //예약받기
     }
