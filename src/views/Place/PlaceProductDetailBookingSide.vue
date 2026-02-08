@@ -269,7 +269,9 @@ const updateItemSchedule = (async(type) => {
     try {
         const response = await productStore.updateItemReservationInfo(props.savedItemId, params);
 
-        showAlert('저장이 완료되었습니다');
+        if(type == 'operating') {
+            showAlert('저장이 완료되었습니다');
+        }
 
         await initDataMapping(); 
 
@@ -1017,7 +1019,7 @@ onMounted(async() => {
 
         <div class="modal-button-wrapper">
             <div class="buttons">
-                <button class="btn btn--size-32 btn--blue" @click="updateItemSchedule('holiday')">저장</button>
+                <button class="btn btn--size-32 btn--blue" @click="updateItemSchedule('holiday')">등록</button>
             </div>
         </div>
     </Modal>
