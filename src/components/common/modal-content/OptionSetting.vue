@@ -245,7 +245,7 @@ const fillOptionData = (optionData) => {
     }
     
     // 재고 설정
-    if (optionData.stock !== null && optionData.stock !== undefined) {
+    if (optionData.stock !== null && optionData.stock !== undefined && optionData.stock > 0) {
         isStockEnabled.value = true;
         stockCount.value = String(optionData.stock);
     } else {
@@ -254,7 +254,7 @@ const fillOptionData = (optionData) => {
     }
     
     // 가격 설정
-    if (optionData.price !== null && optionData.price !== undefined) {
+    if (optionData.price !== null && optionData.price !== undefined && optionData.price > 0) {
         isPriceEnabled.value = true;
         price.value = String(optionData.price);
         normalPrice.value = optionData.normalPrice ? String(optionData.normalPrice) : '';
