@@ -398,4 +398,11 @@ onMounted(async() => {
             }
         }
     }
+
+    .button-wrapper {
+        display: flex;
+        justify-content: center;
+        
+        .btn { flex: 0.3; }
+    }
 </style>

@@ -958,8 +958,8 @@ onMounted(async() => {
     }
 
     .button-wrapper {
-        padding-top: 16px;
-        // padding-top: 40px;
+        // padding-top: 16px;
+        padding-top: 40px;
         display: flex;
         justify-content: center;
         gap: 8px;
