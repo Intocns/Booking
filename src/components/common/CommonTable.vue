@@ -97,7 +97,7 @@ const handleEmptyBtnClick = () => {
                             :style="{ textAlign: col.text_align }"
                         >
                             <!-- 기본 데이터 출력 -->
-                            <span v-if="!$slots[col.key]">{{ row[col.key] }}</span>
+                            <span v-if="!$slots[col.key]" :title="row[col.key] ? `${row[col.key]}` : ''">{{ row[col.key] }}</span>
 
                             <!-- 커스텀 슬롯 존재 시 -->
                             <div v-else class="d-flex justify-center gap-4">
@@ -255,6 +255,7 @@ const handleEmptyBtnClick = () => {
     display: inline-flex;
     align-items: center;
     cursor: pointer;
+    z-index:auto;
 
     &__icon {
         width: 16px;
