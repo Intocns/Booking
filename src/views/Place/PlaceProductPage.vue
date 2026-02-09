@@ -123,20 +123,20 @@ const goProductDetail = (id = null) => {
     }
 };
 // 상품별 노출/미노출 체크 변경
-const clickProductImpUpdateBtn = (async(itemId, itemName, isImp) => {
+const clickProductImpUpdateBtn = (async(product) => {
     let params = [
         {
-            "bizItemId" : itemId,
-            "isImp" : isImp,
+            "bizItemId" : product.bizItemId,
+            "isImp" : product.isImp,
         }
     ]
 
     let response = await productStore.setItemShow(params);
 
     if(response.status_code <= 300){
-        const isImpStr = (isImp == 1) ? '노출' : '미노출';
+        const isImpStr = (product.isImp == 1) ? '노출' : '미노출';
 
-        showAlert(`[${itemName}] 예약서비스에 [${isImpStr}]됩니다.`);
+        showAlert(`[${product.name}] 예약서비스에 [${isImpStr}] 됩니다.`);
         if(isCheckImpType.value){//미노출 제외인 경우
             dragList.value = dragList.value.filter(item => item.isImp && item.bizItemId != itemId)
         }
@@ -344,7 +344,7 @@ onMounted(async () => {
                             <p class="body-l">{{ IS_IMP_TYPE[Number(product.isImp)].label }}</p>
         
                             <label class="toggle"> 
-                                <input type="checkbox" v-model="product.isImp" @change="clickProductImpUpdateBtn(product.bizItemId, product.name, product.isImp)" />
+                                <input type="checkbox" v-model="product.isImp" @change="clickProductImpUpdateBtn(product)" />
                                 <span class="toggle-img"></span>
                             </label>
                         </div>
