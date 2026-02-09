@@ -219,7 +219,12 @@ const toggleOptionVisibility = async (row) => {
             useFlag: 1,
         };
 
-        await optionStore.updateOption(optionId, updateData);
+        const updateResponse = await optionStore.updateOption(optionId, updateData);
+
+        if(updateResponse.status_code <= 300){
+            const isImpStr = (newIsImp == 1) ? '노출' : '미노출';
+            showAlert(`[${rawData.name}] 옵션을 연결한 모든 예약상품에 [${isImpStr}] 됩니다.`);
+        }
 
         // 옵션 리스트 새로고침
         if (activeTab.value) {
