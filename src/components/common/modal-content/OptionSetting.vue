@@ -173,6 +173,12 @@ const validateRequiredFields = async () => {
         }
         return false;
     }
+
+    // 옵션 설명 글자수 체크
+    if(optionDesc.value && optionDesc.value.length > 300) {
+        showAlert('옵션 설명은 300자까지 입력가능합니다.');
+        return false;
+    }
     
     // 재고 수 검증 (재고 토글이 켜져 있을 때)
     if (isStockEnabled.value && (!stockCount.value || stockCount.value.trim() === '')) {
@@ -747,7 +753,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll, true));
                             <div class="setting-row">
                                 <p class="title-s setting-row__label">옵션 설명</p>
                                 <div class="setting-row__content">
-                                    <TextAreaBox v-model="optionDesc" :max-length="300" />
+                                    <TextAreaBox v-model="optionDesc" :max-length="300" :is-error="optionDesc.length > 300"/>
                                 </div>
                             </div>
     
