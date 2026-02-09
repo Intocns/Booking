@@ -593,7 +593,9 @@
 .dp--menu-wrapper,
 .dp__menu,
 .dp__menu > div {width:240px !important; min-width: 240px !important;}
-
+.dp--menu-wrapper {
+    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.06);
+}
 .dp__month_year_wrap .dp__month_year_wrap {flex-direction: row-reverse;} // 월 이동 버튼 자리 바꿈
 .dp__month_year_select { // 월, 년도 선택 버튼
     font-family: $font-family-base;

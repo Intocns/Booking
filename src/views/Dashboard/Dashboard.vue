@@ -274,7 +274,7 @@ onMounted(() => {
     <!-- 예약 정보 안내 모달 -->
     <Modal
         v-if="modalStore.reserveInfoModal.isVisible"
-        size="m"
+        size="l"
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >
