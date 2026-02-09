@@ -12,6 +12,7 @@ export const useProductStore = defineStore("product", () => {
     const productWeekScheduleDataList = ref([]); // 상품 수정 > 상품 운영시간 데이터 (캘랜더)
     const productScheduleInfo = ref([]);
     const temporarySchedules = ref([]); // 임시운영데이터만 따로 저장
+    const scrollToItemId = ref(null); // 새상품 등록 후 새상품 id저장
 
     // 상품 리스트 불러오기
     async function getProductList() {
@@ -609,6 +610,7 @@ export const useProductStore = defineStore("product", () => {
         productWeekScheduleDataList, // 상품 수정 > 상품 운영시간 데이터
         productScheduleInfo, //상품 수정 > 예약 정보 데이터
         temporarySchedules, // 임시운영 데이터만
+        scrollToItemId,
         // 
         getProductList, // 상품 리스트 불러오기
         setItemOrder, // 상품 순서 변경

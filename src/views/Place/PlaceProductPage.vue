@@ -106,9 +106,49 @@ const importIntoPetRoom = async() => {
         showAlert('진료실을 선택해주세요.')
         return;
     }
+
+    // 기존 리스트의 ID들만 미리 저장 (비교용)
+    const oldIds = productStore.productList.map(item => item.bizItemId);
+
     try {
         await productStore.getLinkItemInfo(importIntoPetRoomIdx.value);
+
         modalStore.intoPetImportModal.closeModal();
+
+        // 새로 추가된 첫 번째 상품 찾기
+        const newItem = productStore.productList.find(item => !oldIds.includes(item.bizItemId));
+        
+        const confirmText1 = '선택하신 진료실을 기반으로 상품이 등록되었습니다.\n상품 등록 기준에 맞지 않는 일부 정보는 자동으로 변경되었습니다.';
+        const confirmText2 = '\n\n· 대표 사진이 없거나 등록이 불가능한 확장자로 확인 되면\n기본 사진으로 대체됩니다.\n· 상품명 또는 설명에 사용할 수 없는 문자가 포함된 경우,\n삭제 되어 등록됩니다.\n\n';
+        const confirmText3 = '정확한 노출을 위해 상품 정보를 확인하고\n필요 시 수정 후 다시 저장해 주세요.';
+
+        // 불러오기 등록 완료 안내 팝업 추가
+        modalStore.confirmModal.openModal({
+            title: '상품 등록 완료',
+            text: `${confirmText1}${confirmText2}${confirmText3}`,
+            noCancelBtn: true,
+            onConfirm: () => {
+                if (newItem) { // 불러온 상품 위치로 스크롤
+                    const selector = `[data-product-id="${newItem.bizItemId}"]`;
+                    const element = document.querySelector(selector);
+
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                        // 하이라이트 추후 필요시 추가
+                        // element.style.transition = 'box-shadow 0.3s ease-in-out';
+                        // element.style.boxShadow = '0 0 0 3px #0098ff';
+                        // setTimeout(() => {
+                        //     element.style.boxShadow = '';
+                        // }, 2000);
+                    }
+                } else {
+                    modalStore.confirmModal.closeModal();
+                }
+            }
+        })
+        
+        // 기존 리스트랑 불러온 리스트 비교해서 새로 추가된 상품있는곳으로 스크롤?
     } catch(error) {
         console.error(error)
     }
@@ -276,6 +316,19 @@ const goToPreviewPage = (businessId, itemId) => {
 }
 onMounted(async () => {
     await productStore.getProductList();
+
+    if (productStore.scrollToItemId) {
+        const element = document.querySelector(`[data-product-id="${productStore.scrollToItemId}"]`);
+
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // element.style.boxShadow = '0 0 0 3px #0098ff';
+            // setTimeout(() => element.style.boxShadow = '', 2000);
+        }
+
+        // 스크롤이 끝난 후에는 초기화
+        productStore.scrollToItemId = null;
+    }
 })
 </script>
 
@@ -325,7 +378,7 @@ onMounted(async () => {
     <div class="contents-wrapper">
         <div class="grid-wrapper">
             <!-- 상품 리스트 테이블 -->
-            <div v-for="product in dragList" class="item-box" :key="product.bizItemId">
+            <div v-for="product in dragList" class="item-box" :key="product.bizItemId" :data-product-id="product.bizItemId">
                 <!-- top -->
                 <div class="top">
                     <div class="item-box__img" @click="goProductDetail(product.bizItemId)">
@@ -466,11 +519,17 @@ onMounted(async () => {
             <div class="d-flex gap-8">
                 <p class="title-s modal-label">진료실 선택</p>
 
-                <CustomSingleSelect 
-                    v-model="importIntoPetRoomIdx"
-                    :options="modalStore.intoPetImportModal.data.roomList"
-                    caption="등록되어 있는 정보 그대로 불러오기 됩니다."
-                />
+                <div class="d-flex flex-col gap-4">
+                    <CustomSingleSelect 
+                        v-model="importIntoPetRoomIdx"
+                        :options="modalStore.intoPetImportModal.data.roomList"
+                    />
+
+                    <p class="body-xs caption-l">
+                        등록되어 있는 정보를 불러와 상품으로 등록합니다.<br/>
+                        상품 등록 기준에 맞지 않는 사진이나 문자는 자동으로 변경되어 등록됩니다.
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -544,6 +603,9 @@ onMounted(async () => {
 </template>
 
 <style lang="scss" scoped> 
+    .caption-l {
+        color: $gray-700;
+    }
     .line {
         width: 1px;
         height: 16px;

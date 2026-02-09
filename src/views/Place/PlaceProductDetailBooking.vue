@@ -247,6 +247,7 @@ const clickNextBtn = (async() => {
                     router.push({ name: 'placeProduct' });
                 }
             })
+            productStore.scrollToItemId = props.savedItemId; // 새상품 등록후 해당 id store 에 임시 저장 (해당 상품으로 스크롤해주기위해 사용)
         }
     } catch(e) {
         console.error(e);
