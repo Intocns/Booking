@@ -458,7 +458,6 @@ onMounted(async () => {
         title="인투펫 진료실 불러오기"
         :modal-state="modalStore.intoPetImportModal"
         size="xs"
-        modal-height="410px"
     >
         <div class="modal-contents-inner">
             <div class="d-flex gap-8">
