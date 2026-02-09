@@ -73,6 +73,11 @@ const removeReceiver = (id) => {
     }
 };
 
+//sms충전하기 오픈
+const openChargePoint = () => {
+    window.open(reservationStore.operatorSettingInfo.chargePointUrl, '_blank')
+}
+
 //운영설정 저장
 const saveOperator = (async() => {
     const params = {
@@ -238,8 +243,9 @@ onMounted(async() => {
                         </div>
                         <div class="d-flex align-center gap-8">
                             <button class="text-button text-button--blue">잔여건수: {{ Number(talkSmsStore.smsRemainingCount??"0").toLocaleString() }}</button>
-                            <button class="btn btn--size-24 btn--black-outline">
-                                <img :src="icSms" alt="아이콘" width="14">SMS 충전하기</button>
+                            <button class="btn btn--size-24 btn--black-outline" @click="openChargePoint">
+                                <img :src="icSms" alt="아이콘" width="14">SMS 충전하기
+                            </button>
                         </div>
                     </div>
 
