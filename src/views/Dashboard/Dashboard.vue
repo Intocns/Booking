@@ -162,7 +162,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val blue">{{ formatCount(count.cnt1) }}</p>
+                        <p class="val blue">{{ formatCount(count.cnt4) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>
@@ -192,7 +192,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val">{{ formatCount(count.cnt3) }}</p>
+                        <p class="val">{{ formatCount(count.cnt1) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>
@@ -207,7 +207,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val">{{ formatCount(count.cnt4) }}</p>
+                        <p class="val">{{ formatCount(count.cnt3) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>

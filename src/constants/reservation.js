@@ -26,7 +26,7 @@ export const RESERVE_ROUTE_OPTIONS = [
     { label: '전체', value: 'all' },
     { label: 'IntoVetGE', value: 1 },
     { label: '인투펫', value: 2 },
-    { label: 'fitpet', value: 3 },
+    // { label: 'fitpet', value: 3 },
     { label: '네이버예약', value: 4 },
 ]
 
@@ -34,6 +34,6 @@ export const RESERVE_ROUTE_OPTIONS = [
 export const RESERVE_ROUTE_MAP = {
     1: 'IntoVetGE',
     2: '인투펫',
-    3: 'fitpet',
+    // 3: 'fitpet',
     4: '네이버예약'
 }
