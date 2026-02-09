@@ -4,6 +4,7 @@ import icTooltip from '@/assets/icons/ic_tooltip.svg'
 import icEmpty from '@/assets/icons/ic_empty.svg'
 import TalkPreview from '../TalkPreview.vue';
 import icSms from '@/assets/icons/ic_sms.svg'
+import icReload from '@/assets/icons/ic_reset.svg'
 
 import { ref, computed, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
@@ -330,7 +331,6 @@ defineExpose({
                     <div 
                         class="sms-remaining-count sms-remaining-count--clickable" 
                         v-if="smsRemainingCount !== null"
-                        @click="getSmsPointInfo"
                     >
                         <span class="title-s d-flex gap-4">
                             <img :src="icSms" alt="아이콘">
@@ -340,6 +340,8 @@ defineExpose({
                             <span class="title-s count-value">{{ smsRemainingCount.toLocaleString() }}</span>
                             <span class="body-m">건</span>
                         </div>
+
+                        <button class="btn btn--size-24 btn--black-outline" @click="getSmsPointInfo"><img :src="icReload" alt="아이콘" width="10"></button>
                     </div>
                     <div class="sms-remaining-count" v-else-if="isLoadingSmsPoint">
                         <span class="body-m">잔여건수 조회 중...</span>
@@ -562,12 +564,12 @@ defineExpose({
                 }
 
                 &--clickable {
-                    cursor: pointer;
+                    // cursor: pointer;
                     transition: background-color 0.2s ease;
 
-                    &:hover {
-                        background-color: $primary-100;
-                    }
+                    // &:hover {
+                    //     background-color: $primary-100;
+                    // }
                 }
             }
         }
