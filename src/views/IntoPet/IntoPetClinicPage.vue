@@ -31,6 +31,7 @@ import { useModalStore } from '@/stores/modalStore';
 import { useIntoPetStore } from '@/stores/intoPetStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
 import { showAlert } from '@/utils/ui';
+import { api } from '@/api/axios';
 
 const modalStore = useModalStore();
 const intoPetStore = useIntoPetStore();
@@ -123,18 +124,18 @@ const handleRoomChange = (nextRoom) => {
     const isDirty = JSON.stringify(original) !== JSON.stringify(selectedRoom.value);
 
     
-    if (isDirty) {
-        // console.log(original)
-        // console.log(selectedRoom.value)
-
-        modalStore.confirmModal.openModal({
-            text: '수정된 내용이 있습니다. 저장하지 않고 이동하시겠습니까?',
-            confirmBtnText: '이동',
-            onConfirm: () => selectRoom(nextRoom) // 저장 안 하고 그냥 이동
-        });
-    } else {
-        selectRoom(nextRoom);
-    }
+    // if (isDirty) {
+    //     // console.log(original)
+    //     // console.log(selectedRoom.value)
+    //     modalStore.confirmModal.openModal({
+    //         text: '수정된 내용이 있습니다. 저장하지 않고 이동하시겠습니까?',
+    //         confirmBtnText: '이동',
+    //         onConfirm: () => selectRoom(nextRoom) // 저장 안 하고 그냥 이동
+    //     });
+    // } else {
+    //     selectRoom(nextRoom);
+    // }
+    selectRoom(nextRoom);
 };
 
 // 진료실 바뀌거나 데이터가 생겼을 때 데이터를 자식에게 전달
@@ -287,6 +288,11 @@ const delIntoPetRoom = async() => {
             
             showAlert('진료실이 삭제되었습니다.');
 
+            if(index == newRoomIdx.value) {
+                hasNewRoom.value = false;
+                newRoomIdx.value = null;
+            }  
+
         } catch (error) {
             console.error(error)
         }
@@ -294,21 +300,28 @@ const delIntoPetRoom = async() => {
 }
 
 // 진료실 복제 핸들러
-const handleCopyRoom = () => {
-    if (!selectedRoom.value) return;
+// const handleCopyRoom = () => {
+//     if (!selectedRoom.value) return;
 
-    // 사용자 확인 
-    modalStore.confirmModal.openModal({
-        text: `${selectedRoom.value.name || '이름 없음'}\n진료실을 복제하시겠습니까?`,
-        confirmBtnText: '복제',
-        onConfirm: () => copyIntoPetRoom(),
+//     // 사용자 확인 
+//     modalStore.confirmModal.openModal({
+//         text: `${selectedRoom.value.name || '이름 없음'}\n진료실을 복제하시겠습니까?`,
+//         confirmBtnText: '복제',
+//         onConfirm: () => copyIntoPetRoom(),
         
-    })
+//     })
 
-};
+// };
 
+const hasNewRoom = ref(false); // 새 진료실 존재여부
+const newRoomIdx = ref(null);
 // 진료실 복제 함수
-const copyIntoPetRoom = async () => {
+const copyIntoPetRoom = () => {
+    if(hasNewRoom.value) {
+        showAlert('이미 진료실 추가가 진행중입니다.');
+        selectedRoom.value = intoPetRoomList.value[newRoomIdx.value];
+        return;
+    }
     // 현재 선택된 방 데이터를 깊은 복사 (참조 끊기)
     const newRoom = JSON.parse(JSON.stringify(selectedRoom.value));
     
@@ -318,32 +331,40 @@ const copyIntoPetRoom = async () => {
     
     // 리스트에 추가
     intoPetRoomList.value.push(newRoom);
+    selectedRoom.value = intoPetRoomList.value[intoPetRoomList.value.length - 1];
     
-    try {
-        const params = {
-            idx: intoPetStore.intoPetRoomIdx,
-            hosIdx: intoPetStore.intoPetRoomHosIdx,
-            clinicInfo: intoPetRoomList.value,
-        }
+    hasNewRoom.value = true;
+    newRoomIdx.value = selectedRoom.value.idx;
+    // try {
+    //     const params = {
+    //         idx: intoPetStore.intoPetRoomIdx,
+    //         hosIdx: intoPetStore.intoPetRoomHosIdx,
+    //         clinicInfo: intoPetRoomList.value,
+    //     }
     
-        // console.log(params);
-        // return false;
+    //     // console.log(params);
+    //     // return false;
     
-        await intoPetStore.setIntoPetInfo(params);
-        // 데이터 다시 불러오기 
-        await intoPetStore.getIntoPetInfo(); 
+    //     await intoPetStore.setIntoPetInfo(params);
+    //     // 데이터 다시 불러오기 
+    //     await intoPetStore.getIntoPetInfo(); 
         
-        showAlert('진료실이 복제되었습니다.');
+    //     showAlert('진료실이 복제되었습니다.');
     
-        // 추가된 복사본으로 바로 선택 변경
-        selectedRoom.value = intoPetRoomList.value[intoPetRoomList.value.length - 1];
-    } catch (error) {
-        console.error(error);
-    }
+    //     // 추가된 복사본으로 바로 선택 변경
+    //     selectedRoom.value = intoPetRoomList.value[intoPetRoomList.value.length - 1];
+    // } catch (error) {
+    //     console.error(error);
+    // }
 }
 
 // 진료실 추가 버튼 핸들러
 const handleAddRoomBtn = () => {
+    if(hasNewRoom.value) {
+        showAlert('이미 진료실 추가가 진행중입니다.');
+        selectedRoom.value = intoPetRoomList.value[newRoomIdx.value];
+        return;
+    }
     // 기본 타임슬롯 정의 
     const defaultTimeSlot = {
         st_hour: "10시",
@@ -384,32 +405,50 @@ const handleAddRoomBtn = () => {
     intoPetRoomList.value.push(newRoom);
 
     selectedRoom.value = intoPetRoomList.value[intoPetRoomList.value.length - 1];
+
+    hasNewRoom.value = true;
+    newRoomIdx.value = selectedRoom.value.idx;
 }
+
+const fileInput = ref(null);
+
+// const checkUploadLimit = () => {
+//     const currentImages = selectedRoom.value.images;
+//     if (currentImages && currentImages.length >= 30) {
+//         showAlert('이미지는 최대 30장까지 추가할 수 있습니다.');
+//         return;
+//     }
+//     // 개수가 여유 있다면 수동으로 input 클릭
+//     fileInput.value.click();
+// };
 
 // file input change핸들러 (이미지 업로드)
 const handleImageUpload = async (event) => {
-    const file = event.target.files[0]; 
-
-    if (!file) return;
-
-    // TODO: 이미지 몇장까지 업로드 할지
-    const currentImages = selectedRoom.value.images;
-    // if (currentImages && currentImages.length >= 3) {
-    //     showAlert('이미지는 항목당 최대 3장까지 추가할 수 있습니다.');
-    //     event.target.value = ''; // input 초기화
-    //     return;
-    // }
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
 
     try {
-        const uploadedUrl = await uploadImage(file);
-        if (uploadedUrl) {
-            selectedRoom.value.images.push(uploadedUrl);
+        for (const file of files) {
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                const response = await api.post('/api/add/img', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                });
+
+            const { imageUrl } = JSON.parse(response.data.data);
+
+            if (imageUrl) {
+                selectedRoom.value.images.push(imageUrl);
+            }
         }
     } catch (error) {
         console.error(error);
+    } finally {
+        event.target.value = '';
     }
-
-    event.target.value = ''; // 초기화
 };
 
 // 사진 삭제
@@ -521,6 +560,10 @@ const saveIntoPetRoomInfo = async() => {
         intoPetRoomList.value[targetIdx] = JSON.parse(JSON.stringify(selectedRoom.value));
     }
 
+    if(hasNewRoom.value) {
+        intoPetRoomList.value.splice(newRoomIdx.value, 1);
+    }
+
     try {
         const params = {
             idx: intoPetStore.intoPetRoomIdx,
@@ -541,6 +584,8 @@ const saveIntoPetRoomInfo = async() => {
         if (updatedRoom) {
             selectRoom(updatedRoom); 
         }
+        hasNewRoom.value = false;
+        newRoomIdx.value = null;
     } catch(error) {
         console.log(error);
     }
@@ -612,7 +657,7 @@ onMounted(async() => {
                 <div class="d-flex gap-8">
                     <button class="btn btn--size-24 btn--black-outline" @click="handleDeleteRoom">
                         <img :src="icDel" alt="아이콘" width="14">진료실 삭제</button>
-                    <button class="btn btn--size-24 btn--black-outline" @click="handleCopyRoom">
+                    <button class="btn btn--size-24 btn--black-outline" @click="copyIntoPetRoom">
                         <img :src="icCopy" alt="아이콘">진료실 복제</button>
                 </div>
             </li>
@@ -678,6 +723,7 @@ onMounted(async() => {
                     <div class="photo-upload__grid">
                         <label class="photo-upload__btn">
                             <input 
+                                ref="fileInput"
                                 type="file" 
                                 hidden 
                                 multiple 
