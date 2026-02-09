@@ -98,11 +98,12 @@ const setTab = async (tabId) => {
     const currentCategory = optionStore.optionList.find(
         (cat) => String(cat.categoryId) === String(tabId)
     );
+    
+    selectionTypeCode.value = categoryStore.categoryList.find((cat) => cat.categoryId == tabId).selectionTypeCode; //currentCategory.selectionTypeCode;
 
     if (currentCategory) {
         dataMap.value[tabId] = currentCategory.options;
         
-        selectionTypeCode.value = currentCategory.selectionTypeCode;
     } else {
         dataMap.value[tabId] = [];
     }
