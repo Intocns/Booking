@@ -192,6 +192,12 @@ const validateRequiredFields = async () => {
         }
         return false;
     }
+
+    // 예약 가능 수량 검증
+    if(isCountError) {
+        showAlert('예약 가능 수량을 확인해 주세요.');
+        return;
+    }
     
     // 판매가 검증 (가격 토글이 켜져 있을 때)
     if (isPriceEnabled.value && (!price.value || price.value.trim() === '')) {
@@ -673,6 +679,23 @@ watch(categoryOptions, async (options) => {
     // 상품 리스트는 PlaceOptionPage에서 미리 로드됨
 }, { immediate: true });
 
+// 예약 가능 수량 에러 여부 체크 
+const isCountError = computed(() => {
+    if (minCount.value === '' || maxCount.value === '' || 
+        minCount.value === null || maxCount.value === null) return false;
+    return Number(minCount.value) > Number(maxCount.value);
+});
+
+// 최소 수량용 에러 메시지
+const minCountErrorMessage = computed(() => {
+    return isCountError.value ? '최소 수량은 최대 수량보다 클 수 없습니다.' : '';
+});
+
+// 최대 수량용 에러 메시지
+const maxCountErrorMessage = computed(() => {
+    return isCountError.value ? '최대 수량은 최소 수량보다 작을 수 없습니다.' : '';
+});
+
 onMounted(() => window.addEventListener('click', closeAll, true));
 onUnmounted(() => window.removeEventListener('click', closeAll, true));
 </script>
@@ -775,6 +798,8 @@ onUnmounted(() => window.removeEventListener('click', closeAll, true));
                                             :model-value="minCount" 
                                             @update:model-value="handleNumberInput($event, 'minCount')"
                                             :disabled="isCheckTypeCategory"
+                                            :is-error="isCountError"
+                                            :error-message="minCountErrorMessage"
                                         />
                                         <span class="unit">개</span>
                                     </div>
@@ -788,11 +813,14 @@ onUnmounted(() => window.removeEventListener('click', closeAll, true));
                                             :model-value="maxCount" 
                                             @update:model-value="handleNumberInput($event, 'maxCount')"
                                             :disabled="isCheckTypeCategory"
+                                            :is-error="isCountError"
+                                            :error-message="maxCountErrorMessage"
                                         />
                                         <span class="unit">개</span>
                                     </div>
                                 </div>
                             </div>
+                            <span v-if="isCountError" class="error-message">{{  }}</span>
                         </div>
                     </div>
     
@@ -1082,7 +1110,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll, true));
     .unit {
         position: absolute;
         right: 10px;
-        top: 50%;
+        top: 16px;
         transform: translateY(-50%);
         z-index: 1;
         pointer-events: none;
