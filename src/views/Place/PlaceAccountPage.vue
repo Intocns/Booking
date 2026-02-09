@@ -101,6 +101,20 @@ function focusFirstInvalidField(errorKeys) {
     });
 }
 
+
+const fileInput = ref(null);
+
+const checkUploadLimit = (e) => {
+    if (isFormLockedByUseFlag) e.preventDefault();
+
+    if (placeImages.value.length >= 30) {
+        showAlert('이미지는 최대 30장까지 추가할 수 있습니다.');
+        return;
+    }
+    // 개수가 여유 있다면 수동으로 input 클릭
+    fileInput.value.click();
+};
+
 /** 업체 사진 업로드 (multiple 선택 시 선택한 파일 전부 업로드 후 배열에 추가) */
 async function handlePlaceImageUpload(event) {
     if (isFormLockedByUseFlag.value) return;
@@ -625,26 +639,34 @@ onUnmounted(() => {
                     <li class="form-item d-flex">
                         <div class="d-flex" style="flex: 1;">
                             <!-- 업체사진 -->
-                            <div class="form-label helper">
-                                업체 사진 
-                                <img :src="icInfo" alt="안내아이콘" class="helper__icon">
-                                <div class="tooltip-content">
-                                    사진을 드래그하여 순서를 변경할 수 있습니다.
+                            <div class="form-label">
+                                <div class="helper d-flex gap-4">
+                                    업체 사진 
+                                    <img :src="icInfo" alt="안내아이콘" class="helper__icon">
+                                    <div class="tooltip-content">
+                                        <ul>
+                                            <li>최대 30장 등록가능</li>
+                                            <li>한 장당 최대 20MB, 1200*750 권장</li>
+                                            <li>JPG,GIF,PNG,BMP,HEIF 형식의 사진 등록 가능</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-content" :class="{ 'form-content--locked': isFormLockedByUseFlag }">
                                 <div class="photo-upload__grid">
-                                    <label class="photo-upload__btn" :class="{ 'is-disabled': isFormLockedByUseFlag }" @click="(e) => { if (isFormLockedByUseFlag) e.preventDefault(); }">
+                                    <div class="photo-upload__btn" :class="{ 'is-disabled': isFormLockedByUseFlag }" @click="checkUploadLimit">
                                         <input
+                                            ref="fileInput"
                                             type="file"
                                             hidden
                                             multiple
                                             accept="image/*"
                                             :disabled="isFormLockedByUseFlag"
                                             @change="handlePlaceImageUpload"
+                                            @click.stop
                                         >
                                         <img :src="icAddBtn" alt="추가" class="icon-plus" width="32">
-                                    </label>
+                                    </div>
                                     <draggable
                                         v-model="placeImages"
                                         :item-key="(url) => url"

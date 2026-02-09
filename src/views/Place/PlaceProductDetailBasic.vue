@@ -12,6 +12,7 @@ import icClear from '@/assets/icons/ic_clear.svg'
 import icAddBtn from '@/assets/icons/ic_add_btn.svg'
 import icDragHandel from '@/assets/icons/ic_drag_handel.svg'
 import icDel from '@/assets/icons/ic_del.svg'
+import icInformationB from '@/assets/icons/ic_infomation_b.svg'
 // 라이브러리
 import draggable from 'vuedraggable'; 
 
@@ -103,6 +104,17 @@ watch(() => basicInput.value.bookingPrecautionJson[0].desc, (newVal) => {emit('u
 /**
  * 상품 사진 업로드 핸들러
  */
+const fileInput = ref(null);
+
+const checkUploadLimit = () => {
+    if (basicInput.value.imageUrls.length >= 30) {
+        showAlert('이미지는 최대 30장까지 추가할 수 있습니다.');
+        return;
+    }
+    // 개수가 여유 있다면 수동으로 input 클릭
+    fileInput.value.click();
+};
+
 const handleMainImageUpload = async (event) => {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
@@ -454,19 +466,32 @@ onMounted(async() => {
 
         <!-- 상품사진 -->
         <li class="form-item">
-            <div class="form-label required">상품 사진</div>
+            <div class="form-label required">
+                <div class="helper d-flex gap-4">
+                    상품 사진 <img :src="icInformationB" alt="아이콘" class="helper__icon">
+                    <div class="tooltip-content">
+                        <ul>
+                            <li>최대 30장 등록가능</li>
+                            <li>한 장당 최대 20MB, 1200*750 권장</li>
+                            <li>JPG,GIF,PNG,BMP,HEIF 형식의 사진 등록 가능</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
             <div class="form-content">
                 <div class="photo-upload__grid">
-                    <label class="photo-upload__btn">
+                    <div class="photo-upload__btn" @click="checkUploadLimit">
                         <input 
+                            ref="fileInput"
                             type="file" 
                             hidden 
                             multiple 
                             accept="image/*"
                             @change="handleMainImageUpload"
+                            @click.stop
                         >
                         <img :src="icAddBtn" alt="추가" class="icon-plus" width="32">
-                    </label>
+                    </div>
 
                     <draggable
                         v-model="basicInput.imageUrls"
