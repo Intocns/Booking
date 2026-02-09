@@ -17,7 +17,8 @@ const statusIcons = {
     0: icHold,
     1: icConfirm,
     2: icCancel,
-    3: icPersonal,
+    3: icCancel,
+    4: icPersonal,
 };
     // 0: '예약대기',
     // 1: '예약확정',
@@ -96,7 +97,7 @@ const summaryData = computed(() => {
     props.events.forEach(event => {
         const date = event.start.includes('T') ? event.start.split('T')[0] : event.start;
         const staff = event.resource;
-        const status = event.inState ?? '';
+        const status = event.clinicType === '개인일정' ? 4 : event.inState;
 
         if (!grid[date]) grid[date] = {};
         if (!grid[date][staff]) grid[date][staff] = {};
@@ -110,13 +111,18 @@ const statusLabels = {
     1: '예약확정',
     0: '예약대기',
     2: '예약취소',
-    3: '개인일정'
+    3: '예약거절',
+    4: '개인일정'
 };
 
 // 예약 상세보기 핸들러
 const handelReserveDetail = (reserveIdx) => {
     reservationStore.getReserveInfo(reserveIdx)
 }
+
+const getInState = (data) => {
+    return data.clinicType === '개인일정' ? 4 : data.inState;
+};
 </script>
 
 <template>
@@ -175,12 +181,12 @@ const handelReserveDetail = (reserveIdx) => {
                     <div 
                         v-for="event in selectedEvents" 
                         :key="event.id" 
-                        :class="['detail-item', `detail-item__${event.inState}`]"
+                        :class="['detail-item', `detail-item__${getInState(event)}`]"
                         @click="handelReserveDetail(event.reserveIdx)"
                     >
                         <div class="time-box">
                             <img 
-                                :src="statusIcons[event.inState ?? '']" 
+                                :src="statusIcons[getInState(event)]" 
                                 alt="" 
                                 class="status-icon"
                             />
@@ -303,7 +309,8 @@ const handelReserveDetail = (reserveIdx) => {
         &__1 { background: $status-confirmed_bg; color: $status-confirmed_text; } // 확정
         &__0 { background: $status-onHold_bg; color: $status-onHold_text; } // 대기
         &__2 { background: $status-canceled_bg; color: $status-canceled_text; } // 취소
-        &__3 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
+        &__3 { background: $status-canceled_bg; color: $status-canceled_text; } // 거절
+        &__4 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
     }
 }
 
@@ -390,7 +397,8 @@ const handelReserveDetail = (reserveIdx) => {
         &__1 { background: $status-confirmed_bg; color: $status-confirmed_text; } // 확정
         &__0 { background: $status-onHold_bg; color: $status-onHold_text; } // 대기
         &__2 { background: $status-canceled_bg; color: $status-canceled_text; } // 취소
-        &__3 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
+        &__3 { background: $status-canceled_bg; color: $status-canceled_text; } // 거절
+        &__4 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
 
         &:hover {
             filter: brightness(96%);

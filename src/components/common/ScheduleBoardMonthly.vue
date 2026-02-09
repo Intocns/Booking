@@ -18,10 +18,11 @@ const reservationStore = useReservationStore();
 
 // 상태 아이콘 매핑
 const statusIcons = {
+    0: icHold, // 대기
     1: icConfirm, //확정
-    3: icPersonal, //개인일정
     2: icCancel, // 취소
-    0: icHold // 대기
+    3: icCancel, // 거절
+    4: icPersonal, //개인일정
 };
 
 const props = defineProps(['startDate', 'events', 'staffs']);
@@ -295,13 +296,13 @@ onMounted(() => {
                             v-for="ev in group.events" 
                             :key="ev.id" 
                             class="detail-item" 
-                            :class="`detail-item__${ev.inState}`"
+                            :class="`detail-item__${ev.clinicType === '개인일정' ? 4 : ev.inState}`"
                             @click="handelReserveDetail(ev.reserveIdx)"
                         >
                             <div class="d-flex gap-6">
                                 <div class="d-flex gap-4">
                                     <img 
-                                        :src="statusIcons[ev.inState]" 
+                                        :src="statusIcons[ev.clinicType === '개인일정' ? 4 : ev.inState]"
                                         alt="" 
                                         class="status-icon"
                                     />
@@ -518,7 +519,8 @@ onMounted(() => {
             &__1 { background: $status-confirmed_bg; color: $status-confirmed_text; } // 확정
             &__0 { background: $status-onHold_bg; color: $status-onHold_text; } // 대기
             &__2 { background: $status-canceled_bg; color: $status-canceled_text; } // 취소
-            &__3 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
+            &__3 { background: $status-canceled_bg; color: $status-canceled_text; } // 거절
+            &__4 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
 
             &:hover {
                 filter: brightness(96%);

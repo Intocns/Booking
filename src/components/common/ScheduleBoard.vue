@@ -20,7 +20,8 @@ const statusIcons = {
     0: icHold,
     1: icConfirm,
     2: icCancel,
-    3: icPersonal,
+    3: icCancel,
+    4: icPersonal,
 };
     // 0: '예약대기',
     // 1: '예약확정',
@@ -97,14 +98,24 @@ const config = ref({
 
     onBeforeEventRender: (args) => {
         const status = args.data.inState;
+        const clinicType = args.data.clinicType; // clinicType 가져오기
         
         const bgColors = {
             0: '#ffe9a5', // 대기
             1: '#cceaff', // 확정
             2: '#ffd3db', // 취소
-            3: '#D2FAE2', // 개인(불가)
+            3: '#ffd3db', // 거절
+            4: '#D2FAE2', // 개인(불가)
         };
-        args.data.backColor = bgColors[status];
+
+        // clinicType이 '개인일정'인 경우
+        if (clinicType == '개인일정') {
+            args.data.backColor = bgColors[4];
+        } else {
+            // 2. 그 외에는 status(inState) 값에 따라 색상 결정
+            args.data.backColor = bgColors[status];
+        }
+
     },
     
     cellDuration: 30,
@@ -308,6 +319,10 @@ const handleMouseUp = () => {
     }
 };
 
+const getInState = (data) => {
+    return data.clinicType === '개인일정' ? 4 : data.inState;
+};
+
 onMounted(() => {
     // 초기 로드 시 업데이트
     if (calendarRef.value && calendarRef.value.control) {
@@ -354,10 +369,10 @@ onUnmounted(() => {
                 <div class="event-header">
                     <!-- 예약 상태 아이콘 -->
                     <div class="reserve-name">
-                        <img :src="statusIcons[event.data.inState] || ''" alt="상태아이콘">
+                        <img :src="statusIcons[getInState(event.data)] || ''" alt="상태아이콘">
                         <span 
                             class="title" 
-                            :class="`title__${event.data.inState}`"
+                            :class="`title__${getInState(event.data)}`"
                         >
                             {{ event.data.userName }} {{ event.data.petName ? '(' + event.data.petName + ')' : '' }}
                         </span>
@@ -370,7 +385,7 @@ onUnmounted(() => {
                 </div>
                 <div class="event-content">
                     <!-- 상품명/진료실명 -->
-                    <p class="reserve-title" :class="`reserve-title__${event.data.inState}`">{{ event.data.roomName }}</p>
+                    <p class="reserve-title" :class="`reserve-title__${getInState(event.data)}`">{{ event.data.roomName }}</p>
                     <!-- 병원 메모 -->
                     <p class="reserve-memo">{{ event.data.memo }}</p>
                 </div>
@@ -637,7 +652,8 @@ onUnmounted(() => {
                 &__1 {color: $status-confirmed_text;}
                 &__0 {color: $status-onHold_text;}
                 &__2 {color: $status-canceled_text;}
-                &__3 {color: $status-personal_text;}
+                &__3 {color: $status-canceled_text;}
+                &__4 {color: $status-personal_text;}
             }
         }
 
@@ -655,7 +671,8 @@ onUnmounted(() => {
             &__0 {color: $status-onHold_text;}
             &__1 {color: $status-confirmed_text;}
             &__2 {color: $status-canceled_text;}
-            &__3 {color: $status-personal_text;}
+            &__3 {color: $status-canceled_text;}
+            &__4 {color: $status-personal_text;}
         }
         .reserve-memo {
             overflow: hidden;
