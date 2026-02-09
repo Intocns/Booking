@@ -194,7 +194,7 @@ const validateRequiredFields = async () => {
     }
 
     // 예약 가능 수량 검증
-    if(isCountError) {
+    if(!isCheckTypeCategory && isCountError) {
         showAlert('예약 가능 수량을 확인해 주세요.');
         return;
     }

@@ -275,6 +275,16 @@ const handleMenuAction = async (action, row) => {
     }
 };
 
+// 테이블 행 클릭 시 처리
+const handelTableRowClick = (row) => {
+    isEdit.value = true; // 수정
+    modalStore.optionSettingModal.setTitle('옵션 수정');
+    // 이미 가져온 옵션 리스트의 rawData 활용 (별도 API 호출 불필요)
+    modalStore.optionSettingModal.openModal({ 
+        optionData: row.rawData
+    });
+}
+
 // 옵션 삭제 핸들러
 const handleDeleteOption = async () => {
     const optionData = modalStore.confirmModal.data?.optionData;
@@ -384,6 +394,8 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                     table-empty-sub-text="예약 상품에 연결해 함께 예약할 옵션 상품이 있다면 등록해주세요."
                     table-empty-btn-text="옵션 등록"
                     @empty-btn-click="optionRegisterBtnClick"
+                    @row-click="handelTableRowClick"
+                    :is-click-able="true"
                 >
                     <template #right>
                         <div class="d-flex gap-16 align-center table-title-right">
@@ -395,14 +407,14 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                                 </div>
                             </div>
                             <div class="line"></div>
-                            <button class="btn btn--size-32 btn--black" @click="optionRegisterBtnClick">옵션등록</button>
+                            <button class="btn btn--size-32 btn--black" @click.stop="optionRegisterBtnClick">옵션등록</button>
                         </div>
                     </template>
 
 
                     <!-- 노출설정 커스텀 슬롯 td -->
                     <template #visibleBtn="{ row, rowIndex }">
-                        <label class="toggle"> 
+                        <label class="toggle" @click.stop> 
                             <input 
                                 type="checkbox" 
                                 :checked="row.isImp" 
@@ -413,8 +425,8 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                     </template>
 
                     <!-- 상품연결 커스텀 슬롯 td -->
-                    <template #connect="{ row, rowIndex }">
-                        <div class="connect_btn" @click="handleProductConnectClick(row)" style="cursor: pointer;">
+                    <template #connect="{ row, rowIndex }" @click.stop>
+                        <div class="connect_btn" @click.stop="handleProductConnectClick(row)" style="cursor: pointer;">
                             <span class="title-s">{{ row.is_connect }}</span>
                             <img :src="icArrowRightBlue" alt="">
                         </div>
@@ -422,7 +434,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
 
                     <!-- 설정버튼 커스텀 슬롯 td -->
                     <!-- 설정 -->
-                    <template #settingBtn="{ row, rowIndex }">
+                    <template #settingBtn="{ row, rowIndex }" @click.stop>
                         <div class="row__btn-td">
                             <button 
                                 class="btn btn--size-24 btn--black-outline"
