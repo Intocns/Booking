@@ -843,7 +843,7 @@ const handleViewChart = () => {
                         <p class="label" style="padding-top: 10px;">병원 메모</p>
                         <TextAreaBox 
                             v-model="reserveData.geReMemo"
-                            :disabled="true"
+                            :disabled="isCancelled"
                             placeholder="병원 메모"
                             height="160px"
                         />
