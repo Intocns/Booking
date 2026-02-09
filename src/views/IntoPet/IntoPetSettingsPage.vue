@@ -55,7 +55,6 @@ const addPurpose = () => {
 const removePurpose = (id) => {
     if (visitPurposes.value.length > 1) {
         visitPurposes.value = visitPurposes.value.filter(item => item.id !== id);
-        console.log(visitPurposes.value)
     }
 };
 
