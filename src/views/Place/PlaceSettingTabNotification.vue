@@ -426,4 +426,11 @@ onMounted(() => {
             }
         }
     }
+
+    .button-wrapper {
+        display: flex;
+        width: 50%;
+
+        .btn {flex:1;}
+    }
 </style>

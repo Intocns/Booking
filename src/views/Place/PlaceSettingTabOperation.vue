@@ -92,7 +92,7 @@ const saveOperatorSetting = async() => {
     }
 
     const response = await placeStore.setOperatorSetting(params);
-    console.log('저장');
+    // console.log('저장');
 
     if(response.status_code <= 300){
         showAlert('저장 되었습니다.');
@@ -360,5 +360,12 @@ onBeforeUnmount(() => {
     :deep(.tooltip-box) {
         border: 1px solid $primary-700;
         box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    .button-wrapper {
+        display: flex;
+        width: 50%;
+
+        .btn {flex:1;}
     }
 </style>                                      
