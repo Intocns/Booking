@@ -450,7 +450,10 @@ onUnmounted(() => {
                         width: 100%;
                     }
                 }
-                width: auto !important;
+
+                &:first-child { // 이벤트 셀 위치 값 오류 수정
+                    width: auto !important;
+                }
             }
         }
     }
