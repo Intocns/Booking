@@ -11,8 +11,6 @@ import icDragHandel from '@/assets/icons/ic_drag_handel.svg';
 import icClear from '@/assets/icons/ic_clear.svg';
 import { useModalStore } from '@/stores/modalStore';
 import { usePlaceStore } from '@/stores/placeStore';
-import { useProductStore } from '@/stores/productStore';
-import { useRouter } from 'vue-router';
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { api } from '@/api/axios';
 import { COCODE, HOS_IDX } from '@/constants/common';
@@ -35,12 +33,6 @@ import draggable from 'vuedraggable';
 // --- 상태 ---
 const modalStore = useModalStore();
 const placeStore = usePlaceStore();
-const productStore = useProductStore();
-const router = useRouter();
-
-/** 상품 등록 필요 모달 "다시 보지 않음" localStorage 키 */
-const PRODUCT_MODAL_DONT_SHOW_KEY = 'place_product_registration_modal_dont_show';
-const productModalDontShowAgain = ref(false);
 const hasNaverAccount = ref(false);
 /** GET /api/linkbusiness/{cocode} 응답의 useFlag: null=처음 등록, 0=연동해지(계정 재연동), 1=연동중(연동관리) */
 const naverUseFlag = ref(null);
@@ -477,21 +469,8 @@ onMounted(() => {
         fetchAccountInfo().catch(() => {}),
         ensureNaverLoginScripts(),
     ])
-        .then(async () => {
+        .then(() => {
             if (!hasNaverAccount.value) nextTick(() => initNaverLogin());
-            // 네이버 플레이스 관리 접근 시 상품이 0개면 상품 등록 필요 모달 노출 (다시 보지 않음 미체크 시)
-            const dontShow = localStorage.getItem(PRODUCT_MODAL_DONT_SHOW_KEY) === '1';
-            if (dontShow) return; // 다시 보지 않음이면 상품 API 호출 없이 종료
-            try {
-                await productStore.getProductList();
-                const list = productStore.productList ?? [];
-                if (list.length === 0) {
-                    productModalDontShowAgain.value = false;
-                    modalStore.productRegistrationModal.openModal();
-                }
-            } catch {
-                // 상품 목록 조회 실패 시 모달은 띄우지 않음
-            }
         })
         .catch((err) => {
             console.error(err);
@@ -499,23 +478,6 @@ onMounted(() => {
         });
 });
 
-/** 상품 등록 필요 모달 > 닫기 버튼: 모달만 닫는다 */
-function closeProductRegistrationModal() {
-    modalStore.productRegistrationModal.closeModal();
-}
-
-/** 상품 등록 필요 모달 > 상품 등록하기 버튼: 모달 닫고 상품 관리 페이지로 이동 */
-function goToProductRegistration() {
-    modalStore.productRegistrationModal.closeModal();
-    router.push('/place/product');
-}
-
-/** 상품 등록 필요 모달 > 다시 보지 않음 체크 시 localStorage 저장/해제, 다음 접속 시 API·모달 생략 여부 결정 */
-function onProductModalDontShowChange(checked) {
-    productModalDontShowAgain.value = !!checked;
-    if (checked) localStorage.setItem(PRODUCT_MODAL_DONT_SHOW_KEY, '1');
-    else localStorage.removeItem(PRODUCT_MODAL_DONT_SHOW_KEY);
-}
 onUnmounted(() => {
     window.removeEventListener('message', handleNaverMessage);
 });
@@ -821,38 +783,6 @@ onUnmounted(() => {
         </template>
 
     </TableLayout>
-
-    <!-- 상품 등록 필요 모달 (네이버 플레이스 관리 접근 시 상품 0개일 때 노출) -->
-    <Modal
-        v-if="modalStore.productRegistrationModal.isVisible"
-        title="상품 등록 필요"
-        size="xs"
-        :modal-state="modalStore.productRegistrationModal"
-    >
-        <div class="modal-contents-inner">
-            <p class="modal-contents-subTitle">현재 등록된 예약 상품이 없습니다.</p>
-            <p class="modal-contents-body">네이버 예약 연동을 진행하기 위해서는 인투링크에 상품 등록이 필요합니다. 상품 등록을 완료한 후 다시 계정 연동을 진행해 주세요.</p>
-            <span class="caption modal-contents-caption">※ 이미 네이버 예약을 사용 중이시라면 <span class="strong">별도 상품 등록 없이 연동을 진행</span>해주세요.</span>
-        </div>
-
-        <div class="modal-button-wrapper">
-            <div class="check_section">
-                <label class="checkbox">
-                    <input
-                        type="checkbox"
-                        :checked="productModalDontShowAgain"
-                        @change="onProductModalDontShowChange(($event.target).checked)"
-                    />
-                    <span class="box"></span>
-                    <span class="label">다시 보지 않음</span>
-                </label>
-            </div>
-            <div class="buttons">
-                <button type="button" class="btn btn--size-24 btn--black-outline btn--c" @click="closeProductRegistrationModal">닫기</button>
-                <button type="button" class="btn btn--size-24 btn--black" @click="goToProductRegistration">상품 등록하기</button>
-            </div>
-        </div>
-    </Modal>
 
     <!-- 계정 연동 완료 모달 -->
     <Modal
