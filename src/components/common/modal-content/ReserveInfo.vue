@@ -390,30 +390,69 @@ const handleConfirmReservationSave = async () => {
 
 // 고객 검색에서 고객 선택 시 처리
 const handleCustomerSelected = (customer) => {
+    const petInfoByType = {//customer.buttonType을 키값으로 사용 => 0 : 신규동물, 1 : 선택동물
+        0: {
+            petSno: '',
+            breed: '',
+            sex: PET_GENDER_MAP[reserveData.petSex] || '',
+            petName: reserveData.petName,
+            petBw: '',//체중
+            breedName: '',
+            speciesName: reserveData.spesice
+        },
+        1: {
+            petSno: customer.petSno,
+            breed: customer.breedName,
+            sex: PET_GENDER_MAP[customer.sex] || '',
+            petName: customer.petName,
+            petBw: customer.petBw,
+            breedName: customer.breedName,
+            speciesName: customer.speciesName
+        }
+    };
+
     // 선택한 고객만 리스트에 남기고 나머지는 제거 (단일 결과 화면으로 표시)
+    // const newCustomer = {
+    //     ...customer,
+    //     lastStatusDateTxt: customer.lastStatusDate ? formatDate(customer.lastStatusDate) : '',
+    //     regDateTxt: customer.regDate ? formatDate(customer.regDate) : '',
+    //     isMatched: true,
+    //     rowClass: 'row-matched',
+    //     breed: customer.breedName || '',
+    //     sex: PET_GENDER_MAP[customer.sex] || '',
+    //     // 고객/동물 번호 (예약 확정 시 필요)
+    //     userSno: customer.userSno || null,
+    //     petSno: customer.petSno || null,
+    //     // 주소 정보 (1건인 경우 사용)
+    //     userAddr: customer.userAddr || '',
+    //     userAddr2: customer.userAddr2 || '',
+    //     // 담당의사 (1건인 경우 사용)
+    //     petDoctor: customer.petDoctor || '',
+    //     petName: customer.petName || '',
+    //     petBw: customer.petBw || '',
+    //     rfid: customer.rfid || '',
+    //     speciesName: customer.speciesName || '',
+    //     breedName: customer.breedName || '',
+    //     lastStatusDate: customer.lastStatusDate || '',
+    //     regDate: customer.regDate || '',
+    // };
     const newCustomer = {
         ...customer,
         lastStatusDateTxt: customer.lastStatusDate ? formatDate(customer.lastStatusDate) : '',
         regDateTxt: customer.regDate ? formatDate(customer.regDate) : '',
         isMatched: true,
         rowClass: 'row-matched',
-        breed: customer.breedName || '',
-        sex: PET_GENDER_MAP[customer.sex] || '',
         // 고객/동물 번호 (예약 확정 시 필요)
         userSno: customer.userSno || null,
-        petSno: customer.petSno || null,
         // 주소 정보 (1건인 경우 사용)
         userAddr: customer.userAddr || '',
         userAddr2: customer.userAddr2 || '',
         // 담당의사 (1건인 경우 사용)
         petDoctor: customer.petDoctor || '',
-        petName: customer.petName || '',
-        petBw: customer.petBw || '',
         rfid: customer.rfid || '',
-        speciesName: customer.speciesName || '',
-        breedName: customer.breedName || '',
         lastStatusDate: customer.lastStatusDate || '',
         regDate: customer.regDate || '',
+        ...petInfoByType[customer.buttonType]//타입별 선언한 값으로 덮어쓰기
     };
     
     // 선택한 고객만 리스트에 남김 (단일 결과 화면으로 표시)

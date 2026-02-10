@@ -115,15 +115,28 @@ const handleSelectPet = () => {
     if (!selectedCustomer.value) {
         return;
     }
-    
+
     // 부모 컴포넌트에 선택한 고객 정보 전달
-    emit('customer-selected', selectedCustomer.value);
+    emit('customer-selected', {
+        ...selectedCustomer.value,
+        buttonType: 1
+    });
 };
 
 // 신규 동물 등록 버튼 클릭
 const handleNewPetRegistration = () => {
+    if (!selectedCustomer.value) {
+        return;
+    }
+
+    // 부모 컴포넌트에 선택한 고객 정보 전달
+    emit('customer-selected', {
+        ...selectedCustomer.value,
+        buttonType: 0
+    });
+
     // 고객 검색 모달 닫기 (신규 등록은 예약 확정 시 처리)
-    modalStore.searchCustomerModal.closeModal();
+    // modalStore.searchCustomerModal.closeModal();
     // TODO: 신규 동물 등록 로직 (필요시 추가)
 };
 
