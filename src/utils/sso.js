@@ -18,15 +18,17 @@ export const loadSSOScript = () => {
 // sso 강제 로그인 (차트사용)
 export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
     const urlParams = new URLSearchParams(window.location.search);
-    const bizNo = urlParams.get('biz_No') || '123-12-12345' // TODO:차트에서 보내주는 사업자번호로 변경 //compnum
-    const cocode = urlParams.get('cocode') || '2592'; // TODO: 2592 추후삭제 차트에서 보내주는 cocode값으로 변경 
-    // const cocode = localStorage.getItem('HOSUUID') || '2592'; // TODO: 2592 추후삭제 차트에서 보내주는 cocode값으로 변경
+    const bizNo = urlParams.get('biz_No') || import.meta.env.VITE_BIZ_NO; // TODO:차트에서 보내주는 사업자번호 키값 확인 후 변경 //compnum
+    const cocode = urlParams.get('cocode') || import.meta.env.VITE_COCODE; // TODO: 차트에서 보내주는 cocode 키값 확인 후 변경 
+    // const cocode = localStorage.getItem('HOSUUID'); // 추후삭제 차트에서 보내주는 cocode값으로 변경
 
+    if(!bizNo && !cocode) {
+        showAlert('잘못된 접근입니다.');
+    }
     if(!bizNo) {
         showAlert('사업자번호가 존재하지 않습니다.');
         return;
     }
-
     if(!cocode) {
         showAlert('병원코드가 존재하지 않습니다.');
         return;
@@ -39,17 +41,9 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
         return;
     }
 
-    // if(!_businessNo) {
-    //     return {data: {returnUrl: '', status : 101, message:'사업자번호가 존재하지 않습니다.'}};
-    // }
+    const isLocal = import.meta.env.VITE_IS_LOCAL === 'true';
 
-    // if(!cocode) {
-    //     return {data: {returnUrl: '', status : 102, message:'병원코드가 존재하지 않습니다.'}};
-    // }
-
-    const isDev = import.meta.env.VITE_IS_TEST === 'true';
-
-    let finalNextUrl = isDev ? window.location.origin : import.meta.env.VITE_MAIN_URL;
+    let finalNextUrl = isLocal ? window.location.origin : import.meta.env.VITE_MAIN_URL;
 
     const sendData = { 
         cocode: cocode, 
@@ -68,7 +62,7 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
     // console.log(decryptData)
 
     try { // 강제 로그인 시도
-        const response = await axios.post( isDev ? '/sso-api/autoSignIn' : `${import.meta.env.VITE_SSO_URL}api/autoSignIn`, 
+        const response = await axios.post( isLocal ? '/sso-api/autoSignIn' : `${import.meta.env.VITE_SSO_URL}api/autoSignIn`, 
             { encodeData: encryptedData },
             { headers: { 'Content-Type': 'application/json' }}
         );
@@ -88,7 +82,7 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
             window.close();
         }
     } catch (err) {
-        // alert('인증에 실패했습니다.');
+        alert('인증에 실패했습니다.');
         console.error("SSO 로그인 실패:", err);
         // 브라우저 창닫기
         // window.close();
@@ -98,8 +92,8 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
 // SSO 초기화 및 로직 
 export const initSSOCheck = (onResult) => {
     const isSession = false; // 현재 사이트 자체 세션 유무
-    const isDev = import.meta.env.VITE_IS_TEST === 'true';
-    const sso = new INTOSSO('intobooking', true, true);  // test일경우 마지막 인자값 true, live일 경우 false
+    const isTest = import.meta.env.VITE_IS_TEST === 'true';
+    const sso = new INTOSSO('intobooking', true, isTest);  // test일경우 마지막 인자값 true, live일 경우 false
 
     const callback = function(data) {
         // console.log(data);
@@ -122,7 +116,7 @@ export const initSSOCheck = (onResult) => {
     try {
         sso.init(callback, logout, isSession);
     } catch(err) {
-        alert('sso 로그인 확인 오류')
+        alert('인증에 실패했습니다.');
         console.error(err);
         if (onResult) onResult('error');
     }
