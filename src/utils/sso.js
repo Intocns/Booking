@@ -99,7 +99,7 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
 export const initSSOCheck = (onResult) => {
     const isSession = false; // 현재 사이트 자체 세션 유무
     const isDev = import.meta.env.VITE_IS_TEST === 'true';
-    const sso = new INTOSSO('intobooking', true, isDev);  // test일경우 마지막 인자값 true, live일 경우 false
+    const sso = new INTOSSO('intobooking', true, true);  // test일경우 마지막 인자값 true, live일 경우 false
 
     const callback = function(data) {
         // console.log(data);
