@@ -174,7 +174,6 @@ const saveQuestion = async() => {
     }
     
     modalStore.addRequestModal.closeModal();
-    showAlert('저장 되었습니다.')
     // 데이터 새로고침
     await placeStore.getQuestionList();
 };
@@ -460,7 +459,7 @@ onMounted(() => {
         <div class="modal-button-wrapper">
             <div class="buttons">
                 <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.addRequestModal.closeModal()">취소</button>
-                <button class="btn btn--size-32 btn--blue" @click="saveQuestion">저장</button>
+                <button class="btn btn--size-32 btn--blue" @click="saveQuestion">등록</button>
             </div>
         </div>
     </Modal>
