@@ -641,10 +641,27 @@ const receivedDateTime = computed(() =>
     formatDateTime(reserveData.createdAt)
 );
 
-// 확정 일시 계산 (inState가 1일 때만 표시)
-const confirmedDateTime = computed(() => 
-    reserveData.inState === 1 ? formatDateTime(reserveData.updatedAt) : ''
-);
+// 확정/취소(거절 포함) 일시 계산
+// - 예약확정(inState === 1) : updatedAt (확정 처리 시각)
+// - 취소/거절(inState === 2 또는 3) : canceledAt (취소/거절 처리 시각)
+// - 그 외 상태 : 빈 값
+const confirmedDateTime = computed(() => {
+    if (reserveData.inState != 0 && reserveData.updatedAt) {
+        return formatDateTime(reserveData.updatedAt);
+    }
+   
+    return '';
+});
+
+// 병원 메모 표시값
+// - 취소/거절 상태이면 rejectMsg 우선, 없으면 geReMemo
+// - 그 외에는 geReMemo
+const hospitalMemo = computed(() => {
+    if (isCancelled.value) {
+        return reserveData.rejectMsg || reserveData.geReMemo || '';
+    }
+    return reserveData.geReMemo || '';
+});
 
 // 모달이 열릴 때마다 값 초기화
 watch(() => modalStore.cancelReserveModal.isVisible, (newVal) => {
@@ -881,7 +898,8 @@ const handleViewChart = () => {
                     <div class="info-item align-start">
                         <p class="label" style="padding-top: 10px;">병원 메모</p>
                         <TextAreaBox 
-                            v-model="reserveData.geReMemo"
+                            :model-value="hospitalMemo"
+                            @update:modelValue="val => { if (!isCancelled) reserveData.geReMemo = val }"
                             :disabled="isCancelled"
                             placeholder="병원 메모"
                             height="160px"
