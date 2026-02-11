@@ -78,10 +78,10 @@ const newQuestion = reactive({
 
 // 질문 추가 모달 열기 (10개 제한)
 const handleAddQuestion = () => {
-    if (questions.value.length >= 10) {
-        showAlert('질문은 최대 10개까지만 등록 가능합니다.');
-        return;
-    }
+    // if (questions.value.length >= 10) {
+    //     showAlert('질문은 최대 10개까지만 등록 가능합니다.');
+    //     return;
+    // }
     
     // 폼 초기화
     newQuestion.title = '';
@@ -278,7 +278,12 @@ onMounted(() => {
                         </div>
         
                         <div class="buttons">
-                            <button class="btn btn--size-32 btn--black-outline" @click="handleAddQuestion">
+                            <button 
+                                class="btn btn--size-32 btn--black-outline"
+                                :class="{ 'is-disabled' : questions.length >= 10 }"
+                                :disabled="questions.length >= 10"
+                                @click="handleAddQuestion"
+                            >
                                 <img :src="icPlus" alt="">질문 추가 ({{ questions.length }}/10)
                             </button>
                             <button 

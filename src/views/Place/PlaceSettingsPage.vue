@@ -239,5 +239,11 @@ const currentTab = ref('operation'); // 탭 버튼
         display: flex;
         flex-direction: column;
         gap: 6px;
+
+        .checkbox {
+            align-items: start;
+            .box-naver {flex-shrink: 0;}
+            .label {line-height: 18px;}
+        }
     }
 </style>
