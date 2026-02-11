@@ -4,17 +4,14 @@
     import ConfirmModal from '../common/ConfirmModal.vue';
     import Modal from '../common/Modal.vue';
 
-    import { ref } from 'vue';
     import { api } from '@/api/axios';
     import { useModalStore } from '@/stores/modalStore';
     import { useRouter } from 'vue-router';
-    import { PRODUCT_MODAL_DONT_SHOW_KEY } from '@/constants/naver';
 
     import icBtnCloseB from '@/assets/icons/ic_btn_close_b.svg';
 
     const modalStore = useModalStore();
     const router = useRouter();
-    const productModalDontShowAgain = ref(false);
 
     function onGoToNaverAccount() {
         modalStore.naverConnectRequiredModal.closeModal();
@@ -26,17 +23,10 @@
         modalStore.productRegistrationModal.closeModal();
     }
 
-    /** 상품 등록 필요 모달 > 상품 등록하기: 모달 닫고 상품 관리로 이동 */
+    /** 상품 등록 필요 모달 > 상품 등록하기: 모달 닫고 상품 등록 화면으로 이동 */
     function goToProductRegistration() {
         modalStore.productRegistrationModal.closeModal();
-        router.push('/place/product');
-    }
-
-    /** 상품 등록 필요 모달 > 다시 보지 않음 체크 시 localStorage 저장/해제 */
-    function onProductModalDontShowChange(checked) {
-        productModalDontShowAgain.value = !!checked;
-        if (checked) localStorage.setItem(PRODUCT_MODAL_DONT_SHOW_KEY, '1');
-        else localStorage.removeItem(PRODUCT_MODAL_DONT_SHOW_KEY);
+        router.push('/place/product/detail');
     }
 </script>
 
@@ -58,6 +48,7 @@
         v-if="modalStore.productRegistrationModal.isVisible"
         title="상품 등록 필요"
         size="xs"
+        :hide-header-close="true"
         :modal-state="modalStore.productRegistrationModal"
     >
         <div class="modal-contents-inner">
@@ -66,17 +57,6 @@
             <span class="caption modal-contents-caption">※ 이미 네이버 예약을 사용 중이시라면 <span class="strong">별도 상품 등록 없이 연동을 진행</span>해주세요.</span>
         </div>
         <div class="modal-button-wrapper">
-            <div class="check_section">
-                <label class="checkbox">
-                    <input
-                        type="checkbox"
-                        :checked="productModalDontShowAgain"
-                        @change="onProductModalDontShowChange(($event.target).checked)"
-                    />
-                    <span class="box"></span>
-                    <span class="label">다시 보지 않음</span>
-                </label>
-            </div>
             <div class="buttons">
                 <button type="button" class="btn btn--size-24 btn--black-outline btn--c" @click="closeProductRegistrationModal">닫기</button>
                 <button type="button" class="btn btn--size-24 btn--black" @click="goToProductRegistration">상품 등록하기</button>

@@ -14,7 +14,9 @@ const props = defineProps({
         }
     },
     modalWidth: {type: String, default: ''},
-    modalHeight: {type: String, default: ''}
+    modalHeight: {type: String, default: ''},
+    // 특정 모달에서만 헤더 X 버튼을 숨기고 싶을 때 사용
+    hideHeaderClose: {type: Boolean, default: false}
 })
 // 닫기 메서드는 Prop으로 받은 객체의 closeModal을 호출하도록 
 const close = () => {
@@ -30,7 +32,11 @@ const close = () => {
                 <!-- 모달 헤더 -->
                 <div class="modal-header">
                     <p class="modal-header__title title-l">{{title}}</p>
-                    <button class="modal-close" @click="close">
+                    <button
+                        v-if="!hideHeaderClose"
+                        class="modal-close"
+                        @click="close"
+                    >
                         <img :src="icBtnClose" alt="닫기 버튼">
                     </button>
                 </div>

@@ -13,7 +13,8 @@ import icEdit from '@/assets/icons/ic_edit.svg';
 import icPlusW from '@/assets/icons/ic_plus_w.svg';
 import icCopy from '@/assets/icons/ic_copy.svg';
 import icDel from '@/assets/icons/ic_del.svg';
-import icDragHandel from '@/assets/icons/ic_drag_handel.svg'
+import icDragHandel from '@/assets/icons/ic_drag_handel.svg';
+import placeConnectButtonAlert from '@/assets/images/place_connect_button_alert.png';
 // 라이브러리
 import draggable from 'vuedraggable'; 
 // 스토어
@@ -25,6 +26,7 @@ import { useRouter } from 'vue-router';
 
 //util
 import { IS_IMP_TYPE } from "@/constants";
+import { PRODUCT_REGISTRATION_COMPLETE_DONT_SHOW_KEY } from '@/constants/naver';
 import InputTextBox from '@/components/common/InputTextBox.vue';
 import { showAlert } from '@/utils/ui';
 
@@ -43,6 +45,7 @@ const copyOptionBooking = ref(1) // 상품 복사 모달 > 복사 옵션 예약�
 const copyOptionItem = ref(1) // 상품 복사 모달 > 복사 옵션 기본정보
 const importIntoPetRoomIdx = ref(null) // 인투펫 진료실 불러오기 > 불러올 진료실 idx
 const productImpValue = ref(null); // 상품별 일괄 노출/미노출(노출:1, 미노출:0)
+const productRegistrationCompleteDontShow = ref(false); // 상품 등록 완료 모달 > 다시 보지 않음
 
 // 미노출 제외 체크박스 감시
 watch(
@@ -314,8 +317,24 @@ const submitCopyItem = () => {
 const goToPreviewPage = (businessId, itemId) => {
     window.open(`https://m.booking.naver.com/booking/13/bizes/${businessId}/items/${itemId}`)
 }
+/** 상품 등록 완료 모달 > 확인: 다시 보지 않음이 체크되면 저장 후 모달 닫기 */
+const closeProductRegistrationCompleteModal = () => {
+    if (productRegistrationCompleteDontShow.value) {
+        localStorage.setItem(PRODUCT_REGISTRATION_COMPLETE_DONT_SHOW_KEY, '1');
+    }
+    modalStore.productRegistrationCompleteModal.closeModal();
+};
+
 onMounted(async () => {
     await productStore.getProductList();
+
+    // 상품이 1개 이상이면 플레이스 연결 안내 팝업 노출 (다시 보지 않음 미체크 시)
+    const list = productStore.productList ?? [];
+    const dontShow = localStorage.getItem(PRODUCT_REGISTRATION_COMPLETE_DONT_SHOW_KEY) === '1';
+    if (list.length >= 1 && !dontShow) {
+        productRegistrationCompleteDontShow.value = false;
+        modalStore.productRegistrationCompleteModal.openModal();
+    }
 
     if (productStore.scrollToItemId) {
         const element = document.querySelector(`[data-product-id="${productStore.scrollToItemId}"]`);
@@ -421,6 +440,43 @@ onMounted(async () => {
             </div>
         </div>
     </div>
+
+    <!-- 상품 등록 완료 모달 (상품 1개 이상 시 플레이스 연결 안내) -->
+    <Modal
+        v-if="modalStore.productRegistrationCompleteModal.isVisible"
+        title="상품 등록 완료"
+        size="xs"
+        :modal-state="modalStore.productRegistrationCompleteModal"
+    >
+        <div class="modal-contents-inner">
+            <p class="modal-contents-subTitle">상품이 정상적으로 등록되었습니다.</p>
+            <p class="modal-contents-body">
+                마지막으로 원활한 예약 관리를 위해 네이버 스마트 플레이스로 이동하여 <span class="strong">[플레이스 연결하기]</span>를 진행해주세요.
+            </p>
+            <p class="modal-contents-body caption">
+                버튼 위치: 네이버 스마트플레이스 접속 &gt; 솔루션 메뉴 &gt;
+                <br/>사용중인 솔루션 &gt; '네이버 예약' 항목의 <span class="place-connect-btn-label">플레이스 연결하기</span> 버튼 클릭
+            </p>
+            <div class="product-registration-complete-modal__image-wrap">
+                <img :src="placeConnectButtonAlert" alt="플레이스 연결하기 버튼 위치 안내" class="product-registration-complete-modal__image">
+            </div>
+        </div>
+        <div class="modal-button-wrapper">
+            <div class="check_section">
+                <label class="checkbox">
+                    <input
+                        type="checkbox"
+                        v-model="productRegistrationCompleteDontShow"
+                    />
+                    <span class="box"></span>
+                    <span class="label">다시 보지 않음</span>
+                </label>
+            </div>
+            <div class="buttons">
+                <button type="button" class="btn btn--size-24 btn--blue btn--c" @click="closeProductRegistrationCompleteModal">확인</button>
+            </div>
+        </div>
+    </Modal>
 
     <!-- 순서 변경 모달 -->
     <Modal
@@ -602,7 +658,27 @@ onMounted(async () => {
     </Modal>
 </template>
 
-<style lang="scss" scoped> 
+<style lang="scss" scoped>
+.product-registration-complete-modal__image-wrap {
+    margin-top: 12px;
+}
+.product-registration-complete-modal__image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+}
+.place-connect-btn-label {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    color: $gray-800;
+    background: #fff;
+    border: 1px solid $gray-300;
+    border-radius: 4px;
+    vertical-align: middle;
+} 
     .caption-l {
         color: $gray-700;
     }

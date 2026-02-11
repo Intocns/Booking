@@ -60,6 +60,7 @@ export const useModalStore = defineStore("modalStore", () => {
     const productInfoUpdateAllModal = createModalState(); // 상품 관리 > 정보 일괄 변경
     const intoPetImportModal = createModalState(); // 상품 관리 > 인투펫 불러오기
     const productCopyModal = createModalState(); // 상품 관리 > 상품 복사
+    const productRegistrationCompleteModal = createModalState(); // 상품 관리 > 상품 1개 이상 시 플레이스 연결 안내
     // 상품 관리 > 상품 수정
     const holidaySettingModal = createModalState() // 상품 수정 > 예약 정보 > 휴무일 수정
     const setDateSettingModal = createModalState() // 상품 수정 > 예약 정보 > 캘린더 운영/미운영 블록 클릭시
@@ -97,6 +98,7 @@ export const useModalStore = defineStore("modalStore", () => {
         productInfoUpdateAllModal,
         intoPetImportModal,
         productCopyModal,
+        productRegistrationCompleteModal,
         // 상품 관리 > 상품 수정
         holidaySettingModal,
         setDateSettingModal,
