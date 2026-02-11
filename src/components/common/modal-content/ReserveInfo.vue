@@ -654,10 +654,10 @@ const confirmedDateTime = computed(() => {
 });
 
 // 병원 메모 표시값
-// - 취소/거절 상태이면 rejectMsg 우선, 없으면 geReMemo
+// - 예약거절(inState === 3, 병원이 거절한 경우) 이면 rejectMsg 우선, 없으면 geReMemo
 // - 그 외에는 geReMemo
 const hospitalMemo = computed(() => {
-    if (isCancelled.value) {
+    if (reserveData.inState === 3) {
         return reserveData.rejectMsg || reserveData.geReMemo || '';
     }
     return reserveData.geReMemo || '';
