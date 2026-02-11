@@ -146,7 +146,7 @@ onMounted(async() => {
     // 담당의 리스트 불러오기
     await hospitalStore.getDoctorList();
 
-    reservationStore.getReserveSchedule(fetchParams.value);
+    // reservationStore.getReserveSchedule(fetchParams.value);
 })
 </script>
 
