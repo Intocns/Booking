@@ -14,6 +14,7 @@ import { useModalStore } from '@/stores/modalStore';
 import { usePlaceStore } from '@/stores/placeStore';
 
 import { showAlert } from '@/utils/ui';
+import { getFieldError } from '@/utils/common';
 
 const modalStore = useModalStore();
 const placeStore = usePlaceStore();
@@ -86,6 +87,14 @@ const openGuideModal = async(type, index = null) => {
 // 등록 완료 함수 => 260206 JJB 저장 통합으로 합치면서 아래 저장 부분 주석처리
 const handleGuideSubmit = async() => {
     if (!guideInputText.value.trim()) return showAlert('내용을 입력해주세요.');
+
+    const textError = getFieldError(guideInputText.value, 0, 50);
+    if (textError.isError) {
+        showAlert(`입력하신 안내 문구를 확인해주세요.`);
+        return false;
+    }
+
+    return false;
     
     const targetList = currentGuideType.value === 'confirm' ? placeStore.guideList : placeStore.cancelGuideList;
 
@@ -317,7 +326,12 @@ onMounted(() => {
     >
         <div class="modal-contents-inner">
             <p class="modal-contents-body mt-0">안내 문구를 입력하거나 수정할 수 있습니다.</p>
-            <TextAreaBox ref="textAreaRef" :max-length="500" v-model="guideInputText"/>
+            <TextAreaBox ref="textAreaRef" 
+                :max-length="500" 
+                v-model="guideInputText"
+                :is-error="getFieldError(guideInputText, 0, 500).isError"
+                :error-message="getFieldError(guideInputText, 0, 500).message"
+            />
         </div>
 
         <div class="modal-button-wrapper">
