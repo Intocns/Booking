@@ -110,10 +110,10 @@ onMounted(() => {
                 </div>
                 <div class="profile">
                     <div class="hospital-info">
-                        <div class="hospital-onOff on">
+                        <!-- <div class="hospital-onOff on">
                             <span class="title-xs">병원예약 - </span>
-                            <!-- <span class="title-xs">ON</span> -->
-                        </div>
+                            <span class="title-xs">ON</span>
+                        </div> -->
                         <div class="hospital-name-box">
                             <span class="hospital-name heading-s">{{ hospitalStore.hospitalInfo.name }}</span>
                             <!-- <span class="heading-s">병원</span> -->
