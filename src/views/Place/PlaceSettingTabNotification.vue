@@ -93,8 +93,6 @@ const handleGuideSubmit = async() => {
         showAlert(`입력하신 안내 문구를 확인해주세요.`);
         return false;
     }
-
-    return false;
     
     const targetList = currentGuideType.value === 'confirm' ? placeStore.guideList : placeStore.cancelGuideList;
 
