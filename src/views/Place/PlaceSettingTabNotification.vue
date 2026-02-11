@@ -334,7 +334,7 @@ onMounted(() => {
 
         <div class="modal-button-wrapper">
             <div class="buttons">
-                <button class="btn btn--size-32 btn--blue" @click="handleGuideSubmit">완료</button>
+                <button class="btn btn--size-32 btn--blue" @click="handleGuideSubmit">등록</button>
             </div>
         </div>
     </Modal>
