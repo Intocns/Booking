@@ -115,12 +115,12 @@ onMounted(() => {
                             <span class="title-xs">ON</span>
                         </div> -->
                         <div class="hospital-name-box">
-                            <span class="hospital-name heading-s">{{ hospitalStore.hospitalInfo.name }}</span>
+                            <span class="hospital-name heading-s">{{ hospitalStore.hospitalData?.company_name }}</span>
                             <!-- <span class="heading-s">병원</span> -->
                         </div>
                     </div>
                     <div class="client-info">
-                        <span class="title-m"></span>
+                        <span class="title-m">{{ hospitalStore.hospitalData.user_name }}</span>
                         <span class="title-m">님</span>
                     </div>
                 </div>

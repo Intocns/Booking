@@ -1,6 +1,7 @@
 import { showAlert } from "@/utils/ui";
 import { createRouter, createWebHistory } from "vue-router";
 import { usePlaceStore } from "@/stores/placeStore";
+import { useHospitalStore } from "@/stores/hospitalStore";
 import { useModalStore } from "@/stores/modalStore";
 import { useProductStore } from "@/stores/productStore";
 import { PLACE_HAS_PRODUCTS_STORAGE_KEY } from "@/constants/naver";
@@ -107,12 +108,20 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
+    const hospitalStore = useHospitalStore(); // SSO 데이터가 담기는 스토어
+
     if (to.matched.some(record => record.meta?.isWaiting) || to.meta?.isWaiting) {
         showAlert('서비스 준비 중입니다.');
         return next(false);
     }
     if (isRestrictedPlacePath(to.path)) {
         const placeStore = usePlaceStore();
+
+        // hospitalData가 없으면(sso 로그인 인증 전) API 호출을 하지 않도록
+        if (!hospitalStore.hospitalData?.cocode) {
+             return next(); // App.vue가 처리할 수 있게 길을 열어줌
+        }
+
         await placeStore.fetchNaverLinkUseFlag();
         if (placeStore.naverUseFlag !== 1) {
             const modalStore = useModalStore();

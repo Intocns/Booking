@@ -4,6 +4,8 @@ import Qs from "qs"
 import { ref } from "vue";
 
 export const useHospitalStore = defineStore("hospital", () => {
+    const hospitalData = ref({}); // 병원 정보
+
     let hospitalInfo = ref({}) // 예약별 카운트
     let doctorList = ref([]) // 담당의 리스트
 
@@ -29,7 +31,8 @@ export const useHospitalStore = defineStore("hospital", () => {
 
     return {
         // 
-        hospitalInfo, // 병원 정보
+        hospitalData, // 병원정보 (로그인)
+        hospitalInfo, // 대시보드 > 병원 정보
         doctorList, // 담당의 리스트
         // 
         getHospitalInfo, // 병원 정보 가져오기

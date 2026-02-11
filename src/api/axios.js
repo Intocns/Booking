@@ -1,7 +1,9 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 import { ref } from "vue";
 import { showAlert } from "@/utils/ui";
-import { COCODE } from "@/constants/common";
+// import { COCODE } from "@/constants/common";
+import { useHospitalStore } from "@/stores/hospitalStore";
 
 const api = axios.create({
     baseURL: '',
@@ -17,9 +19,11 @@ api.ing = ref(false) // 응답 상태에 따라 dom 요소에서 사용할 상�
 // 요청 인터셉터
 api.interceptors.request.use(
     (config) => {
+        const hospitalStore = useHospitalStore();
+
         // env > api url 
         const baseUrl = import.meta.env.VITE_API_URL;
-
+        
         if (config.url.startsWith('/api') && baseUrl) {
             if (baseUrl !== '/api') {
                 config.url = config.url.replace(/^\/api/, baseUrl);
@@ -32,14 +36,13 @@ api.interceptors.request.use(
             api.ing.value = true // 로딩 상태를 true로 설정
         }
 
-        // const accessToken = Cookies.get('INTOLINK_RESERVE_ACCESS') // 토큰값 가져오기 
+        // const accessToken = Cookies.get('INTO_ACCESS') // 토큰값 가져오기 
         // config.headers.Authorization = `Bearer ${accessToken}` // 요청 헤더에 포함
         config.headers.Authorization = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJib29raW5nLXBsYWNlIiwidXNlck5hbWUiOiJkbHN4bjIwMjUhIiwiZXhwIjoxNzk3MjkyNjc3LCJ1c2VySWQiOiJpbnRvY25zMCIsImlhdCI6MH0.q4ewsivkWaEhH1ht0IRV1c-R9X0FS6BqPty4cpHktic' // TODO: 토큰값  요청 헤더에 포함
 
         // URL 내 '{cocode}' 템플릿 문자를 실제 관리 코드(COCODE)로 치환
-        // TODO: 추후 로그인 기능 구현 시, 상수가 아닌 로그인 cocode와 연동 필요
-        if (config.url.includes('{cocode}')) {
-            config.url = config.url.replace('{cocode}', COCODE);
+        if (config.url.includes('{cocode}') && hospitalStore.hospitalData?.cocode) {
+            config.url = config.url.replace('{cocode}', hospitalStore.hospitalData.cocode); // sso 로그인 후 받는 data cocode 매핑
         }
 
         return config
