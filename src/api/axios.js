@@ -2,7 +2,6 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { ref } from "vue";
 import { showAlert } from "@/utils/ui";
-// import { COCODE } from "@/constants/common";
 import { useHospitalStore } from "@/stores/hospitalStore";
 
 const api = axios.create({

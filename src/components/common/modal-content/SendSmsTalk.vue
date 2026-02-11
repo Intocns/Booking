@@ -12,10 +12,13 @@ import { useModalStore } from '@/stores/modalStore';
 import { useTalkSmsStore } from '@/stores/talkSmsStore';
 import { api } from '@/api/axios';
 import { buildTemplateVariables, formatTemplateContent, getSmsByteLength } from '@/utils/alimtalkSmsTemplate.js';
-import { COCODE } from '@/constants/common';
 import { formatPhone, removePhoneHyphens } from '@/utils/phoneFormatter.js';
 import { PET_GENDER_MAP } from '@/constants';
 import { showAlert } from '@/utils/ui';
+
+import { useHospitalStore } from '@/stores/hospitalStore';
+
+const hospitalStore = useHospitalStore();
 
 const props = defineProps({
     reservationData: {
@@ -37,10 +40,10 @@ const {
 } = storeToRefs(talkSmsStore);
 
 const activeTab = ref('talk');
-const cocode = COCODE; // TODO: 임시
-const compEnrolNum = '1231212345'; // TODO: 임시
-const hospitalName = '인투병원'; // TODO: 임시
-const hospitalPhone = '01089380571'; // TODO: 임시
+const cocode = hospitalStore.hospitalData.cocode
+const compEnrolNum = hospitalStore.hospitalData.biz_no.replace(/-/g, '')
+const hospitalName = hospitalStore.hospitalData.company_name
+const hospitalPhone = hospitalStore.hospitalData.company_tel.replace(/-/g, '')
 
 // 수신번호 (알림톡·SMS 공통)
 const recipientPhone = ref('');
@@ -151,17 +154,17 @@ const sendTalk = async () => {
     isSending.value = true;
     try {
         const body = {
-            compEnrolNum: compEnrolNum, // TODO: 실제 값 연동
-            cocode: cocode, // TODO: 실제 값 연동
+            compEnrolNum: compEnrolNum,
+            cocode: cocode,
             templateType: selectedTemplateType.value ?? 0,
             templateSno: selectedTemplate.value?.sno || null,
             templateId: String(templateId),
             alimDataArray: [alimData],
             hospitalReplaceInfo: {
-                comp_enrol_num: compEnrolNum, // TODO: 실제 값 연동
-                cocode: cocode, // TODO: 실제 값 연동
-                company_name: hospitalName, // TODO: 실제 값 연동
-                sms_send_tel: hospitalPhone, // TODO: 실제 값 연동
+                comp_enrol_num: compEnrolNum,
+                cocode: cocode,
+                company_name: hospitalName, 
+                sms_send_tel: hospitalPhone,
             },
             visitSourceTotalList: props.reservationData?.visitSourceTotalList || '',
             messageText: historyText,

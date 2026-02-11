@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api } from '@/api/axios';
-import { COCODE } from '@/constants/common';
+import { useHospitalStore } from './hospitalStore';
 
 /** 알림톡/SMS 템플릿·포인트 조회용 스토어 (페이지 진입 시 프리로드) */
 export const useTalkSmsStore = defineStore('talkSms', () => {
@@ -18,8 +18,12 @@ export const useTalkSmsStore = defineStore('talkSms', () => {
     const smsTemplateList = ref([]);
     const isLoadingSmsTemplates = ref(false);
 
-    const compEnrolNum = '1231212345'; // TODO: 임시
+    const hospitalStore = useHospitalStore();
+
+    const compEnrolNum = hospitalStore.hospitalData.biz_no.replace(/-/g, '');
+    const COCODE = hospitalStore.hospitalData.cocode;
     const templateType = 5; // TODO: 추후 변경
+
 
     async function getSmsPointInfo() {
         if (isLoadingSmsPoint.value) return;

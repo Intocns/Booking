@@ -1,10 +1,14 @@
 <!-- 네이버 로그인 콜백: SDK로 프로필 조회 후 opener에 postMessage -->
 <script setup>
 import { onMounted } from 'vue';
-import { COCODE } from '@/constants/common';
 import { NAVER_CLIENT_ID, getNaverCallbackUrl, buildProfilePayload, ensureNaverLoginScripts } from '@/constants/naver';
+import { useHospitalStore } from '@/stores/hospitalStore';
+
+const hospitalStore = useHospitalStore();
 
 const callbackUrl = getNaverCallbackUrl();
+
+const cocode =  hospitalStore.hospitalData.cocode;
 
 function sendError(msg) {
     if (window.opener && !window.opener.closed) {
@@ -15,7 +19,7 @@ function sendError(msg) {
 
 function sendToOpener(profile) {
     if (!window.opener || window.opener.closed) return;
-    const payload = buildProfilePayload(profile, Number(COCODE));
+    const payload = buildProfilePayload(profile, Number(cocode));
     if (!payload) return;
     window.opener.postMessage({ type: 'naver-profile', profile: payload }, window.location.origin);
     window.close();
