@@ -557,7 +557,8 @@ const saveIntoPetRoomInfo = async() => {
     
     if (targetIdx > -1) {
         // 원본 리스트의 해당 위치에 내가 수정한 내용을 덮어씌움
-        intoPetRoomList.value[targetIdx] = JSON.parse(JSON.stringify(selectedRoom.value));
+        // intoPetRoomList.value[targetIdx] = JSON.parse(JSON.stringify(selectedRoom.value));
+        intoPetRoomList.value.push(selectedRoom.value);
     }
 
     if(hasNewRoom.value) {
@@ -637,7 +638,7 @@ onMounted(async() => {
                 <div class="room-index">
                     <span class="title-m">{{ (index + 1) }}</span>
                 </div>
-                <span class="room-name title-m ">{{ room.doctor }} 수의사 : {{ room.name }}</span>
+                <span class="room-name title-m ">{{ room.name }}</span>
             </div>
             <div class="room-button add-room-button" @click="handleAddRoomBtn">
                 <img :src="icAddBtn" alt="아이콘">
@@ -693,6 +694,7 @@ onMounted(async() => {
                     <div class="d-flex align-center gap-8">
                         <CustomSingleSelect 
                             v-model="selectedRoom.doctor_id"
+                            @input="selectedRoom.doctor.length > 0 && (selectedRoom.doctor_id = $event.target.value === '' ? '0' : $event.target.value)"
                             :options="doctorOptions" 
                             @update:model-value="handleDoctorChange"
                             select-width="200px" 
