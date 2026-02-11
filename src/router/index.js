@@ -122,7 +122,6 @@ router.beforeEach(async (to, from, next) => {
 
 
 
-
     // 접근하는 모든 화면에서 상품이 0개면 상품 등록 필요 모달 노출
     // 단,
     //  - 실제 상품 등록 화면(/place/product/detail)에서는 팝업을 띄우지 않는다.

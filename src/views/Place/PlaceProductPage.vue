@@ -21,7 +21,7 @@ import draggable from 'vuedraggable';
 import { useProductStore } from '@/stores/productStore';
 import { useModalStore } from '@/stores/modalStore';
 
-import { nextTick, onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 //util
@@ -72,20 +72,20 @@ watch(
  * 이벤트 핸들러
  */
 // 상품 순서 변경
-const clickProductOrderUpdateBtn = (() => {
-    itemOrderList.value = productStore.productList//상품 순서 변경 모달창 오픈 시 초기화
-    modalStore.productOrderUpdateModal.openModal()
-})
-// 상품 일괄설정 
-const clickProductVisibleUpdateBtn = (() => {
-    modalStore.productVisibleUpdateModal.openModal()
-})
+const clickProductOrderUpdateBtn = () => {
+    itemOrderList.value = productStore.productList; // 상품 순서 변경 모달창 오픈 시 초기화
+    modalStore.productOrderUpdateModal.openModal();
+};
+// 상품 일괄설정
+const clickProductVisibleUpdateBtn = () => {
+    modalStore.productVisibleUpdateModal.openModal();
+};
 // 정보 일괄 변경
-const clickProductInfoUpdataAllBtn = (async() => {
+const clickProductInfoUpdataAllBtn = () => {
     modalStore.productInfoUpdateAllModal.openModal();
-})
+};
 // 인투펫 진료실 목록 불러오기
-const clickIntoPetImportBtn = (async () => {
+const clickIntoPetImportBtn = async () => {
     importIntoPetRoomIdx.value = null;
 
     try {
@@ -102,7 +102,7 @@ const clickIntoPetImportBtn = (async () => {
     } catch (error) {
         console.error(error);
     }
-});
+};
 // 인투펫 진료실 불러오기(선택한 진료실을 불러옴)
 const importIntoPetRoom = async() => {
     if(importIntoPetRoomIdx.value === null) {
@@ -137,25 +137,16 @@ const importIntoPetRoom = async() => {
 
                     if (element) {
                         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                        // 하이라이트 추후 필요시 추가
-                        // element.style.transition = 'box-shadow 0.3s ease-in-out';
-                        // element.style.boxShadow = '0 0 0 3px #0098ff';
-                        // setTimeout(() => {
-                        //     element.style.boxShadow = '';
-                        // }, 2000);
                     }
                 } else {
                     modalStore.confirmModal.closeModal();
                 }
             }
-        })
-        
-        // 기존 리스트랑 불러온 리스트 비교해서 새로 추가된 상품있는곳으로 스크롤?
-    } catch(error) {
-        console.error(error)
+        });
+    } catch (error) {
+        console.error(error);
     }
-}
+};
 // 상품 등록 페이지로 이동
 const goProductDetail = (id = null) => {
     if (id) {
@@ -166,7 +157,7 @@ const goProductDetail = (id = null) => {
     }
 };
 // 상품별 노출/미노출 체크 변경
-const clickProductImpUpdateBtn = (async(product) => {
+const clickProductImpUpdateBtn = async (product) => {
     let params = [
         {
             "bizItemId" : product.bizItemId,
@@ -180,21 +171,20 @@ const clickProductImpUpdateBtn = (async(product) => {
         const isImpStr = (product.isImp == 1) ? '노출' : '미노출';
 
         showAlert(`[${product.name}] 예약서비스에 [${isImpStr}] 됩니다.`);
-        if(isCheckImpType.value){//미노출 제외인 경우
-            dragList.value = dragList.value.filter(item => item.isImp && item.bizItemId != itemId)
+        if (isCheckImpType.value) {
+            // 미노출 제외인 경우 목록을 노출 상품만 보이도록 갱신
+            dragList.value = dragList.value.filter((item) => item.isImp);
         }
     }
-})
+};
 // 상품별 일괄 노출/미노출 체크 변경
 const clickTotalProductImpUpdateBtn = () => {
     modalStore.productVisibleUpdateModal.closeModal();
 
-    
-    const config = productImpValue.value === 1 
+    const config = productImpValue.value === 1
         ? { title: '전체상품 노출', text: '전체 상품을 노출 하시겠습니까?', subText: '노출된 상품은 고객이 직접 예약할 수 있습니다.', btn: '노출' }
         : { title: '전체상품 미노출', text: '전체 상품을 미노출 하시겠습니까?', subText: '미노출된 상품은 예약할 수 없습니다.', btn: '미노출' };
 
-    
     modalStore.confirmModal.openModal({
         title: config.title,
         text: config.text,
@@ -206,63 +196,49 @@ const clickTotalProductImpUpdateBtn = () => {
     });
     
 }
-// 노출/미노출 체크 변경 
-const totalProductImpUpdate = (async(isImp) => {
-    let params = [];
+// 노출/미노출 체크 변경
+const totalProductImpUpdate = async (isImp) => {
+    const params = dragList.value.map((item) => ({
+        bizItemId: item.bizItemId,
+        isImp,
+    }));
 
-    dragList.value.forEach((item, key)  => {
-        params.push(
-            {
-                "bizItemId" : item.bizItemId,
-                "isImp" : isImp,
-            }
-        );
-    });
+    const response = await productStore.setItemShow(params);
 
-    let response = await productStore.setItemShow(params);
-
-    if(response.status_code <= 300){
-        await productStore.getProductList();//상품 관리 기존 화면 새로고침용
-        modalStore.productVisibleUpdateModal.closeModal()
+    if (response.status_code <= 300) {
+        await productStore.getProductList(); // 상품 관리 기존 화면 새로고침용
+        modalStore.productVisibleUpdateModal.closeModal();
     }
-})
+};
 // 상품 순서 변경 저장
-const saveItemOrder = (async() => {
-    let params = [];
+const saveItemOrder = async () => {
+    const params = itemOrderList.value.map((item, key) => ({
+        order: key + 1,
+        bizItemId: item.bizItemId,
+    }));
 
-    //순서변경 모달창 상품 순서 가져오기
-    itemOrderList.value.forEach((item, key)  => {
-        params.push(
-            {
-                "order" : (key + 1),
-                "bizItemId" : item.bizItemId
-            }
-        );
-    });
+    const response = await productStore.setItemOrder(params);
 
-    //상품 순서 변경 api 호출
-    let response = await productStore.setItemOrder(params)
-
-    if(response.status_code <= 300){
-        await productStore.getProductList();//상품 관리 기존 화면 새로고침용
-        modalStore.productOrderUpdateModal.closeModal()
+    if (response.status_code <= 300) {
+        await productStore.getProductList(); // 상품 관리 기존 화면 새로고침용
+        modalStore.productOrderUpdateModal.closeModal();
     }
-})
+};
 
 // 상품 삭제 버튼 클릭 이벤트
-const clickDeleteItem = ((itemName, itemId) => {
+const clickDeleteItem = (itemName, itemId) => {
     modalStore.confirmModal.openModal({
         title: '상품 삭제',
         text: `[${itemName}]\n상품 정보, 설정 등 모든 정보가 삭제되며\n다시 복원할 수 없습니다.`,
         confirmBtnText: '삭제',
-        onConfirm: (() => {
-            productStore.delItem(itemId)
-        })
-    })
-})
+        onConfirm: () => {
+            productStore.delItem(itemId);
+        },
+    });
+};
 
 // 상품 복사 버튼 클릭 이벤트
-const clickCopyItem = ((id, imageUrls) => {
+const clickCopyItem = (id, imageUrls) => {
     if(!imageUrls || imageUrls.length == 0) {
         showAlert('상품 이미지가 존재하지 않는 상품은 복사가 불가합니다.');
         return;
@@ -272,7 +248,7 @@ const clickCopyItem = ((id, imageUrls) => {
     copyOptionItem.value = 1; // 열 때마다 초기화
     copyOptionBooking.value = 1;
     modalStore.productCopyModal.openModal();
-})
+};
 
 // 상품 복사 > 옵션 클릭 토글 이벤트
 const toggleCopyOption = (target) => {
@@ -341,14 +317,12 @@ onMounted(async () => {
 
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            // element.style.boxShadow = '0 0 0 3px #0098ff';
-            // setTimeout(() => element.style.boxShadow = '', 2000);
         }
 
         // 스크롤이 끝난 후에는 초기화
         productStore.scrollToItemId = null;
     }
-})
+});
 </script>
 
 <template>
