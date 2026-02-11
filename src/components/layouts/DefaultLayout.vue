@@ -41,7 +41,7 @@
 
     <Spinner v-show="api.ing.value" />
 
-    <ConfirmModal />
+    <!-- <ConfirmModal /> -->
 
     <!-- 상품 등록 필요 모달 (모든 화면 접근 시 상품 0개일 때 노출) -->
     <Modal

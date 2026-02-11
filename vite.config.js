@@ -46,6 +46,11 @@ export default defineConfig(({ mode }) => {
                     changeOrigin: true,
                     rewrite: (path) => path.replace(/^\/api/, ''),
                 },
+                '/sso-api': {
+                    target: env.VITE_SSO_URL,
+                    changeOrigin: true,
+                    rewrite: (path) => path.replace(/^\/sso-api/, '/api'), // /sso-api를 /api로 바꿔서 서버에 전달
+                },
             },
         },
     }
