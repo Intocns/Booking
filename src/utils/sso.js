@@ -68,7 +68,7 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
     // console.log(decryptData)
 
     try { // 강제 로그인 시도
-        const response = await axios.post('/sso-api/autoSignIn', 
+        const response = await axios.post( isDev ? '/sso-api/autoSignIn' : `${import.meta.env.VITE_SSO_URL}api/autoSignIn`, 
             { encodeData: encryptedData },
             { headers: { 'Content-Type': 'application/json' } }
         );
