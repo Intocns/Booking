@@ -237,7 +237,10 @@ onMounted(() => {
                         </div>
     
                         <button class="btn btn--size-32 btn--black-outline add-guide-btn" 
-                            @click="openGuideModal('confirm')" :disabled="placeStore.guideList.length >= 10">
+                            @click="openGuideModal('confirm')"
+                            :class="{'is-disabled' : placeStore.guideList.length >= 10 }"
+                            :disabled="placeStore.guideList.length >= 10"
+                        >
                             <img :src="icPlus"> 안내 문구 추가({{ placeStore.guideList.length }}/10)
                         </button>
     
@@ -276,7 +279,10 @@ onMounted(() => {
                         </div>
     
                         <button class="btn btn--size-32 btn--black-outline add-guide-btn" 
-                            @click="openGuideModal('cancel')" :disabled="placeStore.cancelGuideList.length >= 10">
+                            @click="openGuideModal('cancel')" 
+                            :class="{'is-disabled' : placeStore.cancelGuideList.length >= 10 }"
+                            :disabled="placeStore.cancelGuideList.length >= 10"
+                        >
                             <img :src="icPlus"> 안내 문구 추가({{ placeStore.cancelGuideList.length }}/10)
                         </button>
     
