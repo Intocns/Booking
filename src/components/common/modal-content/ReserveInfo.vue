@@ -466,7 +466,7 @@ const handleCustomerSelected = (customer) => {
 const handleSaveCancel = async () => {
     // 1. 유효성 검사
     if (!cancelReasonType.value) {
-        showAlert('취소 사유를 선택해주세요.');
+        showAlert('거절 사유를 선택해주세요.');
         return;
     }
     
@@ -474,13 +474,13 @@ const handleSaveCancel = async () => {
     if (cancelReasonType.value === '직접 입력') {
         // 빈 값 체크
         if (!cancelReasonDirect.value.trim()) {
-            showAlert('취소 사유를 입력해주세요.');
+            showAlert('거절 사유를 입력해주세요.');
             return;
         }
         
         // 3. 50자 초과 체크 추가
         if (cancelReasonDirect.value.length > 50) {
-            showAlert('취소 사유는 최대 50자까지 입력 가능합니다.');
+            showAlert('거절 사유는 최대 50자까지 입력 가능합니다.');
             return;
         }
     }
@@ -506,8 +506,8 @@ const handleSaveCancel = async () => {
         
         // 성공 메시지 표시
         modalStore.confirmModal.openModal({
-            title: '예약 취소',
-            text: '예약이 취소되었습니다.',
+            title: '예약 거절',
+            text: '예약이 거절되었습니다.',
             confirmBtnText: '확인',
             noCancelBtn: true,
             onConfirm: () => {
@@ -517,8 +517,8 @@ const handleSaveCancel = async () => {
     } else {
         // 실패 시 에러 메시지 표시
         modalStore.confirmModal.openModal({
-            title: '예약 취소 실패',
-            text: result.message || '예약 취소 중 오류가 발생했습니다.',
+            title: '예약 거절 실패',
+            text: result.message || '예약 거절 중 오류가 발생했습니다.',
             confirmBtnText: '확인',
             noCancelBtn: true,
             onConfirm: () => modalStore.confirmModal.closeModal()
@@ -1097,7 +1097,7 @@ const handleViewChart = () => {
     <!-- 버튼 -->
     <div v-if="!isCancelled" class="modal-button-wrapper">
         <div class="buttons">
-            <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.cancelReserveModal.openModal()">예약취소</button>
+            <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.cancelReserveModal.openModal()">예약거절</button>
             <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation">{{ isConfirmed ? '저장' : '예약 확정' }}</button>
         </div>
     </div>
@@ -1118,7 +1118,7 @@ const handleViewChart = () => {
     <!-- 고객 예약 정보 > 예약 취소 모달 -->
     <Modal 
         v-if="modalStore.cancelReserveModal.isVisible"
-        title="예약 취소" 
+        title="예약 거절" 
         size="xs"
         :modal-state="modalStore.cancelReserveModal"
     >
@@ -1127,7 +1127,7 @@ const handleViewChart = () => {
                 <span class="title-s">{{ formatDateTime(reserveDate) }} {{ reserveData.userName }}-{{ reserveData.petName }}</span>
     
                 <div class="d-flex flex-col gap-8">
-                    <span class="body-m" style="color: #494949;">예약을 취소하시려면 취소 사유 선택 후 저장 버튼을 클릭해주세요.</span>
+                    <span class="body-m" style="color: #494949;">예약을 거절하시려면 거절 사유 선택 후 저장 버튼을 클릭해주세요.</span>
     
                     <ul class="d-flex flex-col gap-8">
                         <li>

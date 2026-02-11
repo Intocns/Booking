@@ -150,11 +150,11 @@ export const useReservationStore = defineStore("reservation", () => {
             
             return { 
                 success: false, 
-                message: response.data?.message || '예약 취소 중 오류가 발생했습니다.' 
+                message: response.data?.message || '예약 거절 중 오류가 발생했습니다.' 
             };
         } catch (error) {
             console.error('예약 취소 오류:', error);
-            return { success: false, message: '예약 취소 중 오류가 발생했습니다.' };
+            return { success: false, message: '예약 거절 중 오류가 발생했습니다.' };
         }
     }
 
