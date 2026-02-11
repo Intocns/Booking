@@ -454,15 +454,15 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                                 class="setting-dropdown"
                                 :style="{ left: menuPosition.x + 'px', top: menuPosition.y + 'px' }"
                             >
-                                <li @click="handleMenuAction('edit', row)">
+                                <li @click.stop="handleMenuAction('edit', row)">
                                     <img :src="icEdit" alt="수정아이콘">
                                     옵션수정
                                 </li>
-                                <li @click="handleMenuAction('copy', row)">
+                                <li @click.stop="handleMenuAction('copy', row)">
                                     <img :src="icCopy" alt="복사아이콘">
                                     옵션복사
                                 </li>
-                                <li @click="handleMenuAction('delete', row)">
+                                <li @click.stop="handleMenuAction('delete', row)">
                                     <img :src="icDel" alt="삭제아이콘">
                                     옵션삭제
                                 </li>
