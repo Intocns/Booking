@@ -813,11 +813,11 @@ const handleViewChart = () => {
                         />
                     </div>
                     <div class="info-item">
-                        <p class="label">상품명</p>
+                        <p class="label">상품/진료실명</p>
                         <InputTextBox 
                             v-model="reserveData.roomName"
                             :disabled="true"
-                            placeholder="상품명"
+                            placeholder="상품명/진료실명"
                         />
                     </div>
                     <div class="info-item">
