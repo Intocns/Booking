@@ -73,9 +73,12 @@ const removeReceiver = (id) => {
     }
 };
 
-//sms충전하기 오픈
+// sms충전하기 오픈 (새 창, 탭이 아닌 팝업 창)
 const openChargePoint = () => {
-    window.open(reservationStore.operatorSettingInfo.chargePointUrl, '_blank')
+    const url = reservationStore.operatorSettingInfo?.chargePointUrl;
+    if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer,width=625,height=770,scrollbars=no,location=no');
+    }
 }
 
 //운영설정 저장
