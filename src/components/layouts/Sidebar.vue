@@ -88,6 +88,10 @@ const goToCsCenter = () => {
     window.open('https://intolink.co.kr/cscenter/notice')
 }
 
+const goToDashboard = () => {
+    router.push({ name: 'dashboard' });
+};
+
 onMounted(() => {
     hospitalStore.getHospitalInfo();
     placeStore.fetchNaverLinkUseFlag();
@@ -101,7 +105,7 @@ onMounted(() => {
             <!-- top영역 -->
             <div class="top">
                 <div class="title">
-                    <div class="title-wrapper">
+                    <div class="title-wrapper" @click="goToDashboard">
                         <div>
                             <img :src="sidebarLogo" alt="인투링크">
                         </div>
@@ -219,6 +223,7 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     gap: 30px;
+    cursor: pointer;
 
     .line {
         width: 100%;
