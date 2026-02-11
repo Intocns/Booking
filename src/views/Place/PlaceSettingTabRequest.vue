@@ -14,7 +14,8 @@ import { useModalStore } from '@/stores/modalStore';
 import { usePlaceStore } from '@/stores/placeStore';
 
 import { ref, reactive, watch, onMounted, computed, nextTick } from 'vue';
-import draggable from 'vuedraggable'; 
+import draggable from 'vuedraggable';
+import { getFieldError } from '@/utils/common';
 import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();
@@ -139,11 +140,21 @@ const handleTypeChange = (newType) => {
 const saveQuestion = async() => {
     if (!newQuestion.title) return showAlert('질문을 입력하세요.');
 
+    const titleError = getFieldError(newQuestion.title, 0, 50);
+    if (titleError.isError) return showAlert(titleError.message);
+
     if (newQuestion.type !== 'TEXTAREA' && newQuestion.options.some(opt => {
         const val = typeof opt === 'object' ? opt.optionName : opt;
-        return !val || !val.trim(); 
+        return !val || !val.trim();
     })) {
         return showAlert('답변 항목을 모두 입력해주세요.');
+    }
+
+    if (newQuestion.type !== 'TEXTAREA') {
+        for (const opt of newQuestion.options) {
+            const optError = getFieldError(opt.optionName, 0, 30);
+            if (optError.isError) return showAlert(optError.message);
+        }
     }
 
     const params = {
@@ -388,7 +399,13 @@ onMounted(() => {
                         예약자에게 요청할 질문을 입력하세요.
                         <span class="required">*</span>
                     </p>
-                    <InputTextBox v-model="newQuestion.title" :max-length="50" placeholder="질문을 입력해 주세요." />
+                    <InputTextBox
+                        v-model="newQuestion.title"
+                        :max-length="50"
+                        placeholder="질문을 입력해 주세요."
+                        :is-error="getFieldError(newQuestion.title, 0, 50).isError"
+                        :error-message="getFieldError(newQuestion.title, 0, 50).message"
+                    />
                 </div>
                 <div class="d-flex flex-col gap-8">
                     <p class="modal-contents-subTitle">답변 방식을 선택하세요.</p>
@@ -428,10 +445,12 @@ onMounted(() => {
                                 >
                                     <img :src="icDragHandel" alt="드래그핸들">
                                 </button>
-                                <InputTextBox 
-                                    v-model="opt.optionName" 
+                                <InputTextBox
+                                    v-model="opt.optionName"
                                     :max-length="30"
                                     placeholder="답변 항목을 입력해 주세요."
+                                    :is-error="getFieldError(opt.optionName, 0, 30).isError"
+                                    :error-message="getFieldError(opt.optionName, 0, 30).message"
                                     :ref="el => { if (el) optionInputs[index] = el }"
                                 />
                                 <button 
