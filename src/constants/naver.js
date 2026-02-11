@@ -7,6 +7,8 @@ export const PLACE_SETTING_UNLINK = 0;
 export const PLACE_SETTING_LINK = 1;
 /** 상품 등록 완료 모달 "다시 보지 않음" localStorage 키 */
 export const PRODUCT_REGISTRATION_COMPLETE_DONT_SHOW_KEY = 'place_product_registration_complete_modal_dont_show';
+/** 상품 1개 이상 있음이 확인되면 저장, 이후 라우터에서 상품 개수 조회 생략 */
+export const PLACE_HAS_PRODUCTS_STORAGE_KEY = 'place_has_products';
 /** 프론트 기준 콜백 경로 (라우터 path) */
 export const NAVER_CALLBACK_PATH = 'mylink/naverReserveCallBack';
 

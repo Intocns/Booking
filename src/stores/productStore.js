@@ -2,6 +2,7 @@
 import { defineStore } from "pinia";
 import { api } from "@/api/axios";
 import { ref } from "vue";
+import { PLACE_HAS_PRODUCTS_STORAGE_KEY } from "@/constants/naver";
 
 export const useProductStore = defineStore("product", () => {
     const productList = ref([]);     // 상품 전체 리스트
@@ -22,6 +23,10 @@ export const useProductStore = defineStore("product", () => {
         if (response.status == 200) {
             const data = response.data.data;
             productList.value = data;
+            // 상품이 0개가 되면 캐시 제거 → 다음 라우트 진입 시 다시 갯수 체크
+            if (!data || data.length === 0) {
+                localStorage.removeItem(PLACE_HAS_PRODUCTS_STORAGE_KEY);
+            }
         }
     }
 

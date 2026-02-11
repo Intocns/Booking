@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import { usePlaceStore } from "@/stores/placeStore";
 import { useModalStore } from "@/stores/modalStore";
 import { useProductStore } from "@/stores/productStore";
+import { PLACE_HAS_PRODUCTS_STORAGE_KEY } from "@/constants/naver";
 
 /** useFlag 1일 때만 접근 가능한 네이버 플레이스 경로 (URL 직접 입력·새로고침 시 차단) */
 const PLACE_PATHS_REQUIRE_LINK = ['/place/product', '/place/option', '/place/simple-reservation', '/place/settings'];
@@ -126,10 +127,15 @@ router.beforeEach(async (to, from, next) => {
     // 단,
     //  - 실제 상품 등록 화면(/place/product/detail)에서는 팝업을 띄우지 않는다.
     //  - 네이버 계정 연동(useFlag !== 1) 상태에서는 상품 여부 팝업을 띄우지 않는다.
+    //  - 이전에 상품 1개 이상으로 확인된 경우(PLACE_HAS_PRODUCTS_STORAGE_KEY)에는 갯수 체크 생략
     if (to.matched.some((r) => r.meta?.requiresAuth) && !to.path.startsWith('/place/product/detail')) {
         const placeStore = usePlaceStore();
         // 아직 연동되지 않은 경우에는 상품 여부 팝업 스킵
         if (placeStore.naverUseFlag !== 1) {
+            return next();
+        }
+        const hasProductsCached = localStorage.getItem(PLACE_HAS_PRODUCTS_STORAGE_KEY) === '1';
+        if (hasProductsCached) {
             return next();
         }
         try {
@@ -139,6 +145,8 @@ router.beforeEach(async (to, from, next) => {
             if (list.length === 0) {
                 const modalStore = useModalStore();
                 modalStore.productRegistrationModal.openModal();
+            } else {
+                localStorage.setItem(PLACE_HAS_PRODUCTS_STORAGE_KEY, '1');
             }
         } catch {
             // 상품 목록 조회 실패 시 모달은 띄우지 않음
