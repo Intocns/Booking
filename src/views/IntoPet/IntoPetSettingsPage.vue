@@ -10,7 +10,8 @@ import icInfo from '@/assets/icons/ic_infomation_b.svg'
 import icArrowR from '@/assets/icons/ic_arrow_right_blue.svg'
 import icPlus from '@/assets/icons/ic_plus_black.svg'
 import icDel from '@/assets/icons/ic_del.svg'
-import icSms from '@/assets/icons/ic_sms.svg'
+import icSms from '@/assets/icons/ic_sms.svg';
+import icReload from '@/assets/icons/ic_reset.svg';
 
 import { ref, onMounted } from 'vue';
 import { showAlert } from '@/utils/ui';
@@ -72,6 +73,9 @@ const removeReceiver = (id) => {
         receiverPhones.value = receiverPhones.value.filter(item => item.id !== id);
     }
 };
+
+// 잔여건수 재조회 (알림톡/SMS 발송 팝업과 동일)
+const getSmsPointInfo = () => talkSmsStore.getSmsPointInfo();
 
 // sms충전하기 오픈 (새 창, 탭이 아닌 팝업 창)
 const openChargePoint = () => {
@@ -245,10 +249,34 @@ onMounted(async() => {
                             </label>
                         </div>
                         <div class="d-flex align-center gap-8">
-                            <button class="text-button text-button--blue">잔여건수: {{ Number(talkSmsStore.smsRemainingCount??"0").toLocaleString() }}</button>
-                            <button class="btn btn--size-24 btn--black-outline" @click="openChargePoint">
-                                <img :src="icSms" alt="아이콘" width="14">SMS 충전하기
-                            </button>
+                            <!-- 문자 잔여 건수 (알림톡/SMS 발송 팝업과 동일 UI·기능) -->
+                            <div
+                                v-if="talkSmsStore.smsRemainingCount !== null"
+                                class="sms-remaining-count"
+                            >
+                                <span class="title-s d-flex gap-4">
+                                    <img :src="icSms" alt="아이콘" width="14">
+                                    문자 잔여 건수
+                                </span>
+                                <div class="d-flex gap-4 align-center">
+                                    <span class="title-s count-value">{{ talkSmsStore.smsRemainingCount.toLocaleString() }}</span>
+                                    <span class="body-m">건</span>
+                                </div>
+                                <button type="button" class="btn btn--size-24 btn--black-outline" @click="getSmsPointInfo" title="잔여건수 새로고침">
+                                    <img :src="icReload" alt="새로고침" width="10">
+                                </button>
+                                <button type="button" class="btn btn--size-24 btn--black-outline" @click="openChargePoint">
+                                    <img :src="icSms" alt="아이콘" width="14">SMS 충전하기
+                                </button>
+                            </div>
+                            <div v-else-if="talkSmsStore.isLoadingSmsPoint" class="sms-remaining-count">
+                                <span class="body-m">잔여건수 조회 중...</span>
+                            </div>
+                            <div v-else class="d-flex align-center gap-8">
+                                <button type="button" class="btn btn--size-24 btn--black-outline" @click="openChargePoint">
+                                    <img :src="icSms" alt="아이콘" width="14">SMS 충전하기
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -372,6 +400,18 @@ onMounted(async() => {
         justify-content: space-between;
         align-items: center;
         width: 570px;
+    }
+
+    /* 문자 잔여 건수 (알림톡/SMS 발송 팝업과 동일 스타일) */
+    .sms-remaining-count {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: $gray-700;
+
+        .count-value {
+            color: $primary-700;
+        }
     }
 
     .receiver-body {
