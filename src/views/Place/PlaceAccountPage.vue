@@ -13,7 +13,6 @@ import { useModalStore } from '@/stores/modalStore';
 import { usePlaceStore } from '@/stores/placeStore';
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { api } from '@/api/axios';
-import { COCODE, HOS_IDX } from '@/constants/common';
 import {
     NAVER_CLIENT_ID,
     PLACE_SETTING_UNLINK,
@@ -29,6 +28,12 @@ import { openKakaoAddrSearch } from '@/utils/kakaoAddrSearch';
 import { validatePlaceDetail, formatPlaceDetailErrors } from '@/utils/placeAccountValidation';
 import { uploadImage } from '@/utils/fileUpload';
 import draggable from 'vuedraggable';
+import { useHospitalStore } from '@/stores/hospitalStore';
+
+// COCODE,HOS_IDX
+const hospitalStore = useHospitalStore();
+const COCODE = hospitalStore.hospitalData.cocode;
+const HOS_IDX = hospitalStore.hospitalInfo.idx;
 
 // --- 상태 ---
 const modalStore = useModalStore();
@@ -369,8 +374,8 @@ async function requestConnect() {
     }
     try {
         const payload = buildConnectPayload({
-            cocode: Number(COCODE), // TODO: 개발 사용 임시 cocode
-            hosIdx: Number(HOS_IDX), // TODO: 개발 사용 임시 hosIdx
+            cocode: Number(COCODE),
+            hosIdx: Number(HOS_IDX),
             naverId: nid,
             businessId: Number(bid),
         });
