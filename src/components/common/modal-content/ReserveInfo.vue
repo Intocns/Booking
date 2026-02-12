@@ -815,7 +815,9 @@ const handleViewChart = () => {
                         <TextAreaBox 
                             :model-value="reserveData?.reMemo || ''"
                             :disabled="true"
-                            placeholder="고객 메모"/>
+                            height="100px"
+                            placeholder="고객 메모"
+                        />
                     </div>
                 </div>
     

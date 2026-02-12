@@ -102,7 +102,7 @@ const handleBlur = () => {
                 '--has-value': hasValue,
                 '--is-error': isError,
             }"
-            :style="{ minHeight: height }"
+            :style="{ height: height, minHeight: height, maxHeight: height }"
         >
             <textarea 
                 :value="modelValue"
@@ -182,6 +182,7 @@ textarea {
     resize: none; // 크기 조절 방지
     outline: none; // 포커스 시 브라우저 기본 아웃라인 제거
     background: transparent;
+    overflow-y: auto;
 
     color: $gray-900;
     @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
@@ -194,7 +195,7 @@ textarea {
     // 비활성화 시 텍스트 색상
     &:disabled {
         color: $gray-700;
-        pointer-events: none;
+        pointer-events: auto; // disabled여도 스크롤 가능
     }
 }
 
