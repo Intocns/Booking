@@ -170,10 +170,10 @@ onMounted(() => {
                 <img :src="icCs" alt="고객센터 아이콘">
                 고객센터
             </button>
-            <button class="footer-btn body-xs">
+            <!-- <button class="footer-btn body-xs">
                 <img :src="icLogout" alt="로그아웃 아이콘">
                 로그아웃
-            </button>
+            </button> -->
         </div>
     </aside>
 </template>
