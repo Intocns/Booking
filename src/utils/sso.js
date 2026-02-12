@@ -95,12 +95,12 @@ export const initSSOCheck = (onResult) => {
     const isTest = import.meta.env.VITE_IS_TEST === 'true';
     const sso = new INTOSSO('intobooking', true, isTest);  // test일경우 마지막 인자값 true, live일 경우 false
 
-    // 3초 동안 응답이 없으면 실패로 간주
+    // 5초 동안 응답이 없으면 실패로 간주
     const authTimeout = setTimeout(() => {
         console.warn('SSO 서버 응답 없음');
         
         if (onResult) onResult('fail');
-    }, 3000);
+    }, 5000);
     
     const callback = function(data) {
         clearTimeout(authTimeout); // 응답 왔으니 타임아웃 제거
@@ -118,6 +118,7 @@ export const initSSOCheck = (onResult) => {
     const logout = function() {
         clearTimeout(authTimeout); // 응답 왔으니 타임아웃 제거
 
+        // TODO : 로그아웃 로직
         // console.log('sso logout');
     };
 
