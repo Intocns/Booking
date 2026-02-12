@@ -17,11 +17,7 @@ onMounted(async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const at = urlParams.get('at'); // 해당 값 저장 후
     const rt = urlParams.get('rt');
-
-    // 토큰값 저장되어있는지 확인
-    // 로컬스토리지/쿠키에 토큰이 없고, URL에도 없다면 첫 진입으로 간주
-    const hasToken = !!Cookies.get('INTO_ACCESS') || !!localStorage.getItem('INTO_ACCESS');
-
+    
     // 인증 결과에 따른 처리를 위한 공통 콜백 함수
     const handleAuthResult = (status) => {
         if (status === 'success') {
@@ -31,7 +27,7 @@ onMounted(async () => {
             window.close(); // 실패 시 창 닫기
         }
     };
-
+    
     try {
         await loadSSOScript(); // sso 스크립트 로드
 
@@ -39,11 +35,15 @@ onMounted(async () => {
             await router.replace({ query: {} }); // url에 남아있는 토큰 비워줌
             initSSOCheck(handleAuthResult); // sso 로그인 체크
 
-        } else if(hasToken) { // 이미 토큰 저장 되어있음
-            initSSOCheck(handleAuthResult); // sso 로그인체크
-
         } else {  // 로그인 되어있지 않음
-            await forceSsoLogin();
+            initSSOCheck((status) => {
+                if (status === 'success') {
+                    isAuthChecked.value = true;
+                } else {
+                    // 강제 로그인
+                    forceSsoLogin();
+                }
+            });
         }
     } catch (err) {
         console.error("SSO 프로세스 오류:", err);
