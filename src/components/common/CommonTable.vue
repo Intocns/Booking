@@ -186,14 +186,13 @@ const handleEmptyBtnClick = () => {
     overflow-x: hidden;
     overflow-y: auto;
     // border-bottom: 1px solid $gray-300;
-    border-top: 2px solid $gray-700;
     background-color: $gray-00;
 }
 
 .table {
     width: 100%;
     border-spacing: 0;
-    border-collapse: collapse;
+    // border-collapse: collapse;
     table-layout: fixed;
     
     thead {
@@ -204,6 +203,7 @@ const handleEmptyBtnClick = () => {
         border-bottom: 1px solid $gray-300;
 
         tr { height: 40px; }
+        th { border-top: 2px solid $gray-700; }
     }
 
     th {

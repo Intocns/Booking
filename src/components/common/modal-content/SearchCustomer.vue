@@ -143,12 +143,12 @@ const handleNewPetRegistration = () => {
 // 고객 테이블 col 정의
 const customerColumns = [
     { key: 'userNo', label: '고객번호', width: '10%' },
-    { key: 'userName', label: '고객명', width: '12%' },
-    { key: 'userTel', label: '전화번호', width: '15%' },
-    { key: 'petNo', label: '동물번호', width: '12%' },
-    { key: 'petName', label: '동물명', width: '12%' },
-    { key: 'speciesName', label: '종', width: '12%' },
-    { key: 'breed', label: '품종', width: '15%'},
+    { key: 'userName', label: '고객명', width: '10%' },
+    { key: 'userTel', label: '전화번호', width: '17%' },
+    { key: 'petNo', label: '동물번호', width: '10%' },
+    { key: 'petName', label: '동물명', width: '10%' },
+    { key: 'speciesName', label: '종', width: '10%' },
+    { key: 'breed', label: '품종', width: '17%'},
     { key: 'sex', label: '성별', width: '12%'},
     { key: 'action', label: '고객매칭', width: '10%'},
 ]

@@ -283,16 +283,6 @@ onMounted(() => {
         <ReserveInfo />
     </Modal>
 
-    <!--  고객 예약 정보 > 고객 검색 모달 -->
-    <Modal
-        v-if="modalStore.searchCustomerModal.isVisible"
-        size="m"
-        title="고객 검색"
-        :modalState="modalStore.searchCustomerModal"
-    >
-        <SearchCustomer />
-    </Modal>
-
     <!-- 문자 발송 모달 -->
     <Modal 
         v-if="modalStore.smsModal.isVisible"
