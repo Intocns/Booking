@@ -102,7 +102,7 @@ const handleBlur = () => {
                 '--has-value': hasValue,
                 '--is-error': isError,
             }"
-            :style="{ height: height, minHeight: height, maxHeight: height }"
+            :style="{ minHeight: height }"
         >
             <textarea 
                 :value="modelValue"
