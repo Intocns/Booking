@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
 import { api} from "@/api/axios";
-import Qs from "qs"
 import { ref } from "vue";
 
 export const useHospitalStore = defineStore("hospital", () => {

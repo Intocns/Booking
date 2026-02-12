@@ -102,29 +102,22 @@ onMounted(() => {
     <aside class="sidebar">
         <!-- top -->
         <div class="top-menu">
-            <!-- top영역 -->
+            <!-- top영역: 위(로고) / 아래(병원·사용자명) 분리 -->
             <div class="top">
-                <div class="title">
-                    <div class="title-wrapper" @click="goToDashboard">
-                        <div>
-                            <img :src="sidebarLogo" alt="인투링크">
-                        </div>
+                <button type="button" class="top-header" @click="goToDashboard">
+                    <div class="title-wrapper">
+                        <img :src="sidebarLogo" alt="인투링크">
                         <div class="line"></div>
                     </div>
-                </div>
-                <div class="profile">
+                </button>
+                <div class="top-profile">
                     <div class="hospital-info">
-                        <!-- <div class="hospital-onOff on">
-                            <span class="title-xs">병원예약 - </span>
-                            <span class="title-xs">ON</span>
-                        </div> -->
                         <div class="hospital-name-box">
                             <span class="hospital-name heading-s">{{ hospitalStore.hospitalData?.company_name }}</span>
-                            <!-- <span class="heading-s">병원</span> -->
                         </div>
                     </div>
                     <div class="client-info">
-                        <span class="title-m">{{ hospitalStore.hospitalData.user_name }}</span>
+                        <span class="title-m">{{ hospitalStore.hospitalData?.user_name }}</span>
                         <span class="title-m">님</span>
                     </div>
                 </div>
@@ -211,33 +204,42 @@ onMounted(() => {
 ----------------------------- */
 .top {
     width: 100%;
-    padding: 30px 24px 40px;
+    padding: 0 24px 40px;
     display: flex;
     flex-direction: column;
     gap: 40px;
     background-color: #328bff;
 }
 
-.title-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 30px;
+/* 위: 로고 영역 전체 균일 클릭 (위쪽 여백까지 버튼에 포함) */
+.top-header {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 30px 0 0;
+    border: none;
+    background: none;
     cursor: pointer;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
 
-    .line {
-        width: 100%;
-        height: 1px;
-        background-color: $primary-50;
-        opacity: 0.2;
+    .title-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+
+        .line {
+            width: 100%;
+            height: 1px;
+            background-color: $primary-50;
+            opacity: 0.2;
+        }
     }
 }
 
-/* -----------------------------
-    Profile 영역
------------------------------ */
-
-.profile {
+/* 아래: 병원명·사용자명 (클릭 없음) */
+.top-profile {
     display: flex;
     flex-direction: column;
     gap: 20px;
