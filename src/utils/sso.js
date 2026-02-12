@@ -77,12 +77,12 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
                 window.location.href = response.data.data.returnUrl; // returnUrl로 이동
             }
         } else {
-            alert('인증에 실패했습니다.');
+            showAlert('인증에 실패했습니다.');
             // 브라우저 창닫기 
             window.close();
         }
     } catch (err) {
-        alert('인증에 실패했습니다.');
+        showAlert('인증에 실패했습니다.');
         console.error("SSO 로그인 실패:", err);
         // 브라우저 창닫기
         // window.close();
@@ -95,8 +95,16 @@ export const initSSOCheck = (onResult) => {
     const isTest = import.meta.env.VITE_IS_TEST === 'true';
     const sso = new INTOSSO('intobooking', true, isTest);  // test일경우 마지막 인자값 true, live일 경우 false
 
+    // 3초 동안 응답이 없으면 실패로 간주
+    const authTimeout = setTimeout(() => {
+        console.warn('SSO 서버 응답 없음');
+        
+        if (onResult) onResult('fail');
+    }, 3000);
+    
     const callback = function(data) {
-        // console.log(data);
+        clearTimeout(authTimeout); // 응답 왔으니 타임아웃 제거
+
         if(Number(data.cocode) >= 10000) {
             showAlert('인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.');
             return;
@@ -108,15 +116,16 @@ export const initSSOCheck = (onResult) => {
     };
 
     const logout = function() {
-        // console.log('logout');
-        // TODO: 로그아웃
-        if (onResult) onResult('fail');
+        clearTimeout(authTimeout); // 응답 왔으니 타임아웃 제거
+
+        // console.log('sso logout');
     };
 
     try {
         sso.init(callback, logout, isSession);
     } catch(err) {
-        alert('인증에 실패했습니다.');
+        clearTimeout(authTimeout); // 응답 왔으니 타임아웃 제거
+
         console.error(err);
         if (onResult) onResult('error');
     }

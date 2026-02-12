@@ -33,18 +33,20 @@ onMounted(async () => {
 
         if(at && rt) { // 강제 로그인 후 
             await router.replace({ query: {} }); // url에 남아있는 토큰 비워줌
-            initSSOCheck(handleAuthResult); // sso 로그인 체크
+        } 
 
-        } else {  // 로그인 되어있지 않음
-            initSSOCheck((status) => {
-                if (status === 'success') {
-                    isAuthChecked.value = true;
-                } else {
-                    // 강제 로그인
-                    forceSsoLogin();
-                }
-            });
-        }
+        // 현재 강제 로그인 로직은 실행하지 않음 > 주석처리
+        // initSSOCheck((status) => {
+        //     if (status === 'success') {
+        //         isAuthChecked.value = true;
+        //     } else {
+        //         // 강제 로그인
+        //         forceSsoLogin();
+        //     }
+        // });
+
+        initSSOCheck(handleAuthResult); // sso 로그인 체크
+
     } catch (err) {
         console.error("SSO 프로세스 오류:", err);
         showAlert("시스템 오류가 발생했습니다.");
