@@ -153,7 +153,7 @@ onMounted(() => {
                 </div>
 
                 <!-- waiting -->
-                <div class="count-card count-card--waiting">
+                <!-- <div class="count-card count-card--waiting">
                     <div class="count-card__title">
                         <div class="icon_wrapper">
                             <img :src="icWaiting" alt="waiting icon">
@@ -165,7 +165,7 @@ onMounted(() => {
                         <p class="val blue">{{ formatCount(count.cnt4) }}</p>
                         <span class="txt">건</span>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- naver -->
                 <div class="count-card count-card--waiting">
@@ -220,6 +220,8 @@ onMounted(() => {
         <CommonTable 
             title="대기중인 예약"
             :table-route="{ name: 'pendingList' }"
+            :show-table-count="true"
+            :total-count="reservationStore.reservePendingList.length"
             :columns="columns" 
             :rows="reservationStore.reservePendingList"
             @row-click="handelReserveDetail" 
@@ -313,6 +315,7 @@ onMounted(() => {
         }
 
         &__today {
+            flex: 0.5;
             display: flex;
             flex-direction: column;
             justify-content: space-between;

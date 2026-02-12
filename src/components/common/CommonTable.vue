@@ -17,8 +17,10 @@ const props = defineProps({
     noThead: {type: Boolean, default: false}, // thead 노출 여부
     tableTitleTooltip: {type: String, default: ''},
     tableEmptyBtnText : {type: String, default: ''},
-    tableTotal: {type: [String, Number], default: null}, 
-    isClickAble: {type: Boolean, default: false}
+    tableTotal: {type: [String, Number], default: null}, // 테이블 위에 전체: 00개 로 보여줄 카운트
+    isClickAble: {type: Boolean, default: false},
+    showTableCount: {type: Boolean, default: false}, // 테이블 타이틀 옆에 카운트 보여줄 것인지
+    totalCount: {type:Number, default: null}, // 테이블 타이틀 옆에 보여줄 카운트
 })
 
 //  에밋
@@ -44,6 +46,10 @@ const handleEmptyBtnClick = () => {
                             {{ tableTitleTooltip }}
                         </div>
                     </div>
+                </div>
+                <!-- 테이블 타이틀 옆 카운트 -->
+                <div v-if="showTableCount" class="flag flag--yellow">
+                    {{ totalCount }}
                 </div>
                 <RouterLink v-if="tableRoute" :to="tableRoute" class="table-link">
                     <img :src="icMore" alt="더보기">
