@@ -95,18 +95,19 @@ export const initSSOCheck = (onResult) => {
     const isTest = import.meta.env.VITE_IS_TEST === 'true';
     const sso = new INTOSSO('intobooking', true, isTest);  // test일경우 마지막 인자값 true, live일 경우 false
 
-    // 5초 동안 응답이 없으면 실패로 간주
+    // 응답이 없으면 실패로 간주
     const authTimeout = setTimeout(() => {
         console.warn('SSO 서버 응답 없음');
         
         if (onResult) onResult('fail');
-    }, 5000);
+    }, 4000);
     
     const callback = function(data) {
         clearTimeout(authTimeout); // 응답 왔으니 타임아웃 제거
 
         if(Number(data.cocode) >= 10000) {
             showAlert('인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.');
+            window.close();
             return;
         }
 

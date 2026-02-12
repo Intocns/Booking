@@ -259,7 +259,7 @@ onMounted(() => {
     }
 
     &.--fail {
-        color: $warning-300;
+        color: $warning-500;
     }
 }
 </style>
