@@ -643,9 +643,9 @@ const receivedDateTime = computed(() =>
 
 // 확정/취소/거절 일시 필드 라벨 (상태에 따라 문구 변경)
 const confirmedDateTimeLabel = computed(() => {
-    if (reserveData.inState === 2) return '취소일시';
-    if (reserveData.inState === 3) return '거절일시';
-    return '확정일시';
+    if (reserveData.inState === 2) return '취소 일시';
+    if (reserveData.inState === 3) return '거절 일시';
+    return '확정 일시';
 });
 
 // 확정/취소(거절 포함) 일시 계산
