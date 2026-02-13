@@ -180,7 +180,7 @@ onMounted(() => {
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >
-        <ReserveInfo />
+        <ReserveInfo @refresh-list="searchList" />
     </Modal>
 
     <!-- 문자 발송 모달 -->
