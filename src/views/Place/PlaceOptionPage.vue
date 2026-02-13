@@ -17,7 +17,7 @@ import icEdit from '@/assets/icons/ic_edit.svg'
 import icCopy from '@/assets/icons/ic_copy.svg'
 import icDel from '@/assets/icons/ic_del.svg'
 
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
@@ -294,6 +294,8 @@ const handelTableRowClick = (row) => {
 const handleDeleteOption = async () => {
     const optionData = modalStore.confirmModal.data?.optionData;
     if (!optionData || !optionData.optionId) {
+        await nextTick()
+
         showAlert('옵션 ID를 찾을 수 없습니다.');
         return;
     }
