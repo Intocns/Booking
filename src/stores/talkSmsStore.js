@@ -20,6 +20,8 @@ export const useTalkSmsStore = defineStore('talkSms', () => {
 
     const hospitalStore = useHospitalStore();
 
+    const alimTalkParam = ref(null);
+
     const compEnrolNum = hospitalStore.hospitalData.biz_no.replace(/-/g, '');
     const COCODE = hospitalStore.hospitalData.cocode;
     const templateType = 5; // TODO: 추후 변경
@@ -56,6 +58,8 @@ export const useTalkSmsStore = defineStore('talkSms', () => {
                 const isProfile = d.is_profile === true;
                 const isAvailableTemplate = d.is_available_template === true;
                 isLink.value = !isChannel && !isProfile && !isAvailableTemplate;
+                // 백엔드에서 내려준 알림톡 프로필 등록 파라미터 저장 (있을 경우)
+                alimTalkParam.value = d.alimTalkParam || null;
                 await getTemplateInfo(isLink.value);
             }
         } catch (e) {
@@ -64,6 +68,22 @@ export const useTalkSmsStore = defineStore('talkSms', () => {
         } finally {
             isCheckingAvailable.value = false;
         }
+    }
+
+    /** 알림톡 프로필 등록 URL 생성 (버튼 클릭 시 호출) */
+    async function createAlimTalkUrl() {
+        if (!alimTalkParam.value) return null;
+        try {
+            const res = await api.post('/api/{cocode}/alimtalk/createAlimTalkUrl', {
+                alimTalkParam: alimTalkParam.value,
+            });
+            if (res.data?.status_code === 200 && res.data?.data?.alimTalkUrl) {
+                return res.data.data.alimTalkUrl;
+            }
+        } catch (e) {
+            console.error('알림톡 URL 생성 오류:', e);
+        }
+        return null;
     }
 
     async function getTemplateInfo(useLink = false) {
@@ -126,6 +146,7 @@ export const useTalkSmsStore = defineStore('talkSms', () => {
         isCheckingAvailable,
         checkAvailableResult,
         isLink,
+        alimTalkParam,
         templateList,
         isLoadingTemplates,
         smsTemplateList,
@@ -137,5 +158,6 @@ export const useTalkSmsStore = defineStore('talkSms', () => {
         sendAlimTalk,
         sendSms,
         preloadTemplatesAndPoint,
+        createAlimTalkUrl,
     };
 });

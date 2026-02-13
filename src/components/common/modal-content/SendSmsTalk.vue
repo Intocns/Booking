@@ -37,6 +37,7 @@ const {
     isLoadingTemplates,
     smsTemplateList,
     isLoadingSmsTemplates,
+    alimTalkParam,
 } = storeToRefs(talkSmsStore);
 
 const activeTab = ref('talk');
@@ -255,7 +256,9 @@ function syncSelectedFromStore() {
         selectedSmsTemplate.value = smsTemplateList.value[0];
     }
 }
-onMounted(syncSelectedFromStore);
+onMounted(() => {
+    syncSelectedFromStore();
+});
 watch([templateList, smsTemplateList], syncSelectedFromStore, { deep: true });
 
 // SMS: sms_memo + {변수} 치환 미리보기
@@ -278,6 +281,13 @@ const smsPreviewText = computed(() => {
 // SMS: 미리보기 텍스트 기준 Byte·건수 (80Byte 초과 시 2건)
 const smsByteCount = computed(() => getSmsByteLength(smsPreviewText.value));
 const smsMessageCount = computed(() => (smsByteCount.value >= 80 ? 2 : 1));
+
+// 알림톡 프로필 등록 페이지 열기
+const openChargePointRegister = async () => {
+    const url = await talkSmsStore.createAlimTalkUrl();
+    if (!url) return;
+    window.open(url, '_blank');
+};
 
 // 백엔드 복호화 테스트용
 const decryptAlimtalkData = async (encryptedData) => {
@@ -344,7 +354,9 @@ defineExpose({
                             <span class="body-m">건</span>
                         </div>
 
-                        <button class="btn btn--size-24 btn--black-outline" @click="getSmsPointInfo"><img :src="icReload" alt="아이콘" width="10"></button>
+                        <button class="btn btn--size-24 btn--black-outline" @click="getSmsPointInfo">
+                            <img :src="icReload" alt="아이콘" width="10">
+                        </button>
                     </div>
                     <div class="sms-remaining-count" v-else-if="isLoadingSmsPoint">
                         <span class="body-m">잔여건수 조회 중...</span>
@@ -406,10 +418,21 @@ defineExpose({
                     </div>
                 </div>
 
-                <div class="tooltip-box" v-if="isLink === true">
-                    <ul>
-                        <li>해당 알림톡은 인투링크 프로필로 발송됩니다.</li>
-                    </ul>
+                <div class="tooltip-box tooltip-box--link" v-if="isLink === true">
+                    <div class="tooltip-box__text">
+                        <ul>
+                            <li>해당 알림톡은 인투링크 프로필로 발송됩니다.</li>
+                            <li>
+                                인투톡에 등록된 병원인 경우, '외부예약' 유형으로 등록된 알림톡 템플릿이 없어 병원 알림톡 프로필로 발송할 수 없습니다. 외부예약 유형 템플릿 등록 후 병원 프로필로 알림톡 발송이 가능합니다.
+                                <button
+                                    v-if="alimTalkParam"
+                                    type="button"
+                                    class="tooltip-box__link"
+                                    @click="openChargePointRegister"
+                                >[등록하기]</button>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
             </div>
@@ -696,6 +719,32 @@ defineExpose({
             display:flex;
             gap: 8px;
             justify-content: flex-end;
+        }
+    }
+
+    .tooltip-box--link {
+        &__text {
+            ul li {
+                line-height: 1.5;
+            }
+        }
+
+        /* 버튼 클래스가 tooltip-box__link 이므로 하위 선택자로 지정 */
+        .tooltip-box__link {
+            padding: 0;
+            margin: 0;
+            border: none;
+            background: none;
+            font-size: inherit;
+            font-family: inherit;
+            cursor: pointer;
+            text-decoration: none;
+            vertical-align: baseline;
+            color: $primary-700;
+
+            &:hover {
+                color: $primary-800 !important;
+            }
         }
     }
 
