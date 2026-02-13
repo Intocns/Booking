@@ -163,4 +163,23 @@ router.beforeEach(async (to, from, next) => {
     }
     next();
 })
+
+// 파일 로드 실패 시 에러 핸들링
+router.onError((error, to) => {
+    // 브라우저가 동적 임포트(Lazy Loading)에 실패했을 때 발생하는 에러 메시지들
+    const errors = [
+        'Failed to fetch dynamically imported module',
+        'Loading chunk',
+        'Error: Cannot find module'
+    ];
+
+    const isChunkError = errors.some(msg => error.message.includes(msg));
+
+    if (isChunkError) {
+        // alert('새 버전이 업데이트되어 페이지를 새로고침합니다.');
+
+        window.location.href = to.fullPath; 
+    }
+});
+
 export default router
