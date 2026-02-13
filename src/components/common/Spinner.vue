@@ -2,9 +2,9 @@
 
 <template>
     <div id="overlay">
-        <div>
+        <div class="spinner-wrapper">
             <div class="spinner"></div>
-            <span>Loading...</span>
+            <span class="body-l">Loading...</span>
         </div>
     </div>
 </template>
@@ -20,24 +20,32 @@
         top: 0;
         left: 0;
 
-        background-color: $gray-00;
-        opacity: .80;
-        color: #666666;
+        color: $primary-700;
 
-        div {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+        background-color: rgba(255, 255, 255, 0.05);
     }
 
+    .spinner-wrapper {
+        width: 200px;
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+        justify-content: center;
+
+        background: rgba(255, 255, 255, 0.8);
+        padding: 30px 40px;
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
     .spinner {
-        margin: 0 auto;
-        height: 64px;
-        width: 64px;
+        height: 54px;
+        width: 54px;
         animation: rotate 0.8s infinite linear;
-        border: 5px solid #322f2f;
-        border-right-color: transparent;
+        border: 4px solid $gray-100;
+        border-top-color: $primary-700; 
         border-radius: 50%;
     }
 

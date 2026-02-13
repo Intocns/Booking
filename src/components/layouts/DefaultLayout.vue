@@ -34,8 +34,15 @@
     <div class="default-layout">
         <Sidebar />
 
-        <main class="content">
-            <router-view :key="$route.fullPath" />
+        <main class="main">
+            <!-- <router-view :key="$route.fullPath" /> -->
+            <router-view v-slot="{ Component }" :key="$route.fullPath">
+                <transition name="fade" mode="out-in">
+                    <div class="content">
+                        <component :is="Component" />
+                    </div>
+                </transition>
+            </router-view>
         </main>
     </div>
 
@@ -117,16 +124,28 @@
     .default-layout {
         display: flex;
     }
-    .content {
+    .main {
         flex: 1;
         width: calc(100% - 220px);
         height: 100vh;
+    }
+    .content {
+        width: 100%;
+        height: 100%;
         display:flex;
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;
         background-color: $gray-50;
         padding: 24px;
+        
+    }
+
+    .fade-enter-active, .fade-leave-active {
+        transition: opacity 0.2s ease;
+    }
+    .fade-enter-from, .fade-leave-to {
+        opacity: 0;
     }
 
     /* 네이버 연동 필요 모달: 1번사진 스타일 (전체 흰색, 파란 헤더 없음) */
