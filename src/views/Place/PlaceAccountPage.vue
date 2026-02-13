@@ -9,6 +9,12 @@ import icSearch from '@/assets/icons/ic_search.svg';
 import icAddBtn from '@/assets/icons/ic_add_btn.svg';
 import icDragHandel from '@/assets/icons/ic_drag_handel.svg';
 import icClear from '@/assets/icons/ic_clear.svg';
+import icNaver from '@/assets/icons/ic_res_naver.svg'
+import icLink from '@/assets/icons/ic_link.svg'
+import icSetting from '@/assets/icons/ic_setting.svg'
+import icInfoLine from '@/assets/icons/ic_information_line.svg'
+import icInfoBlue from '@/assets/icons/ic_information_blue.svg'
+import AccountGuideImg from '@/assets/images/naver_account_guide.png'
 import { useModalStore } from '@/stores/modalStore';
 import { usePlaceStore } from '@/stores/placeStore';
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
@@ -29,6 +35,7 @@ import { validatePlaceDetail, formatPlaceDetailErrors } from '@/utils/placeAccou
 import { uploadImage } from '@/utils/fileUpload';
 import draggable from 'vuedraggable';
 import { useHospitalStore } from '@/stores/hospitalStore';
+import ModalSimple from '@/components/common/ModalSimple.vue';
 
 // COCODE,HOS_IDX
 const hospitalStore = useHospitalStore();
@@ -54,6 +61,10 @@ const existingAccountBtnRef = ref(null);
 function onExistingAccountClick() {
     existingAccountMode.value = !existingAccountMode.value;
     nextTick(() => existingAccountBtnRef.value?.focus());
+}
+
+const handelOpenAccountGuideModal = () => {
+    modalStore.naverAccountGuideModal.openModal();
 }
 
 // GET /api/linkbusiness/{cocode} 응답으로 채우는 플레이스 상세 필드
@@ -497,37 +508,52 @@ onUnmounted(() => {
             <div class="account-sync" :key="'account-' + hasNaverAccount">
                 <section class="account-sync__login">
                     <div class="sync-header">
-                        <h3 class="sync-header__title title-m">네이버 계정 연동하기</h3>
+                        <div class="d-flex gap-4 align-center">
+                            <img :src="icNaver" alt="네이버아이콘">
+                            <h3 class="sync-header__title title-m">
+                                네이버 계정 연동
+                            </h3>
+                        </div>
                         <template v-if="hasNaverAccount">
                             <button
                                 v-if="naverUseFlag === 0"
                                 type="button"
-                                class="btn btn--size-40 btn--blue"
+                                class="btn btn--size-32 btn--blue"
                                 @click="onReconnectAccount"
                             >
+                                <img :src="icLink" alt="아이콘">
                                 계정 재연동
                             </button>
                             <button
                                 v-else
                                 type="button"
-                                class="btn btn--size-40 btn--blue"
+                                class="btn btn--size-32 btn--black-outline"
                                 @click="openNaverManageModal"
                             >
+                                <img :src="icSetting" alt="아이콘">
                                 연동관리
                             </button>
                         </template>
                         <template v-else>
                             <!-- 2026.02.10 네이버 로그인버튼 비활성화함 -->
                             <!-- <div id="naver_id_login"></div> -->
-                            <button
+                            <!-- <button
                                 v-if="!hasNaverAccount"
                                 ref="existingAccountBtnRef"
-                                type="button"
-                                class="btn btn--size-40"
-                                :class="existingAccountMode ? 'btn--blue' : 'btn--black-outline'"
+                                
+                                class="btn btn--size-32 btn--black-outline"
                                 @click="onExistingAccountClick"
                             >
+                                <img :src="icLink" alt="아이콘">
                                 기존 계정 연동
+                            </button> -->
+                            <button 
+                                v-if="!hasNaverAccount"
+                                class="btn btn--size-32 btn--black-outline"
+                                @click="handelOpenAccountGuideModal"
+                            >
+                                <img :src="icInfoLine" alt="아이콘" width="14">
+                                연동 가이드
                             </button>
                         </template>
                     </div>
@@ -550,9 +576,9 @@ onUnmounted(() => {
                         <label class="form-row__label title-s">네이버 ID</label>
                         <div class="form-row__input">
                             <InputTextBox
-                                :model-value="naverUseFlag === 1 ? naverId : (existingAccountMode ? naverId : '')"
-                                placeholder="네이버 ID"
-                                :disabled="naverUseFlag === 1 || !existingAccountMode"
+                                :model-value="naverUseFlag === 1 ? naverId : (existingAccountMode ? naverId : naverId)"
+                                placeholder="네이버 ID를 입력하세요."
+                                :disabled="naverUseFlag === 1"
                                 :key="'naver-' + hasNaverAccount + '-' + existingAccountMode + '-' + naverUseFlag"
                                 @update:model-value="naverId = $event"
                             />
@@ -562,21 +588,21 @@ onUnmounted(() => {
                         <label class="form-row__label title-s">네이버 스마트 플레이스 비즈니스 ID</label>
                         <div class="form-row__input form-row__input--with-btn">
                             <InputTextBox
-                                :model-value="naverUseFlag === 1 ? businessId : (existingAccountMode ? businessId : '')"
-                                placeholder="비즈니스 ID"
-                                :disabled="naverUseFlag === 1 || !existingAccountMode"
+                                :model-value="naverUseFlag === 1 ? businessId : (existingAccountMode ? businessId : businessId)"
+                                placeholder="네이버 스마트 플레이스 비즈니스 ID를 입력하세요."
+                                :disabled="naverUseFlag === 1"
                                 :key="'biz-' + hasNaverAccount + '-' + existingAccountMode + '-' + naverUseFlag"
                                 @update:model-value="businessId = $event"
                             />
                             <button
                                 v-if="!hasNaverAccount"
                                 type="button"
-                                class="btn btn--size-40"
-                                :class="existingAccountMode ? 'btn--blue' : 'btn--gray'"
-                                :disabled="!existingAccountMode"
+                                class="btn btn--size-32"
+                                :class="naverId.length != 0 && businessId.length != 0 ? 'btn--blue' : 'btn--gray'"
+                                :disabled="naverId.length == 0 && businessId.length == 0"
                                 @click="requestConnect"
                             >
-                                연동
+                                연동하기 
                             </button>
                         </div>
                     </div>
@@ -586,6 +612,18 @@ onUnmounted(() => {
 
         <template #table>
             <div class="contents-wrapper" :class="{ 'contents-wrapper--locked': isFormLockedByUseFlag }">
+                <div class="d-flex flex-col gap-4">
+                    <h3 class="heading-s">
+                        네이버 플레이스 등록 정보
+                    </h3>
+                    <div v-if="!hasNaverAccount" class="d-flex gap-4 align-start">
+                        <img :src="icInfoBlue" alt="아이콘">
+                        <p class="body-s text-blue">
+                            아래 입력한 정보는 신규 연동 시 네이버 플레이스 정보로 저장됩니다. (기존 계정 연동시에는 사용되지 않습니다.)<br>
+                            정보 입력이 완료되면 상단의 네이버 및 네이버 스마트 플레이스 비즈니스 ID를 입력하여 연동을 진행해주세요.
+                        </p>
+                    </div>
+                </div>
                 <ul class="form-container">
                     <li class="form-item">
                         <!-- 서비스명 (API: serviceName) - 수정 불가 -->
@@ -828,7 +866,7 @@ onUnmounted(() => {
                 </div>
                 <button
                     type="button"
-                    class="btn btn--size-40 btn--black-outline naver-manage-modal__unlink-btn"
+                    class="btn btn--size-32 btn--black-outline naver-manage-modal__unlink-btn"
                     @click="onUnlinkFromManageModal"
                 >
                     연동 해제
@@ -858,14 +896,14 @@ onUnmounted(() => {
             <div class="naver-unlink-notice-modal__buttons">
                 <button
                     type="button"
-                    class="btn btn--size-40 btn--black-outline"
+                    class="btn btn--size-32 btn--black-outline"
                     @click="modalStore.naverConnectUnlinkNoticeModal.closeModal()"
                 >
                     취소
                 </button>
                 <button
                     type="button"
-                    class="btn btn--size-40 btn--blue"
+                    class="btn btn--size-32 btn--blue"
                     @click="onConfirmUnlinkFromNoticeModal"
                 >
                     해제하기
@@ -896,14 +934,14 @@ onUnmounted(() => {
             <div class="naver-reconnect-confirm-modal__buttons">
                 <button
                     type="button"
-                    class="btn btn--size-40 btn--black-outline"
-                    @click="modalStore.naverReconnectConfirmModal.closeModal()"
+                    class="btn btn--size-32 btn--black-outline"
+                    @click="modalStore.naverReconnectConfirmModal.closeModal()" 
                 >
                     취소
                 </button>
                 <button
                     type="button"
-                    class="btn btn--size-40 btn--blue"
+                    class="btn btn--size-32 btn--blue"
                     @click="onConfirmReconnect"
                 >
                     연동하기
@@ -911,6 +949,18 @@ onUnmounted(() => {
             </div>
         </div>
     </Modal>
+
+    <!-- 네이버 연동 가이드 모달 (연동 가이드 버튼 클릭 시) -->
+    <ModalSimple
+        v-if="modalStore.naverAccountGuideModal.isVisible"
+        :modal-state="modalStore.naverAccountGuideModal"
+        modal-width="866px"
+        title="네이버 연동 가이드"
+    >
+        <div class="modal-contents-inner" style="padding: 10px;">
+            <img :src="AccountGuideImg" alt="네이버연동가이드" style="width: 100%;">
+        </div>
+    </ModalSimple>
 </template>
 
 <style lang="scss" scoped>
@@ -1013,6 +1063,9 @@ onUnmounted(() => {
     .form-content--locked .delete-btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+    }
+    .contents-wrapper {
+        gap: 16px;
     }
     /* useFlag 0/null 시 폼 영역 전체 회색 비활성화 표시 */
     .contents-wrapper--locked {

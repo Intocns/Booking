@@ -122,6 +122,7 @@ textarea {
 .body-xs { @include typo($body-xs-size, $body-xs-weight, $body-xs-spacing, $body-xs-line); }
 .caption { @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line); }
 .tooltip { @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line); word-break: keep-all;}
+.text-blue {color: $primary-700;}
 // img
 .icon-img {display: inline-block;}
 
