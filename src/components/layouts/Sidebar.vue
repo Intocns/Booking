@@ -1,7 +1,7 @@
 <!-- sideBar -->
 <script setup>
 import { menus } from '@/data/sidebarMenus'
-import { onMounted, ref } from "vue";
+import { computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 import sidebarLogo from '@/assets/images/sidebar_logo.svg'
@@ -26,7 +26,16 @@ const modalStore = useModalStore();
 
 const router = useRouter();
 const route = useRoute();
-const openMenu = ref(null); // 열려있는 1뎁스 메뉴 index 저장
+
+/** URL 기준으로 펼쳐질 1뎁스 (2depth도 열리도록) */
+const openMenu = computed(() => {
+    const path = route.path;
+    const index = menus.findIndex(
+        (m) => m.path === path || m.children?.some((c) => c.path === path)
+    );
+    if (index !== -1 && menus[index].children?.length) return index;
+    return null;
+});
 
 /** useFlag 1일 때만 접근 가능한 네이버 플레이스 하위 경로 */
 const PLACE_MENUS_REQUIRE_LINK = ['/place/product', '/place/option', '/place/simple-reservation', '/place/settings'];
@@ -48,12 +57,15 @@ const onClickMenu = (menu, index) => {
 
     if (!menu.children?.length) {
         router.push(menu.path);
-        openMenu.value = index;
         return;
     }
 
-    // 2뎁스 있는 메뉴 > 열기/닫기 toggle
-    openMenu.value = openMenu.value === index ? null : index;
+    // 2뎁스 있는 메뉴: 열려 있으면 대시보드로(접기), 아니면 첫 하위로 이동(펼치기)
+    if (openMenu.value === index) {
+        router.push({ name: 'dashboard' });
+    } else {
+        router.push(menu.children[0].path);
+    }
 };
 
 // 2뎁스 클릭 핸들러
