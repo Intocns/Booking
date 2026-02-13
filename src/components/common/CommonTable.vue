@@ -94,7 +94,9 @@ const handleEmptyBtnClick = () => {
                         :key="rIndex" 
                         @click="$emit('row-click', row)" 
                         :class="[row.rowClass,
-                            {'is-clickable' : isClickAble}
+                            {'is-clickable' : isClickAble,
+                                'no-head' : noThead,
+                            }
                         ]"
                     >
                         <td
@@ -238,6 +240,8 @@ const handleEmptyBtnClick = () => {
         &--canceled {
             td { color: $gray-400; }
         }
+
+        &.no-head:first-child td {border-top: 2px solid $gray-900;}
 
         &.is-clickable {cursor: pointer;}
 
