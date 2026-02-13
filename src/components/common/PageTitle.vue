@@ -4,7 +4,7 @@ import icInformation from '@/assets/icons/ic_information_blue.svg'
 // props
 const props = defineProps({
     title: { type: String }, // 페이지 제목
-    total: { type: Number }, // total
+    total: { type: Number, default: null }, // total
     details: {
         type: Array,
         default: () => [], // 예: [{label:'확정', value: 15}]
@@ -22,7 +22,7 @@ const props = defineProps({
         </h1>
 
         <!-- Summary -->
-        <div v-if="total" class="page-summary">
+        <div v-if="total != null" class="page-summary">
 
             <!-- Total -->
             <div class="page-summary__total">

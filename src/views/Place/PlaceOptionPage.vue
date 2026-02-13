@@ -296,7 +296,7 @@ const handleDeleteOption = async () => {
     if (!optionData || !optionData.optionId) {
         await nextTick()
 
-        showAlert('옵션 ID를 찾을 수 없습니다.');
+        showAlert('옵션 ID를 찾을 수 없습니다.\n관리자에게 문의 바랍니다.');
         return;
     }
 
