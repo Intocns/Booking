@@ -396,18 +396,26 @@ const handleCustomerSelected = (customer) => {
             breed: '',
             sex: PET_GENDER_MAP[reserveData.petSex] || '',
             petName: reserveData.petName,
-            petBw: '',//체중
+            petBw: '',
             breedName: '',
-            speciesName: reserveData.spesice
+            speciesName: reserveData.spesice,
+            petDoctor: '',
+            rfid: '',
+            lastStatusDate: '',
+            regDate: '',
         },
         1: {
-            petSno: customer.petSno,
-            breed: customer.breedName,
-            sex: PET_GENDER_MAP[customer.sex] || '',
-            petName: customer.petName,
-            petBw: customer.petBw,
-            breedName: customer.breedName,
-            speciesName: customer.speciesName
+            petSno: customer.petSno,//동물번호
+            breed: customer.breedName,//품종
+            sex: PET_GENDER_MAP[customer.sex] || '',//성별
+            petName: customer.petName,//동물명
+            petBw: customer.petBw,//체중
+            breedName: customer.breedName,//품종명
+            speciesName: customer.speciesName,//종명
+            petDoctor: customer.petDoctor || '',// 담당의사 (1건인 경우 사용)
+            rfid: customer.rfid || '',//동물등록번호
+            lastStatusDateTxt: customer.lastStatusDate ? formatDate(customer.lastStatusDate) : '',//최근방문일
+            regDateTxt: customer.regDate ? formatDate(customer.regDate) : '',//등록일
         }
     };
 
@@ -438,8 +446,8 @@ const handleCustomerSelected = (customer) => {
     // };
     const newCustomer = {
         ...customer,
-        lastStatusDateTxt: customer.lastStatusDate ? formatDate(customer.lastStatusDate) : '',
-        regDateTxt: customer.regDate ? formatDate(customer.regDate) : '',
+        // lastStatusDateTxt: customer.lastStatusDate ? formatDate(customer.lastStatusDate) : '',
+        // regDateTxt: customer.regDate ? formatDate(customer.regDate) : '',
         isMatched: true,
         rowClass: 'row-matched',
         // 고객/동물 번호 (예약 확정 시 필요)
@@ -447,11 +455,6 @@ const handleCustomerSelected = (customer) => {
         // 주소 정보 (1건인 경우 사용)
         userAddr: customer.userAddr || '',
         userAddr2: customer.userAddr2 || '',
-        // 담당의사 (1건인 경우 사용)
-        petDoctor: customer.petDoctor || '',
-        rfid: customer.rfid || '',
-        lastStatusDate: customer.lastStatusDate || '',
-        regDate: customer.regDate || '',
         ...petInfoByType[customer.buttonType]//타입별 선언한 값으로 덮어쓰기
     };
     
@@ -1002,7 +1005,7 @@ const handleViewChart = () => {
                                     <div class="d-flex align-center justify-between">
                                         <span class="body-s">{{ singlePetData?.petSno || '' }}</span>
     
-                                        <button class="btn btn--size-24 btn--black-outline" @click="handleViewChart">차트보기</button>
+                                        <button class="btn btn--size-24 btn--black-outline" @click="handleViewChart" v-if="(singlePetData?.petSno || '') != '' ">차트보기</button>
                                     </div>
                                 </div>
                                 <div class="form-label" style="width:92px;">체중</div>
