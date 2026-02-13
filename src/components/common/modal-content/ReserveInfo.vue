@@ -457,6 +457,7 @@ const handleCustomerSelected = (customer) => {
     
     // 선택한 고객만 리스트에 남김 (단일 결과 화면으로 표시)
     reserveClientList.value = [newCustomer];
+    isManualUnmatched.value = false;
     
     // 고객 검색 모달 닫기
     modalStore.searchCustomerModal.closeModal();
@@ -1221,7 +1222,8 @@ const handleViewChart = () => {
         flex-direction: column;
         gap: 8px; // 24px -> 16px로 줄임
         padding: 28px 32px;
-        padding-bottom: 18px;
+        padding-bottom: 15px;
+        padding-top: 20px;
 
         flex-grow: 1;
         // overflow: hidden; // 전체 스크롤 제거
