@@ -31,7 +31,6 @@ import InputTextBox from '@/components/common/InputTextBox.vue';
 import { showAlert } from '@/utils/ui';
 
 const router = useRouter();
-// 스토어
 const productStore = useProductStore();
 const modalStore = useModalStore();
 
