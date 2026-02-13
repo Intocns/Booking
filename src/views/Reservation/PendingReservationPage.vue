@@ -47,7 +47,7 @@ const openSmsModal = (row) => {
 
 const reservationChannel = ref(['all']);
 const keyword = ref('');
-const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
+const reservationChannelOptions = RESERVE_ROUTE_OPTIONS.filter(opt => opt.value !== 1);
 const columns = [
     { key: 'idx', label: 'No.', width: '6%' },
     { key: 'reTimeTxt', label: '예약일자', width: '7%' },
@@ -76,13 +76,15 @@ const reserveSummary = computed(() => {
         }
     });
 
-    return Object.keys(RESERVE_ROUTE_MAP)
-        .filter(key => key !== '1') // '1'번 키를 제외하는 필터 추가 (intoVetGe는 대기 예약이 없어서 제외함)
+    const customOrder = ['4', '2']; // 순서 변경 및 intoVetGe 제외
+
+    return customOrder
+        .filter(key => RESERVE_ROUTE_MAP[key]) // 혹시 모를 키 누락 방지
         .map(key => ({
             label: RESERVE_ROUTE_MAP[key],
             value: String(counts[key]).padStart(2, '0'),
         }));
-});
+})
 
 // 필터 값 변환 헬퍼 함수 ('all'이 포함되어 있으면 null로 변환)
 const convertFilterParam = (value) => {
