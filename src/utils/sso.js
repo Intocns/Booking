@@ -95,15 +95,31 @@ export const initSSOCheck = (onResult) => {
     const isTest = import.meta.env.VITE_IS_TEST === 'true';
     const sso = new INTOSSO('intobooking', true, isTest);  // test일경우 마지막 인자값 true, live일 경우 false
 
-    // 응답이 없으면 실패로 간주
-    const authTimeout = setTimeout(() => {
-        console.warn('SSO 서버 응답 없음');
+    // 토큰 없는 경우, 보내는 메세지 받아서 alert띄우도록 처리함
+    const failMethods = ['resetIntoCookie', 'removeIntoSSOToken'];
+    // 메시지 핸들러
+    const messageHandler = (event) => {
+        const data = event.data;
         
-        if (onResult) onResult('fail');
-    }, 4000);
+        // iframe에서 보내는 'resetIntoCookie' method > 토큰 없는경우
+        if (failMethods.includes(data.method)) {
+            console.log('resetIntoCookie message', data.method);
+            window.removeEventListener('message', messageHandler);
+            
+            cleanup(); // 리스너 즉시 제거
+            if (onResult) onResult('fail');
+        }
+    };
+
+    // 리스너 등록
+    window.addEventListener('message', messageHandler);
+
+    const cleanup = () => { // 리스너 해제
+        window.removeEventListener('message', messageHandler);
+    };
     
     const callback = function(data) {
-        clearTimeout(authTimeout); // 응답 왔으니 타임아웃 제거
+        window.removeEventListener('message', messageHandler);
 
         if(Number(data.cocode) >= 10000) {
             showAlert('인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.');
@@ -117,16 +133,17 @@ export const initSSOCheck = (onResult) => {
     };
 
     const logout = function() {
-        clearTimeout(authTimeout); // 응답 왔으니 타임아웃 제거
+        window.removeEventListener('message', messageHandler);
 
         // TODO : 로그아웃 로직
-        // console.log('sso logout');
+        console.log('sso logout');
+        if (onResult) onResult('fail');
     };
 
     try {
         sso.init(callback, logout, isSession);
     } catch(err) {
-        clearTimeout(authTimeout); // 응답 왔으니 타임아웃 제거
+        window.removeEventListener('message', messageHandler);
 
         console.error(err);
         if (onResult) onResult('error');
