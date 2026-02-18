@@ -599,10 +599,14 @@ const isSingleResult = computed(() => {
 // 예약 확정 상태 여부
 const isConfirmed = computed(() => reserveData.inState === 1);
 
-// 예약 취소 상태 확인 (inState === 2 또는 3)
+// 예약 취소/거절 상태 확인 (inState === 2: 취소, 3: 거절)
 const isCancelled = computed(() => {
     return reserveData.inState === 2 || reserveData.inState === 3;
 });
+
+// 고객 정보: 취소/거절 시 상세(단일) 뷰 숨김 → 테이블 빈 상태만 표시
+const showCustomerDetailView = computed(() => !isCancelled.value && isSingleResult.value);
+const customerTableRows = computed(() => (isCancelled.value ? [] : matchedClientList.value));
 
 // 매칭된 고객 정보 (SearchCustomer에 전달)
 const matchedCustomerForSearch = computed(() => {
@@ -923,10 +927,10 @@ const handleViewChart = () => {
 
         </div>
 
-        <!--고객정보 -->
+        <!-- 고객정보 (취소/거절 시 테이블 빈 상태만 표시) -->
         <div class="d-flex flex-col gap-6 customer-info-section">
-            <!-- 조회 결과가 1건인 경우: 고객 정보와 동물 정보를 별도 섹션으로 표시 -->
-            <template v-if="isSingleResult">
+            <!-- 단일 결과 상세 뷰 (취소/거절이 아닐 때만) -->
+            <template v-if="showCustomerDetailView">
                 <!-- 타이틀 --> 
                 <div class="modal-content-title-wrapper">
                     <div class="d-flex gap-4 align-items-center">
@@ -1059,7 +1063,7 @@ const handleViewChart = () => {
                 </div>
             </template>
 
-            <!-- 조회 결과가 여러 건인 경우: 기존처럼 하나의 테이블 -->
+            <!-- 여러 건이거나 취소/거절: 테이블 (취소/거절 시 빈 상태) -->
             <template v-else>
                 <!-- 타이틀 -->
                 <div class="modal-content-title-wrapper">
@@ -1073,7 +1077,7 @@ const handleViewChart = () => {
                         </div>
                     </div>
 
-                    <!-- 고객 검색 버튼 -->
+                    <!-- 고객 검색 버튼 (취소/거절 시 미표시) -->
                     <button 
                         v-if="!isCancelled"
                         class="btn btn--size-24 btn--black" 
@@ -1084,11 +1088,11 @@ const handleViewChart = () => {
                     </button>
                 </div>
 
-                <!-- 테이블 -->
+                <!-- 테이블 (취소/거절 시 빈 행 → CommonTable 빈 상태 화면) -->
                 <div class="customer-info-table-wrapper">
                     <CommonTable
                         :columns="customerInfoColumns"
-                        :rows="matchedClientList"
+                        :rows="customerTableRows"
                         table-empty-sub-text="예약 확정 시, 신규 고객으로 등록되어 예약이 접수됩니다."
                     >
                         <!-- 고객매칭 버튼 슬롯 -->
