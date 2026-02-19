@@ -966,7 +966,7 @@ const textPhoneNumber = computed(() => {
                         <div class="info-item align-start" style="flex:1;">
                             <p class="label" style="padding-top: 10px;">{{ cancelRejectLabel }}</p>
                             <div class="fake-textbox disabled" style="height:100%;">
-                                <span v-if="!reserveData.rejectMsg || reserveData.rejectMsg.trim() == ''" class="empty-text">등롣된 내용이 없습니다.</span>
+                                <span v-if="!reserveData.rejectMsg || reserveData.rejectMsg.trim() == ''" class="empty-text">등록된 내용이 없습니다.</span>
                                 <p v-else class="text">{{ reserveData.rejectMsg }}</p>
                             </div>
                         </div>
