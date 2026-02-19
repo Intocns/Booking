@@ -14,7 +14,8 @@ import icHospital from '@/assets/icons/ic_lnb_hospital.svg'
 import icArrowDown from '@/assets/icons/ic_arrow_down.svg'
 import ic2depth from '@/assets/icons/ic_res_lnb_2depth.svg'
 import icCs from '@/assets/icons/ic_lnb_cs.svg'
-import icLogout from '@/assets/icons/ic_lnb_logout.svg'
+import icGuide from '@/assets/icons/ic_lnb_guide.svg'
+// import icLogout from '@/assets/icons/ic_lnb_logout.svg'
 // 스토어
 import { useHospitalStore } from '@/stores/hospitalStore';
 import { usePlaceStore } from '@/stores/placeStore';
@@ -100,6 +101,11 @@ const goToCsCenter = () => {
     window.open('https://intolink.co.kr/cscenter/notice')
 }
 
+const goToUserGuide = () => {
+    //TODO: 이용 가이드 링크 수정
+    window.open('https://intolink.co.kr/cscenter/guide', '_blank')
+}
+
 const goToDashboard = () => {
     router.push({ name: 'dashboard' });
 };
@@ -181,6 +187,10 @@ onMounted(() => {
             <button class="footer-btn body-xs" @click="goToCsCenter">
                 <img :src="icCs" alt="고객센터 아이콘">
                 고객센터
+            </button>
+            <button class="footer-btn body-xs" @click="goToUserGuide">
+                <img :src="icGuide" alt="이용가이드 아이콘">
+                이용가이드
             </button>
             <!-- <button class="footer-btn body-xs">
                 <img :src="icLogout" alt="로그아웃 아이콘">
@@ -377,7 +387,8 @@ onMounted(() => {
 
     .footer-btn {
         height: 34px;
-        flex: 1 0 0;
+        flex: 1 1 auto;
+        min-width: 0;
         padding: 12px 13px;
         border-radius: 5px;
         background-color: $primary-800;
@@ -386,6 +397,7 @@ onMounted(() => {
         align-items: center;
         gap: 4px;
         justify-content: center;
+        white-space: nowrap;
     }
 }
 </style>
