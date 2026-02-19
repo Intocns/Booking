@@ -23,6 +23,10 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    width: {
+        type: String,
+        default: null,
+    },
     height: {
         type: String,
         default: '32px',
@@ -116,7 +120,7 @@ const showClearIcon = computed(() => {
 </script>
 
 <template>
-    <div class="input-text-box-wrapper">
+    <div class="input-text-box-wrapper" :style="{width: width}">
         <div 
             class="input-text-box"
             :class="{ 
