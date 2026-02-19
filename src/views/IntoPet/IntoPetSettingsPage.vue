@@ -159,7 +159,7 @@ onMounted(async() => {
             <li class="form-item">
                 <div class="form-label helper helper--tooltip-bottom">
                     예약 승인방식
-                    <div class="help">
+                    <div class="helper">
                         <img :src="icHint" alt="아이콘">
                         <div class="tooltip-content">
                             방문 목적에 따라 예약 승인방식을 선택할 수 있습니다.
@@ -336,10 +336,7 @@ onMounted(async() => {
     .contents-wrapper .form-container {
         overflow: visible;
     }
-    .form-label.helper .help {
-        position: relative;
-    }
-    .form-label.helper .help .tooltip-content {
+    .form-label.helper .tooltip-content {
         top: 0;
         right: 0;
         transform: translate(-20px, calc(-100% - 8px));
