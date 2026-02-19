@@ -102,7 +102,7 @@ const handleBlur = () => {
                 '--has-value': hasValue,
                 '--is-error': isError,
             }"
-            :style="{ minHeight: height }"
+            :style="{ height: height }"
         >
             <textarea 
                 :value="modelValue"
@@ -176,7 +176,7 @@ const handleBlur = () => {
 textarea {
     flex-grow: 1; // 남은 공간을 모두 차지
     width: 100%;
-    min-height: 60px; // textarea 최소 높이
+    // min-height: 100%; // textarea 최소 높이
     
     border: none;
     resize: none; // 크기 조절 방지

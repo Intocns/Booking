@@ -20,6 +20,7 @@ import { useModalStore } from '@/stores/modalStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
 import { useReservationStore } from '@/stores/reservationStore';
 import { showAlert } from '@/utils/ui';
+import { formatPhone } from '@/utils/phoneFormatter';
 
 const emit = defineEmits(['refresh-list']);
 
@@ -738,6 +739,12 @@ const handleViewChart = () => {
         window.open(url, '_blank');
     }
 };
+
+
+// 핸드폰 번호 표기
+const textPhoneNumber = computed(() => {
+    return formatPhone(reserveData.userTel);
+})
 </script>
 
 <template>
@@ -760,167 +767,194 @@ const handleViewChart = () => {
             <!-- 정보 -->
             <div class="info-lists-wrapper">
                 <!-- 왼쪽 -->
-                <div class="info-list left">
-                    <div class="info-item">
-                        <p class="label">예약 고객명</p>
-                        <InputTextBox 
-                            v-model="reserveData.userName"
-                            :disabled="true"
-                            placeholder="예약 고객명"
-                        />
+                <div class="d-flex flex-col gap-6 left">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <div class="d-flex align-center gap-6">
+                                <p class="label">예약 고객명</p>
+                                <InputTextBox 
+                                    v-model="reserveData.userName"
+                                    :disabled="true"
+                                    placeholder="예약 고객명"
+                                    width="50%"
+                                />
+                            </div>
+                            <div class="d-flex align-center gap-6">
+                                <p class="label">고객 전화번호</p>
+                                <InputTextBox 
+                                    v-model="textPhoneNumber     "
+                                    :disabled="true"
+                                    placeholder="고객 전화번호"
+                                    width="50%"
+                                />
+                            </div>
+                        </div>
+                        <!-- <div class="info-item">
+                            <p class="label">주소</p>
+                            <InputTextBox 
+                                v-model="reserveData.address1"
+                                :disabled="true"
+                                placeholder="주소"
+                            />
+                        </div> -->
+                        <!-- <div class="info-item">
+                            <p class="label">상세 주소</p>
+                            <InputTextBox 
+                                v-model="reserveData.address2"
+                                :disabled="true"
+                                placeholder="상세 주소"
+                            />
+                        </div> -->
+                        <div class="info-item">
+                            <div class="d-flex align-center gap-6">
+                                <p class="label">동물명</p>
+                                <InputTextBox 
+                                    v-model="reserveData.petName"
+                                    :disabled="true"
+                                    placeholder="동물명"
+                                    width="50%"
+                                />
+                            </div>
+                            <div class="d-flex align-center gap-6">
+                                <p class="label">동물 성별</p>
+                                <InputTextBox 
+                                    v-model="PET_GENDER_MAP[reserveData.petSex]"
+                                    :disabled="true"
+                                    placeholder="성별"
+                                    width="50%"
+                                />
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <p class="label">종</p>
+                            <InputTextBox 
+                                v-model="reserveData.spesice"
+                                :disabled="true"
+                                placeholder="종"
+                            />
+                        </div>
+                        <div class="info-item">
+                            <p class="label">품종</p>
+                            <InputTextBox 
+                                :model-value="reserveData.breed || ''"
+                                :disabled="true"
+                                placeholder="품종"
+                            />
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <p class="label">고객 전화번호</p>
-                        <InputTextBox 
-                            v-model="reserveData.userTel"
-                            :disabled="true"
-                            placeholder="고객 전화번호"
-                        />
-                    </div>
-                    <div class="info-item">
-                        <p class="label">주소</p>
-                        <InputTextBox 
-                            v-model="reserveData.address1"
-                            :disabled="true"
-                            placeholder="주소"
-                        />
-                    </div>
-                    <div class="info-item">
-                        <p class="label">상세 주소</p>
-                        <InputTextBox 
-                            v-model="reserveData.address2"
-                            :disabled="true"
-                            placeholder="상세 주소"
-                        />
-                    </div>
-                    <div class="info-item">
-                        <p class="label">동물명</p>
-                        <InputTextBox 
-                            v-model="reserveData.petName"
-                            :disabled="true"
-                            placeholder="동물명"
-                        />
-                    </div>
-                    <div class="info-item">
-                        <p class="label">종</p>
-                        <InputTextBox 
-                            v-model="reserveData.spesice"
-                            :disabled="true"
-                            placeholder="종"
-                        />
-                    </div>
-                    <div class="info-item">
-                        <p class="label">품종</p>
-                        <InputTextBox 
-                            :model-value="reserveData.breed || ''"
-                            :disabled="true"
-                            placeholder="품종"
-                        />
-                    </div>
-                    <div class="info-item">
-                        <p class="label">성별</p>
-                        <InputTextBox 
-                            v-model="PET_GENDER_MAP[reserveData.petSex]"
-                            :disabled="true"
-                            placeholder="성별"
-                        />
-                    </div>
-                    <div class="info-item align-start">
-                        <p class="label" style="padding-top: 10px;">고객 메모</p>
-                        <TextAreaBox 
-                            :model-value="reserveData?.reMemo || ''"
-                            :disabled="true"
-                            height="100px"
-                            placeholder="고객 메모"
-                        />
+
+                    <div class="info-list over-flow-wrapper">
+                        <div class="info-item align-start">
+                            <p class="label" style="padding-top: 10px;">고객 메모</p>
+                            <div class="fake-textbox disabled" :style="{minHeight: reserveData.reRoute == 2 ? '99px' : '64px'}">    
+                                <span v-if="!reserveData.reMemo || reserveData.reMemo.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
+                                <p v-else class="text">{{ reserveData.reMemo  }}</p>
+                            </div>
+                        </div>
+                        <div class="info-item align-start">
+                            <p class="label" style="padding-top: 10px;">추가 정보</p>
+                            <div class="fake-textbox disabled" :style="{minHeight: reserveData.reRoute == 2 ? '99px' : '64px'}">
+                                <span v-if="!reserveData.questions || reserveData.questions.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
+                                <p v-else class="text">{{ reserveData.questions }}</p>
+                            </div>
+                        </div>
+                        <div v-if="reserveData.reRoute != 2" class="info-item align-start">
+                            <p class="label" style="padding-top: 10px;">옵션</p>
+                            <div class="fake-textbox disabled" style="min-height:64px">
+                                <span v-if="!reserveData.options || reserveData.options.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
+                                <p v-else class="text">{{ reserveData.options }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-    
+                
                 <!-- 오른쪽 -->
-                <div class="info-list right">
-                    <div class="info-item">
-                        <p class="label">예약 경로</p>
-                        <InputTextBox 
-                            v-model="RESERVE_ROUTE_MAP[reserveData.reRoute]"
-                            :disabled="true"
-                            placeholder="예약 경로"
-                        />
-                    </div>
-                    <div class="info-item">
-                        <p class="label">상품/진료실명</p>
-                        <InputTextBox 
-                            v-model="reserveData.roomName"
-                            :disabled="true"
-                            placeholder="상품명/진료실명"
-                        />
-                    </div>
-                    <div class="info-item">
-                        <p class="label">예약 방문일</p>
-                        <div class="d-flex gap-8" style="flex:2;">
-                            <CustomDatePicker 
-                                ref="reserveDateRef" 
-                                v-model="reserveDate" 
-                                :range="false" 
-                                :disabled="isCancelled"
+                <div class="right">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <p class="label">예약 경로</p>
+                            <InputTextBox 
+                                v-model="RESERVE_ROUTE_MAP[reserveData.reRoute]"
+                                :disabled="true"
+                                placeholder="예약 경로"
                             />
-
-                            <!-- 시간 선택 ( 00: 00 ~ 00: 00) -->
-                            <div class="d-flex align-center gap-4" style="flex:2;">
-                                <TimeSelect 
-                                    ref="startTimeRef" 
-                                    v-model="startTime" 
-                                    class="time-select-wrap"
+                        </div>
+                        <div class="info-item">
+                            <p class="label">상품/진료실명</p>
+                            <InputTextBox 
+                                v-model="reserveData.roomName"
+                                :disabled="true"
+                                placeholder="상품명/진료실명"
+                            />
+                        </div>
+                        <div class="info-item">
+                            <p class="label">예약 방문일</p>
+                            <div class="d-flex gap-8" style="flex:2;">
+                                <CustomDatePicker 
+                                    ref="reserveDateRef" 
+                                    v-model="reserveDate" 
+                                    :range="false" 
                                     :disabled="isCancelled"
                                 />
-                                <span class="time-separator">-</span>
-                                <TimeSelect 
-                                    ref="endTimeRef" 
-                                    v-model="endTime" 
-                                    class="time-select-wrap"
+    
+                                <!-- 시간 선택 ( 00: 00 ~ 00: 00) -->
+                                <div class="d-flex align-center gap-4" style="flex:2;">
+                                    <TimeSelect 
+                                        ref="startTimeRef" 
+                                        v-model="startTime" 
+                                        class="time-select-wrap"
+                                        :disabled="isCancelled"
+                                    />
+                                    <span class="time-separator">-</span>
+                                    <TimeSelect 
+                                        ref="endTimeRef" 
+                                        v-model="endTime" 
+                                        class="time-select-wrap"
+                                        :disabled="isCancelled"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <p class="label">담당의</p>
+                            <div class="select-wrapper">
+                                <CustomSingleSelect 
+                                    ref="doctorSelectRef"
+                                    :model-value="selectedDoctorId"
+                                    @update:model-value="handleDoctorChange"
+                                    :options="doctorOptions"
+                                    placeholder="담당의 선택"
+                                    select-width="100%"
                                     :disabled="isCancelled"
                                 />
                             </div>
                         </div>
-                    </div>
-                    <div class="info-item">
-                        <p class="label">담당의</p>
-                        <div class="select-wrapper">
-                            <CustomSingleSelect 
-                                ref="doctorSelectRef"
-                                :model-value="selectedDoctorId"
-                                @update:model-value="handleDoctorChange"
-                                :options="doctorOptions"
-                                placeholder="담당의 선택"
-                                select-width="100%"
-                                :disabled="isCancelled"
+                        <div class="info-item">
+                            <p class="label">접수 일시</p>
+                            <InputTextBox 
+                                :model-value="receivedDateTime"
+                                :disabled="true"
+                                placeholder="접수 일시"
                             />
                         </div>
-                    </div>
-                    <div class="info-item">
-                        <p class="label">접수 일시</p>
-                        <InputTextBox 
-                            :model-value="receivedDateTime"
-                            :disabled="true"
-                            placeholder="접수 일시"
-                        />
-                    </div>
-                    <div class="info-item">
-                        <p class="label">{{ confirmedDateTimeLabel }}</p>
-                        <InputTextBox 
-                            :model-value="confirmedDateTime"
-                            :disabled="true"
-                            :placeholder="confirmedDateTimeLabel"
-                        />
-                    </div>
-                    <div class="info-item align-start">
-                        <p class="label" style="padding-top: 10px;">병원 메모</p>
-                        <TextAreaBox 
-                            :model-value="hospitalMemo"
-                            @update:modelValue="val => { if (!isCancelled) reserveData.geReMemo = val }"
-                            :disabled="isCancelled"
-                            placeholder="병원 메모"
-                            height="160px"
-                        />
+                        <div class="info-item">
+                            <p class="label">{{ confirmedDateTimeLabel }}</p>
+                            <InputTextBox 
+                                :model-value="confirmedDateTime"
+                                :disabled="true"
+                                :placeholder="confirmedDateTimeLabel"
+                            />
+                        </div>
+                        <div class="info-item align-start">
+                            <p class="label" style="padding-top: 10px;">병원 메모</p>
+                            <TextAreaBox 
+                                :model-value="hospitalMemo"
+                                @update:modelValue="val => { if (!isCancelled) reserveData.geReMemo = val }"
+                                :disabled="isCancelled"
+                                placeholder="병원 메모"
+                                height="160px"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1250,10 +1284,13 @@ const handleViewChart = () => {
         display:flex;
         gap:8px;
         overflow-y: auto;
-    }
+
+        .left {width: 50%;}
+        .right {width: 50%;}
+    }  
 
     .info-list {
-        flex:1;
+        // flex:1;
         display: flex;
         flex-direction: column;
         gap: 5px;
@@ -1263,6 +1300,16 @@ const handleViewChart = () => {
         border: 1px solid $gray-200;
         background-color: $gray-00;
 
+        &.over-flow-wrapper {
+            height: 230px;
+            overflow-y: auto;
+
+            .info-item {flex:1;}
+
+            // :deep(.text-area-box-wrapper) {min-height: 100%;}
+            :deep(.text-area-box) {min-height: 60px; height: auto !important}       
+            // :deep(.text-area-box textarea) {overflow-y: visible; height: auto;}       
+        }
     }
 
     // 고객 정보 테이블 (1열 형태)
@@ -1279,8 +1326,10 @@ const handleViewChart = () => {
         align-items: center;
         gap: 6px; // 8px -> 6px로 줄임
 
+        & > div {flex:1; width: 19%;}
         .label {
             width: 80px;
+            flex-shrink: 0;
             @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
             color: $gray-700;
         }
