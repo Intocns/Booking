@@ -269,6 +269,7 @@ onMounted(() => {
     flex-direction: column;
     gap: 20px;
     align-items: center;
+    width: 100%;
 }
 
 .hospital-info {
@@ -276,6 +277,7 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     gap: 8px;
+    width: 100%;
 
     .hospital-onOff {
         display: flex;
@@ -295,14 +297,22 @@ onMounted(() => {
         display: flex;
         gap: 4px;
         color: $gray-00;
-
+        max-height: 70px;
+        width: 100%;
+        
         .hospital-name {
-        flex: 1;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        min-width: 0;
-        text-align: center;
+            min-width: 0;
+            flex: 1;
+            text-align: center;
+
+            // 여러 줄 말줄임 설정
+            display: -webkit-box;
+            -webkit-line-clamp: 2;    // 보여줄 줄 수 (2줄)
+            -webkit-box-orient: vertical;
+            line-clamp: 2;
+
+            overflow: hidden;
+            text-overflow: ellipsis;  // 생략 표시
         }
     }
 }
