@@ -501,6 +501,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
         :title="modalStore.optionSettingModal.title"
         :modal-state="modalStore.optionSettingModal"
     >
+        <OptionSetting :is-edit="isEdit" />
     </Modal>
 </template>
 
