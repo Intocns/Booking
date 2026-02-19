@@ -861,8 +861,8 @@ onUnmounted(() => window.removeEventListener('click', closeAll, true));
                                             ref="stockCountInputRef"
                                             :model-value="stockCount" 
                                             @update:model-value="handleNumberInput($event, 'stockCount')"
-                                            :is-error="stockCount && stockCount > 9999"
-                                            :error-message="stockCount && stockCount > 9999 ? '9,999 이하의 숫자를 입력해주세요.' : ''"
+                                            :is-error="stockCount > 9999"
+                                            :error-message="stockCount > 9999 ? '9,999 이하의 숫자를 입력해주세요.' : ''"
                                             placeholder="개수 입력" 
                                         />
                                         <span class="unit">개</span>
