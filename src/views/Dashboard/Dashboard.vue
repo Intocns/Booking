@@ -269,6 +269,7 @@ onMounted(() => {
                 :rows="noticeStore.noticeList"
                 @row-click="openNoticeDetail"
                 :no-thead="true"
+                :isClickAble="true"
             />
         </div>
     </div>
