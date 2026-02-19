@@ -667,10 +667,12 @@ const cancelRejectLabel = computed(() => {
 // - 취소/거절(inState === 2 또는 3) : canceledAt (취소/거절 처리 시각)
 // - 그 외 상태 : 빈 값
 const confirmedDateTime = computed(() => {
+    if (reserveData.inState === 2 || reserveData.inState === 3) {
+        return reserveData.canceledAt ? formatDateTime(reserveData.canceledAt) : '';
+    }
     if (reserveData.inState != 0 && reserveData.updatedAt) {
         return formatDateTime(reserveData.updatedAt);
     }
-   
     return '';
 });
 
