@@ -157,11 +157,10 @@ onMounted(async() => {
         <ul class="form-container">
             <!-- 예약 승인방식 -->
             <li class="form-item">
-                <div class="form-label helper">
+                <div class="form-label helper helper--tooltip-bottom">
                     예약 승인방식
                     <div class="help">
                         <img :src="icHint" alt="아이콘">
-    
                         <div class="tooltip-content">
                             방문 목적에 따라 예약 승인방식을 선택할 수 있습니다.
                         </div>
@@ -331,6 +330,20 @@ onMounted(async() => {
 <style lang="scss" scoped>
     .caption {
         color: $gray-500;
+    }
+
+    /* 예약 승인방식 툴팁: 라벨 위에 표시 (스크롤 영역이 잘라서 overflow 완화) */
+    .contents-wrapper .form-container {
+        overflow: visible;
+    }
+    .form-label.helper .help {
+        position: relative;
+    }
+    .form-label.helper .help .tooltip-content {
+        top: 0;
+        left: auto;
+        right: 0;
+        transform: translate(40px, calc(-100% - 8px));
     }
     .line {
         width: 1px;
