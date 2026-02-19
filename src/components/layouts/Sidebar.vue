@@ -104,9 +104,15 @@ const goToCsCenter = () => {
     window.open('https://intolink.co.kr/cscenter/notice')
 }
 
+// public/[인투링크] 예약관리자센터 이용 가이드.pdf 다운로드
+// 수정 시: 기존 PDF는 백업 폴더로 옮기고, 새 PDF를 이 이름으로 public에 둠
+const GUIDE_PDF_FILENAME = '[인투링크] 예약관리자센터 이용 가이드.pdf'
 const goToUserGuide = () => {
-    //TODO: 이용 가이드 링크 수정
-    window.open('https://intolink.co.kr/cscenter/guide', '_blank')
+    const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || ''
+    const link = document.createElement('a')
+    link.href = `${base}/${encodeURIComponent(GUIDE_PDF_FILENAME)}`
+    link.download = GUIDE_PDF_FILENAME
+    link.click()
 }
 
 const goToDashboard = () => {
