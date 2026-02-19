@@ -31,9 +31,12 @@ const route = useRoute();
 /** URL 기준으로 펼쳐질 1뎁스 (2depth도 열리도록) */
 const openMenu = computed(() => {
     const path = route.path;
-    const index = menus.findIndex(
-        (m) => m.path === path || m.children?.some((c) => c.path === path)
-    );
+    const index = menus.findIndex((m) => {
+        // 1뎁스 
+        if (m.path && path.startsWith(m.path)) return true;
+        // 2뎁스 > 하위 메뉴
+        return m.children?.some((c) => path.startsWith(c.path));
+    });
     if (index !== -1 && menus[index].children?.length) return index;
     return null;
 });
@@ -87,14 +90,14 @@ const isActiveMenu = (menu, index) => {
     }
 
     // 클릭해서 열린 메뉴가 없을 때만(처음 로드 등) 현재 경로를 기준으로 활성화
-    const isRouteActive = (menu.path && route.path === menu.path) || 
-                         (menu.children?.some(child => child.path === route.path));
+    const isRouteActive = (menu.path && route.path.startsWith(menu.path)) || 
+                         (menu.children?.some(child => route.path.startsWith(child.path)));
     
     return isRouteActive;
 };
 
 const isActiveChild = (child) => {
-    return route.path === child.path;
+    return route.path.startsWith(child.path);
 };
 
 const goToCsCenter = () => {
