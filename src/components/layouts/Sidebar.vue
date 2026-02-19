@@ -378,6 +378,7 @@ onMounted(() => {
 
 .submenu {
     display: flex;
+    align-items: center;
     flex-direction: column;
     padding: 8px 0;
     border-radius: 5px;
@@ -392,6 +393,8 @@ onMounted(() => {
         &--active {
             color: $gray-00;
         }
+
+        line-height: 20px !important;
     }
 }
 
@@ -419,4 +422,10 @@ onMounted(() => {
         white-space: nowrap;
     }
 }
+
+// 스타일 변경 요청 적용  250219
+// 폰트가 굵어보여 한단계씩 얇게 적용함
+:deep(.heading-s) {font-weight: 600;}
+:deep(.title-m) {font-weight: 600;}
+:deep(.title-s) {font-weight: 600;}
 </style>
