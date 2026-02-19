@@ -596,7 +596,7 @@ const saveIntoPetRoomInfo = async() => {
         hasNewRoom.value = false;
         newRoomIdx.value = null;
     } catch(error) {
-        console.log(error);
+        console.error(error);
     }
 }
 

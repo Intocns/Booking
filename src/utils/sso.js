@@ -103,7 +103,7 @@ export const initSSOCheck = (onResult) => {
         
         // iframe에서 보내는 'resetIntoCookie' method > 토큰 없는경우
         if (failMethods.includes(data.method)) {
-            console.log('resetIntoCookie message', data.method);
+            // console.log('resetIntoCookie message', data.method);
             window.removeEventListener('message', messageHandler);
             
             cleanup(); // 리스너 즉시 제거
@@ -136,7 +136,7 @@ export const initSSOCheck = (onResult) => {
         window.removeEventListener('message', messageHandler);
 
         // TODO : 로그아웃 로직
-        console.log('sso logout');
+        // console.log('sso logout');
         if (onResult) onResult('fail');
     };
 
