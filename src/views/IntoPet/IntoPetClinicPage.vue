@@ -499,7 +499,7 @@ const addCustomHoliday = (payload) => {
  * // 휴무일 설정 > 특정일 항목 추가 관련
  */
 
-// 진료시 저장 핸들러
+// 진료실 저장 핸들러
 const saveIntoPetRoomInfo = async() => {
     // 진료실 명 입력 체크
     if (!selectedRoom.value.name?.trim()) {
@@ -510,6 +510,14 @@ const saveIntoPetRoomInfo = async() => {
     // 사용자설정 값 체크
     if(selectedRoom.value.doctor_id === '') {
         showAlert('사용자 설정을 확인해주세요.');
+        return;
+    }
+
+    //이미 존재하는 진료실명이 있는 경우 제한 > 명칭이 동일하고 idx가 다른 경우(선택 중인 진료실도 intoPetRoomList에 들어가 있기 때문에 해당 idx는 제외)
+    const nameDupCheck = intoPetRoomList.value.some(item => item.name.trim() === selectedRoom.value.name.trim() && item.idx !== selectedRoom.value.idx)
+
+    if(nameDupCheck){
+        showAlert('이미 사용 중인 진료실명입니다. 다른 진료실명을 입력해주세요.');
         return;
     }
     // TODO: 추후 필수값..추가되면 체크
