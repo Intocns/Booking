@@ -165,7 +165,8 @@ const handleBlur = () => {
 
     &.--disabled {
         background-color: $gray-50;
-        pointer-events: none;
+        // pointer-events: none;
+        cursor: default;
     }
 
     &.--is-error {

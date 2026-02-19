@@ -207,7 +207,8 @@ const showClearIcon = computed(() => {
     }
     &.--disabled {
         background-color: $gray-50;
-        pointer-events: none;
+        // pointer-events: none;
+        cursor: default;
     }
     // 에러 발생 시 보더 색상 변경
     &.--is-error {
@@ -229,11 +230,11 @@ const showClearIcon = computed(() => {
         }
 
         &:read-only {
-            cursor: not-allowed;
+            // cursor: not-allowed;
             color: $gray-700;
         }
         &:disabled {
-            cursor: not-allowed;
+            // cursor: not-allowed;
             color: $gray-700;
         }
     }
