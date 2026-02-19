@@ -93,7 +93,7 @@ const handleBlur = () => {
 </script>
 
 <template>
-    <div class="text-area-box-wrapper">
+    <div class="text-area-box-wrapper" :style="{ height: height }">
         <div 
             class="text-area-box"
             :class="{ 
@@ -147,7 +147,7 @@ const handleBlur = () => {
     // gap:10px;
     position: relative;
     width: 100%;
-    min-height: 80px; // 최소 높이 지정
+    min-height: 60px; // 최소 높이 지정
 
     border-radius: 4px;
     border: 1px solid $gray-200;

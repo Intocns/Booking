@@ -656,6 +656,11 @@ const confirmedDateTimeLabel = computed(() => {
     if (reserveData.inState === 3) return '거절 일시';
     return '확정 일시';
 });
+// 취소/거절 일시 필드 라벨 (상태에 따라 문구 변경)
+const cancelRejectLabel = computed(() => {
+    if (reserveData.inState === 2) return '취소 메모';
+    if (reserveData.inState === 3) return '거절 메모';
+});
 
 // 확정/취소(거절 포함) 일시 계산
 // - 예약확정(inState === 1) : updatedAt (확정 처리 시각)
@@ -869,8 +874,8 @@ const textPhoneNumber = computed(() => {
                 </div>
                 
                 <!-- 오른쪽 -->
-                <div class="right">
-                    <div class="info-list">
+                <div class="d-flex flex-col gap-6 right">
+                    <div class="info-list" style="flex:1;">
                         <div class="info-item">
                             <p class="label">예약 경로</p>
                             <InputTextBox 
@@ -937,6 +942,19 @@ const textPhoneNumber = computed(() => {
                                 placeholder="접수 일시"
                             />
                         </div>
+                        <div class="info-item align-start" style="flex:1;">
+                            <p class="label" style="padding-top: 10px;">병원 메모</p>
+                            <TextAreaBox 
+                                :model-value="reserveData.geReMemo"
+                                :disabled="isCancelled"
+                                placeholder="병원 메모"
+                                height="100%"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- 예약취소, 거절의 경우 데이터 따로 보여줌 -->
+                    <div v-if="isCancelled" class="info-list" style="flex:1;">
                         <div class="info-item">
                             <p class="label">{{ confirmedDateTimeLabel }}</p>
                             <InputTextBox 
@@ -945,15 +963,12 @@ const textPhoneNumber = computed(() => {
                                 :placeholder="confirmedDateTimeLabel"
                             />
                         </div>
-                        <div class="info-item align-start">
-                            <p class="label" style="padding-top: 10px;">병원 메모</p>
-                            <TextAreaBox 
-                                :model-value="hospitalMemo"
-                                @update:modelValue="val => { if (!isCancelled) reserveData.geReMemo = val }"
-                                :disabled="isCancelled"
-                                placeholder="병원 메모"
-                                height="160px"
-                            />
+                        <div class="info-item align-start" style="flex:1;">
+                            <p class="label" style="padding-top: 10px;">{{ cancelRejectLabel }}</p>
+                            <div class="fake-textbox disabled" style="height:100%;">
+                                <span v-if="!reserveData.rejectMsg || reserveData.rejectMsg.trim() == ''" class="empty-text">등롣된 내용이 없습니다.</span>
+                                <p v-else class="text">{{ reserveData.rejectMsg }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
