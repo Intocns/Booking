@@ -166,20 +166,40 @@ export const useOptionStore = defineStore("option", () => {
                         name: category.name,
                         selectionTypeCode: category.selectionTypeCode,
                         order: category.order,
-                        options: (category.options || []).map(opt => ({
-                            ...opt,
-                            rawData: { 
-                                ...opt, 
-                                categoryId: category.categoryId,
-                                optionsId: opt.optionId,
-                                connectedProductIds: opt.items ? opt.items.map(item => item.itemsDto) : []
-                            },
-                            count: opt.stock !== 0 ? opt.stock + ' 개' : '제한 없음',
-                            priceText: opt.price ? opt.price.toLocaleString() + '원' : '0원',
-                            checked: opt.checked,
-                            operatingPeriod: opt.startDate && opt.endDate ? `${formatDateUtil(opt.startDate).replace(/-/g, '.')} ~ ${formatDateUtil(opt.endDate).replace(/-/g, '.')}` : '상시운영',
-                            is_connect: opt.items ? `${opt.items.length}개 연결중` : '연결하기',
-                        }))
+                        options: (category.options || []).map(opt => {
+                            // minBookingCount ~ maxBookingCount 형식으로 표시
+                            let bookingCountText = '';
+                            const hasMin = opt.minBookingCount && opt.minBookingCount > 0;
+                            const hasMax = opt.maxBookingCount && opt.maxBookingCount > 0;
+                            if (hasMin && hasMax) {
+                                // min과 max가 모두 있는 경우
+                                if (opt.minBookingCount === opt.maxBookingCount) {
+                                    bookingCountText = `${opt.minBookingCount}개`;
+                                } else {
+                                    bookingCountText = `${opt.minBookingCount}개 ~ ${opt.maxBookingCount}개`;
+                                }
+                            } else if (hasMin && !hasMax) {
+                                // min만 있는 경우: "1개 ~" 형식
+                                bookingCountText = `${opt.minBookingCount}개 ~`;
+                            } else {
+                                bookingCountText = '-';
+                            }
+                            return {
+                                ...opt,
+                                rawData: { 
+                                    ...opt, 
+                                    categoryId: category.categoryId,
+                                    optionsId: opt.optionId,
+                                    connectedProductIds: opt.items ? opt.items.map(item => item.itemsDto) : []
+                                },
+                                count: opt.stock == 99999 ? '제한 없음' : opt.stock + ' 개',
+                                priceText: opt.price > 0 ? opt.price.toLocaleString() + '원' : '-',
+                                selectable: bookingCountText,
+                                checked: opt.checked,
+                                operatingPeriod: opt.startDate && opt.endDate ? `${formatDateUtil(opt.startDate).replace(/-/g, '.')} ~ ${formatDateUtil(opt.endDate).replace(/-/g, '.')}` : '상시운영',
+                                is_connect: opt.items ? `${opt.items.length}개 연결중` : '연결하기',
+                            }
+                        })
                     }
                 })
         }

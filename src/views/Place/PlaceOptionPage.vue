@@ -72,10 +72,10 @@ const nextTab = async () => {
 
 
 const optionTableColumns = [ // th에 tooltip이 필요한 경우 여기서 추가
-    { key: 'name', label: '옵션명' },
+    { key: 'name', label: '옵션명', width: '18%' },
     { key: 'priceText', label: '판매가', tooltip: '해당 옵션의 판매 가격을 의미합니다.' },
     { key: 'count', label: '재고 수', tooltip: '하루 기준으로 옵션의 예약 가능한 수량을 의미합니다.\n해당 수량만큼 예약이 이루어지면 더이상 해당 옵션의 선택은 불가합니다.' },
-    { key: 'maxBookingCount', label: '선택가능', tooltip: '고객은 해당 수량 안에서 선택 가능합니다.' },
+    { key: 'selectable', label: '선택가능', tooltip: '고객은 해당 수량 안에서 선택 가능합니다.' },
     { key: 'operatingPeriod', label: '운영기간', tooltip: '운영기간이 설정되면 기간 내 날짜를 예약 할 경우에만 해당 옵션 선택이 가능합니다.', width: '18%' },
     { key: 'visibleBtn', label: '노출설정' },
     { key: 'connect', label: '상품연결', width: '8%' },
@@ -501,7 +501,6 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
         :title="modalStore.optionSettingModal.title"
         :modal-state="modalStore.optionSettingModal"
     >
-        <OptionSetting :is-edit="isEdit" />
     </Modal>
 </template>
 

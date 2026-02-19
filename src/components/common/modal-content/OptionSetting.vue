@@ -66,7 +66,7 @@ const isCheckTypeCategory = computed(() => {
 // 입력 필드 데이터
 const optionName = ref(''); // 옵션명
 const optionDesc = ref(''); // 옵션 설명
-const minCount = ref(''); // 최소 수량
+const minCount = ref('1'); // 최소 수량
 const maxCount = ref(''); // 최대 수량
 const stockCount = ref(''); // 재고 수
 const price = ref(''); // 판매가
@@ -193,6 +193,18 @@ const validateRequiredFields = async () => {
         return false;
     }
 
+    if (isStockEnabled.value && (stockCount.value > 9999)) {
+        showAlert('재고 수는 9,999개까지 입력 가능합니다.');
+        await nextTick();
+        if (stockCountInputRef.value) {
+            const inputElement = stockCountInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return false;
+    }
+
     // 예약 가능 수량 검증
     if(!isCheckTypeCategory && isCountError) {
         showAlert('예약 가능 수량을 확인해 주세요.');
@@ -245,7 +257,10 @@ const fillOptionData = (optionData) => {
     }
     
     // 재고 설정
-    if (optionData.stock !== null && optionData.stock !== undefined && optionData.stock > 0) {
+    if (optionData.stock == 99999) {
+        isStockEnabled.value = false;
+        stockCount.value = '';
+    } else if (optionData.stock && optionData.stock > 0) {
         isStockEnabled.value = true;
         stockCount.value = String(optionData.stock);
     } else {
@@ -578,7 +593,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                     minCount.value = '1';
                     maxCount.value = '1';
                 } else {
-                    minCount.value = '';
+                    minCount.value = '1';
                     maxCount.value = '';
                 }
                 stockCount.value = '';
@@ -682,7 +697,9 @@ watch(categoryOptions, async (options) => {
 // 예약 가능 수량 에러 여부 체크 
 const isCountError = computed(() => {
     if (minCount.value === '' || maxCount.value === '' || 
-        minCount.value === null || maxCount.value === null) return false;
+        minCount.value === null || maxCount.value === null ||
+        minCount.value === '1' || maxCount.value === ''
+    ) return false;
     return Number(minCount.value) > Number(maxCount.value);
 });
 
@@ -844,6 +861,8 @@ onUnmounted(() => window.removeEventListener('click', closeAll, true));
                                             ref="stockCountInputRef"
                                             :model-value="stockCount" 
                                             @update:model-value="handleNumberInput($event, 'stockCount')"
+                                            :is-error="stockCount && stockCount > 9999"
+                                            :error-message="stockCount && stockCount > 9999 ? '9,999 이하의 숫자를 입력해주세요.' : ''"
                                             placeholder="개수 입력" 
                                         />
                                         <span class="unit">개</span>
