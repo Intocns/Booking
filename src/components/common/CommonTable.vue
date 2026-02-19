@@ -243,7 +243,11 @@ const handleEmptyBtnClick = () => {
 
         &.no-head:first-child td {border-top: 2px solid $gray-900;}
 
-        &.is-clickable {cursor: pointer;}
+        &.is-clickable {
+            td {
+                cursor: pointer;
+            }
+        }
 
         // &:last-child td {border-bottom: none;}
     }
