@@ -341,9 +341,8 @@ onMounted(async() => {
     }
     .form-label.helper .help .tooltip-content {
         top: 0;
-        left: auto;
         right: 0;
-        transform: translate(40px, calc(-100% - 8px));
+        transform: translate(-20px, calc(-100% - 8px));
     }
     .line {
         width: 1px;
