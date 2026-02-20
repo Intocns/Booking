@@ -985,9 +985,9 @@ onUnmounted(() => window.removeEventListener('click', closeAll, true));
                         class="list-item"
                     >
                         <div class="d-flex gap-4 align-center">
-                            <span class="body-m">{{ product.name }}</span>
+                            <span class="body-m ellipsis">{{ product.name }}</span>
                             <span 
-                                class="flag"
+                                class="flag flex-shrink-0"
                                 :class="product.isConnected ? 'flag--basic' : 'flag--disabled'"
                             >
                                 {{ product.isConnected ? '연결' : '미연결' }}
@@ -1268,6 +1268,8 @@ onUnmounted(() => window.removeEventListener('click', closeAll, true));
     padding: 0 10px;
     height: 32px;
     margin-bottom: 12px;
+    width:100%;
+    gap: 8px;
 
     border-radius: 4px;
     border: 1px solid $gray-200;

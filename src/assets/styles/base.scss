@@ -90,6 +90,8 @@ td { cursor: default }
 .flex-col { flex-direction: column; }
 .flex-row { flex-direction: row; }
 .flex-wrap {flex-wrap: wrap;}
+.flex-1 { flex: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
 .gap-16 { gap: 16px; }
 .gap-10 {gap: 10px;}
 .gap-8 { gap: 8px; }
@@ -124,6 +126,13 @@ td { cursor: default }
 .caption { @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line); }
 .tooltip { @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line); word-break: keep-all;}
 .text-blue {color: $primary-700;}
+
+.ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 // img
 .icon-img {display: inline-block;}
 
