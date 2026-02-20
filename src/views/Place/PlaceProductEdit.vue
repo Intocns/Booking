@@ -142,11 +142,10 @@ const handleModalSave = async () => {
         
         await productStore.getItemReservationInfo(itemId.value); // 오른쪽 목록 갱신
         
-        // 캘린더 갱신 (일단 오늘 기준 주차로 호출)
-        const start = DayPilot.Date.today().firstDayOfWeek(1);
+        // 지금 보고있는 스케쥴 날짜로 호출
         await productStore.getProductSchedule(itemId.value, {
-            startDate: start.toString("yyyy-MM-dd"),
-            endDate: start.addDays(6).toString("yyyy-MM-dd"),
+            startDate: productStore.currentDateForDetailBookingCalendar.startDate,
+            endDate: productStore.currentDateForDetailBookingCalendar.endDate,
         });
 
         modalStore.setOperationRuleModal.closeModal();

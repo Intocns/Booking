@@ -343,6 +343,9 @@ watch( () => calendarConfig.startDate, async (newStartDate) => {
         endDate: end.toString("yyyy-MM-dd"),
     };
 
+    productStore.currentDateForDetailBookingCalendar.startDate = params.startDate;
+    productStore.currentDateForDetailBookingCalendar.endDate = params.endDate;
+
     await productStore.getProductSchedule(props.savedItemId, params);
 
 }, { immediate: true });

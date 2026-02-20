@@ -15,6 +15,11 @@ export const useProductStore = defineStore("product", () => {
     const temporarySchedules = ref([]); // 임시운영데이터만 따로 저장
     const scrollToItemId = ref(null); // 새상품 등록 후 새상품 id저장
 
+    const currentDateForDetailBookingCalendar = ref({
+        startDate: '',
+        endDate: '',
+    }); // 상품 수정 > 일정설정 스케쥴 뷰에서 보고있는 날짜값
+
     // 상품 리스트 불러오기
     async function getProductList() {
 
@@ -617,6 +622,7 @@ export const useProductStore = defineStore("product", () => {
         productScheduleInfo, //상품 수정 > 예약 정보 데이터
         temporarySchedules, // 임시운영 데이터만
         scrollToItemId,
+        currentDateForDetailBookingCalendar, // 상품 수정 > 일정설정 스케쥴 뷰에서 보고있는 날짜값
         // 
         getProductList, // 상품 리스트 불러오기
         setItemOrder, // 상품 순서 변경

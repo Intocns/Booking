@@ -275,11 +275,10 @@ const updateItemSchedule = (async(type) => {
 
         await initDataMapping(); 
 
-        // 캘랜더 데이터 업데이트
-        const currentStart = DayPilot.Date.today().firstDayOfWeek(1); 
+        // 캘랜더 데이터 업데이트 (지금 보고있는 날짜로 호출)
         await productStore.getProductSchedule(props.savedItemId, {
-            startDate: currentStart.toString("yyyy-MM-dd"),
-            endDate: currentStart.addDays(6).toString("yyyy-MM-dd"),
+            startDate: productStore.currentDateForDetailBookingCalendar.startDate,
+            endDate: productStore.currentDateForDetailBookingCalendar.endDate,
         });
 
         isTimeModalOpen.value = false;
@@ -499,11 +498,10 @@ const onDeleteTemporary = async (raw, targetIdx) => {
 
     await initDataMapping(); // 예약 정보 재조회
 
-    // 캘린더 새로고침
-    const start = DayPilot.Date.today().firstDayOfWeek(1);
+    // 캘린더 새로고침 (지금 보고있는 날짜로 호출)
     await productStore.getProductSchedule(props.savedItemId, {
-        startDate: start.toString("yyyy-MM-dd"),
-        endDate: start.addDays(6).toString("yyyy-MM-dd"),
+        startDate: productStore.currentDateForDetailBookingCalendar.startDate,
+        endDate: productStore.currentDateForDetailBookingCalendar.endDate,
     });
 };
 
