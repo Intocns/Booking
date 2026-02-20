@@ -37,7 +37,7 @@ const openSmsModal = (row) => {
         reservationDate: row?.reTimeTxt,
         reservationTime: row?.reTimeHisTxt,
         productName: row?.roomName,
-        hospitalPhone: row?.hospitalPhone, //TODO: cocode 기반 실제 병원명으로 교체
+        hospitalPhone: hospitalStore.hospitalData?.company_tel, //cocode 기반 실제 병원전화번호
         phoneTxt: row?.phoneTxt, // 수신번호용 전화번호
         protectorName: row?.userName, // 고객명
         visitSource: row?.reRouteTxt, // 예약경로 텍스트
