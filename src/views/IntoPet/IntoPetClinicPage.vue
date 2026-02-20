@@ -385,7 +385,6 @@ const handleAddRoomBtn = () => {
         defaultPos[day] = [{ ...defaultTimeSlot }];
     });
 
-    // TODO: 진료실 추가시 default 값 확인필요
     const newRoom = {
         del_images: [],
         doctor: '현장데스크(관리자)',
@@ -393,7 +392,7 @@ const handleAddRoomBtn = () => {
         idx: intoPetRoomList.value.length,
         images: [],
         impos: { week: [], mon: [], sp_day: [] }, // 구조 미리 생성
-        mapping_idx: 0, // TODO: 새로 추가하는 진료실의 mpapping_idx?
+        mapping_idx: 0, // 새로 추가하는 진료실의 mapping_idx
         memo: '',
         name: ('진료실' + (intoPetRoomList.value.length + 1)),
         pos: defaultPos,
@@ -520,7 +519,6 @@ const saveIntoPetRoomInfo = async() => {
         showAlert('이미 사용 중인 진료실명입니다. 다른 진료실명을 입력해주세요.');
         return;
     }
-    // TODO: 추후 필수값..추가되면 체크
 
     // 운영시간 체크
     const pos = selectedRoom.value.pos;

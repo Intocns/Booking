@@ -28,7 +28,7 @@ const statusIcons = {
     // 2: '예약취소',
     // 3: '예약거절'??
 
-// TODO: 예약 경로 아이콘 매핑
+// 예약 경로 아이콘 매핑
 const pathIcons = {
     1: icIntoLink,
     2: icIntoPet,
