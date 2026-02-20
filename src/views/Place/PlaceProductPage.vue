@@ -550,7 +550,7 @@ onMounted(async () => {
             <div class="d-flex gap-8">
                 <p class="title-s modal-label">진료실 선택</p>
 
-                <div class="d-flex flex-col gap-4">
+                <div class="d-flex flex-col gap-4" style="width: 80%;">
                     <CustomSingleSelect 
                         v-model="importIntoPetRoomIdx"
                         :options="modalStore.intoPetImportModal.data.roomList"

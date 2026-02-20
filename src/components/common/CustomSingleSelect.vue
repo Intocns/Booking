@@ -262,6 +262,12 @@ onBeforeUnmount(() => {
             background-color: $primary-100;
             color: $primary-700;
         }
+
+        span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 }
 .caption { color: $gray-700; padding: 0 10px; font-size: 12px; }

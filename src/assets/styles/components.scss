@@ -582,8 +582,15 @@
         .btn {min-width: 80px;}
         .btn--c {min-width: 56px;}
     }
-
 } 
+
+.modal--l {
+    .modal-button-wrapper .buttons .btn {min-width: 120px;}
+}
+.modal--xs {
+    .modal-button-wrapper .buttons .btn {min-width: 56px;}
+}
+
 
 //  심플 모달
 .modal-container.simple {

@@ -530,7 +530,7 @@ defineExpose({
     </div>
     <div class="modal-button-wrapper">
         <div class="buttons">
-            <button class="btn btn--size-40 btn--blue-outline modal-btn" @click="modalStore.smsModal.closeModal()">취소</button>
+            <button class="btn btn--size-40 btn--black modal-btn" @click="modalStore.smsModal.closeModal()">취소</button>
             <button 
                 class="btn btn--size-40 btn--blue modal-btn" 
                 :disabled="isSending"
