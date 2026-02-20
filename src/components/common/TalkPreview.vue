@@ -2,6 +2,7 @@
 <script setup>
 import { computed } from 'vue';
 import { buildTemplateVariables, formatTemplateContent } from '@/utils/alimtalkSmsTemplate.js';
+import { useHospitalStore } from '@/stores/hospitalStore';
 
 const props = defineProps({
     template: {
@@ -18,6 +19,8 @@ const props = defineProps({
     }
 });
 
+const hospitalStore = useHospitalStore();
+
 const variableMap = computed(() => buildTemplateVariables(props.reservationData));
 const formattedContent = computed(() =>
     formatTemplateContent(props.template?.template_content || '', variableMap.value)
@@ -27,10 +30,9 @@ const senderName = computed(() => {
     if (props.isLink) {
         return '인투링크';
     }
-// TODO: cocode 기반 실제 병원명으로 교체해야함
+// 병원명
     return (
-        props.reservationData?.hospitalName ||
-        props.reservationData?.hospital_name ||
+        hospitalStore.hospitalData?.company_name ||
         '병원명'
     );
 });
@@ -49,10 +51,10 @@ const buttons = computed(() => {
         <div>
             <!-- 메세지 -->
             <div class="talk_message_wrapper">
-                <div class="d-flex justify-between">
+                <div class="talk_header">
                     <!-- 발신명: 템플릿이 있으면 병원명, 없으면 기본값 -->
-                    <span class="talk_name title-s">{{ senderName }}</span>
-                    <span class="talk_byte body-m">알림톡 1건 / 0.7건</span>
+                    <span class="talk_name title-s ellipsis">{{ senderName }}</span>
+                    <span class="talk_byte body-s">알림톡 1건 / 0.7건</span>
                 </div>
 
                 <!-- 메세지 말풍선 -->
@@ -110,6 +112,12 @@ p {margin: 0;}
     scrollbar-gutter: stable;
     box-sizing: border-box;
 }
+.talk_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
 .talk_message {
     max-width: 280px; 
     min-width: 280px; 
@@ -129,7 +137,7 @@ p {margin: 0;}
     flex-shrink: 0;
 }
 // .talk_name {font-size: 10pt;}
-.talk_byte {color: $gray-600}
+.talk_byte {color: $gray-600; flex-shrink: 0; line-height: 0;}
 .message_box {
     padding: 10px;
 }
