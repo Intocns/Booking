@@ -1,7 +1,7 @@
 <!-- 전체예약 조회 -->
 <script setup>
 import { onMounted, ref, computed, watch, nextTick } from 'vue';
-import { startOfDay, subDays } from "date-fns";
+import { startOfDay, subDays, addDays } from "date-fns";
 import { formatDate } from "@/utils/dateFormatter";
 import { RESERVE_STATUS_OPTIONS, RESERVE_ROUTE_OPTIONS } from "@/constants";
 import { useReservationStore } from '@/stores/reservationStore';
@@ -138,7 +138,7 @@ const searchClear = () => {
     reservationChannel.value = ['all'];
     keyword.value = '';
     const today = startOfDay(new Date());
-    dateRange.value = [subDays(today, 7), today];
+    dateRange.value = [today, addDays(today, 7)];
 };
 
 let isInitialMount = true;
