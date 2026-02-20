@@ -168,6 +168,7 @@ onBeforeUnmount(() => {
                     class="select__option"
                     :class="{ selected: modelValue === opt.value }"
                     @click.stop="selectOption(opt.value)"
+                    :title="opt.label"
                 >
                     <span class="label body-m">{{ opt.label }}</span>
                 </div>
