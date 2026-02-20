@@ -984,7 +984,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll, true));
                         :key="product.id"
                         class="list-item"
                     >
-                        <div class="d-flex gap-4 align-center">
+                        <div class="d-flex gap-4 align-center" style="min-width:0;">
                             <span class="body-m ellipsis">{{ product.name }}</span>
                             <span 
                                 class="flag flex-shrink-0"
