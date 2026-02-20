@@ -193,6 +193,18 @@ const validateRequiredFields = async () => {
         return false;
     }
 
+    if (isStockEnabled.value && (stockCount.value == '0')) {
+        showAlert('재고 수는 1개 이상이어야 합니다.');
+        await nextTick();
+        if (stockCountInputRef.value) {
+            const inputElement = stockCountInputRef.value.$el?.querySelector('input[type="text"]');
+            if (inputElement) {
+                inputElement.focus();
+            }
+        }
+        return false;
+    }
+
     if (isStockEnabled.value && (stockCount.value > 9999)) {
         showAlert('재고 수는 9,999개까지 입력 가능합니다.');
         await nextTick();
@@ -260,7 +272,7 @@ const fillOptionData = (optionData) => {
     if (optionData.stock == 99999) {
         isStockEnabled.value = false;
         stockCount.value = '';
-    } else if (optionData.stock && optionData.stock > 0) {
+    } else if (optionData.stock >= 0) {
         isStockEnabled.value = true;
         stockCount.value = String(optionData.stock);
     } else {
@@ -713,6 +725,11 @@ const maxCountErrorMessage = computed(() => {
     return isCountError.value ? '최대 수량은 최소 수량보다 작을 수 없습니다.' : '';
 });
 
+// 재고수량 토글
+const handleStockToggle = () => {
+    stockCount.value = '';
+};
+
 onMounted(() => window.addEventListener('click', closeAll, true));
 onUnmounted(() => window.removeEventListener('click', closeAll, true));
 </script>
@@ -847,7 +864,7 @@ onUnmounted(() => window.removeEventListener('click', closeAll, true));
                             <p class="title-m">재고</p>
     
                             <label class="toggle"> 
-                                <input type="checkbox" v-model="isStockEnabled"/>
+                                <input type="checkbox" v-model="isStockEnabled" @change="handleStockToggle"/>
                                 <span class="toggle-img"></span>
                             </label>
                         </div>
@@ -861,8 +878,8 @@ onUnmounted(() => window.removeEventListener('click', closeAll, true));
                                             ref="stockCountInputRef"
                                             :model-value="stockCount" 
                                             @update:model-value="handleNumberInput($event, 'stockCount')"
-                                            :is-error="stockCount > 9999"
-                                            :error-message="stockCount > 9999 ? '9,999 이하의 숫자를 입력해주세요.' : ''"
+                                            :is-error="stockCount > 9999 || stockCount == '0'"
+                                            :error-message="stockCount > 9999 ? '9,999 이하의 숫자를 입력해주세요.' : stockCount == '0' ? '재고 수는 1개 이상이어야 합니다.' : ''"
                                             placeholder="개수 입력" 
                                         />
                                         <span class="unit">개</span>
