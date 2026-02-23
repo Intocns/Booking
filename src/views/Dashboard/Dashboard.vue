@@ -138,7 +138,7 @@ onMounted(() => {
             <div class="summary--header__today">
                 <p class="title heading-s">
                     TODAY
-                    <span class="flag flag--basic">예약확정</span>
+                    <!-- <span class="flag flag--basic">예약확정</span> -->
                 </p>
                 <h2 class="date">{{ todayDate }}</h2>
             </div>
