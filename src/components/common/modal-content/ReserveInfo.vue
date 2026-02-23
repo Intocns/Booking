@@ -1261,7 +1261,7 @@ const textPhoneNumber = computed(() => {
                 <label class="checkbox">
                     <input type="checkbox" v-model="sendNotification" />
                     <span class="box"></span>
-                    <span class="label">고객에게 예약 확정 알림 발송</span>
+                    <span class="label">고객에게 예약 확정 알림톡 발송</span>
                 </label>
             </div>
         </div>
