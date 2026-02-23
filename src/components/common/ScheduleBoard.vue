@@ -80,8 +80,19 @@ const columns = computed(() => {
 const earliestStartHour = computed(() => {
     if (!props.events || props.events.length === 0) return 0; // 데이터 없으면 기본 0시
 
-    const hours = props.events.map(event => {
-        // event.startDate 형식: "2026-01-23T09:00:00"
+    // 현재 화면에 표시되는 columns(staffs)의 ID 목록만 추출
+    const activeStaffIds = columns.value.map(col => col.id);
+
+    // events 중 doctorId가 activeStaffIds에 포함된 데이터만 필터링
+    const filteredEvents = props.events.filter(event => 
+        activeStaffIds.includes(event.doctorId)
+    );
+
+    // 필터링된 이벤트가 없다면 기본값 반환
+    if (filteredEvents.length === 0) return 0;
+
+    // 필터링된 이벤트들에서 시간(Hour) 추출
+    const hours = filteredEvents.map(event => {
         const timePart = event.startDate.split('T')[1]; 
         return parseInt(timePart.split(':')[0]);
     });
