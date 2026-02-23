@@ -78,7 +78,7 @@ const columns = computed(() => {
 
 // 현재 로드된 events 중 가장 빠른 시간(Hour)을 반환
 const earliestStartHour = computed(() => {
-    if (!props.events || props.events.length === 0) return 9; // 데이터 없으면 기본 8시
+    if (!props.events || props.events.length === 0) return 0; // 데이터 없으면 기본 0시
 
     const hours = props.events.map(event => {
         // event.startDate 형식: "2026-01-23T09:00:00"
