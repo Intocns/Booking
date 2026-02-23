@@ -129,10 +129,7 @@ const handleGuideSubmit = async() => {
 const handleStatusChange = async(type, selectedIndex) => {
     const targetList = type === 'confirm' ? placeStore.guideList : placeStore.cancelGuideList;
 
-    const params = targetList.map((item, index) => ({
-        words: item.words,
-        isActive: index === selectedIndex ? 1 : 0
-    }));
+    targetList.forEach((item, index) => item.isActive = index === selectedIndex);
 
     // if (type === 'confirm') {
     //     await placeStore.modifyAlarmGuide(params);
@@ -153,7 +150,7 @@ const saveNotificationSetting = async(type, selectedIndex) => {
     const toMsgPayload = list =>
         list.map(({ words, isActive }) => ({
             words,
-            isActive: Number(isActive) // true -> 1
+            isActive: isActive ? 1 : 0
         }));
 
     const params = {
