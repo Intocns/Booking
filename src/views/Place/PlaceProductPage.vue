@@ -458,6 +458,7 @@ onMounted(async () => {
         v-if="modalStore.productOrderUpdateModal.isVisible"
         title="순서 변경"
         :modal-state="modalStore.productOrderUpdateModal"
+        :modal-width="'400px'"
     >
         <div class="modal-contents-inner">
             <div class="modal-title">
@@ -478,7 +479,7 @@ onMounted(async () => {
             >
                 <template #item="{ element }">
                     <li class="modal-product-list__item">
-                        <span class="name body-m">{{ element.name }}</span>
+                        <span class="name body-m" :title="element.name">{{ element.name }}</span>
                         <span class="drag-handel">
                             <img :src="icDragHandel" alt="드래그 핸들">
                         </span>
@@ -803,6 +804,7 @@ onMounted(async () => {
                 flex: 1;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                white-space: nowrap;
             }
         }
     }
