@@ -24,6 +24,18 @@ export const useHospitalStore = defineStore("hospital", () => {
 
         if(response.status == 200) {
             let data = response.data.data;
+
+            // 현장데스크(관리자) (id: 0) 가 있는지 확인
+            const hasAdmin = data.some(doc => doc.id == "0");
+
+            // 없으면 배열 맨 앞에 추가
+            if (!hasAdmin) {
+                data.unshift({
+                    id: "0",
+                    userName: "현장데스크(관리자)"
+                });
+            }
+
             doctorList.value = data;
         }
     }

@@ -78,10 +78,10 @@ const holidayFormRef = ref(null)//저장 시 api에 맞춰 request형식으로 f
 const doctorOptions = computed(() => {
     const options = [];
     
-    // 기본 옵션 추가
+    // 기본 옵션 추가 (매칭 안된 경우를 대비)
     options.push({
-        value: 0,
-        label: '현장데스크(관리자)'
+        value: null,
+        label: '담당의 선택'
     });
     
     // 담당의 리스트 옵션 추가
@@ -507,7 +507,7 @@ const saveIntoPetRoomInfo = async() => {
     }
 
     // 사용자설정 값 체크
-    if(selectedRoom.value.doctor_id === '') {
+    if(selectedRoom.value.doctor_id == null) {
         showAlert('사용자 설정을 확인해주세요.');
         return;
     }
