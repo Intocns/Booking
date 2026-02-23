@@ -168,9 +168,9 @@ const addTimeRange = (targetDayKey) => {
 
     // 1. 추가할 기본 객체 생성
     const newSlot = {
-        st_hour: '10시',
+        st_hour: '00시',
         st_min: '00분',
-        end_hour: '20시',
+        end_hour: '00시',
         end_min: '00분',
         is_disabled: 0, // 기본값은 0 (운영)
         deadline_hour: firstItem?.deadline_hour || '19시',
