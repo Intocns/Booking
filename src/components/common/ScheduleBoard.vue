@@ -648,6 +648,7 @@ onUnmounted(() => {
         overflow: hidden;
         position: relative;
     }
+    :deep(.calendar_default_cell_inner) {background-color: $gray-00;}
     :deep(.calendar_default_event_bar) {display: none;}
     :deep(.calendar_default_shadow) {display: none;}
 
