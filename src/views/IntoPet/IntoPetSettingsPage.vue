@@ -157,7 +157,7 @@ onMounted(async() => {
         <ul class="form-container">
             <!-- 예약 승인방식 -->
             <li class="form-item">
-                <div class="form-label helper helper--tooltip-bottom">
+                <div class="form-label">
                     예약 승인방식
                     <div class="helper">
                         <img :src="icHint" alt="아이콘">
