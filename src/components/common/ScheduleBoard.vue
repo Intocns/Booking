@@ -172,7 +172,7 @@ const scrollToWorkTime = async() => {
         // 가장 빠른 시간(earliestStartHour) 기준으로 위치 계산
         // cellHeight(60px) * 2 = 1시간(120px)
         const scrollTarget = earliestStartHour.value * (config.value.cellHeight * 2);
-        console.log('scrollTarget:', scrollTarget);
+        // console.log('scrollTarget:', scrollTarget);
         calendarEl.scrollTop = scrollTarget;
     }
 };
