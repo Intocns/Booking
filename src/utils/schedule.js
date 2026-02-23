@@ -43,9 +43,22 @@ export const bitToTimeRanges = (bitString) => {
 /**
  * 시간 유효성 검사 함수
  */
-export const getTimeError = (start, end) => {
-    if (!start || !end) return "";
+export const getTimeError = (allRanges, index) => {
+    const current = allRanges[index];
 
-    if (start >= end) return "마지막 시간은 시작 시간보다 빠를 수 없습니다.";
+    if (!current.startTime && !current.endTime) return "";
+
+    if (index > 0) {
+        const previous = allRanges[index - 1];
+        if (previous.endTime && previous.endTime >= current.startTime) {
+            return "시작 시간은 이전 종료 시간보다 커야 합니다.";
+        }
+    }
+
+    if (current.startTime >= current.endTime) {
+        return "마지막 시간은 시작 시간보다 빠를 수 없습니다.";
+    }
+
+
     return "";
 };

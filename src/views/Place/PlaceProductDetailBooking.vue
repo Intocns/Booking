@@ -160,9 +160,10 @@ const clickNextBtn = (async() => {
             allRanges = config.dailyGroups.flatMap(g => g.times);
         }
 
-        if (!validateTimeRanges(allRanges)) {
-            showAlert('마지막 시간은 시작 시간보다 빠를 수 없습니다.');
-            return; // 저장 중단
+        const result = validateTimeRanges(allRanges);
+        if (!result.isValid) {
+            showAlert(result.message);
+            return;
         }
     }
     // --------------------------

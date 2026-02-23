@@ -103,10 +103,22 @@ watch(
         if (!newTimes) return;
         
         // 각 시간 항목별로 검증 후 에러 메시지 할당
-        timeErrors.value = newTimes.map(time => {
-            if (isTimeInvalid(time.startTime, time.endTime)) {
-                return "마지막 시간은 시작 시간보다 빠를 수 없습니다.";
+        timeErrors.value = newTimes.map((time, index) => {
+            // 1. 시작 시간만 입력되어도 이전 줄의 종료 시간과 비교
+            if (time.startTime && index > 0) {
+                const previous = newTimes[index - 1];
+                if (previous.endTime && previous.endTime >= time.startTime) {
+                    return "시작 시간은 이전 종료 시간보다 커야 합니다.";
+                }
             }
+
+            // 2. 시작과 마감이 모두 있을 때 내 줄의 유효성 검사
+            if (time.startTime && time.endTime) {
+                if (time.startTime >= time.endTime) {
+                    return "마지막 시간은 시작 시간보다 빠를 수 없습니다.";
+                }
+            }
+
             return "";
         });
     },

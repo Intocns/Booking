@@ -35,12 +35,21 @@ export const getFieldError = (value, min, max) => {
  * return: true/false
  */
 export const validateTimeRanges = (timeRanges) => {
-    for (const range of timeRanges) {
-        if (!range.startTime || !range.endTime) continue;
+    for (let i = 0; i < timeRanges.length; i++) {
+        const current = timeRanges[i];
 
-        if (range.startTime >= range.endTime) {
-            return false;
+        if (!current.startTime || !current.endTime) continue;
+
+        if (current.startTime >= current.endTime) {
+            return { isValid: false, message: '마지막 시간은 시작 시간보다 빠를 수 없습니다.' };
+        }
+
+        if(i > 0) {
+            const prev = timeRanges[i - 1];
+            if (current.startTime <= prev.endTime) {
+                return { isValid: false, message: '시작 시간은 이전 종료 시간보다 커야 합니다.' };
+            }
         }
     }
-    return true;
+    return { isValid: true };
 };
