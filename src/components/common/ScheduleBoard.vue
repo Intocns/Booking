@@ -1,6 +1,6 @@
 <script setup>
 import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
-import { ref, onMounted, watch, computed, onUnmounted } from 'vue';
+import { ref, onMounted, watch, computed, onUnmounted, nextTick } from 'vue';
 // 예약 상태 아이콘
 import icConfirm from '@/assets/icons/ic_res_confirm.svg'
 import icPersonal from '@/assets/icons/ic_res_personal.svg'
@@ -76,6 +76,18 @@ const columns = computed(() => {
     }));
 });
 
+// 현재 로드된 events 중 가장 빠른 시간(Hour)을 반환
+const earliestStartHour = computed(() => {
+    if (!props.events || props.events.length === 0) return 9; // 데이터 없으면 기본 8시
+
+    const hours = props.events.map(event => {
+        // event.startDate 형식: "2026-01-23T09:00:00"
+        const timePart = event.startDate.split('T')[1]; 
+        return parseInt(timePart.split(':')[0]);
+    });
+
+    return Math.min(...hours); // 가장 작은 시간 반환
+});
 
 // ---------------------------------------------
 // 캘린더 구성 옵션
@@ -91,6 +103,7 @@ const config = ref({
     startDate: props.startDate,
     eventMoveHandling: "Disabled",
     eventResizeHandling: "Disabled",
+    businessBeginsHour: earliestStartHour.value,           // 시작 시간
     
     onEventClick: (args) => {
         handelReserveDetail(args.e.data.reserveIdx)
@@ -150,10 +163,17 @@ const handelReserveDetail = (reserveIdx) => {
     reservationStore.getReserveInfo(reserveIdx)
 }
 
-const scrollToWorkTime = () => {
+// 캘린더 스크롤을 운영시작 위치로 이동
+const scrollToWorkTime = async() => {
+    await nextTick();
     const calendarEl = document.querySelector('.calendar_default_main');
+
     if (calendarEl) {
-        calendarEl.scrollTop = 1080; // 9시 위치로 스크롤
+        // 가장 빠른 시간(earliestStartHour) 기준으로 위치 계산
+        // cellHeight(60px) * 2 = 1시간(120px)
+        const scrollTarget = earliestStartHour.value * (config.value.cellHeight * 2);
+        console.log('scrollTarget:', scrollTarget);
+        calendarEl.scrollTop = scrollTarget;
     }
 };
 
@@ -332,7 +352,7 @@ onMounted(() => {
             columns: props.viewType === 'Resources' ? columns.value : null,
         });
 
-        scrollToWorkTime();
+        // scrollToWorkTime();
         
         setTimeout(() => {
             addResizeHandles();
@@ -377,7 +397,7 @@ onUnmounted(() => {
                             {{ event.data.userName }} {{ event.data.petName ? '(' + event.data.petName + ')' : '' }}
                         </span>
                     </div>
-
+                    
                     <!-- 예약경로 아이콘(네이버/인투펫/링크) -->
                     <div class="reserve-icon">
                         <img v-if="event.data.reRoute" :src="pathIcons[event.data.reRoute] || ''" alt="예약경로 아이콘" width="16">

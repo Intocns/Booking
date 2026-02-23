@@ -1,7 +1,7 @@
 <!-- 상품"수정" > 예약 정보 -->
 <script setup>
 import { DayPilot, DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
-import { ref, reactive, onMounted, computed, watch, onActivated } from 'vue';
+import { ref, reactive, onMounted, computed, watch, onActivated, nextTick } from 'vue';
 import { storeToRefs } from "pinia";
 // 아이콘
 import icArrowRight from '@/assets/icons/ic_arrow_right_blue.svg'
@@ -198,6 +198,19 @@ const handelSetOperationModalOpen = () => {
     }
 };
 
+// 현재 로드된 events 중 가장 빠른 시간(Hour)을 반환
+const earliestStartHour = computed(() => {
+    if (!events.value || events.value.length === 0) return 9; // 데이터 없으면 기본 8시
+
+    const hours = events.value.map(event => {
+        // event.start 형식: "2026-01-23T09:00:00"
+        const timePart = event.start.split('T')[1]; 
+        return parseInt(timePart.split(':')[0]);
+    });
+
+    return Math.min(...hours); // 가장 작은 시간 반환
+});
+
 // 캘린더 설정
 const calendarConfig = reactive({
     viewType: "Week",                // 주간 뷰 설정
@@ -206,8 +219,8 @@ const calendarConfig = reactive({
     headerDateFormat: "MM.dd (ddd)", // 헤더 날짜 형식
     timeFormat: "Clock24Hours",      // 타임 포맷 24시 형식
     cellHeight: 32,                  // 셀 높이
-    businessBeginsHour: 9,           // 시작 시간
-    businessEndsHour: 20,            // 종료 시간
+    businessBeginsHour: earliestStartHour.value,           // 시작 시간
+    // businessEndsHour: 20,            // 종료 시간
     dayBeginsHour: 0,                // 하루 시작 (0시)
     dayEndsHour: 24,                 // 하루 끝 (24시)
     events: events.value,
@@ -350,12 +363,22 @@ watch( () => calendarConfig.startDate, async (newStartDate) => {
 
 }, { immediate: true });
 
+watch(events, () => {
+    if (events.value.length > 0) {
+        scrollToWorkTime();
+    }
+}, { deep: true });
+
 // 캘린더 스크롤을 운영시작 위치로 이동
-const scrollToWorkTime = () => {
+const scrollToWorkTime = async() => {
+    await nextTick();
     const calendarEl = document.querySelector('.calendar_default_main > div:nth-child(2)');
 
     if (calendarEl) {
-        calendarEl.scrollTop = 576; // 9시 위치로 스크롤 // TODO: 동적계산 필요
+        // 가장 빠른 시간(earliestStartHour) 기준으로 위치 계산
+        // cellHeight(32px) * 2 = 1시간(64px)
+        const scrollTarget = earliestStartHour.value * (calendarConfig.cellHeight * 2);
+        calendarEl.scrollTop = scrollTarget;
     }
 };
 
@@ -364,12 +387,8 @@ onMounted(() => {
     const start = DayPilot.Date.today().firstDayOfWeek(1);
     calendarConfig.startDate = start;
 
-    scrollToWorkTime();
 })
 
-onActivated(() => {
-    scrollToWorkTime();
-});
 </script>
 
 <template>
