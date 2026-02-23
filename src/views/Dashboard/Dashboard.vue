@@ -131,7 +131,10 @@ onMounted(() => {
         <!-- today -->
         <div class="summary--header__section">
             <div class="summary--header__today">
-                <p class="title heading-s">TODAY</p>
+                <p class="title heading-s">
+                    TODAY
+                    <span class="flag flag--basic">예약확정</span>
+                </p>
                 <h2 class="date">{{ todayDate }}</h2>
             </div>
 
@@ -311,7 +314,12 @@ onMounted(() => {
             flex-direction: column;
             justify-content: space-between;
 
-            .title {color: $gray-900;}
+            .title {
+                color: $gray-900;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
             .date {
                 color: $gray-900;
                 font-size: 48px;
