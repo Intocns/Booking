@@ -142,6 +142,10 @@ const searchClear = () => { //초기화 버튼
     reservationChannel.value = ['all'];
 };
 
+const refreshSchedule = () => {
+    reservationStore.getReserveSchedule(fetchParams.value);
+};
+
 onMounted(async() => {
     // 담당의 리스트 불러오기
     await hospitalStore.getDoctorList();
@@ -243,7 +247,7 @@ onMounted(async() => {
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >
-        <ReserveInfo @refresh-list="reservationStore.getReserveSchedule(fetchParams.value)" />
+        <ReserveInfo @refresh-list="refreshSchedule" />
     </Modal>
 </template>
 
