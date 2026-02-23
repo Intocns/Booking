@@ -105,6 +105,11 @@ const handelReserveDetail = (row) => {
     reservationStore.getReserveInfo(row.idx)
 }
 
+const refreshDashboard = () => {
+    reservationStore.getPendingList();
+    reservationStore.getReserveCount(); // 상단 카운트 카드 갱신
+}
+
 onMounted(() => {
     // 예약별 카운트
     reservationStore.getReserveCount();
@@ -284,7 +289,7 @@ onMounted(() => {
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >
-        <ReserveInfo />
+        <ReserveInfo @refresh-list="refreshDashboard" />
     </Modal>
 
     <!-- 문자 발송 모달 -->

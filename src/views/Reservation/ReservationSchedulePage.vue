@@ -243,7 +243,7 @@ onMounted(async() => {
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >
-        <ReserveInfo />
+        <ReserveInfo @refresh-list="reservationStore.getReserveSchedule(fetchParams.value)" />
     </Modal>
 </template>
 
