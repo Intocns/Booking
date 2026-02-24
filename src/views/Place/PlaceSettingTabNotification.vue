@@ -272,7 +272,7 @@ onMounted(() => {
                     <div class="setting-item__guide-content">
                         <div class="d-flex gap-8">
                             <p class="title-s">예약 거절 시 안내</p>
-                            <span class="caption">예약 거절시 예약자에게 추가로 안내할 내용을 최대 10개까지 미리등록 할 수 있습니다.<br/>등록한 안내 사항 중 1개를 기본으로 지정하여 확정 처리 시 자동 선택되도록 할 수 있습니다.</span>
+                            <span class="caption">예약 거절시 예약자에게 추가로 안내할 내용을 최대 10개까지 미리등록 할 수 있습니다.<br/>등록한 안내 사항 중 1개를 기본으로 지정하여 거절 처리 시 자동 선택되도록 할 수 있습니다.</span>
                         </div>
     
                         <button class="btn btn--size-32 btn--black-outline add-guide-btn" 
