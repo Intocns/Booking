@@ -432,7 +432,7 @@ onUnmounted(() => {
                     <!-- 상품명/진료실명 -->
                     <p class="reserve-title" :class="`reserve-title__${getInState(event.data)}`">{{ event.data.roomName }}</p>
                     <!-- 병원 메모 -->
-                    <p class="reserve-memo">{{ event.data.memo }}</p>
+                    <p class="reserve-memo">{{ event.data.geReMemo }}</p>
                 </div>
             </template>
         </DayPilotCalendar>
@@ -731,10 +731,6 @@ onUnmounted(() => {
             &__4 {color: $status-personal_text;}
         }
         .reserve-memo {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-
             color: $gray-600;
         }
     }
