@@ -563,12 +563,8 @@ const saveIntoPetRoomInfo = async() => {
     
     if (targetIdx > -1) {
         // 원본 리스트의 해당 위치에 내가 수정한 내용을 덮어씌움
-        // intoPetRoomList.value[targetIdx] = JSON.parse(JSON.stringify(selectedRoom.value));
-        intoPetRoomList.value.push(selectedRoom.value);
-    }
-
-    if(hasNewRoom.value) {
-        intoPetRoomList.value.splice(newRoomIdx.value, 1);
+        intoPetRoomList.value[targetIdx] = JSON.parse(JSON.stringify(selectedRoom.value));
+        // intoPetRoomList.value.push(selectedRoom.value);
     }
 
     try {
