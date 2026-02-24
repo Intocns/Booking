@@ -630,6 +630,7 @@ const singlePetData = computed(() => {
         // reserveClientPet는 초기 데이터이므로, 선택한 고객의 정보를 우선 사용
         return {
             petSno: customer.petSno || '',
+            petNo: customer.petNo || '',
             petName: customer.petName || '',
             petBw: customer.petBw || '',
             rfid: customer.rfid || '',
@@ -742,7 +743,7 @@ watch(endTime, (newEnd) => {
 // 차트보기 버튼 클릭 핸들러
 const handleViewChart = () => {
     if (singlePetData.value?.petSno) {
-        const url = `https://intolink.co.kr/plus/main?pet_no=${singlePetData.value.petSno}`;
+        const url = `https://intolink.co.kr/plus/main?pet_no=${singlePetData.value.petNo}`;
         window.open(url, '_blank');
     }
 };
@@ -948,6 +949,7 @@ const textPhoneNumber = computed(() => {
                             <p class="label" style="padding-top: 10px;">병원 메모</p>
                             <TextAreaBox 
                                 :model-value="reserveData.geReMemo"
+                                @update:modelValue="val => { if (!isCancelled) reserveData.geReMemo = val }"
                                 :disabled="isCancelled"
                                 placeholder="병원 메모"
                                 height="100%"

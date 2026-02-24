@@ -1,6 +1,6 @@
 <!-- 테이블 컴포넌트 -->
 <script setup>
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, useSlots, computed } from 'vue';
 import icEmpty from '@/assets/icons/ic_empty.svg'
 import icMore from '@/assets/icons/ic_more_btn.svg'
 import icInformation from '@/assets/icons/ic_information_blue.svg'
@@ -21,6 +21,7 @@ const props = defineProps({
     isClickAble: {type: Boolean, default: false},
     showTableCount: {type: Boolean, default: false}, // 테이블 타이틀 옆에 카운트 보여줄 것인지
     totalCount: {type:Number, default: null}, // 테이블 타이틀 옆에 보여줄 카운트
+    isLoading: {type: Boolean, default: false}, // 로딩 상태 
 })
 
 //  에밋
@@ -30,6 +31,10 @@ const emit = defineEmits(['empty-btn-click', 'row-click']);
 const handleEmptyBtnClick = () => {
     emit('empty-btn-click');
 };
+
+const slots = useSlots();
+// 슬롯이 정의된 컬럼의 key들만 Set으로 미리 뽑아둠
+const definedSlotKeys = computed(() => new Set(Object.keys(slots)));
 </script>
 
 <template>
@@ -91,13 +96,14 @@ const handleEmptyBtnClick = () => {
                 <tbody>
                     <tr 
                         v-for="(row, rIndex) in rows" 
-                        :key="rIndex" 
+                        :key="row.idx" 
                         @click="$emit('row-click', row)" 
                         :class="[row.rowClass,
                             {'is-clickable' : isClickAble,
                                 'no-head' : noThead,
                             }
                         ]"
+                        v-memo="[row, isClickAble]"
                     >
                         <td
                             v-for="col in columns"
@@ -105,8 +111,7 @@ const handleEmptyBtnClick = () => {
                             :style="{ textAlign: col.text_align }"
                         >
                             <!-- 기본 데이터 출력 -->
-                            <span v-if="!$slots[col.key]" :title="row[col.key] ? `${row[col.key]}` : ''">{{ row[col.key] }}</span>
-
+                            <span v-if="!definedSlotKeys.has(col.key)">{{ row[col.key] }}</span>
                             <!-- 커스텀 슬롯 존재 시 -->
                             <div v-else class="d-flex justify-center gap-4">
                                 <slot
@@ -122,8 +127,8 @@ const handleEmptyBtnClick = () => {
                 </tbody>
             </table>
 
-            <template v-if="rows.length == 0">
-                <div class="empty-box" :class="{ 'no-thead_table' : noThead == true}">
+            <template v-if="!isLoading">
+                <div v-show="rows.length == 0" class="empty-box" :class="{ 'no-thead_table' : noThead == true}">
                     <img :src="icEmpty" alt="비어있음 아이콘">
                     <div class="d-flex flex-col align-center gap-4">
                         <span class="title-s">{{ tableEmptyText }}</span>
@@ -138,6 +143,7 @@ const handleEmptyBtnClick = () => {
                     </button>
                 </div>
             </template>
+
         </div>
     </div>
 </template>

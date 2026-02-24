@@ -402,6 +402,20 @@ onUnmounted(() => {
                     <div class="reserve-name">
                         <img :src="statusIcons[getInState(event.data)] || ''" alt="상태아이콘">
                         <span 
+                            v-if="event.data.clinicType == '개인일정'"
+                            class="title"
+                            :class="`title__${getInState(event.data)}`"
+                        >
+                            {{ event.data.clinicType }}
+                        </span>
+                        <span 
+                            v-else-if="event.data.clinicType == '일반예약'"
+                            class="title"
+                            :class="`title__${getInState(event.data)}`"
+                        >
+                            일반 예약
+                        </span>
+                        <span v-else
                             class="title" 
                             :class="`title__${getInState(event.data)}`"
                         >
@@ -418,7 +432,7 @@ onUnmounted(() => {
                     <!-- 상품명/진료실명 -->
                     <p class="reserve-title" :class="`reserve-title__${getInState(event.data)}`">{{ event.data.roomName }}</p>
                     <!-- 병원 메모 -->
-                    <p class="reserve-memo">{{ event.data.memo }}</p>
+                    <p class="reserve-memo">{{ event.data.geReMemo }}</p>
                 </div>
             </template>
         </DayPilotCalendar>
@@ -668,7 +682,8 @@ onUnmounted(() => {
         display:flex;
         align-items: center;
         margin-bottom: 6px;
-        gap:8px;
+        // gap:8px;
+        flex-wrap: wrap;
 
         .reserve-name {
             flex:2;
@@ -676,6 +691,12 @@ onUnmounted(() => {
             align-items:center;
             gap:4px;
             overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+
+            img {
+                min-width: 16px;
+            }
 
             .title {
                 overflow: hidden;
@@ -710,10 +731,6 @@ onUnmounted(() => {
             &__4 {color: $status-personal_text;}
         }
         .reserve-memo {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-
             color: $gray-600;
         }
     }

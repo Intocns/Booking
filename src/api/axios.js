@@ -53,10 +53,6 @@ api.interceptors.request.use(
 // 응답 인터셉터
 api.interceptors.response.use(
     async (response) => {
-        if (!response.config.skipLoading) {
-            api.ing.value = false;
-        }
-
         const res = response.data; // 서버에서 보낸 실제 데이터 바디
 
         // 비즈니스 로직 에러 처리
@@ -69,6 +65,9 @@ api.interceptors.response.use(
             return Promise.reject(res);
         }
 
+        if (!response.config.skipLoading) {
+            api.ing.value = false;
+        }
         // 진짜 성공일 때만 데이터를 반환
         return response
     },

@@ -563,12 +563,8 @@ const saveIntoPetRoomInfo = async() => {
     
     if (targetIdx > -1) {
         // 원본 리스트의 해당 위치에 내가 수정한 내용을 덮어씌움
-        // intoPetRoomList.value[targetIdx] = JSON.parse(JSON.stringify(selectedRoom.value));
-        intoPetRoomList.value.push(selectedRoom.value);
-    }
-
-    if(hasNewRoom.value) {
-        intoPetRoomList.value.splice(newRoomIdx.value, 1);
+        intoPetRoomList.value[targetIdx] = JSON.parse(JSON.stringify(selectedRoom.value));
+        // intoPetRoomList.value.push(selectedRoom.value);
     }
 
     try {
@@ -673,7 +669,7 @@ onMounted(async() => {
             <li class="form-item">
                 <div class="form-label required">진료실 명</div>
                 <div class="form-content">
-                    <InputTextBox v-model="selectedRoom.name" />
+                    <InputTextBox v-model="selectedRoom.name" :placeholder="'진료실 명을 입력해주세요.'" />
                 </div>
 
                 <div class="form-label required">진료실 사용</div>
@@ -824,7 +820,7 @@ onMounted(async() => {
                         <div class="form-title-box border-right">특정일</div>
 
                         <div class="d-flex align-center gap-16" style="padding: 4px 10px;">
-                            <div class="d-flex flex-wrap gap-8">
+                            <div class="d-flex flex-wrap gap-8 align-center">
                                 <div 
                                     v-for="(date, idx) in selectedRoom.impos?.sp_day" 
                                     :key="idx" 
@@ -835,15 +831,15 @@ onMounted(async() => {
                                         <img :src="icClear" width="16" alt="삭제">
                                     </button>
                                 </div>
+                                <button 
+                                    type="button" 
+                                    class="btn btn--size-24 btn--black-outline"
+                                    @click="openDatePicker"
+                                >
+                                    <img :src="icPlus" alt="아이콘">항목 추가
+                                </button>
                             </div>
 
-                            <button 
-                                type="button" 
-                                class="btn btn--size-24 btn--black-outline"
-                                @click="openDatePicker"
-                            >
-                                <img :src="icPlus" alt="아이콘">항목 추가
-                            </button>
                         </div>
                     </div>
 

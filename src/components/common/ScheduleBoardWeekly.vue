@@ -193,7 +193,8 @@ const getInState = (data) => {
                             {{ formatTime(event.start) }}
                         </div>
                         <div class="event-info">
-                            <span class="patient">{{ event.userName }}{{ event.petName ? '(' + event.petName + ')' : '' }}</span>
+                            <span v-if="event.clinicType == '개인일정' || event.clinicType == '일반예약'" class="patient">{{ event.clinicType }}</span>
+                            <span v-else class="patient">{{ event.userName }}{{ event.petName ? '(' + event.petName + ')' : '' }}</span>
                             <span class="memo">{{ event.roomName }}</span>
                         </div>
                     </div>

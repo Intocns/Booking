@@ -6,6 +6,7 @@ import { formatDate, formatDateTime, formatTime} from "@/utils/dateFormatter";
 import { formatPhone } from "@/utils/phoneFormatter";
 import { RESERVE_ROUTE_MAP, RESERVE_STATUS_MAP} from "@/constants";
 import { useModalStore } from "./modalStore";
+import { showAlert } from "@/utils/ui";
 
 export const useReservationStore = defineStore("reservation", () => {
     const modalStore = useModalStore();
@@ -18,22 +19,34 @@ export const useReservationStore = defineStore("reservation", () => {
     
     let reserveInfo = ref({})
 
+    let isLoading = ref(false);
+
     const mapReserveRow = (row) => ({
         ...row,
+        // 일반 예약의 경우 리스트에서 동물 정보, 고객 정보 미노출 필요
+        // 고객명
+        userName: row.clinicType == '일반예약' ? '' : row.userName, 
+        // 전화번호
+        phoneTxt: row.clinicType == '일반예약' ? '' : formatPhone(row.phone),
+        // 동물명
+        petName: row.clinicType == '일반예약' ? '' : row.petName,
+        // 종
+        speciesName: row.clinicType == '일반예약' ? '' : row.speciesName,
         // 날짜 / 시간
         reTimeTxt: formatDate(row.reTime),
-        reTimeHisTxt: formatTime(row.reTimeHis),
+        reTimeHisTxt: formatTime(row.reTime),
         createdAtTxt: formatDateTime(row.createdAt),
-        // 전화번호
-        phoneTxt: formatPhone(row.phone),
         // 예약상태
         inStateTxt: RESERVE_STATUS_MAP[row.inState] ?? '-',
         // 예약경로
         reRouteTxt: RESERVE_ROUTE_MAP[row.reRoute] ?? '-',
+        // rowClass
+        rowClass: row.inState === 0 ? 'row-pending' : row.inState == 2 || row.inState == 3 ? 'row-canceled' : '',
     })
 
     // 전체 예약 내역 불러오기
     async function getReservationList(params) {
+        isLoading.value = true;
         try {
             const response = await api.post(`/api/{cocode}/reserve/list`, params);
             if(response.status <= 300){
@@ -43,6 +56,8 @@ export const useReservationStore = defineStore("reservation", () => {
         } catch (error) {
             console.error(error);
             throw error; // 호출한 쪽에서 에러 처리 가능
+        } finally {
+            isLoading.value = false;
         }
     }
 
@@ -59,13 +74,19 @@ export const useReservationStore = defineStore("reservation", () => {
 
     // 대기 예약 리스트 불러오기 (대기 예약 관리,대시보드)
     async function getPendingList(params) {
-        const response = await api.get(`/api/{cocode}/reserve/pendinglist`, {params: params});
+        isLoading.value = true;
+        try {
+            const response = await api.get(`/api/{cocode}/reserve/pendinglist`, {params: params});
 
-        if(response.status <= 300) {
-            // console.log(response)
-            let data = response.data.data;
-            reservePendingList.value = data.map(mapReserveRow);
+            if(response.status <= 300) {
+                // console.log(response)
+                let data = response.data.data;
+                reservePendingList.value = data.map(mapReserveRow);
+            }
+        } finally {
+            isLoading.value = false;
         }
+
     }
 
     // 예약 일정 불러오기 (예약 일정 확인 페이지)
@@ -161,12 +182,27 @@ export const useReservationStore = defineStore("reservation", () => {
     // 운영 설정 조회
     async function getOperatorSetting() {
         try {
-            const response = await api.get(`/api/{cocode}/reserve/setting/operator`)
+            const response = await api.get(`/api/{cocode}/reserve/setting/operator`, {skipAlert: true});
             if(response.data.status_code <= 300) {
                 let data = response.data.data
                 operatorSettingInfo.value = data;
             }
         } catch (error) {
+            if (error.response?.data?.status_code === 503 || error.data?.status_code === 503) {
+                // 503 에러 > 기본값 세팅
+                operatorSettingInfo.value = {
+                    reserveCnt: 0,
+                    alimTalkFlag: 0,
+                    isReserve: null,
+                    reserveInfo: [{
+                        title: '',
+                        rec: 0
+                    }],
+                    alimTalk: ['']
+                }
+            } else {
+                showAlert("운영 설정 정보를 불러오는 중 오류가 발생했습니다.");
+            }
             console.error(error);
         }
     }
@@ -185,6 +221,7 @@ export const useReservationStore = defineStore("reservation", () => {
         reserveScheduleList, // 예약 일정 리스트
         reserveInfo,
         operatorSettingInfo,
+        isLoading,
         // 
         getReservationList,
         getPendingList, // 대기 예약 리스트 불러오기

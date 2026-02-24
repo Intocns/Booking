@@ -308,7 +308,8 @@ onMounted(() => {
                                     />
                                     <span class="time title-s">{{ ev.start.split('T')[1].substring(0,5) }}</span>
                                 </div>
-                                <span class="patient body-s">{{ ev.userName }}{{ ev.petName ? '(' + ev.petName + ')' : '' }}</span>
+                                <span v-if="ev.clinicType == '개인일정' || ev.clinicType == '일반예약'" class="patient body-s">{{ ev.clinicType }}</span>
+                                <span v-else class="patient body-s">{{ ev.userName }}{{ ev.petName ? '(' + ev.petName + ')' : '' }}</span>
                             </div>
                             <span class="memo body-s">{{ ev.roomName }}</span>
                         </div>  
