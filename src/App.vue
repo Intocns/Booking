@@ -7,8 +7,10 @@ import { onMounted, ref } from 'vue';
 import { loadSSOScript, initSSOCheck, forceSsoLogin } from '@/utils/sso';
 import { useRoute, useRouter } from 'vue-router';
 import { showAlert } from './utils/ui';
+import { useModalStore } from './stores/modalStore';
 
 const router = useRouter();
+const modalStore = useModalStore();
 
 const isAuthChecked = ref(false); // SSO 체크 완료 여부 (UI 렌더링 제어)
 
@@ -23,8 +25,13 @@ onMounted(async () => {
         if (status === 'success') {
             isAuthChecked.value = true; // 인증 성공 시에만 레이아웃 노출
         } else {
-            showAlert("인증에 실패하였습니다.");
-            window.close(); // 실패 시 창 닫기
+            modalStore.confirmModal.openModal({
+                content: "인증에 실패하였습니다. 다시 시도해주세요.",
+                confirmText: "확인",
+                onConfirm: () => {
+                    window.close(); // 실패 시 창 닫기
+                }
+            })
         }
     };
     
