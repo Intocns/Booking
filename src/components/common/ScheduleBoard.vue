@@ -402,6 +402,13 @@ onUnmounted(() => {
                     <div class="reserve-name">
                         <img :src="statusIcons[getInState(event.data)] || ''" alt="상태아이콘">
                         <span 
+                            v-if="event.data.clinicType == '개인일정'"
+                            class="title"
+                            :class="`title__${getInState(event.data)}`"
+                        >
+                            {{ event.data.clinicType }}
+                        </span>
+                        <span v-else
                             class="title" 
                             :class="`title__${getInState(event.data)}`"
                         >
@@ -668,7 +675,8 @@ onUnmounted(() => {
         display:flex;
         align-items: center;
         margin-bottom: 6px;
-        gap:8px;
+        // gap:8px;
+        flex-wrap: wrap;
 
         .reserve-name {
             flex:2;
@@ -676,6 +684,12 @@ onUnmounted(() => {
             align-items:center;
             gap:4px;
             overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+
+            img {
+                min-width: 16px;
+            }
 
             .title {
                 overflow: hidden;
