@@ -820,7 +820,7 @@ onMounted(async() => {
                         <div class="form-title-box border-right">특정일</div>
 
                         <div class="d-flex align-center gap-16" style="padding: 4px 10px;">
-                            <div class="d-flex flex-wrap gap-8">
+                            <div class="d-flex flex-wrap gap-8 align-center">
                                 <div 
                                     v-for="(date, idx) in selectedRoom.impos?.sp_day" 
                                     :key="idx" 
@@ -831,15 +831,15 @@ onMounted(async() => {
                                         <img :src="icClear" width="16" alt="삭제">
                                     </button>
                                 </div>
+                                <button 
+                                    type="button" 
+                                    class="btn btn--size-24 btn--black-outline"
+                                    @click="openDatePicker"
+                                >
+                                    <img :src="icPlus" alt="아이콘">항목 추가
+                                </button>
                             </div>
 
-                            <button 
-                                type="button" 
-                                class="btn btn--size-24 btn--black-outline"
-                                @click="openDatePicker"
-                            >
-                                <img :src="icPlus" alt="아이콘">항목 추가
-                            </button>
                         </div>
                     </div>
 
