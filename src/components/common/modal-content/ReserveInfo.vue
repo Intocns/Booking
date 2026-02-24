@@ -948,6 +948,7 @@ const textPhoneNumber = computed(() => {
                             <p class="label" style="padding-top: 10px;">병원 메모</p>
                             <TextAreaBox 
                                 :model-value="reserveData.geReMemo"
+                                @update:modelValue="val => { if (!isCancelled) reserveData.geReMemo = val }"
                                 :disabled="isCancelled"
                                 placeholder="병원 메모"
                                 height="100%"
