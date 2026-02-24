@@ -148,16 +148,6 @@ watch([reservationStatus, doctorList, reservationChannel, dateRange], () => {
     nextTick(() => searchList());
 }, { deep: true });
 
-const processedRows = computed(() => {
-    return reservationStore.reserveList.map(row => {
-        let className = '';
-        if (row.inState === 0) className = 'row-pending';
-        if (row.inState === 2 || row.inState === 3) className = 'row-canceled';
-        
-        return { ...row, rowClass: className };
-    });
-});
-
 const handelReserveDetail = (row) => {
     reservationStore.getReserveInfo(row.idx);
 };
@@ -214,7 +204,7 @@ onMounted(async () => {
 
         <!-- 테이블 -->
         <template #table>
-            <CommonTable :columns="columns" :rows="processedRows" @row-click="handelReserveDetail" :is-click-able="true">
+            <CommonTable :columns="columns" :rows="reservationStore.reserveList" @row-click="handelReserveDetail" :is-click-able="true" :is-loading="reservationStore.isLoading">
                 <!-- 예약상태 앞에 dot -->
                 <template #inStateTxt="{ row, value }">
                     <div class="status-cell" :class="`status-cell--state-${row.inState}`">

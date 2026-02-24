@@ -47,7 +47,10 @@ const toNumberFilter = (values) => {
     return values.map((v) => Number(v));
 };
 
+const isLoading = ref(false);
+
 const fetchList = async (syncPending = false) => {
+    isLoading.value = true;
     try {
         const channelTypes = toNumberFilter(filterChannelType.value);
         const sendResults = toNumberFilter(filterSendResult.value);
@@ -65,6 +68,8 @@ const fetchList = async (syncPending = false) => {
     } catch (e) {
         console.error(e);
         list.value = [];
+    } finally {
+        isLoading.value = false;
     }
 };
 
@@ -190,7 +195,7 @@ onMounted(() => {
         </template>
 
         <template #table>
-            <CommonTable :columns="columns" :rows="filteredRows" :table-total="totalCount">
+            <CommonTable :columns="columns" :rows="filteredRows" :table-total="totalCount" :is-loading="isLoading">
                 <template #message="{ value }">
                     <div 
                         class="message-cell" 

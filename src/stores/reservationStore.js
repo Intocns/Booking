@@ -18,6 +18,8 @@ export const useReservationStore = defineStore("reservation", () => {
     
     let reserveInfo = ref({})
 
+    let isLoading = ref(false);
+
     const mapReserveRow = (row) => ({
         ...row,
         // 날짜 / 시간
@@ -30,10 +32,13 @@ export const useReservationStore = defineStore("reservation", () => {
         inStateTxt: RESERVE_STATUS_MAP[row.inState] ?? '-',
         // 예약경로
         reRouteTxt: RESERVE_ROUTE_MAP[row.reRoute] ?? '-',
+        // rowClass
+        rowClass: row.inState === 0 ? 'row-pending' : row.inState == 2 || row.inState == 3 ? 'row-canceled' : '',
     })
 
     // 전체 예약 내역 불러오기
     async function getReservationList(params) {
+        isLoading.value = true;
         try {
             const response = await api.post(`/api/{cocode}/reserve/list`, params);
             if(response.status <= 300){
@@ -43,6 +48,8 @@ export const useReservationStore = defineStore("reservation", () => {
         } catch (error) {
             console.error(error);
             throw error; // 호출한 쪽에서 에러 처리 가능
+        } finally {
+            isLoading.value = false;
         }
     }
 
@@ -59,13 +66,19 @@ export const useReservationStore = defineStore("reservation", () => {
 
     // 대기 예약 리스트 불러오기 (대기 예약 관리,대시보드)
     async function getPendingList(params) {
-        const response = await api.get(`/api/{cocode}/reserve/pendinglist`, {params: params});
+        isLoading.value = true;
+        try {
+            const response = await api.get(`/api/{cocode}/reserve/pendinglist`, {params: params});
 
-        if(response.status <= 300) {
-            // console.log(response)
-            let data = response.data.data;
-            reservePendingList.value = data.map(mapReserveRow);
+            if(response.status <= 300) {
+                // console.log(response)
+                let data = response.data.data;
+                reservePendingList.value = data.map(mapReserveRow);
+            }
+        } finally {
+            isLoading.value = false;
         }
+
     }
 
     // 예약 일정 불러오기 (예약 일정 확인 페이지)
@@ -185,6 +198,7 @@ export const useReservationStore = defineStore("reservation", () => {
         reserveScheduleList, // 예약 일정 리스트
         reserveInfo,
         operatorSettingInfo,
+        isLoading,
         // 
         getReservationList,
         getPendingList, // 대기 예약 리스트 불러오기
