@@ -408,6 +408,13 @@ onUnmounted(() => {
                         >
                             {{ event.data.clinicType }}
                         </span>
+                        <span 
+                            v-else-if="event.data.clinicType == '일반예약'"
+                            class="title"
+                            :class="`title__${getInState(event.data)}`"
+                        >
+                            일반 예약
+                        </span>
                         <span v-else
                             class="title" 
                             :class="`title__${getInState(event.data)}`"
