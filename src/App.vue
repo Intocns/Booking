@@ -26,8 +26,9 @@ onMounted(async () => {
             isAuthChecked.value = true; // 인증 성공 시에만 레이아웃 노출
         } else {
             modalStore.confirmModal.openModal({
-                content: "인증에 실패하였습니다. 다시 시도해주세요.",
+                text: "인증에 실패하였습니다. 다시 시도해주세요.",
                 confirmText: "확인",
+                noCancelBtn: true,
                 onConfirm: () => {
                     window.close(); // 실패 시 창 닫기
                 }
