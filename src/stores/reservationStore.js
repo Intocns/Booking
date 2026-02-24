@@ -23,12 +23,19 @@ export const useReservationStore = defineStore("reservation", () => {
 
     const mapReserveRow = (row) => ({
         ...row,
+        // 일반 예약의 경우 리스트에서 동물 정보, 고객 정보 미노출 필요
+        // 고객명
+        userName: row.clinicType == '일반예약' ? '' : row.userName, 
+        // 전화번호
+        phoneTxt: row.clinicType == '일반예약' ? '' : formatPhone(row.phone),
+        // 동물명
+        petName: row.clinicType == '일반예약' ? '' : row.petName,
+        // 종
+        speciesName: row.clinicType == '일반예약' ? '' : row.speciesName,
         // 날짜 / 시간
         reTimeTxt: formatDate(row.reTime),
-        reTimeHisTxt: formatTime(row.reTimeHis),
+        reTimeHisTxt: formatTime(row.reTime),
         createdAtTxt: formatDateTime(row.createdAt),
-        // 전화번호
-        phoneTxt: formatPhone(row.phone),
         // 예약상태
         inStateTxt: RESERVE_STATUS_MAP[row.inState] ?? '-',
         // 예약경로
