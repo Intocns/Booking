@@ -6,6 +6,7 @@ import { formatDate, formatDateTime, formatTime} from "@/utils/dateFormatter";
 import { formatPhone } from "@/utils/phoneFormatter";
 import { RESERVE_ROUTE_MAP, RESERVE_STATUS_MAP} from "@/constants";
 import { useModalStore } from "./modalStore";
+import { showAlert } from "@/utils/ui";
 
 export const useReservationStore = defineStore("reservation", () => {
     const modalStore = useModalStore();
@@ -174,12 +175,27 @@ export const useReservationStore = defineStore("reservation", () => {
     // 운영 설정 조회
     async function getOperatorSetting() {
         try {
-            const response = await api.get(`/api/{cocode}/reserve/setting/operator`)
+            const response = await api.get(`/api/{cocode}/reserve/setting/operator`, {skipAlert: true});
             if(response.data.status_code <= 300) {
                 let data = response.data.data
                 operatorSettingInfo.value = data;
             }
         } catch (error) {
+            if (error.response?.data?.status_code === 503 || error.data?.status_code === 503) {
+                // 503 에러 > 기본값 세팅
+                operatorSettingInfo.value = {
+                    reserveCnt: 0,
+                    alimTalkFlag: 0,
+                    isReserve: null,
+                    reserveInfo: [{
+                        title: '',
+                        rec: 0
+                    }],
+                    alimTalk: ['']
+                }
+            } else {
+                showAlert("운영 설정 정보를 불러오는 중 오류가 발생했습니다.");
+            }
             console.error(error);
         }
     }

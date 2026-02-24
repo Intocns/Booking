@@ -669,7 +669,7 @@ onMounted(async() => {
             <li class="form-item">
                 <div class="form-label required">진료실 명</div>
                 <div class="form-content">
-                    <InputTextBox v-model="selectedRoom.name" />
+                    <InputTextBox v-model="selectedRoom.name" :placeholder="'진료실 명을 입력해주세요.'" />
                 </div>
 
                 <div class="form-label required">진료실 사용</div>
