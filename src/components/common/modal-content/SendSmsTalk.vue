@@ -169,8 +169,8 @@ const sendTalk = async () => {
             },
             visitSourceTotalList: props.reservationData?.visitSourceTotalList || '',
             messageText: historyText,
+            isLink: isLink.value === true,
         };
-
 
         const response = await talkSmsStore.sendAlimTalk(body);
 

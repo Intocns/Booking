@@ -248,10 +248,9 @@ onMounted(() => {
                 <button class="btn btn--size-24 btn--black-outline" @click.stop="handelReserveDetail(row)">
                     상세
                 </button>
-                <!-- TODO: 알림톡 발송 기능 완료 시 활성화 -->
-                <!-- <button class="btn btn--size-24 btn--black-outline" @click.stop="openSmsModal(row)">
+                <button class="btn btn--size-24 btn--black-outline" @click.stop="openSmsModal(row)">
                     <img :src="icSms" alt="SMS">
-                </button> -->
+                </button>
             </template>
 
         </CommonTable>

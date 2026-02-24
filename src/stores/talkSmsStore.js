@@ -54,10 +54,10 @@ export const useTalkSmsStore = defineStore('talkSms', () => {
             checkAvailableResult.value = res.data;
             if (res.data?.status_code === 200 && res.data?.data) {
                 const d = res.data.data;
-                const isChannel = d.is_channel === true;
-                const isProfile = d.is_profile === true;
+                // const isChannel = d.is_channel === true;
+                // const isProfile = d.is_profile === true;
                 const isAvailableTemplate = d.is_available_template === true;
-                isLink.value = !isChannel && !isProfile && !isAvailableTemplate;
+                isLink.value = !isAvailableTemplate;
                 // 백엔드에서 내려준 알림톡 프로필 등록 파라미터 저장 (있을 경우)
                 alimTalkParam.value = d.alimTalkParam || null;
                 await getTemplateInfo(isLink.value);

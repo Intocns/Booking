@@ -1257,12 +1257,11 @@ const textPhoneNumber = computed(() => {
         <div class="modal-contents-inner">
             <div class="d-flex flex-col gap-16">
                 <span class="body-m">예약을 확정하시겠습니까?</span>
-                <!-- TODO: 알림톡 발송 기능 완료 시 활성화 -->
-                <!-- <label class="checkbox">
+                <label class="checkbox">
                     <input type="checkbox" v-model="sendNotification" />
                     <span class="box"></span>
                     <span class="label">고객에게 예약 확정 알림톡 발송</span>
-                </label> -->
+                </label>
             </div>
         </div>
         <div class="modal-button-wrapper">
