@@ -496,7 +496,7 @@ const getPlaceInfo = async() => {
             businessId: Number(bid),
         });
 
-        const res = await api.post('/api/linkbusiness/conn/2', payload);
+        const res = await api.post('/api/linkbusiness/conn2', payload);
         await productStore.getProductList();
 
         // 실행 후 병원정보, 리스트 불러오기 성공
