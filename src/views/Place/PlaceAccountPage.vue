@@ -320,8 +320,8 @@ function buildPlaceDetailDto() {
         addressDetail: detailAddress.value || null,
         hospitalName: placeName.value || null,
         ownerName: reprOwnerName.value || null,
-        reprPhone: reservationPhone.value || null, //adminPhone.value || null, // 관리자 번호
-        phonNumber: adminPhone.value || null, //reservationPhone.value || null, // 예약자 번호
+        reprPhone: adminPhone.value || null, // 관리자 번호
+        phonNumber: reservationPhone.value || null, // 예약자 번호
         email: email.value || null,
         images,
     };
