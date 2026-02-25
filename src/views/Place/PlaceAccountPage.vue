@@ -381,9 +381,6 @@ function onConfirmUnlinkFromNoticeModal() {
 }
 
 async function requestConnect() {
-    console.log(hospitalStore.hospitalInfo.cocode, '연동하기 버튼 클릭시 cocode');
-    console.log(hospitalStore.hospitalInfo.idx, '연동하기 버튼 클릭시 idx');
-
     const nid = naverId.value?.trim();
     const bid = businessId.value?.trim();
     if (!nid || !bid) {
@@ -537,11 +534,9 @@ onMounted(async() => {
             showAlert('네이버 로그인 스크립트를 불러오지 못했습니다.');
         });
 
-        if(!hospitalStore.hospitalInfo.idx) {
+        if(!hospitalStore.hospitalInfo.idx) { // hosidx 최신값 불러오기
             await hospitalStore.getHospitalInfo();
         }
-        console.log(hospitalStore.hospitalInfo.cocode, '마운트시 cocode');
-        console.log(hospitalStore.hospitalInfo.idx, '마운트시 idx');
 });
 
 onUnmounted(() => {
