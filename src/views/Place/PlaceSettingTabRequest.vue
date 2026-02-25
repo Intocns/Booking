@@ -316,7 +316,7 @@ onMounted(() => {
                                     class="guide-item" 
                                     :class="{ default: q.questionDefaultFlag == 1, 'reorder-active': isReorderMode }"
                                 >
-                                    <div class="d-flex align-center gap-8">
+                                    <div class="d-flex align-center gap-8 flex-1">
                                         <div v-if="isReorderMode" class="drag-handle" style="cursor: grab;">
                                             <img :src="icDragHandel" alt="드래그핸들">
                                         </div>
@@ -580,6 +580,7 @@ onMounted(() => {
         align-items: center;
         justify-content: space-between;
         padding: 8px 16px;
+        gap: 4px;
 
         border-radius: 4px;
         border: 1px solid $gray-200;

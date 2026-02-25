@@ -87,8 +87,10 @@ const currentTab = ref('operation'); // 탭 버튼
                                     class="request-section__item"
                                 >
                                     <div class="request-section__title">
-                                        <p class="title-m">{{ q.questionTitle }}</p>
-                                        <span v-if="q.questionRequiredFlag == 1" class="required">필수</span>
+                                        <p class="title-m">
+                                            {{ q.questionTitle }}
+                                            <span v-if="q.questionRequiredFlag == 1" class="required ml-1">필수</span>
+                                        </p>
                                     </div>
 
                                     <template v-if="q.questionType == 'TEXTAREA'">
