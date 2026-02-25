@@ -120,6 +120,8 @@ const sendTalk = async () => {
     const reservationDataWithPhone = {
         ...props.reservationData,
         hospitalPhone: hospitalPhone,
+        // 템플릿 치환용 병원명 (예약 데이터에 없으면 현재 병원명 사용)
+        hospitalName: props.reservationData?.hospitalName || hospitalName,
     };
     const contentVariables = buildTemplateVariables(reservationDataWithPhone);
     const alimData = {
@@ -398,7 +400,11 @@ defineExpose({
                     <div class="content-talk__preview">
                         <TalkPreview 
                             :template="selectedTemplate" 
-                            :reservationData="{ ...reservationData, hospitalPhone: reservationData?.hospitalPhone || hospitalPhone }" 
+                            :reservationData="{
+                                ...reservationData,
+                                hospitalPhone: reservationData?.hospitalPhone || hospitalPhone,
+                                hospitalName: reservationData?.hospitalName || hospitalName
+                            }" 
                             :isLink="isLink === true" 
                         />
                     </div>
