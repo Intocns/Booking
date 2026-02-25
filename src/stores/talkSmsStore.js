@@ -95,7 +95,14 @@ export const useTalkSmsStore = defineStore('talkSms', () => {
             const res = await api.post('/api/{cocode}/alimtalk/getTemplateInfo', body);
             if (res.data?.status_code === 200 && res.data?.data) {
                 const list = res.data.data?.template_info;
-                templateList.value = Array.isArray(list) ? list : [];
+                const arr = Array.isArray(list) ? [...list] : [];
+                // is_default === 1(기본 템플릿)을 목록 첫 번째로 (이름 변경돼도 동작)
+                arr.sort((a, b) => {
+                    const aDefault = Number(a.is_default) === 1 ? 1 : 0;
+                    const bDefault = Number(b.is_default) === 1 ? 1 : 0;
+                    return bDefault - aDefault;
+                });
+                templateList.value = arr;
             }
         } catch (e) {
             console.error('템플릿 정보 조회 오류:', e);
