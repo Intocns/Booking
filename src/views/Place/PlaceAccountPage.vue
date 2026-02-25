@@ -488,6 +488,7 @@ function handleNaverMessage(event) {
 const getPlaceInfo = async() => {
     const nid = naverId.value?.trim();
     const bid = businessId.value?.trim();
+    modalStore.naverConnectNoticeModal.closeModal();
 
     try {
         const payload = buildConnectPayload({
@@ -507,8 +508,6 @@ const getPlaceInfo = async() => {
         } else { // 상품 등록 되어 있을 시
             modalStore.productRegistrationCompleteModal.openModal(); // 상품 등록 완료 모달 오픈
         }
-
-        modalStore.naverConnectNoticeModal.closeModal();
     } catch (err) {
         console.error(err);
         showAlert('병원 정보 및 상품 정보를 불러오지 못했습니다.');
@@ -875,6 +874,7 @@ onUnmounted(() => {
         title="계정 연동 완료"
         size="xs"
         :modal-state="modalStore.naverConnectNoticeModal"
+        :hide-header-close="true"
     >
         <div class="modal-contents-inner">
             <p class="modal-contents-subTitle">연동이 완료되었습니다.</p>
