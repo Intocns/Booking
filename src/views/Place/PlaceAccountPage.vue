@@ -17,7 +17,9 @@ import icInfoBlue from '@/assets/icons/ic_information_blue.svg'
 import AccountGuideImg from '@/assets/images/naver_account_guide.png'
 import { useModalStore } from '@/stores/modalStore';
 import { usePlaceStore } from '@/stores/placeStore';
+import { useProductStore } from '@/stores/productStore';
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import { api } from '@/api/axios';
 import {
     NAVER_CLIENT_ID,
@@ -45,7 +47,9 @@ const HOS_IDX = hospitalStore.hospitalInfo.idx;
 // --- 상태 ---
 const modalStore = useModalStore();
 const placeStore = usePlaceStore();
+const productStore = useProductStore();
 const hasNaverAccount = ref(false);
+const router = useRouter();
 /** GET /api/linkbusiness/{cocode} 응답의 useFlag: null=처음 등록, 0=연동해지(계정 재연동), 1=연동중(연동관리) */
 const naverUseFlag = ref(null);
 /** useFlag가 0 또는 null이면 인풋·업체사진·주소·저장 등 폼 전체 비활성화 */
@@ -479,6 +483,40 @@ function handleNaverMessage(event) {
     })();
 }
 
+// 네이버 연동하기 진행 후  > 병원 정보, 상품리스트 불러오기
+const getPlaceInfo = async() => {
+    const nid = naverId.value?.trim();
+    const bid = businessId.value?.trim();
+
+    try {
+        const payload = buildConnectPayload({
+            cocode: Number(COCODE),
+            hosIdx: Number(HOS_IDX),
+            naverId: nid,
+            businessId: Number(bid),
+        });
+
+        const res = await api.post('/api/linkbusiness/conn/2', payload);
+        await productStore.getProductList();
+
+        // 실행 후 병원정보, 리스트 불러오기 성공
+        if(productStore.productList.length === 0) { // 상품 리스트 없을 시
+            modalStore.addProductModal.openModal(); // 상품 등록 필요 모달 오픈
+        } else { // 상품 등록 되어 있을 시
+            modalStore.productRegistrationCompleteModal.openModal(); // 상품 등록 완료 모달 오픈
+        }
+    } catch (err) {
+        console.error(err);
+        showAlert('병원 정보 및 상품 정보를 불러오지 못했습니다.');
+    }
+}
+
+// 상품 등록하기 페이지로 이동
+const goToSetProductPage = () => {
+    modalStore.addProductModal.closeModal();
+    router.push('/place/product/detail');
+}
+
 onMounted(() => {
     window.addEventListener('message', handleNaverMessage);
     Promise.all([
@@ -835,15 +873,15 @@ onUnmounted(() => {
         :modal-state="modalStore.naverConnectNoticeModal"
     >
         <div class="modal-contents-inner">
-            <p class="modal-contents-subTitle">현재 등록된 예약상품이 없습니다.</p>
+            <p class="modal-contents-subTitle">연동이 완료되었습니다.</p>
             <p class="modal-contents-body">
-                최초 연동 시에는 네이버 스마트플레이스의 [솔루션] > [사용 중인 솔루션] 화면에서 <span class="strong">[플레이스 연결하기] 버튼을 눌러 연동을 마무리</span>해주세요.
+                네이버 플레이스에 등록된 병원 정보 및 상품 정보를 불러옵니다.
             </p>
         </div>
 
         <div class="modal-button-wrapper">
             <div class="buttons">
-                <button class="btn btn--size-24 btn--black btn--c">확인</button>
+                <button class="btn btn--size-32 btn--blue btn--c" @click="getPlaceInfo">확인</button>
             </div>
         </div>
     </Modal>
@@ -961,6 +999,27 @@ onUnmounted(() => {
             <img :src="AccountGuideImg" alt="네이버연동가이드" style="width: 100%;">
         </div>
     </ModalSimple>
+
+    <!-- 상품 등록 필요 모달 -->
+    <Modal
+        v-if="modalStore.addProductModal.isVisible"
+        title="상품 등록 필요"
+        size="xs"
+        :modal-state="modalStore.addProductModal"
+    >
+        <div class="modal-contents-inner">
+            <p class="modal-consents-subTitle">현재 등록된 예약상품이 없습니다.</p>
+            <p class="modal-contents-body">
+                네이버 예약 연동을 위해 상품 등록을 진행해 주세요.
+            </p>
+        </div>
+
+        <div class="modal-button-wrapper">
+            <div class="buttons">
+                <button class="btn btn--size-32 btn--blue btn--c" @click="goToSetProductPage">상품 등록하기</button>
+            </div>
+        </div>
+    </Modal>
 </template>
 
 <style lang="scss" scoped>

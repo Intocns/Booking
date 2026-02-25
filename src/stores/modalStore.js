@@ -49,6 +49,7 @@ export const useModalStore = defineStore("modalStore", () => {
     const naverReconnectConfirmModal = createModalState(); // 계정 재연동 확인 모달
     const naverConnectRequiredModal = createModalState(); // 네이버 연동 필요 (상품/옵션 등 메뉴 접근 시)
     const naverAccountGuideModal = createModalState(); // 네이버 연동 가이드 모달
+    const addProductModal = createModalState(); // 네이버 연동 후 > 상품등록 필요 모달
 
     // 플레이스 설정
     const bookingGuideModal = createModalState(); // 운영 설정 > 예약 받기 > 자세히 설명 모달
@@ -62,11 +63,14 @@ export const useModalStore = defineStore("modalStore", () => {
     const intoPetImportModal = createModalState(); // 상품 관리 > 인투펫 불러오기
     const productCopyModal = createModalState(); // 상품 관리 > 상품 복사
     const productRegistrationCompleteModal = createModalState(); // 상품 관리 > 상품 1개 이상 시 플레이스 연결 안내
+    const productRegistrationCompleteDontShow = ref(false); // 상품 등록 완료 모달 > 다시 보지 않음
+
     // 상품 관리 > 상품 수정
     const holidaySettingModal = createModalState() // 상품 수정 > 예약 정보 > 휴무일 수정
     const setDateSettingModal = createModalState() // 상품 수정 > 예약 정보 > 캘린더 운영/미운영 블록 클릭시
     const setOperationRuleModal = createModalState() // 상품 수정 > 예약 정보 > 운영 설정 모달 > 진료 가능 동물 수, 운영시간 변경하기
     const setTimeSettingModal = createModalState() // 상품 수정 > 예약오픈,예약 노출, 예약미노출 시작일 시간 설정 모달
+    
 
     // 인투펫 관리
     const intoPetRoomSettingModal = createModalState() // 진료실 관리 > 진료실 노출 설정 모달
@@ -90,6 +94,7 @@ export const useModalStore = defineStore("modalStore", () => {
         naverReconnectConfirmModal,
         naverConnectRequiredModal,
         naverAccountGuideModal,
+        addProductModal,
         // 플레이스 설정
         bookingGuideModal,
         bookingGuideTextModal,
@@ -101,6 +106,7 @@ export const useModalStore = defineStore("modalStore", () => {
         intoPetImportModal,
         productCopyModal,
         productRegistrationCompleteModal,
+        productRegistrationCompleteDontShow,
         // 상품 관리 > 상품 수정
         holidaySettingModal,
         setDateSettingModal,

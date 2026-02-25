@@ -6,12 +6,17 @@
 
     import { api } from '@/api/axios';
     import { useModalStore } from '@/stores/modalStore';
-    import { useRouter } from 'vue-router';
+    import { useRouter, useRoute } from 'vue-router';
+    import { ref } from 'vue';
 
     import icBtnCloseB from '@/assets/icons/ic_btn_close_b.svg';
+    import placeConnectButtonAlert from '@/assets/images/place_connect_button_alert.png';
+
+    import { PRODUCT_REGISTRATION_COMPLETE_DONT_SHOW_KEY } from '@/constants/naver';
 
     const modalStore = useModalStore();
     const router = useRouter();
+    const route = useRoute();
 
     function onGoToNaverAccount() {
         modalStore.naverConnectRequiredModal.closeModal();
@@ -28,11 +33,20 @@
         modalStore.productRegistrationModal.closeModal();
         router.push('/place/product/detail');
     }
+
+    /** 상품 등록 완료 모달 > 확인: 다시 보지 않음이 체크되면 저장 후 모달 닫기 */
+    const closeProductRegistrationCompleteModal = () => {
+        if (modalStore.productRegistrationCompleteDontShow) {
+            localStorage.setItem(PRODUCT_REGISTRATION_COMPLETE_DONT_SHOW_KEY, '1');
+        }
+        modalStore.productRegistrationCompleteModal.closeModal();
+    };
+
 </script>
 
 <template>
     <div class="default-layout">
-        <Sidebar />
+        <Sidebar v-if="route.name !== 'maintenance'" />
 
         <main class="main">
             <!-- <router-view :key="$route.fullPath" /> -->
@@ -102,22 +116,60 @@
                 <div class="naver-connect-required-modal__buttons">
                     <button
                         type="button"
-                        class="btn btn--size-40 btn--black-outline"
+                        class="btn btn--size-40 btn--blue"
+                        style="width: 100px;"
                         @click="modalStore.naverConnectRequiredModal.closeModal()"
                     >
-                        닫기
+                        확인
                     </button>
-                    <button
+                    <!-- <button
                         type="button"
                         class="btn btn--size-40 btn--blue"
                         @click="onGoToNaverAccount"
                     >
                         네이버 계정 연동하기
-                    </button>
+                    </button> -->
                 </div>
             </div>
         </div>
     </Teleport>
+
+    <!-- 상품 등록 완료 모달 (상품 1개 이상 시 플레이스 연결 안내) -->
+    <Modal
+        v-if="modalStore.productRegistrationCompleteModal.isVisible"
+        title="상품 등록 완료"
+        size="xs"
+        :modal-state="modalStore.productRegistrationCompleteModal"
+    >
+        <div class="modal-contents-inner">
+            <p class="modal-contents-subTitle">상품이 정상적으로 등록되었습니다.</p>
+            <p class="modal-contents-body">
+                마지막으로 원활한 예약 관리를 위해 네이버 스마트 플레이스로 이동하여 <span class="strong">[플레이스 연결하기]</span>를 진행해주세요.
+            </p>
+            <p class="modal-contents-body caption">
+                버튼 위치: 네이버 스마트플레이스 접속 &gt; 솔루션 메뉴 &gt;
+                <br/>사용중인 솔루션 &gt; '네이버 예약' 항목의 <span class="place-connect-btn-label">플레이스 연결하기</span> 버튼 클릭
+            </p>
+            <div class="product-registration-complete-modal__image-wrap">
+                <img :src="placeConnectButtonAlert" alt="플레이스 연결하기 버튼 위치 안내" class="product-registration-complete-modal__image">
+            </div>
+        </div>
+        <div class="modal-button-wrapper">
+            <div class="check_section">
+                <label class="checkbox">
+                    <input
+                        type="checkbox"
+                        v-model="modalStore.productRegistrationCompleteDontShow"
+                    />
+                    <span class="box"></span>
+                    <span class="label">다시 보지 않음</span>
+                </label>
+            </div>
+            <div class="buttons">
+                <button type="button" class="btn btn--size-24 btn--blue btn--c" @click="closeProductRegistrationCompleteModal">확인</button>
+            </div>
+        </div>
+    </Modal>
 </template>
 
 <style lang="scss" scoped>
@@ -209,4 +261,25 @@
         gap: 12px;
         padding: 0 24px 24px;
     }
+
+    .product-registration-complete-modal__image-wrap {
+        margin-top: 12px;
+    }
+    .product-registration-complete-modal__image {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 4px;
+    }
+    .place-connect-btn-label {
+        display: inline-block;
+        padding: 2px 6px;
+        font-size: 10px;
+        font-weight: 600;
+        color: $gray-800;
+        background: #fff;
+        border: 1px solid $gray-300;
+        border-radius: 4px;
+        vertical-align: middle;
+    } 
 </style>
