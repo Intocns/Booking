@@ -320,8 +320,8 @@ function buildPlaceDetailDto() {
         addressDetail: detailAddress.value || null,
         hospitalName: placeName.value || null,
         ownerName: reprOwnerName.value || null,
-        reprPhone: adminPhone.value || null,
-        phonNumber: reservationPhone.value || null,
+        reprPhone: reservationPhone.value || null, //adminPhone.value || null, // 관리자 번호
+        phonNumber: adminPhone.value || null, //reservationPhone.value || null, // 예약자 번호
         email: email.value || null,
         images,
     };
@@ -793,13 +793,13 @@ onUnmounted(() => {
                                 <div class="form-label">예약문의 번호</div>
                                 <div class="form-content">
                                     <InputTextBox
-                                        ref="reservationPhoneRef"
-                                        :model-value="reservationPhone"
+                                        ref="adminPhoneRef"
+                                        :model-value="adminPhone"
                                         placeholder="예약문의 번호"
                                         :disabled="isFormLockedByUseFlag"
-                                        :is-error="!!validationErrors?.reservationPhone"
-                                        :error-message="validationErrors?.reservationPhone"
-                                        @update:model-value="reservationPhone = formatPhone($event)"
+                                        :is-error="!!validationErrors?.adminPhone"
+                                        :error-message="validationErrors?.adminPhone"
+                                        @update:model-value="adminPhone = formatPhone($event)"
                                     />
                                 </div>
                             </div>
@@ -808,13 +808,13 @@ onUnmounted(() => {
                                 <div class="form-label">관리자 번호</div>
                                 <div class="form-content">
                                     <InputTextBox
-                                        ref="adminPhoneRef"
-                                        :model-value="adminPhone"
+                                        ref="reservationPhoneRef"
+                                        :model-value="reservationPhone"
                                         placeholder="관리자 번호"
                                         :disabled="isFormLockedByUseFlag"
-                                        :is-error="!!validationErrors?.adminPhone"
-                                        :error-message="validationErrors?.adminPhone"
-                                        @update:model-value="adminPhone = formatPhone($event)"
+                                        :is-error="!!validationErrors?.reservationPhone"
+                                        :error-message="validationErrors?.reservationPhone"
+                                        @update:model-value="reservationPhone = formatPhone($event)"
                                     />
                                 </div>
                             </div>
