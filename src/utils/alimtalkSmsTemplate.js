@@ -14,15 +14,18 @@ export const getSmsByteLength = (str) => {
 
 export const buildTemplateVariables = (reservationData = {}) => {
     return {
+        '동물병원': reservationData?.hospitalName,
+        '보호자명': reservationData?.protectorName,
         '동물명': reservationData?.petName,
         '예약날짜': reservationData?.reservationDate,
         '날짜': reservationData?.reservationDate,
         '예약시간': reservationData?.reservationTime,
         '상품명': reservationData?.productName,
+        '상품명/진료실명': reservationData?.productName,
         '병원전화번호': reservationData?.hospitalPhone,
         '병원명': reservationData?.hospitalName,
         '고객명': reservationData?.protectorName,
-        '내용' : ''
+        '내용': ''
     };
 };
 
