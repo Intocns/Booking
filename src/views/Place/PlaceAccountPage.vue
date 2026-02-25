@@ -522,6 +522,10 @@ const goToSetProductPage = () => {
 
 onMounted(async() => {
     window.addEventListener('message', handleNaverMessage);
+    if (!hospitalStore.hospitalInfo.idx || !hospitalStore.hospitalData.cocode) {
+        await hospitalStore.getHospitalInfo();
+    }
+
     Promise.all([
         fetchAccountInfo().catch(() => {}),
         ensureNaverLoginScripts(),
@@ -533,10 +537,6 @@ onMounted(async() => {
             console.error(err);
             showAlert('네이버 로그인 스크립트를 불러오지 못했습니다.');
         });
-
-        if(!hospitalStore.hospitalInfo.idx) { // hosidx 최신값 불러오기
-            await hospitalStore.getHospitalInfo();
-        }
 });
 
 onUnmounted(() => {
