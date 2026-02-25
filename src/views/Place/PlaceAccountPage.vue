@@ -396,9 +396,10 @@ async function requestConnect() {
         });
 
         const res = await api.post('/api/linkbusiness/conn', payload);
+
         if (isApiSuccess(res)) {
             hasNaverAccount.value = true;
-            await fetchAccountInfo();
+            // await fetchAccountInfo(); // 연동 하기  > 1,2번 분리로 주석처리 함 
             modalStore.naverConnectNoticeModal.openModal();
         } else {
             const msg = res.data?.message ?? '연동에 실패했습니다.';
@@ -497,6 +498,7 @@ const getPlaceInfo = async() => {
         });
 
         const res = await api.post('/api/linkbusiness/conn2', payload);
+        await fetchAccountInfo();
         await productStore.getProductList();
 
         // 실행 후 병원정보, 리스트 불러오기 성공
@@ -505,6 +507,8 @@ const getPlaceInfo = async() => {
         } else { // 상품 등록 되어 있을 시
             modalStore.productRegistrationCompleteModal.openModal(); // 상품 등록 완료 모달 오픈
         }
+
+        modalStore.naverConnectNoticeModal.closeModal();
     } catch (err) {
         console.error(err);
         showAlert('병원 정보 및 상품 정보를 불러오지 못했습니다.');
