@@ -392,8 +392,8 @@ async function requestConnect() {
     }
     try {
         const payload = buildConnectPayload({
-            cocode: Number(COCODE),
-            hosIdx: Number(HOS_IDX),
+            cocode: Number(hospitalStore.hospitalData.cocode), // 최신값 참조
+            hosIdx: Number(hospitalStore.hospitalInfo.idx),    // 최신값 참조
             naverId: nid,
             businessId: Number(bid),
         });
@@ -495,8 +495,8 @@ const getPlaceInfo = async() => {
 
     try {
         const payload = buildConnectPayload({
-            cocode: Number(COCODE),
-            hosIdx: Number(HOS_IDX),
+            cocode: Number(hospitalStore.hospitalData.cocode), // 최신값 참조
+            hosIdx: Number(hospitalStore.hospitalInfo.idx),    // 최신값 참조
             naverId: nid,
             businessId: Number(bid),
         });
