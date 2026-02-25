@@ -523,7 +523,7 @@ const goToSetProductPage = () => {
     router.push('/place/product/detail');
 }
 
-onMounted(() => {
+onMounted(async() => {
     window.addEventListener('message', handleNaverMessage);
     Promise.all([
         fetchAccountInfo().catch(() => {}),
@@ -537,6 +537,9 @@ onMounted(() => {
             showAlert('네이버 로그인 스크립트를 불러오지 못했습니다.');
         });
 
+        if(!hospitalStore.hospitalInfo.idx) {
+            await hospitalStore.getHospitalInfo();
+        }
         console.log(hospitalStore.hospitalInfo.cocode, '마운트시 cocode');
         console.log(hospitalStore.hospitalInfo.idx, '마운트시 idx');
 });
