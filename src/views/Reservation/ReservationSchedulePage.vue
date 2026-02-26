@@ -135,7 +135,7 @@ watch([currentDate, currentView, selectedDoctorList, reservationStatus, reservat
 }, { deep: true });
 
 const searchClear = () => { //초기화 버튼
-    currentView.value = 'Resources';
+    // currentView.value = 'Resources'; // 뷰는 초기화 안함 (사용자 편의 위해)
     currentDate.value = new Date();
     selectedDoctorList.value = ['all'];
     reservationStatus.value = ['all'];
