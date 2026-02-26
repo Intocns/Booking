@@ -41,23 +41,13 @@ const originalData = ref('');
 const doctorOptions = computed(() => {
     const options = [];
     
-    // 기본 옵션 추가 (매칭 안된 경우를 대비)
-    options.push({
-        value: null,
-        label: '담당의 선택'
-    });
-    
     // 담당의 리스트 옵션 추가
-    if (hospitalStore.doctorList && hospitalStore.doctorList.length > 0) {
-        hospitalStore.doctorList.forEach(doc => {
-            options.push({
-                value: doc.id,
-                label: doc.userName || doc.name || ''
-            });
-        });
-    }
-    
-    return options;
+    return hospitalStore.doctorList
+        .filter(doc => Number(doc.id) !== 0) // 현장데스크 제외 (*여기선 승인시 배정으로 선택할 수 있기 때문)
+        .map(doc => ({
+            value: doc.id,
+            label: doc.userName || doc.name || ''
+        }));
 });
 
 //PlaceProductDetail.vue에서 선언한component 옵션 사용
@@ -161,7 +151,13 @@ watch(selectedDoctor, (newId) => {
     } else {
         // doctorOptions에서 현재 선택된 ID와 일치하는 label(이름) 찾기
         const selectedOpt = doctorOptions.value.find(opt => opt.value === newId);
-        basicInput.value.doctor = selectedOpt ? selectedOpt.label : "";
+
+        if(selectedOpt) {
+            // 선택된 옵션의 label을 basicInput.doctor에 저장
+            basicInput.value.doctor = selectedOpt.label;
+        } else {
+            basicInput.value.doctor = "";
+        }
     }
 });
 
@@ -416,8 +412,9 @@ const setInputData = (async() => {
     }
 
     //담당의 세팅
-    doctorAssignType.value = (basicInput.value.doctorId == "") ? "assign" : "select";
-    selectedDoctor.value = basicInput.value.doctorId??"";
+    const dId = basicInput.value.doctorId;
+    doctorAssignType.value = (!dId || dId === "" || Number(dId) === 0) ? "assign" : "select";
+    selectedDoctor.value = doctorAssignType.value === "assign" ? "" : dId;
 
     // 세팅이 완료된 후, 현재 상태를 원본으로 저장 (비교용)
     originalData.value = JSON.stringify({
