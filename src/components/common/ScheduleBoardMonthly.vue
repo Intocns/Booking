@@ -80,7 +80,8 @@ const summaryEvents = computed(() => {
                 id: `summary-${date}-${item.resourceId}`,
                 start: `${date}T00:00:00`,
                 end: `${date}T23:59:59`,
-                text: `${staff ? staff.name : item.resourceId} ${item.count}`,
+                text: `${staff ? staff.name : item.resourceId}`,
+                count: item.count, // 예약 건수
                 tags: { colorIdx, isSummary: true }, // tags에 컬러 번호 저장
 
             });
@@ -123,7 +124,7 @@ const config = ref({
             args.data.html = `
             <div class="summary-event-bar vet-color-${args.data.tags.colorIdx}">
                 <span class="s-name">${args.data.text.split(' ')[0]}</span>
-                <span class="s-count">${args.data.text.split(' ')[1]}</span>
+                <span class="s-count">${args.data.count}</span>
             </div>
             `;
         }
