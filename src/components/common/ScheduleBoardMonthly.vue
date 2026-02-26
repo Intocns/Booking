@@ -123,7 +123,7 @@ const config = ref({
         } else {
             args.data.html = `
             <div class="summary-event-bar vet-color-${args.data.tags.colorIdx}">
-                <span class="s-name">${args.data.text.split(' ')[0]}</span>
+                <span class="s-name">${args.data.text}</span>
                 <span class="s-count">${args.data.count}</span>
             </div>
             `;
