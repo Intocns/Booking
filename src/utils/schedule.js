@@ -50,12 +50,12 @@ export const getTimeError = (allRanges, index) => {
 
     if (index > 0) {
         const previous = allRanges[index - 1];
-        if (previous.endTime && previous.endTime >= current.startTime) {
+        if (previous.endTime && current.startTime && previous.endTime >= current.startTime) {
             return "시작 시간은 이전 종료 시간보다 커야 합니다.";
         }
     }
 
-    if (current.startTime >= current.endTime) {
+    if (current.startTime && current.endTime && current.startTime >= current.endTime) {
         return "마지막 시간은 시작 시간보다 빠를 수 없습니다.";
     }
 

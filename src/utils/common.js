@@ -38,15 +38,20 @@ export const validateTimeRanges = (timeRanges) => {
     for (let i = 0; i < timeRanges.length; i++) {
         const current = timeRanges[i];
 
-        if (!current.startTime || !current.endTime) continue;
+        if ((current.startTime && !current.endTime) || (!current.startTime && current.endTime)) {
+            return { isValid: false, message: '시작 시간과 종료 시간을 모두 입력해주세요.' };
+        }
+
+        if (!current.startTime && !current.endTime) continue;
 
         if (current.startTime >= current.endTime) {
             return { isValid: false, message: '마지막 시간은 시작 시간보다 빠를 수 없습니다.' };
         }
 
-        if(i > 0) {
+        if (i > 0) {
             const prev = timeRanges[i - 1];
-            if (current.startTime <= prev.endTime) {
+            // 이전 종료 시간이 있을 때만 비교
+            if (prev.endTime && current.startTime <= prev.endTime) {
                 return { isValid: false, message: '시작 시간은 이전 종료 시간보다 커야 합니다.' };
             }
         }

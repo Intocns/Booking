@@ -145,25 +145,35 @@ const clickNextBtn = (async() => {
 
     // --- 시간 유효성 검사 추가 ---
     for (const config of configs.value) {
-        let allRanges = [];
+        let validationGroups = []; // 검사할 배열들의 묶음
 
         if (config.operatingMode === 'all') {
-            allRanges = config.allDaysTime;
-        } else if (config.operatingMode === 'split') {
-            allRanges = [
-                ...config.splitTime.weekday,
-                ...config.splitTime.weekend,
-                ...config.splitTime.sat,
-                ...config.splitTime.sun
-            ];
-        } else if (config.operatingMode === 'daily') {
-            allRanges = config.dailyGroups.flatMap(g => g.times);
+            // 모든 날 동일: 한 묶음만 검사
+            validationGroups.push(config.allDaysTime);
+        } 
+        else if (config.operatingMode === 'split') {
+            // 주간/주말/토/일 각각 별도로 검사해야 함
+            if (config.splitTime.weekday.length) validationGroups.push(config.splitTime.weekday);
+            if (config.splitTime.weekend.length) validationGroups.push(config.splitTime.weekend);
+            if (config.splitTime.sat.length) validationGroups.push(config.splitTime.sat);
+            if (config.splitTime.sun.length) validationGroups.push(config.splitTime.sun);
+        } 
+        else if (config.operatingMode === 'daily') {
+            // 각 요일 그룹별로 별도로 검사
+            config.dailyGroups.forEach(g => {
+                if (g.times && g.times.length) {
+                    validationGroups.push(g.times);
+                }
+            });
         }
 
-        const result = validateTimeRanges(allRanges);
-        if (!result.isValid) {
-            showAlert(result.message);
-            return;
+        // 추출된 각 그룹별로 유효성 검사 실시
+        for (const range of validationGroups) {
+            const result = validateTimeRanges(range);
+            if (!result.isValid) {
+                showAlert(result.message);
+                return;
+            }
         }
     }
     // --------------------------
