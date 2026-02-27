@@ -63,6 +63,36 @@ const isCustomerMatched = (clientItem) => {
            (petPetNo && clientPetNo && String(petPetNo) === String(clientPetNo));
 };
 
+// 담당의 옵션 (CustomSingleSelect용)
+const doctorOptions = computed(() => {
+    const options = [];
+    
+    // 기본 옵션 추가 (매칭 안된 경우를 대비)
+    options.push({
+        value: null,
+        label: '담당의 선택'
+    });
+    
+    // 담당의 리스트 옵션 추가
+    if (hospitalStore.doctorList && hospitalStore.doctorList.length > 0) {
+        hospitalStore.doctorList.forEach(doc => {
+            options.push({
+                value: doc.id,
+                label: doc.userName || doc.name || ''
+            });
+        });
+    }
+    
+    return options;
+});
+
+// 담당의 value값으로 담당의 이름 반환
+const getDoctorName = (doctorValue) => {
+    if (!doctorValue) return '';
+    const doctor = doctorOptions.value.find(d => d.value === doctorValue);
+    return doctor ? doctor.label : '';
+}
+
 // 고객 정보 리스트 초기화 및 자동 매칭 처리
 const initializeClientList = () => {
     const clientList = modal.data.clientList || [];
@@ -80,7 +110,7 @@ const initializeClientList = () => {
         const matched = autoMatched || isCustomerMatched(item);
         return {
             ...item,
-            lastStatusDateTxt: item.lastStatusDate ? formatDate(item.lastStatusDate) : '',
+            lastVisitDateTxt: item.lastVisitDate ? formatDate(item.lastVisitDate) : '',
             regDateTxt: item.regDate ? formatDate(item.regDate) : '',
             isMatched: matched, // 고객번호가 매칭된 경우에만 매칭 상태
             rowClass: matched ? 'row-matched' : '', // 매칭된 행에 스타일 클래스 추가
@@ -92,7 +122,7 @@ const initializeClientList = () => {
             userAddr: item.userAddr || '',
             userAddr2: item.userAddr2 || '',
             // 담당의사 (1건인 경우 사용)
-            petDoctor: item.petDoctor || 'unknown',
+            petDoctor: Number(item.petDoctor) >= 0 ? getDoctorName(item.petDoctor) : '',
             // 관리자 (1건인 경우 사용)
             manager: '관리자',
         };
@@ -170,29 +200,6 @@ if (endSource) {
 if (reserveData.doctorName) {
     doctorName.value = reserveData.doctorName;
 } 
-
-// 담당의 옵션 (CustomSingleSelect용)
-const doctorOptions = computed(() => {
-    const options = [];
-    
-    // 기본 옵션 추가 (매칭 안된 경우를 대비)
-    options.push({
-        value: null,
-        label: '담당의 선택'
-    });
-    
-    // 담당의 리스트 옵션 추가
-    if (hospitalStore.doctorList && hospitalStore.doctorList.length > 0) {
-        hospitalStore.doctorList.forEach(doc => {
-            options.push({
-                value: doc.id,
-                label: doc.userName || doc.name || ''
-            });
-        });
-    }
-    
-    return options;
-});
 
 // 담당의 선택 시 이름 업데이트
 const handleDoctorChange = (doctorId) => {
@@ -320,17 +327,21 @@ const validateReservation = async () => {
 };
 
 // 예약 확정 버튼 클릭 핸들러
-const handleConfirmReservation = async () => {
+const handleConfirmReservation = async (isConfirmed) => {
     if (!await validateReservation()) {
         return;
     }
     
-    // 예약 확정 확인 모달 열기
-    modalStore.confirmReserveModal.openModal();
+    if(isConfirmed) { // 수정의 경우
+        handleConfirmReservationSave(isConfirmed)
+    } else {
+        // 예약 확정 확인 모달 열기
+        modalStore.confirmReserveModal.openModal();
+    }
 };
 
 // 예약 확정 실행 함수
-const handleConfirmReservationSave = async () => {
+const handleConfirmReservationSave = async (isConfirmed) => {
     // 선택된 담당의 정보 찾기
     const selectedDoctor = selectedDoctorId.value 
         ? hospitalStore.doctorList.find(doc => doc.id === selectedDoctorId.value)
@@ -369,8 +380,8 @@ const handleConfirmReservationSave = async () => {
         
         // 성공 메시지 표시
         modalStore.confirmModal.openModal({
-            title: '예약 확정',
-            text: '예약이 확정되었습니다.',
+            title: isConfirmed ? '' : '예약 확정',
+            text: isConfirmed ? '변경된 내용으로 저장되었습니다.' : '예약이 확정되었습니다.',
             confirmBtnText: '확인',
             noCancelBtn: true,
             onConfirm: () => {
@@ -380,8 +391,8 @@ const handleConfirmReservationSave = async () => {
     } else {
         // 실패 시 에러 메시지 표시
         modalStore.confirmModal.openModal({
-            title: '예약 확정 실패',
-            text: result.message || '예약 확정 중 오류가 발생했습니다.',
+            title: isConfirmed ? '' : '예약 확정 실패',
+            text: result.message || (isConfirmed ? '저장 중' : '예약 확정 중') + '오류가 발생했습니다.',
             confirmBtnText: '확인',
             noCancelBtn: true,
             onConfirm: () => modalStore.confirmModal.closeModal()
@@ -402,20 +413,20 @@ const handleCustomerSelected = (customer) => {
             speciesName: reserveData.spesice,
             petDoctor: '',
             rfid: '',
-            lastStatusDate: '',
+            lastVisitDate: '',
             regDate: '',
         },
         1: {
             petSno: customer.petSno,//동물번호
             breed: customer.breedName,//품종
-            sex: PET_GENDER_MAP[customer.sex] || '',//성별
+            sex: customer.sex || '',//성별
             petName: customer.petName,//동물명
             petBw: customer.petBw,//체중
             breedName: customer.breedName,//품종명
             speciesName: customer.speciesName,//종명
-            petDoctor: customer.petDoctor || '',// 담당의사 (1건인 경우 사용)
+            petDoctor: Number(customer.petDoctor) >= 0 ?  getDoctorName(customer.petDoctor) : '',// 담당의사 (1건인 경우 사용)
             rfid: customer.rfid || '',//동물등록번호
-            lastStatusDateTxt: customer.lastStatusDate ? formatDate(customer.lastStatusDate) : '',//최근방문일
+            lastVisitDateTxt: customer.lastVisitDate ? formatDate(customer.lastVisitDate) : '',//최근방문일
             regDateTxt: customer.regDate ? formatDate(customer.regDate) : '',//등록일
         }
     };
@@ -568,7 +579,7 @@ const customerInfoColumns = [
     { key: 'speciesName', label: '종', width: '10%' },
     { key: 'breed', label: '품종', width: '10%'},
     { key: 'sex', label: '성별', width: '10%'},
-    { key: 'lastStatusDateTxt', label: '최근방문일', width: '17%'},
+    { key: 'lastVisitDateTxt', label: '최근방문일', width: '17%'},
     { key: 'action', label: '고객매칭', width: '10%'},
 ]
 
@@ -638,8 +649,8 @@ const singlePetData = computed(() => {
             breedName: customer.breedName || '',
             sex: customer.sex || '',
             petInsertDate: customer.petInsertDate || customer.regDate || '',
-            lastVisitDate: customer.lastVisitDate || customer.lastStatusDate || '',
-            petDoctor: customer.petDoctor || '',
+            lastVisitDate: customer.lastVisitDate || '',
+            petDoctor: getDoctorName(customer.petDoctor) || '',
         };
     }
     return null;
@@ -1078,7 +1089,7 @@ const textPhoneNumber = computed(() => {
                                 </div>
                                 <div class="form-label" style="width:92px;">동물등록번호</div>
                                 <div class="form-content">
-                                    <span class="body-s">{{ singlePetData?.rfid ? singlePetData.rfid : '-' }}</span>
+                                    <span class="body-s">{{ singlePetData?.rfid ? singlePetData.rfid : '' }}</span>
                                 </div>
                             </li>
                             <li class="form-item">
@@ -1104,7 +1115,7 @@ const textPhoneNumber = computed(() => {
                             <li class="form-item">
                                 <div class="form-label">성별</div>
                                 <div class="form-content">
-                                    <span class="body-s">{{ singlePetData?.sex ? (PET_GENDER_MAP[singlePetData.sex] || '') : '' }}</span>
+                                    <span class="body-s">{{ singlePetData?.sex || '' }}</span>
                                 </div>
                                 <div class="form-label" style="width:92px;">담당의사</div>
                                 <div class="form-content">
@@ -1168,7 +1179,7 @@ const textPhoneNumber = computed(() => {
     <div v-if="!isCancelled" class="modal-button-wrapper">
         <div class="buttons">
             <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.cancelReserveModal.openModal()">예약거절</button>
-            <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation">{{ isConfirmed ? '저장' : '예약 확정' }}</button>
+            <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation(isConfirmed)">{{ isConfirmed ? '저장' : '예약 확정' }}</button>
         </div>
     </div>
 
@@ -1269,7 +1280,7 @@ const textPhoneNumber = computed(() => {
         <div class="modal-button-wrapper">
             <div class="buttons">
                 <button class="btn btn--size-32 btn--blue-outline" @click="modalStore.confirmReserveModal.closeModal()">닫기</button>
-                <button class="btn btn--size-32 btn--blue" @click="handleConfirmReservationSave">{{ isConfirmed ? '저장' : '예약 확정' }}</button>
+                <button class="btn btn--size-32 btn--blue" @click="handleConfirmReservationSave(isConfirmed)">{{ isConfirmed ? '저장' : '예약 확정' }}</button>
             </div>
         </div>
     </Modal>
