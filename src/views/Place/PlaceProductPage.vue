@@ -293,6 +293,17 @@ const goToPreviewPage = (businessId, itemId) => {
     window.open(`https://m.booking.naver.com/booking/13/bizes/${businessId}/items/${itemId}`)
 }
 
+const bookingConfirmCode = (code) => {
+    switch(code) {
+        case 'CF01':
+            return '신청과 동시에 확정';
+        case 'CF02':
+            return '관리자 확인 후 확정';
+        default:
+            return '';
+    }
+}
+
 onMounted(async () => {
     await productStore.getProductList();
 
@@ -387,7 +398,7 @@ onMounted(async () => {
                             </label>
                         </div>
         
-                        <span class="item-box__sub-text body-xs">관리자 확인 후 확정</span>
+                        <span class="item-box__sub-text body-xs">{{ bookingConfirmCode(product.bookingConfirmCode) }}</span>
                     </div>
                 </div>
 
