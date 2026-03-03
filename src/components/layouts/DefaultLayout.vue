@@ -140,11 +140,12 @@
         title="상품 등록 완료"
         size="xs"
         :modal-state="modalStore.productRegistrationCompleteModal"
+        modal-width="500px"
     >
         <div class="modal-contents-inner">
             <p class="modal-contents-subTitle">상품이 정상적으로 등록되었습니다.</p>
             <p class="modal-contents-body">
-                마지막으로 원활한 예약 관리를 위해 네이버 스마트 플레이스로 이동하여 <span class="strong">[플레이스 연결하기]</span>를 진행해주세요.
+                마지막으로 원활한 예약 관리를 위해<br/><span class="title-s">네이버 스마트 플레이스로 이동하여 <span class="strong">[플레이스 연결하기]</span>를 진행해주세요.</span>
             </p>
             <p class="modal-contents-body caption">
                 버튼 위치: 네이버 스마트플레이스 접속 &gt; 솔루션 메뉴 &gt;
@@ -152,6 +153,20 @@
             </p>
             <div class="product-registration-complete-modal__image-wrap">
                 <img :src="placeConnectButtonAlert" alt="플레이스 연결하기 버튼 위치 안내" class="product-registration-complete-modal__image">
+            </div>
+
+            <div class="d-flex flex-col gap-8 border-top" style="margin-top: 15px; padding-top: 10px;">
+                <p class="title-m">⚠️중요 안내</p>
+                <p class="body-m">
+                    기존에 등록된 상품을 불러온 경우, 네이버 시스템에 의해<br/>
+                    <span class="text-blue title-s">상품이 '미노출' 상태로 등록되며 예약받기 설정도 OFF(받지않음)으로 변경</span>됩니다.
+                </p>
+
+                <p class="body-m">플레이스 연결 완료 후, 예약관리자센터의 네이버 플레이스 관리 메뉴에서<br/>상품 노출 및 예약받기 설정을 반드시 확인해 주세요.</p>
+                <ul>
+                    <li>· 상품 노출 설정: 네이버 플레이스 관리 > 상품 관리 > 노출 설정</li>
+                    <li>· 예약 받기 설정: 네이버 플레이스 관리 > 플레이스 설정 > 운영 설정 > 예약 받기</li>
+                </ul>
             </div>
         </div>
         <div class="modal-button-wrapper">
@@ -166,7 +181,7 @@
                 </label>
             </div>
             <div class="buttons">
-                <button type="button" class="btn btn--size-24 btn--blue btn--c" @click="closeProductRegistrationCompleteModal">확인</button>
+                <button type="button" class="btn btn--size-32 btn--blue" @click="closeProductRegistrationCompleteModal">확인</button>
             </div>
         </div>
     </Modal>
@@ -266,6 +281,7 @@
         margin-top: 12px;
     }
     .product-registration-complete-modal__image {
+        width: 320px;
         max-width: 100%;
         height: auto;
         display: block;

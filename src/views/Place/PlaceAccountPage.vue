@@ -1000,11 +1000,10 @@ onUnmounted(() => {
     <ModalSimple
         v-if="modalStore.naverAccountGuideModal.isVisible"
         :modal-state="modalStore.naverAccountGuideModal"
-        modal-width="866px"
         title="네이버 연동 가이드"
     >
         <div class="modal-contents-inner" style="padding: 10px;">
-            <img :src="AccountGuideImg" alt="네이버연동가이드" style="width: 100%;">
+            <img :src="AccountGuideImg" alt="네이버연동가이드" style="height: 750px;">
         </div>
     </ModalSimple>
 
