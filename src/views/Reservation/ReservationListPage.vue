@@ -175,7 +175,7 @@ onMounted(async () => {
     <TableLayout>
         <!-- 검색필터 -->
         <template #filter>         
-            <FilterDate v-model="dateRange" :default-select="'7'" />
+            <FilterDate v-model="dateRange" :default-select="'today'" />
             <FilterSelect 
                 label="예약상태"
                 :options="reserveStatusOptions"
@@ -191,7 +191,7 @@ onMounted(async () => {
                 :options="reservationChannelOptions"
                 v-model="reservationChannel"
             />
-           
+            
             <FilterKeywordBtn 
                 v-model="keyword"
                 :placeholder="'고객명, 동물명, 전화번호 검색'"
