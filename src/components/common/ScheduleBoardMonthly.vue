@@ -281,7 +281,6 @@ onMounted(() => {
                     <div class="staff-title" @click="toggleStaff(staffId)">
                         <div class="title-wrapper">
                             <span class="title-l">{{ group.name }}</span>
-                            <span class="body-l">수의사</span>
                         </div>
 
                         <div class="d-flex gap-16">
@@ -449,16 +448,13 @@ onMounted(() => {
                     align-items: center;
                     justify-content: space-between;
                     padding: 16px;
+                    gap: 8px;
 
                     color: $gray-700;
 
                     .title-wrapper {
-                        display: flex;
-                        align-items: center;
-                        gap: 4px;
-                    }
-                    .title-l {
-                        max-width: 120px;
+                        flex:1;
+
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
