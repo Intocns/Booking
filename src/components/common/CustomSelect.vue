@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue';
 import { formatSelectedLabels } from '@/utils/selectFormatter';
 import icSelectBoxOpenClosed from '@/assets/icons/ic_selectbox_OpenClosed.svg';
 
@@ -16,6 +16,7 @@ const emit = defineEmits(['update:modelValue']);
 
 const isOpen = ref(false);
 const wrapper = ref(null);
+const localSelected = ref([...props.modelValue]); // 내부 임시 값 (부모의 modelValue와 별개로 움직임)
 
 // 'all' 옵션을 제외한 순수한 옵션들의 value 목록
 const individualOptionValues = computed(() => {
@@ -26,10 +27,19 @@ const individualOptionValues = computed(() => {
 });
 
 /* 토글 */
-const toggle = () => {
-    if (!props.disabled) {
-        isOpen.value = !isOpen.value;
-        if (isOpen.value) updatePosition();
+const toggle = (e) => {
+    if (props.disabled) return;
+
+    if (e) e.stopPropagation();
+
+    if (isOpen.value) {
+        // 이미 열려있는데 다시 누르면 '닫기' 이므로 확정 로직 실행
+        isOpen.value = false;
+        emit("update:modelValue", localSelected.value);
+    } else {
+        // 열 때는 값 동기화 후 열기만 함
+        isOpen.value = true;
+        updatePosition();
     }
 };
 
@@ -59,11 +69,10 @@ const displayText = computed(() => {
     return formatSelectedLabels(selectedLabels.value, props.placeholder);
 });
 
-
 /* 🔹 옵션 선택 */
 const selectOption = (value) => {
     // modelValue가 없거나 undefined인 경우 빈 배열로 초기화
-    const currentValue = props.modelValue || [];
+    const currentValue = localSelected.value || [];
     let newValue = [...currentValue];
 
     if (value === 'all') {
@@ -110,14 +119,24 @@ const selectOption = (value) => {
     }
 
     // 빈 배열도 정상적으로 emit (null이 아닌 빈 배열)
-    emit("update:modelValue", newValue);
+    localSelected.value = newValue;
 };
 
 /* 외부 클릭 → 닫기 */
 const handleClickOutside = (e) => {
-  if (wrapper.value && !wrapper.value.contains(e.target)) {
-    isOpen.value = false;
-  }
+    if (!isOpen.value) return;
+
+    // wrapper(셀렉트 박스 본체) 안을 눌렀는지 확인
+    const isInsideWrapper = wrapper.value && wrapper.value.contains(e.target);
+    // dropdownRef(텔레포트된 드롭다운) 안을 눌렀는지 확인
+    const isInsideDropdown = dropdownRef.value && dropdownRef.value.contains(e.target);
+
+    if (!isInsideWrapper && !isInsideDropdown) {
+        isOpen.value = false;
+        
+        // 창이 닫힐 때 최종적으로 부모에게 업데이트
+        emit("update:modelValue", localSelected.value); 
+    }
 };
 
 const triggerRef = ref(null); // .select__box 참조
@@ -194,13 +213,13 @@ onBeforeUnmount(() => {
                     v-for="opt in options" 
                     :key="opt.value"
                     class="select__option"
-                    :class="{ selected: modelValue.includes(opt.value) || (modelValue.includes('all') && opt.value !== 'all') }"
+                    :class="{ selected: localSelected.includes(opt.value) || (localSelected.includes('all') && opt.value !== 'all') }"
                     @click.stop="selectOption(opt.value)"
                 >
                     <label class="checkbox">
                         <input 
                             type="checkbox" 
-                            :checked="modelValue.includes(opt.value) || (modelValue.includes('all') && opt.value !== 'all')"
+                            :checked="localSelected.includes(opt.value) || (localSelected.includes('all') && opt.value !== 'all')"
                             @click.stop.prevent
                         />
                         <span class="box"></span>
