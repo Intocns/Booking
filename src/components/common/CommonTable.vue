@@ -1,16 +1,20 @@
 <!-- 테이블 컴포넌트 -->
 <script setup>
-import { defineProps, defineEmits, useSlots, computed } from 'vue';
+import { defineProps, defineEmits, useSlots, computed, ref } from 'vue';
 import icEmpty from '@/assets/icons/ic_empty.svg'
 import icMore from '@/assets/icons/ic_more_btn.svg'
 import icInformation from '@/assets/icons/ic_information_blue.svg'
 import icInformationB from '@/assets/icons/ic_infomation_b.svg'
+import icSort from '@/assets/icons/ic_sort.svg'
+import icSortUp from '@/assets/icons/ic_sort_up.svg'
+import icSortDown from '@/assets/icons/ic_sort_down.svg'
+import Spinner from './Spinner.vue';
 
 const props = defineProps({
     title: { type: String, default: '' },
     tableRoute: { type: [String, Object], default: null },  // 타이틀 화살표 버튼으로 이동하는 route 경로
     tableLink: { type: String }, // 타이틀 화살표 버튼으로 이동하는 url link 경로
-    columns: { type: Array },   // [{ key:'name', label:'이름', width:'100px' }]
+    columns: { type: Array },   // [{ key:'name', label:'이름', width:'100px', sortable: true, }] // *sortable 값 추가시 기능 추가됨
     rows: { type: Array},      // [{ name:'철이', phone:'010...' }]
     tableEmptyText: { type: String, default: '검색 결과가 없습니다.' }, // 테이블이 비었을 때 보여줄 서브 텍스트
     tableEmptySubText: { type: String, default: '' }, // 테이블이 비었을 때 보여줄 서브 텍스트
@@ -35,6 +39,36 @@ const handleEmptyBtnClick = () => {
 const slots = useSlots();
 // 슬롯이 정의된 컬럼의 key들만 Set으로 미리 뽑아둠
 const definedSlotKeys = computed(() => new Set(Object.keys(slots)));
+
+const sortConfig = ref({
+    key: null,      // 현재 정렬 기준 컬럼
+    order: 'none'   // 'asc', 'desc', 'none'
+});
+
+const handleSort = (key) => {
+    let order = 'asc';
+    if (sortConfig.value.key === key) {
+        if (sortConfig.value.order === 'asc') order = 'desc';
+        else if (sortConfig.value.order === 'desc') order = 'none';
+    }
+    sortConfig.value = { key: order === 'none' ? null : key, order };
+};
+
+// 실제 화면에 보여줄 로컬 정렬 데이터 
+const sortedRows = computed(() => {
+    const { key, order } = sortConfig.value;
+    if (!key || order === 'none') return props.rows;
+
+    return [...props.rows].sort((a, b) => {
+        const aVal = a[key];
+        const bVal = b[key];
+
+        if (aVal === bVal) return 0;
+        
+        const modifier = order === 'asc' ? 1 : -1;
+        return aVal > bVal ? modifier : -modifier;
+    });
+});
 </script>
 
 <template>
@@ -78,8 +112,20 @@ const definedSlotKeys = computed(() => new Set(Object.keys(slots)));
                 <!-- thead -->
                 <thead v-show="!noThead">
                     <tr>
-                        <th v-for="col in columns" :key="col.key" :style="{ textAlign: col.text_align }">
-                            <div class="d-flex align-center justify-center gap-4">
+                        <th 
+                            v-for="col in columns" 
+                            :key="col.key" 
+                            :class="[
+                                { 'sortable-th' : col.sortable},
+                                { 'is-sorted': sortConfig.key === col.key && sortConfig.order !== 'none' }
+                            ]" 
+                            :style="{ textAlign: col.text_align }"
+                            @click="col.sortable && handleSort(col.key)"
+                        >
+                            <div 
+                                class="d-flex align-center justify-center gap-4" 
+                                :class="{'active' : sortConfig.order != 'none'}"
+                            >
                                 {{ col.label }}
     
                                 <div v-if="col.tooltip" class="helper">
@@ -88,6 +134,14 @@ const definedSlotKeys = computed(() => new Set(Object.keys(slots)));
                                         {{ col.tooltip }}
                                     </div>
                                 </div>
+
+                                <span v-if="col.sortable" class="sort-icons">
+                                    <template v-if="sortConfig.key == col.key">
+                                        <span v-if="sortConfig.order === 'asc'"><img :src="icSortUp" alt="정렬아이콘"  width="20"></span>
+                                        <span v-if="sortConfig.order === 'desc'"><img :src="icSortDown" alt="정렬아이콘" width="20"></span>
+                                    </template>
+                                    <span v-else><img :src="icSort" alt="정렬아이콘" width="20"></span>
+                                </span>
                             </div>
                         </th>
                     </tr>
@@ -95,7 +149,7 @@ const definedSlotKeys = computed(() => new Set(Object.keys(slots)));
                 <!-- tbody -->
                 <tbody>
                     <tr 
-                        v-for="(row, rIndex) in rows" 
+                        v-for="(row, rIndex) in sortedRows" 
                         :key="row.idx" 
                         @click="$emit('row-click', row)" 
                         :class="[row.rowClass,
@@ -143,7 +197,6 @@ const definedSlotKeys = computed(() => new Set(Object.keys(slots)));
                     </button>
                 </div>
             </template>
-
         </div>
     </div>
 </template>
@@ -211,7 +264,15 @@ const definedSlotKeys = computed(() => new Set(Object.keys(slots)));
         border-bottom: 1px solid $gray-300;
 
         tr { height: 40px; }
-        th { border-top: 2px solid $gray-700; }
+        th { 
+            border-top: 2px solid $gray-700;
+
+            & > div {line-height: 1;}
+
+            &.sortable-th { cursor: pointer; }
+            &.sortable-th:hover { background-color: $gray-200; }
+            &.is-sorted { background-color: $gray-200; }
+        }
     }
 
     th {
@@ -268,7 +329,6 @@ const definedSlotKeys = computed(() => new Set(Object.keys(slots)));
         height: 100%; // thead가 없을 때 높이 조정
     }
 }
-
 
 .helper {
     position: relative; // 툴팁 위치의 기준점
