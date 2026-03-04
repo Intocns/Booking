@@ -7,6 +7,11 @@ import icConfirm from '@/assets/icons/ic_res_confirm.svg'
 import icPersonal from '@/assets/icons/ic_res_personal.svg'
 import icCancel from '@/assets/icons/ic_res_canceled.svg'
 import icHold from '@/assets/icons/ic_res_hold.svg'
+// 예약 경로 아이콘
+import icNaver from '@/assets/icons/ic_res_naver.svg'
+import icIntoPet from '@/assets/icons/ic_res_intoPet.svg'
+import icIntoLink from '@/assets/icons/ic_res_intolink.svg'
+
 import icClose from '@/assets/icons/ic_btn_close_b.svg'
 // 스토어
 import { useReservationStore } from '@/stores/reservationStore';
@@ -25,6 +30,16 @@ const statusIcons = {
     // 1: '예약확정',
     // 2: '예약취소',
     // 3: '예약거절'??
+    // 예약 경로 아이콘 매핑
+const pathIcons = {
+    1: icIntoLink,
+    2: icIntoPet,
+    4: icNaver,
+};
+    // 1: 'IntoVetGE',
+    // 2: '인투펫',
+    // 3: 'fitpet',
+    // 4: '네이버예약'
 
 const props = defineProps({
     events: { type: Array, default: () => [] },
@@ -200,8 +215,11 @@ const getInState = (data) => {
                             {{ formatTime(event.start) }}
                         </div>
                         <div class="event-info">
-                            <span v-if="event.clinicType == '개인일정' || event.clinicType == '일반예약'" class="patient">{{ event.clinicType }}</span>
-                            <span v-else class="patient">{{ event.userName }}{{ event.petName ? '(' + event.petName + ')' : '' }}</span>
+                            <div class="d-flex align-center gap-4">
+                                <img :src="pathIcons[event.reRoute] || ''" alt="경로아이콘" width="13">
+                                <span v-if="event.clinicType == '개인일정' || event.clinicType == '일반예약'" class="patient">{{ event.clinicType }}</span>
+                                <span v-else class="patient">{{ event.userName }}{{ event.petName ? '(' + event.petName + ')' : '' }}</span>
+                            </div>
                             <span class="memo">{{ event.roomName }}</span>
                         </div>
                     </div>
@@ -323,7 +341,7 @@ const getInState = (data) => {
 }
 
 .detail-sidebar {
-    width: 300px;
+    width: 345px;
     // padding: 16px;
     height: 100%;
 
@@ -352,7 +370,7 @@ const getInState = (data) => {
             flex:1;
 
             .staff-name {
-                max-width: 160px;
+                max-width: 190px;
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 overflow: hidden;
@@ -375,7 +393,7 @@ const getInState = (data) => {
     .detail-item {
         display: flex;
         align-items: center;
-        padding: 8px 16px;
+        padding: 8px 12px;
         gap: 6px;
         margin-bottom: 8px;
         border-radius: 4px;
@@ -400,10 +418,13 @@ const getInState = (data) => {
             flex: 1;
             display: flex;
             justify-content: space-between;
+            gap: 4px;
+
+            & > div { flex: 1;}
 
             .patient {
                 min-width: 0;
-                max-width: 80px;
+                max-width: 140px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;

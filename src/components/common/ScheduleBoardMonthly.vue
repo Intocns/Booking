@@ -8,6 +8,11 @@ import icConfirm from '@/assets/icons/ic_res_confirm.svg'
 import icPersonal from '@/assets/icons/ic_res_personal.svg'
 import icCancel from '@/assets/icons/ic_res_canceled.svg'
 import icHold from '@/assets/icons/ic_res_hold.svg'
+// 예약 경로 아이콘
+import icNaver from '@/assets/icons/ic_res_naver.svg'
+import icIntoPet from '@/assets/icons/ic_res_intoPet.svg'
+import icIntoLink from '@/assets/icons/ic_res_intolink.svg'
+
 import icPlusCircle from '@/assets/icons/ic_plus_circle.svg'
 import icClose from '@/assets/icons/ic_btn_close_b.svg'
 // 스토어
@@ -25,6 +30,15 @@ const statusIcons = {
     3: icCancel, // 거절
     4: icPersonal, //개인일정
 };
+const pathIcons = {
+    1: icIntoLink,
+    2: icIntoPet,
+    4: icNaver,
+};
+    // 1: 'IntoVetGE',
+    // 2: '인투펫',
+    // 3: 'fitpet',
+    // 4: '네이버예약'
 
 const props = defineProps(['startDate', 'events', 'staffs']);
 const emit = defineEmits(['date-click']);
@@ -244,6 +258,20 @@ const groupedSelectedEvents = computed(() => {
     return groups;
 });
 
+// 사이드바 닫기 및 선택 해제 핸들러
+const handleCloseSidebar = () => {
+    // 1. 상세 영역을 닫기 위해 제목 데이터 초기화
+    selectedDate.value = null;
+    
+    // 2. 캘린더 셀 하이라이트를 제거하기 위해 날짜 문자열 초기화
+    selectedDateStr.value = "";
+    
+    // 4. 캘린더 인스턴스를 즉시 업데이트하여 배경색(onBeforeCellRender)을 다시 계산하게 함
+    if (calendarRef.value && calendarRef.value.control) {
+        calendarRef.value.control.update();
+    }
+};
+
 // 토글 함수
 const toggleStaff = (staffId) => {
     openStaffs.value[staffId] = !openStaffs.value[staffId];
@@ -278,7 +306,7 @@ onMounted(() => {
         <div class="detail-sidebar" v-if="selectedDate">
             <div class="detail-header">
                 <span class="heading-s">{{ selectedDate }}</span>
-                <div class="close-btn" @click="() => selectedDate = null">
+                <div class="close-btn" @click="handleCloseSidebar">
                     <img :src="icClose" alt="닫기 아이콘">
                 </div>
             </div>
@@ -305,19 +333,22 @@ onMounted(() => {
                             :class="`detail-item__${ev.clinicType === '개인일정' ? 4 : ev.inState}`"
                             @click="handelReserveDetail(ev.reserveIdx)"
                         >
-                            <div class="d-flex gap-6">
-                                <div class="d-flex gap-4">
-                                    <img 
-                                        :src="statusIcons[ev.clinicType === '개인일정' ? 4 : ev.inState]"
-                                        alt="" 
-                                        class="status-icon"
-                                    />
-                                    <span class="time title-s">{{ ev.start.split('T')[1].substring(0,5) }}</span>
-                                </div>
-                                <span v-if="ev.clinicType == '개인일정' || ev.clinicType == '일반예약'" class="patient body-s">{{ ev.clinicType }}</span>
-                                <span v-else class="patient body-s">{{ ev.userName }}{{ ev.petName ? '(' + ev.petName + ')' : '' }}</span>
+                            <div class="time-box">
+                                <img 
+                                    :src="statusIcons[ev.clinicType === '개인일정' ? 4 : ev.inState]"
+                                    alt="" 
+                                    class="status-icon"
+                                />
+                                <span class="time title-s">{{ ev.start.split('T')[1].substring(0,5) }}</span>
                             </div>
-                            <span class="memo body-s">{{ ev.roomName }}</span>
+                            <div class="event-info">
+                                <div class="d-flex align-center gap-4">
+                                    <img :src="pathIcons[ev.reRoute] || ''" alt="경로아이콘" width="13">
+                                    <span v-if="ev.clinicType == '개인일정' || ev.clinicType == '일반예약'" class="patient body-s">{{ ev.clinicType }}</span>
+                                    <span v-else class="patient body-s">{{ ev.userName }}{{ ev.petName ? '(' + ev.petName + ')' : '' }}</span>
+                                </div>
+                                <span class="memo body-s">{{ ev.roomName }}</span>
+                            </div>
                         </div>  
                     </div>
                 </div>
@@ -425,7 +456,7 @@ onMounted(() => {
     :deep(.month_default_shadow) {display: none;}
 
     .detail-sidebar {
-        width: 300px;
+        width: 345px;
         display: flex;
         flex-direction: column;
 
@@ -501,28 +532,50 @@ onMounted(() => {
         .detail-item { 
             display: flex;
             align-items: center;
-            justify-content: space-between;
             gap: 8px; 
-            padding: 8px 16px;
+            padding: 8px 12px;
             cursor: pointer;
 
             border-radius: 4px;
 
-            .patient {
-                min-width: 0;
-                max-width: 80px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+            // 왼쪽 시간 강조 스타일
+            .time-box {
+                width: 60px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+
+                @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
+                line-height: 1;
+
+                .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
             }
 
-            .memo {
-                max-width: 70px;
-                text-align: right;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+            .event-info {
+                flex: 1;
+                display: flex;
+                justify-content: space-between;
+                gap: 4px;
+
+                & > div { flex: 1;}
+
+                .patient {
+                    min-width: 0;
+                    max-width: 140px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+    
+                .memo {
+                    max-width: 70px;
+                    text-align: right;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
             }
+
 
             // 상태별 사이드바 아이템 색상
             &__1 { background: $status-confirmed_bg; color: $status-confirmed_text; } // 확정
