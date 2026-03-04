@@ -9,6 +9,7 @@ import icPersonal from '@/assets/icons/ic_res_personal.svg'
 import icCancel from '@/assets/icons/ic_res_canceled.svg'
 import icHold from '@/assets/icons/ic_res_hold.svg'
 import icPlusCircle from '@/assets/icons/ic_plus_circle.svg'
+import icClose from '@/assets/icons/ic_btn_close_b.svg'
 // 스토어
 import { useHospitalStore } from "@/stores/hospitalStore";
 import { useReservationStore } from "@/stores/reservationStore";
@@ -275,7 +276,12 @@ onMounted(() => {
         
         <!-- 오른쪽 상세영역 -->
         <div class="detail-sidebar" v-if="selectedDate">
-            <div class="detail-header">{{ selectedDate }}</div>
+            <div class="detail-header">
+                <span class="heading-s">{{ selectedDate }}</span>
+                <div class="close-btn" @click="() => selectedDate = null">
+                    <img :src="icClose" alt="닫기 아이콘">
+                </div>
+            </div>
             <div class="detail-list">
                 <div v-for="(group, staffId) in groupedSelectedEvents" :key="staffId" class="staff-group">
                     <div class="staff-title" @click="toggleStaff(staffId)">
@@ -427,9 +433,14 @@ onMounted(() => {
         border: 1px solid $gray-200;
 
         .detail-header { 
-            @include typo($heading-s-size, $heading-s-weight, $heading-s-spacing, $heading-s-line);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: space-between;
             padding: 16px; 
             border-bottom: 1px solid $gray-200;
+
+            .close-btn {cursor: pointer;}
         }
 
         .detail-list { 

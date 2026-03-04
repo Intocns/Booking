@@ -7,6 +7,7 @@ import icConfirm from '@/assets/icons/ic_res_confirm.svg'
 import icPersonal from '@/assets/icons/ic_res_personal.svg'
 import icCancel from '@/assets/icons/ic_res_canceled.svg'
 import icHold from '@/assets/icons/ic_res_hold.svg'
+import icClose from '@/assets/icons/ic_btn_close_b.svg'
 // 스토어
 import { useReservationStore } from '@/stores/reservationStore';
 
@@ -173,8 +174,14 @@ const getInState = (data) => {
         <div v-if="selectedCell.fullDate" class="detail-sidebar">
             <div class="detail-container">
                 <div class="detail-header">
-                    <span class="staff-name">{{ selectedCell.staffName }}</span>
-                    <span class="date-info">{{ selectedCell.date }} ({{ selectedCell.dayName }})</span>
+                    <div class="name-wrapper">
+                        <span class="staff-name">{{ selectedCell.staffName }}</span>
+                        <span class="date-info">{{ selectedCell.date }} ({{ selectedCell.dayName }})</span>
+                    </div>
+
+                    <div class="close-btn" @click="() => selectedCell.fullDate = null">
+                        <img :src="icClose" alt="닫기 아이콘">
+                    </div>
                 </div>
                 
                 <div class="detail-list">
@@ -333,12 +340,29 @@ const getInState = (data) => {
         display:flex;
         align-items: center;
         justify-content: space-between;
+        gap:6px;
         padding: 16px;
 
         border-bottom: 1px solid $gray-200;
 
-        .staff-name { @include typo($heading-s-size, $heading-s-weight, $heading-s-spacing, $heading-s-line); }
-        .date-info { @include typo($body-l-size, $body-l-weight, $body-l-spacing, $body-l-line);}
+        .name-wrapper {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex:1;
+
+            .staff-name {
+                max-width: 160px;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+
+                @include typo($heading-s-size, $heading-s-weight, $heading-s-spacing, $heading-s-line); 
+            }
+            .date-info { @include typo($body-l-size, $body-l-weight, $body-l-spacing, $body-l-line);}
+        }
+
+        .close-btn {cursor: pointer;}
     }
 
     .detail-list {
