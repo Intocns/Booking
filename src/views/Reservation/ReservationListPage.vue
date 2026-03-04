@@ -51,17 +51,17 @@ const openSmsModal = (row) => {
 const columns = [
     { key: 'idx', label: 'No.', width: '6%' },
     { key: 'inStateTxt', label: '예약상태', width: '6%' },
-    { key: 'reTimeTxt', label: '예약일자', width: '7%' },
+    { key: 'reTimeTxt', label: '예약일자', width: '7%', sortable: true,}, // sortable 값 추가시 정렬 기능
     { key: 'reTimeHisTxt', label: '예약시간', width: '5%' },
     { key: 'roomName', label: '상품명/진료실명', width: '12%' },
-    { key: 'userName', label: '고객명', width: '7%' },
+    { key: 'userName', label: '고객명', width: '7%', sortable: true, },
     { key: 'phoneTxt', label: '전화번호', width: '10%' },
     { key: 'petName', label: '동물명', width: '8%' },
     { key: 'speciesName', label: '종', width: '6%' },
     { key: 'doctor', label: '담당의', width: '7%' },
     { key: 'geReMemo', label: '병원 메모', width: '12%' },
     { key: 'reRouteTxt', label: '예약경로', width: '7%' },
-    { key: 'createdAtTxt', label: '접수일시', width: '10%' },
+    { key: 'createdAtTxt', label: '접수일시', width: '10%', sortable: true, },
     { key: 'actions', label: '관리', width: '7%' },
 ]
 
