@@ -321,6 +321,8 @@ const sortedRows = computed(() => {
 
 }
 
+.sort-icons {flex-shrink: 0;}
+
 .empty-box {
     height: calc(100% - 41px);
     background-color: $gray-00;
