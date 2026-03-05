@@ -400,13 +400,13 @@ const onHolidayCheckChange = (e) => {
                                         <TimeSelect
                                             :model-value="`${(time.st_hour||'00시').replace('시','')}:${(time.st_min||'00분').replace('분','')}`"
                                             @update:model-value="(val) => updateTime('monday', idx, 'st', val)"
-                                            :disabled="time.is_disabled === 1"
+                                            :disabled="isWeekdayDisabled"
                                         />
                                         <span>-</span>
                                         <TimeSelect
                                             :model-value="`${(time.end_hour||'00시').replace('시','')}:${(time.end_min||'00분').replace('분','')}`"
                                             @update:model-value="(val) => updateTime('monday', idx, 'end', val)"
-                                            :disabled="time.is_disabled === 1"
+                                            :disabled="isWeekdayDisabled"
                                         />
                                     </div>
                                     <div class="btn-box">
@@ -414,7 +414,7 @@ const onHolidayCheckChange = (e) => {
                                             v-if="idx === 0" 
                                             @click="addTimeRange('monday')"
                                             class="btn btn--size-24 btn--black-outline"
-                                            :class="{ 'is-disabled': time.is_disabled === 1 }"
+                                            :class="{ 'is-disabled': isWeekdayDisabled }"
                                         >
                                             <img :src="icPlus">시간 추가
                                         </button>
@@ -458,7 +458,7 @@ const onHolidayCheckChange = (e) => {
                                             v-if="idx === 0" 
                                             @click="addTimeRange('sat')"
                                             class="btn btn--size-24 btn--black-outline"
-                                            :class="{ 'is-disabled': time.is_disabled === 1 }"
+                                            :class="{ 'is-disabled': isWeekendDisabled }"
                                         >
                                             <img :src="icPlus">시간 추가
                                         </button>
