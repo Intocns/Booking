@@ -257,8 +257,8 @@ const getInState = (data) => {
 
     tr.today-row {
         td {
-            border-top: 1px solid $primary-200;
-            border-bottom: 1px solid $primary-200;
+            border-top: 1px solid $primary-500;
+            border-bottom: 1px solid $primary-500;
 
             &:first-child {background-color: $primary-50;}
         }

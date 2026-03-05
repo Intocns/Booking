@@ -188,6 +188,7 @@ const config = ref({
         // 2. 오늘 날짜 하이라이트
         if (cellDate === today) {
             args.cell.properties.backColor = "#E2F3FF";
+            args.cell.properties.html = '<div class="today-cell-marker"></div>';
         }
 
         // 3. 사용자가 클릭해서 선택한 날짜 (가장 우선순위 높음)
@@ -408,6 +409,12 @@ onMounted(() => {
 
     :deep(.month_default_event) {
         transform: translateY(-60%);
+    }
+
+    :deep(.today-cell-marker) {
+        position: absolute;
+        inset: 0;
+        border: 1px solid $primary-500 !important;
     }
 
     :deep(.month_default_event_inner) {
