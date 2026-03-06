@@ -1009,7 +1009,7 @@ const textPhoneNumber = computed(() => {
 
                     <!-- 고객 검색 버튼 -->
                     <button 
-                        v-if="!isCancelled"
+                        v-if="!isCancelled && !isConfirmed"
                         class="btn btn--size-24 btn--black" 
                         @click="modalStore.searchCustomerModal.openModal()"
                     >
@@ -1061,10 +1061,16 @@ const textPhoneNumber = computed(() => {
 
                     <div class="d-flex flex-col gap-6" style="flex:1;">
                         <!-- 동물 정보 (오른쪽) - 2열 테이블 형태 -->
-                        <div class="d-flex align-center justify-between">
+                        <div class="d-flex align-center justify-between" style="height: 24px;">
                             <p class="title-s">동물 정보</p>
-                            <button class="btn btn--size-24 btn--black-outline" :class="{'is-disabled':isCancelled}"
-                            :disabled="isCancelled" @click="unmatchCustomer">매칭해제</button>
+                            <button 
+                                v-if="!isConfirmed"
+                                class="btn btn--size-24 btn--black-outline" 
+                                :class="{'is-disabled':isCancelled}"
+                                :disabled="isCancelled" 
+                                @click="unmatchCustomer">
+                                    매칭해제
+                            </button>
                         </div>
                         <ul class="form-container">
                             <li class="form-item">
@@ -1143,7 +1149,7 @@ const textPhoneNumber = computed(() => {
 
                     <!-- 고객 검색 버튼 (취소/거절 시 미표시) -->
                     <button 
-                        v-if="!isCancelled"
+                        v-if="!isCancelled && !isConfirmed"
                         class="btn btn--size-24 btn--black" 
                         @click="modalStore.searchCustomerModal.openModal()"
                     >

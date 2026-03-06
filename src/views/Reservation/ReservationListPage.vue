@@ -138,7 +138,7 @@ const searchClear = () => {
     reservationChannel.value = ['all'];
     keyword.value = '';
     const today = startOfDay(new Date());
-    dateRange.value = [today, addDays(today, 7)];
+    dateRange.value = [today, today];
 };
 
 let isInitialMount = true;
