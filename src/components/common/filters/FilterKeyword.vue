@@ -56,7 +56,7 @@ const emit = defineEmits(['update:modelValue', 'search']);
         align-items: center;
     }
     .search-filter__icons {
-        width: 36px;
+        // width: 36px;
         display: flex;
         justify-content: flex-end;
         gap: 4px;
@@ -82,7 +82,7 @@ const emit = defineEmits(['update:modelValue', 'search']);
         height: 32px;
         padding: 0 10px;
         align-items: center;
-        gap: 10px;
+        gap: 4px;
 
         border: 1px solid $gray-200;
         border-radius: 4px;

@@ -217,6 +217,7 @@ const showClearIcon = computed(() => {
 
     input[type="text"] {
         flex: 1;
+        width:100%;
         height: 100%;
         border: none;
         background-color: transparent;
@@ -240,7 +241,7 @@ const showClearIcon = computed(() => {
     }
 
     &__icons {
-        width: 16px;
+        // width: 16px;
         display: flex;
     }
 
