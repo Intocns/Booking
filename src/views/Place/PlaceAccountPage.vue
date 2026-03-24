@@ -545,7 +545,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <PageTitle title="네이버 연동 계정 관리" desc-text="네이버로 접수된 예약을 인투링크와 인투벳GE 차트에 연동하여 관리해보세요."/>
+    <PageTitle title="네이버 연동 계정 관리" :desc-text="'네이버로 접수된 예약을 인투링크와 인투벳GE 차트에 연동하여 관리해보세요.\n연동 후 네이버 플레이스에서 수정한 내용은 인투링크에 반영되지 않으며, 오류가 발생할 수 있습니다. 변경이 필요한 경우 인투링크에서 수정해주세요.'"/>
 
     <TableLayout>
 
@@ -884,6 +884,9 @@ onUnmounted(() => {
             <p class="modal-contents-subTitle">연동이 완료되었습니다.</p>
             <p class="modal-contents-body">
                 네이버 플레이스에 등록된 병원 정보 및 상품 정보를 불러옵니다.
+            </p>
+            <p style="color:#1B63EC">
+                연동 후 네이버 플레이스에서 수정한 내용은<br/><strong>인투링크에 반영되지 않으며, 오류가 발생</strong>할 수 있습니다.<br/>변경이 필요한 경우 인투링크에서 수정해주세요.
             </p>
         </div>
 
