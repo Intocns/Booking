@@ -26,6 +26,7 @@ import { useTalkSmsStore } from '@/stores/talkSmsStore';
 
 // 스토어
 import { useModalStore } from '@/stores/modalStore'
+import { EXTERNAL_LINKS } from '@/constants'
 
 const modalStore = useModalStore();
 const talkSmsStore = useTalkSmsStore();
@@ -97,7 +98,7 @@ const noticeColumns = [
 
 //공지사항 클릭 이벤트 => 이동
 const openNoticeDetail = (row) => {
-  window.open('https://intolink.co.kr/cscenter/noticeDet/'+row.idx)
+  window.open(`${EXTERNAL_LINKS.NOTICE_DET}/${row.idx}`)
 }
 
 // 예약 상세보기 핸들러
@@ -263,7 +264,7 @@ onMounted(() => {
             <CommonHorizontalTable
                 title="병원정보"
                 :columns="hospitalColumns"
-                :table-link="'https://intolink.co.kr/mylink/hospital'"
+                :table-link="EXTERNAL_LINKS.MY_HOSPITAL"
                 :data="hospitalStore.hospitalInfo"
                 :max-height="150"
             />
@@ -272,7 +273,7 @@ onMounted(() => {
             <!-- 공지사항 -->
             <CommonTable 
                 title="공지사항"
-                :table-link="'https://intolink.co.kr/cscenter/notice'"
+                :table-link="EXTERNAL_LINKS.NOTICE"
                 :columns="noticeColumns"
                 :rows="noticeStore.noticeList"
                 @row-click="openNoticeDetail"

@@ -4,6 +4,10 @@ import icBtnCloseB from '@/assets/icons/ic_btn_close_b.svg'
 import { useModalStore } from '@/stores/modalStore';
 import { ref, Transition, computed } from 'vue';
 
+const props = defineProps({
+    isMobile: {type: Boolean, default: false,}, // 모바일 환경 체크
+})
+
 const modalStore = useModalStore();
 const modal = modalStore.confirmModal;
 
@@ -30,11 +34,11 @@ const handelCancel = () => {
 <template>
     <teleport to='#app'>
         <Transition name="modal">
-            <div v-if="modalStore.confirmModal.isVisible" class="modal-backdrop" style="z-index: 999;">
-                <div class="modal-container confirm-modal"  @click.stop>
+            <div v-if="modalStore.confirmModal.isVisible" class="modal-backdrop" :class="isMobile ? 'mobile' : ''">
+                <div class="modal-container confirm-modal" :class="isMobile ? 'mobile' : ''"  @click.stop>
                     <!-- 모달 헤더 -->
                     <div class="modal-header">
-                        <p class="modal-header__title heading-s">{{ modal.data?.title }}</p>
+                        <p class="modal-header__title" :class="isMobile ? 'title-xl-mobile' : 'heading-s'">{{ modal.data?.title }}</p>
                         <button v-if="isCloseButtonVisible" class="modal-close" @click="modal.closeModal()">
                             <img :src="icBtnCloseB" alt="닫기 버튼">
                         </button>
@@ -70,6 +74,11 @@ const handelCancel = () => {
 </template>
 
 <style lang="scss" scoped>
+    .modal-backdrop {
+        z-index: 999;
+
+        &.mobile {z-index: 2000;}
+    }
     /* Transition 효과 */
 
     // 1. 나타날 때와 사라질 때의 상태
@@ -105,51 +114,60 @@ const handelCancel = () => {
         // min-width: 400px;
         // max-width: 500px;
         width: 460px;
-    }
 
-    .modal-header {
-        display: flex;
+        .modal-header {
+            display: flex;
 
-        background-color: $gray-00;
-        padding: 20px 20px 0;
+            background-color: $gray-00;
+            padding: 20px 20px 0;
 
-        &__title {
-            flex: 1;
-            text-align: center;
+            &__title {
+                flex: 1;
+                text-align: center;
 
-            color: $gray-900;
-            @include typo($heading-s-size, $heading-s-weight, $heading-s-spacing, $heading-s-line); 
+                color: $gray-900;
+            }
         }
-    }
-    
-    .modal-contents {
-        padding: 0px;
-    }
 
-    .contents-inner {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 50px 40px 70px;
-        text-align: center;
-        color: $gray-800;
-        @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line); 
-        line-height: 140%;
-        white-space: pre-wrap;
+        .modal-contents {padding: 0px;}
+        .contents-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 50px 40px 70px;
+            text-align: center;
+            color: $gray-800;
+            @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line); 
+            line-height: 140%;
+            white-space: pre-wrap;
+        }
+        .modal-footer {
+            width: 100%;
+            display: flex;
+            padding: 0 10px 10px;
+            gap: 8px;
+            
+            .btn {
+                flex: 1;
+            }
+        }
+
+        &.mobile {
+            width: 85%; 
+            border-radius: 16px;
+
+            .modal-header {border-radius: 16px 16px 0 0; height: auto;}
+            .modal-contents {border-radius: 0 0 16px 16px;}
+            .contents-inner {
+                padding: 24px 20px;
+                color: $gray-700;
+                @include typo($body-m-mobile-size, $body-m-mobile-weight, $body-m-mobile-spacing, $body-m-mobile-line); 
+            }
+            .modal-footer {padding: 0 20px 20px;}
+        }
     }
 
     .confirm-subText {
         color: #737373;
-    }
-    
-    .modal-footer {
-        width: 100%;
-        display: flex;
-        padding: 0 10px 10px;
-        gap: 8px;
-        
-        .btn {
-            flex: 1;
-        }
     }
 </style>

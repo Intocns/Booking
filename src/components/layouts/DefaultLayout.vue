@@ -3,20 +3,34 @@
     import Spinner from '../common/Spinner.vue';
     import ConfirmModal from '../common/ConfirmModal.vue';
     import Modal from '../common/Modal.vue';
+    import MobileHeader from './Mobile/MobileHeader.vue';
+    import MobileSidebar from './Mobile/MobileSidebar.vue';
+    import MobileBottomTab from './Mobile/MobileBottomTab.vue';
 
     import { api } from '@/api/axios';
     import { useModalStore } from '@/stores/modalStore';
     import { useRouter, useRoute } from 'vue-router';
-    import { ref } from 'vue';
+    import { ref, onMounted, onUnmounted } from 'vue';
 
     import icBtnCloseB from '@/assets/icons/ic_btn_close_b.svg';
     import placeConnectButtonAlert from '@/assets/images/place_connect_button_alert.png';
+    import icArrowTop from '@/assets/icons/mobile/ic_arrow_top.svg'
 
     import { PRODUCT_REGISTRATION_COMPLETE_DONT_SHOW_KEY } from '@/constants/naver';
+
+    import { useDevice } from '@/composables/useDevice';
+    
+    const isMobile = useDevice();
 
     const modalStore = useModalStore();
     const router = useRouter();
     const route = useRoute();
+
+    const isMenuOpen = ref(false); // 모바일사이드메뉴 열림 상태
+
+    const toggleMenu = () => { // 모바일 사이드메뉴 토글
+        isMenuOpen.value = !isMenuOpen.value;
+    };
 
     function onGoToNaverAccount() {
         modalStore.naverConnectRequiredModal.closeModal();
@@ -42,12 +56,32 @@
         modalStore.productRegistrationCompleteModal.closeModal();
     };
 
+    // 상단으로 이동 버튼 관련
+    const isVisible = ref(false);
+    // 스크롤 위치를 감시하는 함수
+    const checkScroll = () => {
+    // 보통 300px 정도 내려오면 버튼을 보여줍니다 
+        isVisible.value = window.scrollY > 300;
+    };
+    const scrollToTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+    onMounted(() => {
+        window.addEventListener('scroll', checkScroll);
+    });
+
+    onUnmounted(() => {
+        window.removeEventListener('scroll', checkScroll);
+    });
 </script>
 
 <template>
-    <div class="default-layout">
-        <Sidebar v-if="route.name !== 'maintenance'" />
-
+    <div v-if="!isMobile" class="default-layout">
+        <Sidebar v-if="route.name !== 'maintenance'" /> 
+        
         <main class="main">
             <!-- <router-view :key="$route.fullPath" /> -->
             <router-view v-slot="{ Component }" :key="$route.fullPath">
@@ -59,6 +93,28 @@
             </router-view>
         </main>
     </div>
+
+    <div v-else class="mobile-layout">
+        <MobileHeader v-if="route.name !== 'maintenance'" @toggle="toggleMenu" />
+        <MobileSidebar v-if="route.name !== 'maintenance'" :is-active="isMenuOpen" @close="isMenuOpen = false"/>
+
+        <main class="main has-bottom-tab">
+            <router-view v-slot="{ Component }" :key="$route.fullPath">
+                <transition name="fade" mode="out-in">
+                    <div class="content">
+                        <component :is="Component" />
+                    </div>
+                </transition>
+            </router-view>
+        </main>
+
+        <MobileBottomTab />
+
+        <!-- goToTop버튼 -->
+        <div v-show="isVisible" class="go-to-top" @click="scrollToTop">
+            <img :src="icArrowTop" alt="top">
+        </div>
+    </div>  
 
     <Spinner v-show="api.ing.value" />
 
@@ -190,22 +246,52 @@
 <style lang="scss" scoped>
     .default-layout {
         display: flex;
+        .main {
+            flex: 1;
+            width: calc(100% - 220px);
+            height: 100vh;
+        }
+        .content {
+            width: 100%;
+            height: 100%;
+            display:flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            background-color: $gray-50;
+            padding: 24px;
+            
+        }
     }
-    .main {
-        flex: 1;
-        width: calc(100% - 220px);
-        height: 100vh;
-    }
-    .content {
-        width: 100%;
-        height: 100%;
-        display:flex;
+
+    .mobile-layout {
+        display: flex;
         flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-        background-color: $gray-50;
-        padding: 24px;
-        
+        width: 100%;
+        min-height: 100dvh;
+        padding-top: env(safe-area-inset-top);
+        .main {
+            flex: 1;
+
+            display: flex;
+            flex-direction: column;
+
+            &.has-bottom-tab {
+                padding-top: 56px;
+                padding-bottom: 88px;
+            }
+        }
+        .content {
+            width: 100%;
+            flex: 1;
+            display:flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            background-color: $gray-50;
+            padding: 8px 0;
+            
+        }
     }
 
     .fade-enter-active, .fade-leave-active {
@@ -213,6 +299,21 @@
     }
     .fade-enter-from, .fade-leave-to {
         opacity: 0;
+    }
+
+    // 상단으로 이동 버튼 (go-to-top버튼)
+    .go-to-top {
+        position: fixed;
+        bottom: 110px;
+        right: 20px;
+        @include flex-center;
+        width: 48px;
+        height: 48px;
+
+        border: 1px solid $gray-300;
+        border-radius: 5px;
+        background-color: $gray-00;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.08);
     }
 
     /* 네이버 연동 필요 모달: 1번사진 스타일 (전체 흰색, 파란 헤더 없음) */

@@ -15,6 +15,7 @@
     &--size-24 { height: 24px; padding: 0 6px; gap: 2px; border-radius: 4px; @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line); line-height: 1; }
     &--size-32 { height: 32px; padding: 0 8px; gap: 3px; border-radius: 5px; @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line); line-height: 1;}
     &--size-40 { height: 40px; padding: 0 12px; gap: 4px; border-radius: 6px; @include typo($title-m-size, $title-m-weight, $title-m-spacing, $title-m-line); line-height: 1;}
+    &--size-48 { height: 48px; padding: 0 12px; gap: 4px; border-radius: 5px; @include typo($title-l-mobile-size, $title-l-mobile-weight, $title-l-mobile-spacing, $title-l-mobile-line); line-height: 1;}
 
     // solid blue
     &--blue {
@@ -55,7 +56,23 @@
         &.selected {background: $gray-100; border-color: $gray-700;}
         &.is-disabled {border-color: $gray-300; background-color: $gray-50; color: $gray-400; pointer-events: none;}
     }
-}
+
+    // btn-mobile-option
+    &--mobile-option {
+        display: flex;
+        padding: 0 16px;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        border-radius: 100px;
+        background-color: $gray-50;
+        color: $gray-600;
+        @include typo($body-s-mobile-size, $body-s-mobile-weight, $body-s-mobile-spacing, $body-s-mobile-line); line-height: 1;
+
+        &.selected {background-color: $gray-800; color:$gray-00;}
+    }
+} 
 
 .tab-btn {
     display: flex;
@@ -467,6 +484,10 @@
     height: 100%;
     background-color:  rgba(12, 12, 13, 0.6);
     z-index: 100;
+
+    &.mobile {
+        z-index: 2000;
+    }
 }
 
 .modal-container {
@@ -482,6 +503,10 @@
 
     @media (max-width: 1600px) {
         max-height: 90%;
+    }
+
+    &.mobile {
+        width: 85% !important;
     }
 }
 
@@ -622,6 +647,11 @@
             }
         }
     }
+}
+
+// 모바일
+@media screen and (max-width: 600px) {
+    .confirm-modal {width: 85% !important; min-width: 85%;}
 }
 
 // ======================================================================
@@ -967,5 +997,63 @@
         &--route-2 { background-color: $brand-intoPet; } // 인투펫
         &--route-3 { background-color: $gray-100; } // fitpet
         &--route-4 { background-color: $brand-naver;} // 네이버
+    }
+}
+
+// 모바일 전체 화면 모달창 스타일
+.mobile-full-page {
+    position: fixed;
+    top:0;
+    left:0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background-color: $gray-50;
+
+    &-header {
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        border-bottom: 1px solid $gray-100;
+        background-color: $gray-00;
+
+        h2 { @include typo($title-xl-mobile-size, $title-xl-mobile-weight, $title-xl-mobile-spacing, $title-xl-mobile-line); }
+    }
+
+    &-body {
+        flex: 1;
+        // overflow-y: auto;
+        min-height: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    &-content {
+        display: flex;
+        flex-direction: column;
+        gap:16px;
+        padding: 20px;
+        border: 1px solid $gray-200;
+        border-radius: 16px;
+        background-color: $gray-00;
+        flex:1 0 0;
+        min-height: 0;
+    }
+
+    &-button-wrapper {
+        padding: 20px;
+        @include flex-center;
+        border-top: 1px solid $gray-200;
+        background-color: $gray-00;
+
+        button {
+            flex:1;
+        }
     }
 }

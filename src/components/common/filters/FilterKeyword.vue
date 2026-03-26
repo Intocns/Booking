@@ -4,14 +4,15 @@ import icSearch from '@/assets/icons/ic_search.svg';
 import icClear from '@/assets/icons/ic_clear.svg';
 
 const props = defineProps({
-  modelValue: {
-    type: String,
-    default: '',
-  },
-  placeholder: {
-    type: String,
-    default: '',
-  },
+    modelValue: {
+        type: String,
+        default: '',
+    },
+    placeholder: {
+        type: String,
+        default: '',
+    },
+    isMobile: { type: Boolean, default: false},
 });
 
 const emit = defineEmits(['update:modelValue', 'search']);
@@ -19,9 +20,17 @@ const emit = defineEmits(['update:modelValue', 'search']);
 
 <template>
     <div class="search-filter__section">
-        <span class="search-filter__label title-s">검색</span>
-    
-        <div class="search-filter__control search-filter__search_text_box">
+        <span v-if="!isMobile" class="search-filter__label title-s">검색</span>
+        
+        <div class="search-filter__control search-filter__search_text_box" :class="isMobile ? 'mobile' : ''">
+            <!-- 모바일 아이콘 -->
+            <span v-if="isMobile" class="search-filter__icons">
+                <img
+                    :src="icSearch"
+                    @click="$emit('search')"
+                />
+            </span>
+
            <input
                 type="text"
                 class="body-m"
@@ -31,20 +40,30 @@ const emit = defineEmits(['update:modelValue', 'search']);
                 @keyup.enter="emit('search')"
             />
 
-        <!-- 아이콘 -->
-        <span class="search-filter__icons">
-            <img
-                :src="icClear"
-                class="clear-icon"
-                :class="{ visible: props.modelValue.length > 0 }"
-                @click="emit('update:modelValue', '')"
-            />
+            <!-- 아이콘 -->
+            <span v-if="!isMobile" class="search-filter__icons">
+                <img
+                    :src="icClear"
+                    class="clear-icon"
+                    :class="{ visible: props.modelValue.length > 0 }"
+                    @click="emit('update:modelValue', '')"
+                />
 
-            <img
-                :src="icSearch"
-                @click="$emit('search')"
-            />
-        </span>
+                <img
+                    :src="icSearch"
+                    @click="$emit('search')"
+                />
+            </span>
+
+            <!-- 클리어아이콘 -->
+            <span v-if="isMobile" class="search-filter__icons">
+                <img
+                    :src="icClear"
+                    class="clear-icon"
+                    :class="{ visible: props.modelValue.length > 0 }"
+                    @click="emit('update:modelValue', '')"
+                />
+            </span>
         </div>
     </div>
 </template>
@@ -56,7 +75,7 @@ const emit = defineEmits(['update:modelValue', 'search']);
         align-items: center;
     }
     .search-filter__icons {
-        // width: 36px;
+        width: 16px;
         display: flex;
         justify-content: flex-end;
         gap: 4px;
@@ -121,6 +140,17 @@ const emit = defineEmits(['update:modelValue', 'search']);
             &:focus { outline: none; }
             &::placeholder {
                 color: $gray-400;
+            }
+        }
+
+        &.mobile {
+            height: 40px;
+            border: none;
+            background-color: $gray-50;
+
+            input {
+                height: 20px;
+                background-color: $gray-50;
             }
         }
     }

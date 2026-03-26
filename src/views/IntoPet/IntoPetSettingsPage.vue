@@ -19,6 +19,7 @@ import { showAlert } from '@/utils/ui';
 // 스토어
 import { useReservationStore } from '@/stores/reservationStore';
 import { useTalkSmsStore } from '@/stores/talkSmsStore';
+import { EXTERNAL_LINKS } from '@/constants';
 
 const reservationStore = useReservationStore();
 const talkSmsStore = useTalkSmsStore();
@@ -315,7 +316,7 @@ onMounted(async() => {
                 </div>
 
                 <div class="footer-action">
-                    <a href="https://intolink.co.kr/cscenter/noticeDet/18" target="_blank" class="title-xs">Push 알림 기능 이용법 알아보기</a>
+                    <a :href="EXTERNAL_LINKS.NOTICE_DET + '/18'" target="_blank" class="title-xs">Push 알림 기능 이용법 알아보기</a>
                     <img :src="icArrowR" alt="아이콘">
                 </div>
             </li>

@@ -16,7 +16,8 @@ const props = defineProps({
     modalWidth: {type: String, default: ''},
     modalHeight: {type: String, default: ''},
     // 특정 모달에서만 헤더 X 버튼을 숨기고 싶을 때 사용
-    hideHeaderClose: {type: Boolean, default: false}
+    hideHeaderClose: {type: Boolean, default: false},
+    isMobile: { type: Boolean, default: false}, // 모바일 환경 체크
 })
 // 닫기 메서드는 Prop으로 받은 객체의 closeModal을 호출하도록 
 const close = () => {
@@ -27,8 +28,8 @@ const close = () => {
 
 <template>
     <teleport to="#app">
-        <div class="modal-backdrop">
-            <div class="modal-container" :class="`modal--${size}`" @click.stop :style="{width: modalWidth, height: modalHeight}">
+        <div class="modal-backdrop" :class="isMobile ? 'mobile' : '' ">
+            <div class="modal-container" :class="[ `modal--${size}`, isMobile ? 'mobile' : '' ]" @click.stop :style="{width: modalWidth, height: modalHeight}">
                 <!-- 모달 헤더 -->
                 <div class="modal-header">
                     <p class="modal-header__title title-l">{{title}}</p>

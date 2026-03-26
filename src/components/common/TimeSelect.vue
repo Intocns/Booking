@@ -1,6 +1,7 @@
 <script setup>
 import icClear from '@/assets/icons/ic_clear.svg'
 import icClock from '@/assets/icons/ic_clock.svg'
+import BottomSheet from './Mobile/BottomSheet.vue';
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 
 const props = defineProps({
@@ -23,7 +24,8 @@ const props = defineProps({
     isError: {
         type: Boolean,
         default: false,
-    }
+    },
+    isMobile: { type: Boolean, default: false }, // 모바일 환경 체크
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -90,6 +92,8 @@ const applySelection = () => {
     const newTime = `${tempSelectedHour.value}:${tempSelectedMinute.value}`;
     emit('update:modelValue', newTime);
     // isDropdownVisible.value = false; // 시간,분을 선택해도 드롭다운은 닫히지 않도록 주석처리함 바깥영역 클릭시에만 닫힘 (요청사항) 261030 hyerin
+
+    if(props.isMobile) isDropdownVisible.value = false;
 };
 
 const cancelSelection = () => {
@@ -133,6 +137,8 @@ const clearTime = (event) => {
 
 // --- 외부 클릭 감지 (드롭다운 닫기) ---
 const handleClickOutside = (event) => {
+    if(props.isMobile) return;
+
     const isTriggerClick = wrapperRef.value && wrapperRef.value.contains(event.target);
     const isDropdownClick = dropdownRef.value && dropdownRef.value.contains(event.target);
 
@@ -188,6 +194,8 @@ const updatePosition = async () => {
 
 // --- 스크롤/리사이즈 시 닫기 로직 추가 ---
 const handleScroll = (e) => {
+    if(props.isMobile) return;
+
     // 드롭다운 내부의 스크롤(시간/분 선택 리스트)은 무시해야 함
     if (dropdownRef.value && dropdownRef.value.contains(e.target)) {
         return;
@@ -249,7 +257,7 @@ onUnmounted(() => {
         </div>
 
         <teleport to='body'>
-            <div v-if="isDropdownVisible" class="time-picker-dropdown" :style="dropdownStyle" ref="dropdownRef" @click.stop>
+            <div v-if="isDropdownVisible && !isMobile" class="time-picker-dropdown" :style="dropdownStyle" ref="dropdownRef" @click.stop>
                 <div class="time-columns-container">
                     <ul class="time-column hour-column" ref="hourColumnRef">
                         <li
@@ -279,6 +287,34 @@ onUnmounted(() => {
                     <button class="btn btn--size-24 btn--black" @click.stop="applySelection">적용</button>
                 </div>
             </div>
+
+            <BottomSheet v-if="isMobile" v-model="isDropdownVisible" bottom-sheet-title="시간 선택" @save="applySelection()">
+                <template #content>
+                    <div class="time-columns-container">
+                        <ul class="time-column hour-column" ref="hourColumnRef">
+                            <li
+                                v-for="(hour, index) in hourOptions"
+                                :key="hour"
+                                :class="{ 'selected': tempSelectedHour === hour }"
+                                @click.stop="handleHourClick(hour)"
+                            >
+                                {{ hour }}
+                            </li>
+                        </ul>
+                        
+                        <ul class="time-column minute-column" ref="minuteColumnRef">
+                            <li
+                                v-for="(minute, index) in minuteOptions"
+                                :key="minute"
+                                :class="{ 'selected': tempSelectedMinute === minute }"
+                                @click.stop="handleMinuteClick(minute)"
+                            >
+                                {{ minute }}
+                            </li>
+                        </ul>
+                    </div>
+                </template>
+            </BottomSheet>
         </teleport>
     </div>
 </template>

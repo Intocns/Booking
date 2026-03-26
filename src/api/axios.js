@@ -58,7 +58,7 @@ api.interceptors.response.use(
         // 비즈니스 로직 에러 처리
         if(res && res.status_code >  300) {
             // 공통 알럿 처리 (skipAlert가 아닐 때만)
-            const message = res.message || '요청 처리 중 오류가 발생했습니다.';
+            const message =`요청 처리 중 오류가 발생했습니다.\n(${res.message})`;
             showAlert(message, response.config)
 
             // 성공 핸들러지만 reject를 던져서 스토어를 catch로 보냄
@@ -172,7 +172,8 @@ api.interceptors.response.use(
                 //     showAlert(`에러가 발생했습니다: ${error.message}\n관리자에게 문의 바랍니다.`, originalRequest)
                 // }
 
-                let alertMessage = `에러가 발생했습니다.\n관리자에게 문의 바랍니다.`;
+                let errorMessage = errorData.message ? ('(' + errorData.message + ')') : '';
+                let alertMessage = `에러가 발생했습니다.\n관리자에게 문의 바랍니다.\n${errorMessage}`;
 
                 if(errorData.err_code == 998 && errorData.err_message?.trim()){
                     alertMessage = errorData.err_message

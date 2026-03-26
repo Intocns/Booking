@@ -215,12 +215,13 @@ const getInState = (data) => {
                             {{ formatTime(event.start) }}
                         </div>
                         <div class="event-info">
-                            <div class="d-flex align-center gap-4">
-                                <img :src="pathIcons[event.reRoute] || ''" alt="경로아이콘" width="13">
-                                <span v-if="event.clinicType == '개인일정' || event.clinicType == '일반예약'" class="patient">{{ event.clinicType }}</span>
-                                <span v-else class="patient">{{ event.userName }}{{ event.petName ? '(' + event.petName + ')' : '' }}</span>
+                            <div class="d-flex align-center gap-4 flex-1">
+                                <template v-if="event.clinicType !== '개인일정' && event.clinicType !== '일반예약'">
+                                    <img :src="pathIcons[event.reRoute] || ''" alt="경로아이콘" width="13">
+                                    <span class="patient">{{ event.userName }}{{ event.petName ? '(' + event.petName + ')' : '' }}</span>
+                                </template>
                             </div>
-                            <span class="memo">{{ event.roomName }}</span>
+                            <span class="memo">{{ event.clinicType == '개인일정' || event.clinicType == '일반예약' ? event.clinicType : event.roomName }}</span>
                         </div>
                     </div>
                     <div v-if="selectedEvents.length === 0" class="no-data">일정이 없습니다.</div>
@@ -329,14 +330,43 @@ const getInState = (data) => {
         align-items: center;
         padding: 0 16px;
         border-radius: 4px;
+        background-color: $gray-00;
 
         @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
+        color: $gray-700;
 
-        &__1 { background: $status-confirmed_bg; color: $status-confirmed_text; } // 확정
-        &__0 { background: $status-onHold_bg; color: $status-onHold_text; } // 대기
-        &__2 { background: $status-canceled_bg; color: $status-canceled_text; } // 취소
-        &__3 { background: $status-canceled_bg; color: $status-canceled_text; } // 거절
-        &__4 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
+        &__1 { 
+            border: 1px solid $status-confirmed_bg;
+            position: relative;
+
+            .count {color: $status-confirmed_text;}
+         } // 확정
+        &__0 { 
+            border: 1px solid $status-onHold_bg; 
+            position: relative; 
+            .count {color: $status-onHold_text;}
+        } // 대기
+        &__2 { 
+            border: 1px solid $status-canceled_bg; 
+            position: relative; 
+            .count {color: $status-canceled_text;}
+        } // 취소
+        &__3 { 
+            border: 1px solid $status-canceled_bg; 
+            position: relative; 
+            .count {color: $status-canceled_text;}
+        } // 거절
+        &__4 { 
+            border: 1px solid $status-personal_bg; 
+            position: relative; 
+            .count {color: $status-personal_text;}
+        } // 개인일정
+
+        &__1::after { content: ''; width: 6px; height: 23px; background-color: $status-confirmed_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 확정
+        &__0::after { content: ''; width: 6px; height: 23px; background-color: $status-onHold_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 대기
+        &__2::after { content: ''; width: 6px; height: 23px; background-color: $status-canceled_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 취소
+        &__3::after { content: ''; width: 6px; height: 23px; background-color: $status-canceled_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 거절
+        &__4::after { content: ''; width: 6px; height: 23px; background-color: $status-personal_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 개인일정
     }
 }
 
@@ -407,6 +437,7 @@ const getInState = (data) => {
             display: flex;
             align-items: center;
             gap: 4px;
+            color: $gray-700;
 
             @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
             line-height: 1;
@@ -419,6 +450,7 @@ const getInState = (data) => {
             display: flex;
             justify-content: space-between;
             gap: 4px;
+            color: $gray-700;
 
             & > div { flex: 1;}
 
@@ -440,15 +472,21 @@ const getInState = (data) => {
         }
 
         // 상태별 사이드바 아이템 색상
-        &__1 { background: $status-confirmed_bg; color: $status-confirmed_text; } // 확정
-        &__0 { background: $status-onHold_bg; color: $status-onHold_text; } // 대기
-        &__2 { background: $status-canceled_bg; color: $status-canceled_text; } // 취소
-        &__3 { background: $status-canceled_bg; color: $status-canceled_text; } // 거절
-        &__4 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
+        &__1 { border: 1px solid $status-confirmed_bg; position: relative; } // 확정
+        &__0 { border: 1px solid $status-onHold_bg; position: relative; } // 대기
+        &__2 { border: 1px solid $status-canceled_bg; position: relative; } // 취소
+        &__3 { border: 1px solid $status-canceled_bg; position: relative; } // 거절
+        &__4 { border: 1px solid $status-personal_bg; position: relative; } // 개인일정
 
-        &:hover {
-            filter: brightness(96%);
-        }
+        &__1::after { content: ''; width: 4px; height: 35px; background-color: $status-confirmed_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 확정
+        &__0::after { content: ''; width: 4px; height: 35px; background-color: $status-onHold_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 대기
+        &__2::after { content: ''; width: 4px; height: 35px; background-color: $status-canceled_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 취소
+        &__3::after { content: ''; width: 4px; height: 35px; background-color: $status-canceled_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 거절
+        &__4::after { content: ''; width: 4px; height: 35px; background-color: $status-personal_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 개인일정
+
+        // &:hover {
+        //     filter: brightness(96%);
+        // }
     }
 }
 

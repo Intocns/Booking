@@ -3,7 +3,7 @@
 import { menus } from '@/data/sidebarMenus'
 import { computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
-
+import { EXTERNAL_LINKS } from '@/constants';
 import sidebarLogo from '@/assets/images/sidebar_logo.svg'
 // 아이콘
 import icDashboard from '@/assets/icons/ic_lnb_dashboard.svg'
@@ -101,7 +101,7 @@ const isActiveChild = (child) => {
 };
 
 const goToCsCenter = () => {
-    window.open('https://intolink.co.kr/cscenter/notice')
+    window.open(EXTERNAL_LINKS.NOTICE)
 }
 
 // public/[인투링크] 예약관리자센터 이용 가이드.pdf 다운로드

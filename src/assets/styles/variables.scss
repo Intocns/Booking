@@ -26,6 +26,7 @@ $gray-00: #ffffff;
 // Warning
 $warning-500 : #ff3658;
 $warning-300 : #ff99aa;
+$warning-200 : #f9a;
 $warning-100 : #ffe0e5;
 // Etc
 $brand-naver: #00c73c;
@@ -104,6 +105,27 @@ $title-xs-weight: 700;
 $title-xs-spacing: -0.02em;
 $title-xs-line: 120%;
 
+// Titles-mobile
+$title-xl-mobile-size: 18px;
+$title-xl-mobile-weight: 700;
+$title-xl-mobile-spacing: -0.54px;
+$title-xl-mobile-line: 140%;
+
+$title-l-mobile-size: 16px;
+$title-l-mobile-weight: 700;
+$title-l-mobile-spacing: -0.48px;
+$title-l-mobile-line: 140%;
+
+$title-m-mobile-size: 14px;
+$title-m-mobile-weight: 700;
+$title-m-mobile-spacing: -0.42px;
+$title-m-mobile-line: 140%;
+
+$title-s-mobile-size: 13px;
+$title-s-mobile-weight: 700;
+$title-s-mobile-spacing: -0.39px;
+$title-s-mobile-line: 140%;
+
 // Body
 $body-l-size: 16px;
 $body-l-weight: 400;
@@ -125,11 +147,32 @@ $body-xs-weight: 400;
 $body-xs-spacing: -0.02em;
 $body-xs-line: 120%;
 
+// Body-mobile
+$body-l-mobile-size: 16px;
+$body-l-mobile-weight: 400;
+$body-l-mobile-spacing: -0.48px;
+$body-l-mobile-line: 140%;
+
+$body-m-mobile-size: 14px;
+$body-m-mobile-weight: 400;
+$body-m-mobile-spacing: -0.42px;
+$body-m-mobile-line: 140%;
+
+$body-s-mobile-size: 13px;
+$body-s-mobile-weight: 400;
+$body-s-mobile-spacing: -0.39px;
+$body-s-mobile-line: 140%;
+
 // Caption
 $caption-size: 11px;
 $caption-weight: 500;
 $caption-spacing: -0.02em;
 $caption-line: 120%;
+
+$caption-mobile-size: 12px;
+$caption-mobile-weight: 500;
+$caption-mobile-spacing: -0.02em;
+$caption-mobile-line: 130%;
 
 // ======================================================================
 // SPACING SYSTEM (여백 단위)

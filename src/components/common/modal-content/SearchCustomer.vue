@@ -8,6 +8,12 @@ import { useReservationStore } from '@/stores/reservationStore';
 import { PET_GENDER_MAP, CUSTOMER_SEARCH_TYPE_OPTIONS } from '@/constants';
 import { getSearchTypeInt, toggleCustomerMatch as toggleCustomerMatchUtil } from '@/utils/customer';
 import { useModalStore } from '@/stores/modalStore';
+import FilterKeyword from '../filters/FilterKeyword.vue';
+import { formatDate } from '@/utils/dateFormatter';
+
+import icLinkBlue from '@/assets/icons/mobile/ic_link_blue.svg'
+import icLinkBlack from '@/assets/icons/mobile/ic_link_black.svg'
+import icEmpty from '@/assets/icons/ic_empty.svg'
 
 const emit = defineEmits(['customer-selected']);
 const modalStore = useModalStore();
@@ -19,7 +25,8 @@ const props = defineProps({
     matchedCustomer: {
         type: Object,
         default: null
-    }
+    },
+    isMobile: {type:Boolean, default:false,}, // 모바일 환경 체크
 });
 
 // 조회 조건 옵션
@@ -156,79 +163,160 @@ const customerColumns = [
 </script>
 
 <template>
-    <div class="modal-contents-inner">
-        <!-- 고객 검색 -->
-        <div class="d-flex flex-col gap-16">
-
-            <!-- 검색 필드 -->
-            <div class="d-flex flex-col gap-8">
-                <p class="title-l mb-16">검색</p>
-                
-                <div class="search-box">
-                    <CustomSingleSelect 
-                        v-model="selectedSearchType"
-                        :options="searchTypeOptions"
-                        placeholder="선택"
-                        select-width="120px"
-                    />
+    <template v-if="!isMobile">
+        <div class="modal-contents-inner">
+            <!-- 고객 검색 -->
+            <div class="d-flex flex-col gap-16">
     
-                    <div class="d-flex gap-4" style="flex:1;">
-                        <InputTextBox 
-                            v-model="searchKeyword" 
-                            placeholder="검색어 입력" 
-                            @keypress="handleKeyPress"
+                <!-- 검색 필드 -->
+                <div class="d-flex flex-col gap-8">
+                    <p class="title-l mb-16">검색</p>
+                    
+                    <div class="search-box">
+                        <CustomSingleSelect 
+                            v-model="selectedSearchType"
+                            :options="searchTypeOptions"
+                            placeholder="선택"
+                            select-width="120px"
                         />
-                        <button 
-                            class="btn btn--size-32"
-                            :class="isSearchEnabled && !isLoading ? 'btn--black' : 'is-disabled'"
-                            @click="handleSearch"
-                            :disabled="isLoading || !isSearchEnabled"
-                        >
-                            {{ isLoading ? '조회중...' : '조회' }}
-                        </button>
+        
+                        <div class="d-flex gap-4" style="flex:1;">
+                            <InputTextBox 
+                                v-model="searchKeyword" 
+                                placeholder="검색어 입력" 
+                                @keypress="handleKeyPress"
+                            />
+                            <button 
+                                class="btn btn--size-32"
+                                :class="isSearchEnabled && !isLoading ? 'btn--black' : 'is-disabled'"
+                                @click="handleSearch"
+                                :disabled="isLoading || !isSearchEnabled"
+                            >
+                                {{ isLoading ? '조회중...' : '조회' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- 고객 테이블 -->
-            <div class="customer-table-wrapper">
-                <CommonTable
-                    :columns="customerColumns"
-                    :rows="customerList"
-                    table-empty-text="검색 결과가 없습니다."
-                    @row-click="(row) => {}"
-                >
-                    <template #action="{ row }">
-                        <button 
-                            class="btn btn--size-24 btn--black-outline"
-                            @click.stop="toggleCustomerMatch(row)"
-                        >
-                            {{ row.isMatched ? '고객매칭 해제' : '고객매칭' }}
-                        </button>
-                    </template>
-                </CommonTable>
+    
+                <!-- 고객 테이블 -->
+                <div class="customer-table-wrapper">
+                    <CommonTable
+                        :columns="customerColumns"
+                        :rows="customerList"
+                        table-empty-text="검색 결과가 없습니다."
+                        @row-click="(row) => {}"
+                    >
+                        <template #action="{ row }">
+                            <button 
+                                class="btn btn--size-24 btn--black-outline"
+                                @click.stop="toggleCustomerMatch(row)"
+                            >
+                                {{ row.isMatched ? '고객매칭 해제' : '고객매칭' }}
+                            </button>
+                        </template>
+                    </CommonTable>
+                </div>
             </div>
         </div>
-    </div>
+        
+        <!-- 버튼 -->
+        <div class="modal-button-wrapper">
+            <div class="buttons">
+                <button 
+                    class="btn btn--size-40 btn--black"
+                    @click="handleNewPetRegistration"
+                >
+                    신규 동물 등록
+                </button>
+                <button 
+                    class="btn btn--size-40 btn--blue"
+                    @click="handleSelectPet"
+                    :disabled="!selectedCustomer"
+                >
+                    선택 동물로 접수
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <template v-else>
+        <!-- 검색영역 -->
+        <div class="d-flex align-center gap-8">
+            <CustomSingleSelect 
+                v-model="selectedSearchType"
+                :options="searchTypeOptions"
+                placeholder="선택"
+                select-width="120px"
+            />
+            <FilterKeyword 
+                :is-mobile="isMobile"
+                placeholder="고객명, 동물명, 전화번호 검색"
+                v-model="searchKeyword" 
+                @search="handleSearch"
+            />
+        </div>
+
+        <!-- 리스트 -->
+        <div v-if="customerList.length > 0" class="list-wrapper">
+            <div v-for="row in customerList" class="list-item" :class="row.isMatched ? 'matched' : ''">
+                <div class="list-item__content">
+                    <p class="list-item__title">고객정보</p>
+                    <div class="list-item__info">
+                        <p class="name">{{ row.userName }} ({{ row.userNo }})</p>
+                        <div class="sub-info">
+                            <span>{{ row.userTel }}</span>
+                            <span class="bar"></span>
+                            <span>최근 방문일 {{ formatDate(row.lastVisitDate) }}</span>
+                        </div>
+                    </div>
+                </div>
     
-    <!-- 버튼 -->
-    <div class="modal-button-wrapper">
-        <div class="buttons">
+                <div class="list-item__content">
+                    <p class="list-item__title">동물정보</p>
+                    <div class="list-item__info">
+                        <p class="name">{{ row.petName }} ({{ row.petNo }})</p>
+                        <div class="sub-info">
+                            <span>{{ row.speciesName }}</span>
+                            <span class="bar"></span>
+                            <span>{{ row.breed }}</span>
+                            <span class="bar"></span>
+                            <span>{{ row.sex }}</span>
+                        </div>
+                    </div>
+                </div>
+    
+                <button 
+                    class="btn btn--size-40" 
+                    :class="row.isMatched ? 'btn--blue-outline' : 'btn--black-outline'"
+                    @click="toggleCustomerMatch(row)
+                ">
+                    <img :src="row.isMatched ? icLinkBlue : icLinkBlack" alt="매칭">
+                    {{ row.isMatched ? '고객 매칭 해제' : '고객 매칭' }}
+                </button>
+            </div>
+        </div>
+
+        <div v-else class="list-wrapper empty-box">
+            <img :src="icEmpty" alt="비어있음 아이콘">
+            <span>검색결과가 없습니다.</span>
+        </div>
+
+        <div class="bottom-button-wrapper">
             <button 
-                class="btn btn--size-40 btn--black"
+                class="btn btn--size-48 btn--blue-outline"
                 @click="handleNewPetRegistration"
             >
                 신규 동물 등록
             </button>
             <button 
-                class="btn btn--size-40 btn--blue"
+                class="btn btn--size-48 btn--blue"
                 @click="handleSelectPet"
                 :disabled="!selectedCustomer"
             >
                 선택 동물로 접수
             </button>
         </div>
-    </div>
+    </template>
 </template>
 
 <style lang="scss" scoped>
@@ -268,5 +356,83 @@ const customerColumns = [
         background-color: $gray-200;
         box-shadow: none;
     }
+}
+
+// 모바일용 바텀시트 slot css
+.bottom-sheet__content {overflow-y: visible;}
+.list-wrapper {
+    height: 400px;
+    margin-top:24px;
+    display: flex;
+    flex-direction: column;
+    gap:8px;
+    overflow-y: auto;
+
+    .list-item {
+        padding: 20px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap:16px;
+
+        border-radius: 8px;
+        background-color: $gray-50;
+
+        &.matched {background-color: $primary-50;}
+
+        &__content {
+            display: flex;
+            gap:8px;
+            align-items: flex-start;
+        }
+
+        &__title {
+            height: 22px;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            color: $primary-700;
+            @include typo($caption-mobile-size, $caption-mobile-weight, $caption-mobile-spacing, $caption-mobile-line);
+        }
+
+        &__info {
+            flex:1 0 0;
+            display: flex;
+            flex-direction: column;
+            gap:2px;
+
+            .name {
+                height: 22px;
+                display: flex;
+                align-items: center;
+                color: $gray-800;
+                @include typo($title-m-mobile-size, $title-m-mobile-weight, $title-m-mobile-spacing, $title-m-mobile-line);
+            }
+
+            .sub-info {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: $gray-500;
+                @include typo($caption-mobile-size, $caption-mobile-weight, $caption-mobile-spacing, $caption-mobile-line);
+            }
+            .bar {
+                width:1px;
+                height: 12px;
+                background-color: $gray-300;
+            }
+        }
+    }
+}
+.bottom-button-wrapper {
+    width: calc(100% + 40px);
+    margin: 0 -20px;
+    padding: 20px;
+    border-top: 1px solid $gray-200;
+    display: flex;
+    gap: 8px;
+    background-color: $gray-00;
+
+    button {flex:1;}
 }
 </style>

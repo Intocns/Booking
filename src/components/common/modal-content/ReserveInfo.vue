@@ -1,7 +1,7 @@
 <!-- 고객 예약 정보 -->
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
-import { PET_GENDER_MAP, RESERVE_ROUTE_MAP, RESERVE_STATUS_MAP, RESERVE_STATUS_CLASS_MAP } from '@/constants';
+import { PET_GENDER_MAP, RESERVE_ROUTE_MAP, RESERVE_STATUS_MAP, RESERVE_STATUS_CLASS_MAP, EXTERNAL_LINKS } from '@/constants';
 import { toggleCustomerMatch as toggleCustomerMatchUtil } from '@/utils/customer';
 import { formatDate, formatTime, formatDateTime, formatTimeToMinutes, formatDateTimeForAPI, formatDateDot } from '@/utils/dateFormatter';
 
@@ -754,7 +754,7 @@ watch(endTime, (newEnd) => {
 // 차트보기 버튼 클릭 핸들러
 const handleViewChart = () => {
     if (singlePetData.value?.petSno) {
-        const url = `https://intolink.co.kr/plus/main?pet_no=${singlePetData.value.petNo}`;
+        const url = `${EXTERNAL_LINKS.CHART_MAIN}?pet_no=${singlePetData.value.petNo}`;
         window.open(url, '_blank');
     }
 };

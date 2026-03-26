@@ -89,7 +89,7 @@ const summaryEvents = computed(() => {
             // const staff = props.staffs[staffIndex] ?? "";
             const staff = props.staffs.find(s => s.id === item.resourceId);
             // staffs 배열의 인덱스를 사용하여 색상 고정 
-            const colorIdx = (staffIndex !== -1 ? staffIndex % 10 : 0) + 1;
+            const colorIdx = (staffIndex !== -1 ? staffIndex % 4 : 0) + 1;
 
             processed.push({
                 id: `summary-${date}-${item.resourceId}`,
@@ -343,12 +343,13 @@ onMounted(() => {
                                 <span class="time title-s">{{ ev.start.split('T')[1].substring(0,5) }}</span>
                             </div>
                             <div class="event-info">
-                                <div class="d-flex align-center gap-4">
-                                    <img :src="pathIcons[ev.reRoute] || ''" alt="경로아이콘" width="13">
-                                    <span v-if="ev.clinicType == '개인일정' || ev.clinicType == '일반예약'" class="patient body-s">{{ ev.clinicType }}</span>
-                                    <span v-else class="patient body-s">{{ ev.userName }}{{ ev.petName ? '(' + ev.petName + ')' : '' }}</span>
+                                <div class="d-flex align-center gap-4 flex-1">
+                                    <template v-if="ev.clinicType !== '개인일정' && ev.clinicType !== '일반예약'">
+                                        <img :src="pathIcons[ev.reRoute] || ''" alt="경로아이콘" width="13">
+                                        <span class="patient body-s">{{ ev.userName }}{{ ev.petName ? '(' + ev.petName + ')' : '' }}</span>
+                                    </template>
                                 </div>
-                                <span class="memo body-s">{{ ev.roomName }}</span>
+                                <span class="memo body-s">{{ ev.clinicType == '개인일정' || ev.clinicType == '일반예약' ? ev.clinicType : ev.roomName }}</span>
                             </div>
                         </div>  
                     </div>
@@ -414,7 +415,7 @@ onMounted(() => {
     :deep(.today-cell-marker) {
         position: absolute;
         inset: 0;
-        border: 1px solid $primary-500 !important;
+        // border: 1px solid $primary-500 !important;
     }
 
     :deep(.month_default_event_inner) {
@@ -430,6 +431,8 @@ onMounted(() => {
             width: 100%;
             height: 24px;
             display: flex;
+            min-width:0;
+            gap: 8px;
             align-items: center;
             justify-content: space-between;
             padding: 0 16px;
@@ -437,27 +440,54 @@ onMounted(() => {
 
             border-radius: 4px;
             color: $gray-700;
+
+            .s-name {flex:1; min-width:0; overflow:hidden; white-space: nowrap; text-overflow: ellipsis;}
         }
     }
 
     /* nth-of-type 대신 직접 지정한 클래스 사용 */
-    :deep(.vet-color-1) { background-color: $vet1_bg; color: $vet1_bar; }
-    :deep(.vet-color-2) { background-color: $vet2_bg; color: $vet2_bar; }
-    :deep(.vet-color-3) { background-color: $vet3_bg; color: $vet3_bar; }
-    :deep(.vet-color-4) { background-color: $vet4_bg; color: $vet4_bar; }
+    :deep(.vet-color-1) { 
+        border: 1px solid $vet1_bg; 
+        position: relative; 
+        background-color: $gray-00;
 
-    :deep(.vet-color-5) { background-color: $vet5_bg; color: $vet5_bar; }
-    :deep(.vet-color-6) { background-color: $vet6_bg; color: $vet6_bar; }
-    :deep(.vet-color-7) { background-color: $vet7_bg; color: $vet7_bar; }
-    :deep(.vet-color-8) { background-color: $vet8_bg; color: $vet8_bar; }
-    :deep(.vet-color-9) { background-color: $vet9_bg; color: $vet9_bar; }
-    :deep(.vet-color-10) { background-color: $vet10_bg; color: $vet10_bar; }
+        .s-count {color:$vet1_bar;}
+    }
+    :deep(.vet-color-2) { 
+        border: 1px solid $vet2_bg; 
+        position: relative; 
+        background-color: $gray-00;
+
+        .s-count {color:$vet2_bar;}
+    }
+    :deep(.vet-color-3) { 
+        border: 1px solid $vet3_bg; 
+        position: relative; 
+        background-color: $gray-00;
+
+        .s-count {color:$vet3_bar;}
+    }
+    :deep(.vet-color-4) { 
+        border: 1px solid $vet4_bg; 
+        position: relative;
+        background-color: $gray-00;
+
+        .s-count {color:$vet4_bar;}
+    }
+    :deep(.vet-color-1)::after { content: ''; width: 4px; height:24px; display: block; position: absolute; top: 0; left: 0; background-color: $vet1_bg; border-radius: 4px 0 0 4px; }
+    :deep(.vet-color-2)::after { content: ''; width: 4px; height:24px; display: block; position: absolute; top: 0; left: 0; background-color: $vet2_bg; border-radius: 4px 0 0 4px; }
+    :deep(.vet-color-3)::after { content: ''; width: 4px; height:24px; display: block; position: absolute; top: 0; left: 0; background-color: $vet3_bg; border-radius: 4px 0 0 4px; }
+    :deep(.vet-color-4)::after { content: ''; width: 4px; height:24px; display: block; position: absolute; top: 0; left: 0; background-color: $vet4_bg; border-radius: 4px 0 0 4px; }
+
+    // :deep(.vet-color-5) { background-color: $vet5_bg; color: $vet5_bar; }
+    // :deep(.vet-color-6) { background-color: $vet6_bg; color: $vet6_bar; }
+    // :deep(.vet-color-7) { background-color: $vet7_bg; color: $vet7_bar; }
+    // :deep(.vet-color-8) { background-color: $vet8_bg; color: $vet8_bar; }
+    // :deep(.vet-color-9) { background-color: $vet9_bg; color: $vet9_bar; }
+    // :deep(.vet-color-10) { background-color: $vet10_bg; color: $vet10_bar; }
 
     /* 더보기 바 스타일 */
-    :deep(.more-bar) {
-        background-color: $gray-600;
-        color: $gray-00 !important;
-    }
+    :deep(.more-bar) {background-color: $gray-200;}
 
     :deep(.month_default_event_bar) {display: none;}
     :deep(.month_default_shadow) {display: none;}
@@ -540,10 +570,12 @@ onMounted(() => {
             display: flex;
             align-items: center;
             gap: 8px; 
-            padding: 8px 12px;
+            padding: 8px 16px;
             cursor: pointer;
 
             border-radius: 4px;
+            background-color: $gray-00;
+            color: $gray-700;
 
             // 왼쪽 시간 강조 스타일
             .time-box {
@@ -553,7 +585,7 @@ onMounted(() => {
                 gap: 4px;
 
                 @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
-                line-height: 1;
+                // line-height: 1;
 
                 .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
             }
@@ -585,15 +617,17 @@ onMounted(() => {
 
 
             // 상태별 사이드바 아이템 색상
-            &__1 { background: $status-confirmed_bg; color: $status-confirmed_text; } // 확정
-            &__0 { background: $status-onHold_bg; color: $status-onHold_text; } // 대기
-            &__2 { background: $status-canceled_bg; color: $status-canceled_text; } // 취소
-            &__3 { background: $status-canceled_bg; color: $status-canceled_text; } // 거절
-            &__4 { background: $status-personal_bg; color: $status-personal_text; } // 개인일정
+            &__1 { border: 1px solid $status-confirmed_bg; position: relative; } // 확정
+            &__0 { border: 1px solid $status-onHold_bg; position: relative; } // 대기
+            &__2 { border: 1px solid $status-canceled_bg; position: relative; } // 취소
+            &__3 { border: 1px solid $status-canceled_bg; position: relative; } // 거절
+            &__4 { border: 1px solid $status-personal_bg; position: relative; } // 개인일정
 
-            &:hover {
-                filter: brightness(96%);
-            }
+            &__1::after { content: ''; width: 4px; height: 35px; background-color: $status-confirmed_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 확정
+            &__0::after { content: ''; width: 4px; height: 35px; background-color: $status-onHold_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 대기
+            &__2::after { content: ''; width: 4px; height: 35px; background-color: $status-canceled_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 취소
+            &__3::after { content: ''; width: 4px; height: 35px; background-color: $status-canceled_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 거절
+            &__4::after { content: ''; width: 4px; height: 35px; background-color: $status-personal_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 개인일정
         }
     }
     

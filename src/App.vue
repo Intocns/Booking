@@ -9,6 +9,10 @@ import { useRoute, useRouter } from 'vue-router';
 import { showAlert } from './utils/ui';
 import { useModalStore } from './stores/modalStore';
 
+import { useDevice } from '@/composables/useDevice';
+    
+const isMobile = useDevice();
+
 const router = useRouter();
 const modalStore = useModalStore();
 
@@ -67,7 +71,7 @@ onMounted(async () => {
     <DefaultLayout v-if="isAuthChecked" />
     <div v-else class="auth-loading"></div>
 
-    <ConfirmModal />
+    <ConfirmModal :is-mobile="isMobile" />
 </template>
 
 <style lang="scss" scoped>
