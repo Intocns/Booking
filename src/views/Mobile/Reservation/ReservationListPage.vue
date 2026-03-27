@@ -8,7 +8,7 @@ import FilterKeyword from '@/components/common/filters/FilterKeyword.vue';
 import FilterDoctorBtn from '@/components/common/Mobile/filters/FilterDoctorBtn.vue';
 
 import icCheckW from '@/assets/icons/mobile/ic_check_w.svg'
-import icCheckB from '@/assets/icons/mobile/ic_check_B.svg'
+import icCheckB from '@/assets/icons/mobile/ic_check_b.svg'
 import icClose from '@/assets/icons/mobile/ic_close_b.svg'
 
 import { onMounted, computed, ref, watch, nextTick } from 'vue';

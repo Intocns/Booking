@@ -16,7 +16,7 @@ import { formatDate } from '@/utils/dateFormatter';
 import TableLayout from '@/components/common/TableLayout.vue';
 
 import icCheckW from '@/assets/icons/mobile/ic_check_w.svg'
-import icCheckB from '@/assets/icons/mobile/ic_check_B.svg'
+import icCheckB from '@/assets/icons/mobile/ic_check_b.svg'
 import icEmpty from '@/assets/icons/ic_empty.svg'
 import icClose from '@/assets/icons/mobile/ic_close_b.svg'
 
