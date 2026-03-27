@@ -15,7 +15,7 @@ export const loadSSOScript = () => {
     });
 };
 
-// sso 강제 로그인 (차트사용)
+// sso 강제 로그인 (차트사용) (현재 사용하지 않음.)
 export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
     const urlParams = new URLSearchParams(window.location.search);
     const bizNo = urlParams.get('biz_No') || import.meta.env.VITE_BIZ_NO; // TODO:차트에서 보내주는 사업자번호 키값 확인 후 변경 //compnum
@@ -121,11 +121,15 @@ export const initSSOCheck = (onResult) => {
     const callback = function(data) {
         window.removeEventListener('message', messageHandler);
 
-        if(Number(data.cocode) >= 10000) {
-            showAlert('인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.');
-            window.close();
-            return;
-        }
+        // cocode 만번대 계정의 경우 차트를 사용하지 않음으로 로그인 막아뒀지만
+        // 인투펫 예약은 사용할 수 있으므로 주석처리 => 예약 승인 시 cocode 체크 후 매칭없이 확정하도록 함 260327
+
+        // if(Number(data.cocode) >= 10000) {
+        //     // showAlert('인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.');
+        //     // window.close();
+        //     if (onResult) onResult('cocode');
+        //     return;
+        // }
 
         const hospitalStore = useHospitalStore();
         hospitalStore.hospitalData = data;

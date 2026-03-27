@@ -28,6 +28,15 @@ onMounted(async () => {
     const handleAuthResult = (status) => {
         if (status === 'success') {
             isAuthChecked.value = true; // 인증 성공 시에만 레이아웃 노출
+        } else if(status === 'cocode') {
+            modalStore.confirmModal.openModal({
+                text: "인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.",
+                confirmText: "확인",
+                noCancelBtn: true,
+                onConfirm: () => {
+                    window.close(); // 실패 시 창 닫기
+                }
+            })
         } else {
             modalStore.confirmModal.openModal({
                 text: "인증에 실패하였습니다. 다시 시도해주세요.",
@@ -61,8 +70,16 @@ onMounted(async () => {
 
     } catch (err) {
         console.error("SSO 프로세스 오류:", err);
-        showAlert("시스템 오류가 발생했습니다.");
-        window.close();
+        modalStore.confirmModal.openModal({
+            text: "시스템 오류가 발생했습니다.",
+            confirmText: "확인",
+            noCancelBtn: true,
+            onConfirm: () => {
+                window.close(); // 실패 시 창 닫기
+            }
+        })
+        // showAlert("시스템 오류가 발생했습니다.");
+        // window.close();
     }
 });
 </script>
