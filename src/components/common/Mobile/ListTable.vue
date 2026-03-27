@@ -46,9 +46,9 @@ const handelReserveDetail = (row) => {
                 <div class="list__bottom__top">
                     <div class="reserve-info">
                         <div class="info"> 
-                            <span class="name">{{ row.petName }}</span>
+                            <span class="name pet">{{ row.petName }}</span>
                             <span class="dot"></span>
-                            <span class="name">{{ row.userName }}</span>
+                            <span class="name user">{{ row.userName }}</span>
                             <span class="phone">{{ row.phoneTxt }}</span>
                         </div>
     
@@ -150,14 +150,15 @@ const handelReserveDetail = (row) => {
                         text-overflow: ellipsis;
                         overflow: hidden;
                         white-space: nowrap;
-                        max-width: 90px;
+                        &.pet {max-width: 80px;}
+                        &.user {max-width: 60px;}
                     }
                     .phone {
                         @include typo($body-m-mobile-size, $body-m-mobile-weight, $body-m-mobile-spacing, $body-m-mobile-line);
                         text-overflow: ellipsis;
-                        overflow: hidden;
+                        // overflow: hidden;
                         white-space: nowrap;
-                        max-width: 110px;
+                        // max-width: 110px;
                     }
                 }
             }

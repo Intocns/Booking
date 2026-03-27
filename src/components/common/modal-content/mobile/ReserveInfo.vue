@@ -937,7 +937,7 @@ onUnmounted(() => {
                     </div>
                     <div class="info-item">
                         <p class="label">예약 방문일</p>
-                        <div class="d-flex gap-8" style="flex:2;">
+                        <div class="d-flex gap-8 flex-wrap w-100" style="flex:2;">
                             <CustomDatePicker 
                                 ref="reserveDateRef" 
                                 v-model="reserveDate" 
@@ -1350,7 +1350,7 @@ onUnmounted(() => {
         :save-btn-text="memoDetail.disabled ? '확인' : '저장'"
         @save="memoDetail.disabled 
         ? (isMemoOpen = false) 
-        : (reserveData.geReMemo = memoDetail.contentText, isMemoOpen = false)"
+        : (reserveData.geReMemo = memoDetail.content, isMemoOpen = false)"
     >
         <template #content>
             <div style="height:300px; margin-bottom:24px;">
@@ -1760,6 +1760,7 @@ onUnmounted(() => {
                 .sub-info {
                     display: flex;
                     align-items: center;
+                    flex-wrap:wrap;
                     gap: 8px;
                     color: $gray-500;
                     @include typo($caption-mobile-size, $caption-mobile-weight, $caption-mobile-spacing, $caption-mobile-line);
