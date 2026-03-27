@@ -175,18 +175,24 @@ const selectedDateEvents = computed(() => {
 
 const totalCount = computed(() => selectedDateEvents.value?.length ?? 0);
 const reserveSummary = computed(() => {
-    const counts = { confirmed: 0, pending: 0, canceled: 0 };
+    const counts = { confirmed: 0, pending: 0, canceled: 0, personal: 0 };
     
     selectedDateEvents.value?.forEach(row => {
-        if (row.inState === 1) counts.confirmed++;
-        if (row.inState === 0) counts.pending++;
-        if (row.inState === 2 || row.inState === 3) counts.canceled++;
+        if (row.clinicType === '개인일정') {
+            counts.personal++;
+        } else {
+            // 2. '개인일정'이 아닌 경우(else)에만 예약 상태를 카운팅합니다.
+            if (row.inState === 1) counts.confirmed++;
+            else if (row.inState === 0) counts.pending++;
+            else if (row.inState === 2 || row.inState === 3) counts.canceled++;
+        }
     });
 
     return [
         { label: '확정', value: counts.confirmed.toString().padStart(2, '0') },
         { label: '대기', value: counts.pending.toString().padStart(2, '0') },
         { label: '취소 · 거절', value: counts.canceled.toString().padStart(2, '0'), warning: true },
+        { label: '개인일정', value: counts.personal.toString().padStart(2, '0')},
     ];
 });
 
@@ -627,6 +633,7 @@ onMounted(async() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
 }
 .custom-calendar-section {
     padding: 0 20px;
@@ -785,6 +792,7 @@ onMounted(async() => {
 
 .mobile-total-count {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     padding: 10px 20px;
@@ -801,6 +809,7 @@ onMounted(async() => {
     .detail-count {
         display: flex;
         gap:6px;
+        flex-wrap: wrap;
 
         .detail {
             display: flex;
@@ -860,7 +869,7 @@ onMounted(async() => {
         &::before {
             content: '';
             width: 8px;
-            height:36px;
+            height:35px;
             display: block;
             position: absolute;
             left: 0;
@@ -901,7 +910,7 @@ onMounted(async() => {
             width: 100%;
 
             @include typo($body-m-mobile-size, $body-m-mobile-weight, $body-m-mobile-spacing, $body-m-mobile-line);
-            // line-height: 1;
+            line-height: 1;
             color: $gray-700;
 
             .name {

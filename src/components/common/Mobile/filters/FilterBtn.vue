@@ -223,7 +223,7 @@ const handelReset = () => {
             display: flex;
             padding: 16px;
             flex-direction: column;
-            gap: 16px;
+            gap: 10px;
     
             border-radius: 8px;
             background: $gray-50;;

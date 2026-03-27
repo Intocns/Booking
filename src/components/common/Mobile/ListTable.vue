@@ -35,7 +35,7 @@ const handelReserveDetail = (row) => {
             <div class="list__top">
                 <div class="time title-s-mobile">
                     <span>{{ row.reTimeTxt }}</span>
-                    <span>{{ row.reTimeHisTxt }}</span>
+                    <span>{{ row.reTimeHisTxt }} - {{ row.reTimeAndTxt }}</span>
                 </div>
 
                 <div class="flag" :class="RESERVE_STATUS_CLASS_MAP[row.inState]">
@@ -70,7 +70,7 @@ const handelReserveDetail = (row) => {
                         <span class="doctor">{{ row.doctor }}</span>
                     </div>
                     <div class="memo-wrapper">
-                        <p class="memo"{{ row.reMemo }}></p>
+                        <p class="memo">{{ row.reMemo }}</p>
                     </div>
                 </div>
 
@@ -143,14 +143,14 @@ const handelReserveDetail = (row) => {
                     flex: 1 0 0;
                     display: flex;
                     align-items: center;
-                    gap: 8px;
+                    gap: 6px;
     
                     .name { 
                         @include typo($title-l-mobile-size, $title-l-mobile-weight, $title-l-mobile-spacing, $title-l-mobile-line);
                         text-overflow: ellipsis;
                         overflow: hidden;
                         white-space: nowrap;
-                        &.pet {max-width: 80px;}
+                        &.pet {max-width: 60px;}
                         &.user {max-width: 60px;}
                     }
                     .phone {
@@ -158,7 +158,7 @@ const handelReserveDetail = (row) => {
                         text-overflow: ellipsis;
                         // overflow: hidden;
                         white-space: nowrap;
-                        // max-width: 110px;
+                        // max-width: 100px;
                     }
                 }
             }
@@ -188,21 +188,29 @@ const handelReserveDetail = (row) => {
                 @include typo($caption-mobile-size, $caption-mobile-weight, $caption-mobile-spacing, $caption-mobile-line);
                 
                 .room-name {
-                    flex: 1 0 0;
+                    flex: 2 0 0;
                     min-width: 0;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
                 }
-
-                .memo {
-                    width: 100%;
+                .doctor {
+                    flex:1;
+                    text-align: right;
+                    min-width: 0;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
-                    color: $gray-600;
-                    @include typo($caption-mobile-size, $caption-mobile-weight, $caption-mobile-spacing, $caption-mobile-line);
+                    max-width: 65px;
                 }
+            }
+            .memo {
+                width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                color: $gray-600;
+                @include typo($caption-mobile-size, $caption-mobile-weight, $caption-mobile-spacing, $caption-mobile-line);
             }
         }
 

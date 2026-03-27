@@ -96,7 +96,7 @@ onMounted(() => {
                     :is-mobile="true"
                 />
     
-                <div class="d-flex justify-between align-center">
+                <div class="d-flex justify-between align-center flex-wrap">
                     <span class="caption-mobile reserve-list-info">예약일자를 기준으로 내역이 조회됩니다.</span>
     
                     <!-- 조회 필터 버튼 -->
@@ -149,6 +149,7 @@ onMounted(() => {
 
 .mobile-total-count {
     display: flex;
+    flex-wrap:wrap;
     justify-content: space-between;
     align-items: center;
     padding: 0 20px;
@@ -164,6 +165,7 @@ onMounted(() => {
 
     .detail-count {
         display: flex;
+        flex-wrap:wrap;
         gap:6px;
 
         .detail {

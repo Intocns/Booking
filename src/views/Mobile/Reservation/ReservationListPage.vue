@@ -159,7 +159,7 @@ onMounted(async() => {
                         :is-mobile="true" 
                     />
     
-                    <div class="d-flex justify-between align-center">
+                    <div class="d-flex justify-between align-center flex-wrap gap-6">
                         <div 
                             class="btn btn--mobile-option"
                             :class="{ 'selected': isTodayActive }"
@@ -231,6 +231,7 @@ onMounted(async() => {
 
 .mobile-total-count {
     display: flex;
+    flex-wrap:wrap;
     justify-content: space-between;
     align-items: center;
     padding: 0 20px;
@@ -246,6 +247,7 @@ onMounted(async() => {
 
     .detail-count {
         display: flex;
+        flex-wrap:wrap;
         gap:6px;
 
         .detail {

@@ -849,6 +849,7 @@ const scrollToTop = () => {
     }
 };
 
+
 // 모달이 열릴 때 담당의 리스트 로드 및 매칭 확인
 onMounted(async () => {
     if (hospitalStore.doctorList.length === 0) {
@@ -902,7 +903,7 @@ onUnmounted(() => {
                 </div>
     
                 <!-- 예약 동물정보 -->
-                <div class="reserve-pet-info"> 
+                <div v-if="reserveData.clinicType !== '개인일정' && reserveData.clinicType !== '일반예약'" class="reserve-pet-info"> 
                     <div class="reserve-info">
                         <div class="info">
                             <span class="name">{{ reserveData.petName }}</span>
@@ -911,7 +912,7 @@ onUnmounted(() => {
                             <span class="phone">{{ textPhoneNumber }}</span>
                         </div>
     
-                        <div>
+                        <div class="icon">
                             <img :src="pathIcons[reserveData.reRoute]" alt="예약경로">
                         </div>
                     </div>
@@ -1545,13 +1546,14 @@ onUnmounted(() => {
                     width: 100%;
                     display: flex;
                     align-items: center;
-                    gap:16px;
+                    justify-content: space-between;
+                    // gap:16px;
         
                     .info {
-                        flex: 1 0 0;
+                        flex: 2 0 0;
                         display: flex;
                         align-items: center;
-                        gap: 8px;
+                        gap: 6px;
         
                         .name { 
                             @include typo($title-l-mobile-size, $title-l-mobile-weight, $title-l-mobile-spacing, $title-l-mobile-line);
@@ -1568,6 +1570,7 @@ onUnmounted(() => {
                             max-width: 110px;
                         }
                     }
+                    // .icon {flex: 1 0 0;}
                 }
                 .pet-info {
                     width: 100%;

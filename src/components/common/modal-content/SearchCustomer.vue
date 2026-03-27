@@ -411,6 +411,7 @@ const customerColumns = [
 
             .sub-info {
                 display: flex;
+                flex-wrap:wrap;
                 align-items: center;
                 gap: 8px;
                 color: $gray-500;
