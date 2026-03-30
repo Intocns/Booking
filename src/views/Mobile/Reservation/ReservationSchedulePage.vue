@@ -218,19 +218,36 @@ const fetchParams = computed(() => {
 
 // 간단한 터치 감지 로직
 let touchStartY = 0;
+let isTrackable = false; // 터치 추적 시작(Flag)
 // 터치 이벤트
 const handleTouchStart = (e) => {
-    touchStartY = e.touches[0].clientY;
+   // 리스트 영역(.list-area) 기준
+    const rect = e.currentTarget.getBoundingClientRect();
+    const touchY = e.touches[0].clientY;
+
+    const listStartPos = rect.top; 
+    const deadZone = 60; // 상단 60px 이내
+
+    if (touchY >= listStartPos && touchY <= listStartPos + deadZone) {
+        isTrackable = true;
+        touchStartY = touchY;
+    } else {
+        isTrackable = false;
+    }
 };
 // 터치 이벤트
 const handleTouchMove = (e) => {
+    if (!isTrackable) return;
+
     const touchMoveY = e.touches[0].clientY;
     const diff = touchStartY - touchMoveY;
 
-    if (diff > 50) { // 위로 50px 이상 올리면
+    if (diff > 50) { 
         isFolded.value = true;
-    } else if (diff < -50) { // 아래로 50px 이상 내리면
+        isTrackable = false;
+    } else if (diff < -50) { 
         isFolded.value = false;
+        isTrackable = false;
     }
 };
 // 위로 밀어낼 거리 계산
@@ -364,16 +381,17 @@ const setToday = () => {
     }
 }
 
+const listAreaRef = ref(null);
 // 접힙 상태 감지
-// watch(isFolded, (newVal) => {
-//     if (newVal) {
-//         document.body.style.overflow = 'hidden';
-//         document.body.style.touchAction = 'none';
-//     } else {
-//         document.body.style.overflow = 'auto';
-//         document.body.style.touchAction = 'auto';
-//     }
-// });
+watch(isFolded, (newVal) => {
+    if (newVal) {
+        document.body.style.overflow = 'auto';
+        document.body.style.touchAction = 'auto';
+    } else {
+        document.body.style.overflow = 'hidden';
+        document.body.style.touchAction = 'none';
+    }
+});
 
 const closeReserveInfoModal = () => {
     modalStore.reserveInfoModal.closeModal()
@@ -418,6 +436,8 @@ watch(selectedDoctors, (newDocs) => {
 }, { immediate: true });
 
 onMounted(async() => {
+    document.body.style.overflow = 'hidden';
+
     selectedDate.value = formatDate(new Date());
     
     window.scrollTo({ top: 0, behavior: 'auto' })
@@ -509,6 +529,7 @@ onMounted(async() => {
                 :class="{ 'expanded': isFolded }"
                 @touchstart="handleTouchStart"
                 @touchmove="handleTouchMove"
+                ref="listAreaRef"
             >
                 <div class="handle"></div>
 
