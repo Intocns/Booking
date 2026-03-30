@@ -335,7 +335,11 @@ const validateReservation = async () => {
     }
     
     // 6. 고객 매칭 검증 (고객 정보가 있는 경우 반드시 매칭되어야 함)
-    if (reserveClientList.value.length > 0) {
+    // TODO: cocode가 5자리 미만(10000 미만)인 경우에만 매칭 필수 -- 작업중
+    const cocode = hospitalStore.hospitalInfo.cocode;
+    const isMatchingRequired = String(cocode).length < 5;
+    
+    if (isMatchingRequired && reserveClientList.value.length > 0) {
         const hasMatchedCustomer = reserveClientList.value.some(item => item.isMatched);
         if (!hasMatchedCustomer) {
             modalStore.confirmModal.openModal({
@@ -906,9 +910,9 @@ onUnmounted(() => {
                 <div v-if="reserveData.clinicType !== '개인일정' && reserveData.clinicType !== '일반예약'" class="reserve-pet-info"> 
                     <div class="reserve-info">
                         <div class="info">
-                            <span class="name">{{ reserveData.petName }}</span>
+                            <span class="name pet">{{ reserveData.petName }}</span>
                             <span class="dot"></span>
-                            <span class="name">{{ reserveData.userName }}</span>
+                            <span class="name user">{{ reserveData.userName }}</span>
                             <span class="phone">{{ textPhoneNumber }}</span>
                         </div>
     
@@ -1560,7 +1564,8 @@ onUnmounted(() => {
                             text-overflow: ellipsis;
                             overflow: hidden;
                             white-space: nowrap;
-                            max-width: 90px;
+                            &.pet {max-width: 60px;}
+                            &.user {max-width: 70px;}
                         }
                         .phone {
                             @include typo($body-m-mobile-size, $body-m-mobile-weight, $body-m-mobile-spacing, $body-m-mobile-line);
