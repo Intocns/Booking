@@ -74,6 +74,36 @@ const reserveSummary = computed(() => {
     ];
 });
 
+// 정렬된 리스트 computed
+const sortedReserveList = computed(() => {
+    // 1. 데이터가 아예 없는 경우 빈 배열 반환
+    if (!reservationStore.reserveList || reservationStore.reserveList.length === 0) {
+        return [];
+    }
+
+    const list = [...reservationStore.reserveList];
+
+    return list.sort((a, b) => {
+        const dateA = a?.reTime || '';
+        const dateB = b?.reTime || '';
+        const regA = a?.createdAt || '';
+        const regB = b?.createdAt || '';
+
+        switch (currentSort.value) {
+            case '0': // 예약일 빠른 순
+                return dateA.localeCompare(dateB);
+            case '1': // 예약일 느린 순
+                return dateB.localeCompare(dateA);
+            case '2': // 접수일시 빠른 순
+                return regA.localeCompare(regB);
+            case '3': // 접수일시 느린 순
+                return regB.localeCompare(regA);
+            default:
+                return 0;
+        }
+    });
+});
+
 // 필터 값 변환 헬퍼 함수 ('all'이 포함되어 있으면 null로 변환)
 const convertFilterParam = (value) => {
     if (!value || value.length === 0 || value.includes('all')) return null;
@@ -206,7 +236,7 @@ onMounted(async() => {
                 </div>
             </div>
 
-            <ListTable :rows="reservationStore.reserveList" />
+            <ListTable :rows="sortedReserveList" />
         </template>
     </TableLayout>
 
