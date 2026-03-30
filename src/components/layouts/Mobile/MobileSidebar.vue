@@ -51,6 +51,10 @@ const openWd = () => {
 
     window.open(`${EXTERNAL_LINKS.WD_SSO}?at=${at}&rt=${rt}`);
 }
+//오늘의 예약 현황 클릭 이벤트 => 이동
+const openLinkMain = () => {
+    window.open(EXTERNAL_LINKS.RESERVE_MAIN);
+}
 //수납완료 클릭 이벤트 => 이동
 const openLinkReceiptComp = () => {
     window.open(EXTERNAL_LINKS.RECEIPT_COMP);
@@ -146,7 +150,8 @@ watch(() => props.isActive, (val) => {
                         </li>
                     </ul>
                     <div class="sub-menu-wrapper" :class="{ 'is-open': isBookingOpen }">
-                        <div class="sub-menu">
+                        <div class="sub-menu" >
+                            <li class="sub-menu__li" @click="openLinkMain">오늘의 예약 현황</li>
                             <RouterLink to="/reservation/list" class="sub-menu__li" active-class="active-text" @click="$emit('close')">
                                 전체 예약 조회
                             </RouterLink>

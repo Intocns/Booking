@@ -27,5 +27,6 @@ export const EXTERNAL_LINKS = {
     CHART_MAIN: `${BASE_LINK_URL}/plus/main`,
     NOTICE: `${BASE_LINK_URL}/cscenter/notice`,
     NOTICE_DET: `${BASE_LINK_URL}/cscenter/noticeDet`,
-    MY_HOSPITAL: `${BASE_LINK_URL}/mylink/hospital`
+    MY_HOSPITAL: `${BASE_LINK_URL}/mylink/hospital`,
+    RESERVE_MAIN: `${BASE_LINK_URL}/reserve/main`
 };
