@@ -242,12 +242,13 @@ const customerColumns = [
     <template v-else>
         <!-- 검색영역 -->
         <div class="d-flex align-center gap-8">
-            <CustomSingleSelect 
-                v-model="selectedSearchType"
-                :options="searchTypeOptions"
-                placeholder="선택"
-                select-width="120px"
-            />
+            <div style="min-width: 80px;">
+                <CustomSingleSelect 
+                    v-model="selectedSearchType"
+                    :options="searchTypeOptions"
+                    placeholder="선택"
+                />
+            </div>
             <FilterKeyword 
                 :is-mobile="isMobile"
                 placeholder="고객명, 동물명, 전화번호 검색"

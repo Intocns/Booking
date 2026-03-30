@@ -73,6 +73,8 @@ const emit = defineEmits(['update:modelValue', 'search']);
         display: flex;
         gap: 8px;
         align-items: center;
+        flex: 1;
+        min-width: 0;
     }
     .search-filter__icons {
         width: 16px;
@@ -102,6 +104,7 @@ const emit = defineEmits(['update:modelValue', 'search']);
         padding: 0 10px;
         align-items: center;
         gap: 4px;
+        min-width: 0;
 
         border: 1px solid $gray-200;
         border-radius: 4px;
@@ -134,7 +137,8 @@ const emit = defineEmits(['update:modelValue', 'search']);
         input {
             border: none;
             flex: 1;
-            // width: 100%;
+            width: 100%;
+            min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
             &:focus { outline: none; }
