@@ -75,8 +75,10 @@ const parseHourBitToEvents = (daySchedule) => {
     const dateStr = daySchedule.date;
 
     // 운영 시간 범위 계산
-    const startLimitMin = getTotalMinutes(daySchedule.startTime || "00:00");
-    const endLimitMin = getTotalMinutes(daySchedule.endTime || "24:00");
+    // const startLimitMin = getTotalMinutes(daySchedule.startTime || "00:00");
+    // const endLimitMin = getTotalMinutes(daySchedule.endTime || "24:00");
+    const startLimitMin = getTotalMinutes(daySchedule.times[0].startTime || "00:00");
+    const endLimitMin = getTotalMinutes(daySchedule.times[daySchedule.times.length - 1].endTime || "24:00");
 
     const startIdxLimit = Math.max(0, Math.floor(startLimitMin / 30));
     const endIdxLimit = Math.min(bitString.length, Math.ceil(endLimitMin / 30));
@@ -237,8 +239,10 @@ const dayEvents = computed(() => {
     const daySchedule = productWeekScheduleDataList.value.find(day => day.date === targetDate.value);
     if (!daySchedule) return [];
 
-    const startTime = daySchedule.startTime || "00:00";
-    const endTime = daySchedule.endTime || "24:00";
+    // const startTime = daySchedule.startTime || "00:00";
+    // const endTime = daySchedule.endTime || "24:00";
+    const startTime = daySchedule.times[0].startTime || "00:00";
+    const endTime = daySchedule.times[daySchedule.times.length - 1] || "24:00";
 
     const getTotalMinutes = (timeStr) => {
         const [h, m] = timeStr.split(':').map(Number);
