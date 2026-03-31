@@ -609,7 +609,15 @@ const initDataMapping = async () => {
     const basicPos = data.pos.filter(item => item.isBasicSchedule !== false);
 
     // 기본 운영 데이터를 시작일 기준 정렬
+    // const sortedPos = [...basicPos].sort((a, b) => {
+    //     return new Date(a.startDate) - new Date(b.startDate);
+    // });
     const sortedPos = [...basicPos].sort((a, b) => {
+        // 1순위: endDate가 없는 항목을 앞으로 보냄
+        if (!a.endDate && b.endDate) return -1; // a는 없고 b는 있으면 a가 앞(-1)
+        if (a.endDate && !b.endDate) return 1;  // a는 있고 b는 없으면 b가 앞(1)
+
+        // 2순위: 둘 다 endDate가 있거나 둘 다 없는 경우, 시작일 기준 정렬
         return new Date(a.startDate) - new Date(b.startDate);
     });
 
@@ -716,7 +724,7 @@ onMounted(async() => {
                     <div class="form-content">
                         <div>
                             <div class="d-flex align-center gap-4 body-s">
-                                매 30분 마다 최대
+                                매 {{ productStore.bookingTime == 30 ? '30분' : '한시간' }} 마다 최대
                                 <CustomSingleSelect 
                                     v-model="selectedAnimalCount" 
                                     :options="animalCountOptions" 

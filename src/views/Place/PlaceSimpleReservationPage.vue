@@ -14,7 +14,7 @@ import { useProductStore } from '@/stores/productStore';
 import { format } from 'date-fns';
 
 const productStore = useProductStore()
-const { productList, productScheduleDataList } = storeToRefs(productStore);
+const { productList, productScheduleDataList, bookingTime } = storeToRefs(productStore);
 
 /**
  * 상태 관리
@@ -79,66 +79,116 @@ const columns = computed(() => {
 
 // hourBit를 DayPilot 이벤트로 변환하는 함수 
 // hourBit를 30분 단위로 쪼개서 이벤트를 생성함 
+// const parseHourBitToEvents = (item) => {
+//     if (!item || !item.hourBit) return [];
+
+//     const bitString = item.hourBit; // "0000111..." (48자)
+//     const newEvents = []; // 가공해서 담아줄 events 데이터
+//     const dateStr = item.date; // "2023-10-27"
+
+//     // 운영 시간 범위 계산
+//     const startTime = item.startTime || "00:00";
+//     const endTime = item.endTime || "24:00";
+
+//     const getTotalMinutes = (timeStr) => {
+//         const [h, m] = timeStr.split(':').map(Number);
+//         return h * 60 + m;
+//     };
+
+//     const startLimit = getTotalMinutes(startTime);
+//     const endLimit = getTotalMinutes(endTime);    
+
+//     for (let i = 0; i < bitString.length; i++) { // TODO: i += 2로 1시간 단위로 바꿀 수 있음.
+//         const totalMinutes = i * 30;
+//         const nextTotalMinutes = (i + 1) * 30; // TODO: 1시간 단위로 바꿀 때는 (i + 2) * 30으로 변경
+
+//         //  startTime ~ endTime 범위 밖이면 이벤트 생성 안 함
+//         if (totalMinutes < startLimit || totalMinutes >= endLimit) {
+//             continue; 
+//         }
+
+//         const bit = bitString[i];
+        
+//         // 30분 단위 계산
+//         const hour = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+//         const min = (totalMinutes % 60).toString().padStart(2, '0');
+        
+//         const nextHour = Math.floor(nextTotalMinutes / 60).toString().padStart(2, '0');
+//         const nextMin = (nextTotalMinutes % 60).toString().padStart(2, '0');
+
+//         // 해당 시간대의 time_slots 찾기
+//         const currentTimeStr = `${hour}:${min}`;
+//         const slot = item.time_slots?.find(s => s.time === currentTimeStr);
+
+//         // 이벤트를 생성 
+//         newEvents.push({
+//             id: `bit_${item.bizItemId}_${i}`, // 라이브러리가 식별할 수 있는 id
+//             resource: item.bizItemId, // 라이브러리 캘린터 형식이 resource인경우 필요(col의 id값과 같아야 연동됨)
+//             start: `${dateStr}T${hour}:${min}:00`, 
+//             end: `${dateStr}T${nextHour}:${nextMin}:00`,
+//             backColor: "#fff", // 이벤트 셀 기본 배경 컬러
+//             tags: { 
+//                 scheduleId: item.scheduleId,
+//                 bitValue: bit, // (0: 미운영, 1: 운영)
+//                 startTime: startTime,
+//                 endTime: endTime,
+//                 reserved: slot ? slot.reserved : 0,
+//                 stock: item.stock,
+//             }
+//         });
+//     }
+//     return newEvents;
+// };
 const parseHourBitToEvents = (item) => {
-    if (!item || !item.hourBit) return [];
+    if (!item || !item.times) return [];
 
-    const bitString = item.hourBit; // "0000111..." (48자)
-    const newEvents = []; // 가공해서 담아줄 events 데이터
-    const dateStr = item.date; // "2023-10-27"
-
-    // 운영 시간 범위 계산
-    const startTime = item.startTime || "00:00";
-    const endTime = item.endTime || "24:00";
+    const newEvents = [];
+    const dateStr = item.date;
+    const bookingTime = item.bookingTime || 30; // 30 or 60
+    const bitString = item.hourBit; // "0000..."
 
     const getTotalMinutes = (timeStr) => {
         const [h, m] = timeStr.split(':').map(Number);
         return h * 60 + m;
     };
 
-    const startLimit = getTotalMinutes(startTime);
-    const endLimit = getTotalMinutes(endTime);    
+    item.times.forEach((range) => {
+        const startTotal = getTotalMinutes(range.startTime);
+        const endTotal = getTotalMinutes(range.endTime);
 
-    for (let i = 0; i < bitString.length; i++) {
-        const totalMinutes = i * 30;
-        const nextTotalMinutes = (i + 1) * 30;
+        // 해당 구간 내에서 bookingTime 간격으로 이벤트 생성
+        for (let totalMinutes = startTotal; totalMinutes < endTotal; totalMinutes += bookingTime) {
+            const i = totalMinutes / 30; // bitString 인덱스는 항상 30분 기준이므로
+            const bit = bitString[i] || '0';
 
-        //  startTime ~ endTime 범위 밖이면 이벤트 생성 안 함
-        if (totalMinutes < startLimit || totalMinutes >= endLimit) {
-            continue; 
+            const hour = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+            const min = (totalMinutes % 60).toString().padStart(2, '0');
+            
+            const nextTotal = totalMinutes + bookingTime;
+            const nextHour = Math.floor(nextTotal / 60).toString().padStart(2, '0');
+            const nextMin = (nextTotal % 60).toString().padStart(2, '0');
+
+            const currentTimeStr = `${hour}:${min}`;
+            const slot = item.time_slots?.find(s => s.time === currentTimeStr);
+
+            newEvents.push({
+                id: `bit_${item.bizItemId}_${i}`,
+                resource: item.bizItemId,
+                start: `${dateStr}T${hour}:${min}:00`,
+                end: `${dateStr}T${nextHour}:${nextMin}:00`,
+                backColor: "#fff",
+                tags: {
+                    scheduleId: item.scheduleId,
+                    bitValue: bit,
+                    bookingTime: bookingTime, // 추가
+                    reserved: slot ? slot.reserved : 0,
+                    stock: item.stock,
+                }
+            });
         }
-
-        const bit = bitString[i];
-        
-        // 30분 단위 계산
-        const hour = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
-        const min = (totalMinutes % 60).toString().padStart(2, '0');
-        
-        const nextHour = Math.floor(nextTotalMinutes / 60).toString().padStart(2, '0');
-        const nextMin = (nextTotalMinutes % 60).toString().padStart(2, '0');
-
-        // 해당 시간대의 time_slots 찾기
-        const currentTimeStr = `${hour}:${min}`;
-        const slot = item.time_slots?.find(s => s.time === currentTimeStr);
-
-        // 이벤트를 생성 
-        newEvents.push({
-            id: `bit_${item.bizItemId}_${i}`, // 라이브러리가 식별할 수 있는 id
-            resource: item.bizItemId, // 라이브러리 캘린터 형식이 resource인경우 필요(col의 id값과 같아야 연동됨)
-            start: `${dateStr}T${hour}:${min}:00`, 
-            end: `${dateStr}T${nextHour}:${nextMin}:00`,
-            backColor: "#fff", // 이벤트 셀 기본 배경 컬러
-            tags: { 
-                scheduleId: item.scheduleId,
-                bitValue: bit, // (0: 미운영, 1: 운영)
-                startTime: startTime,
-                endTime: endTime,
-                reserved: slot ? slot.reserved : 0,
-                stock: item.stock,
-            }
-        });
-    }
+    });
     return newEvents;
-};
+}
 
 // 상품 ID를 받아 현재 상품이 노출/비노출(isImp) 상태인지 확인
 const getIsImp = (resourceId) => {
@@ -177,6 +227,7 @@ const handleToggle = async (event, isChecked) => {
     const bizItemId = event.data.resource;
     const scheduleId = event.data.tags.scheduleId;
     const day = event.data.start.toString().split('T')[0];
+    const bookingTime = event.data.tags.bookingTime;
 
     if (!getIsImp(bizItemId)) return;
 
@@ -187,7 +238,15 @@ const handleToggle = async (event, isChecked) => {
 
     const bitIndex = parseInt(event.data.id.split('_').pop());
     const bitArray = schedule.hourBit.split('');
-    bitArray[bitIndex] = isChecked ? '1' : '0';
+    const bitValue = isChecked ? '1' : '0';
+
+    // 30분 단위면 1개, 60분 단위면 2개의 비트를 수정
+    const step = bookingTime / 30; 
+    for (let j = 0; j < step; j++) {
+        if (bitIndex + j < bitArray.length) {
+            bitArray[bitIndex + j] = bitValue;
+        }
+    }
 
     await updateScheduleBit(bizItemId, day, bitArray, event.data.tags.startTime, event.data.tags.endTime, scheduleId);
 };
@@ -201,25 +260,40 @@ const handleAllStatusChange = async (bizItemId, status) => {
     
     if (!schedule) return;
 
-    const newBitArray = new Array(48).fill('0'); // 배열 하나 초기화
+    // const newBitArray = new Array(48).fill('0'); // 배열 하나 초기화
+    const newBitArray = schedule.hourBit.split('');
 
-    // 운영 시간(startTime, endTime)을 인덱스로 변환
-    const getIndex = (timeStr) => {
-        if (!timeStr) return 0;
-        const [h, m] = timeStr.split(':').map(Number);
-        return (h * 60 + m) / 30;
-    };
-
-    const startIndex = getIndex(schedule.startTime || "00:00");
-    const endIndex = getIndex(schedule.endTime || "24:00");
-
-    if (status === 'all-open') { // 전체 가능 > 운영 시간 내의 bit값을 1로
-        for (let i = startIndex; i < endIndex; i++) {
-            if (i >= 0 && i < 48) {
+    if (status === 'all-open') {
+        // times에 정의된 구간만 '1'로 변경
+        schedule.times.forEach(range => {
+            const startIdx = getTotalMinutes(range.startTime) / 30;
+            const endIdx = getTotalMinutes(range.endTime) / 30;
+            for (let i = startIdx; i < endIdx; i++) {
                 newBitArray[i] = '1';
             }
-        }
+        });
+    } else {
+        // 전체 마감 시 모든 비트를 '0'으로 (또는 운영시간 내만 '0'으로)
+        newBitArray.fill('0');
     }
+
+    // 운영 시간(startTime, endTime)을 인덱스로 변환
+    // const getIndex = (timeStr) => {
+    //     if (!timeStr) return 0;
+    //     const [h, m] = timeStr.split(':').map(Number);
+    //     return (h * 60 + m) / 30;
+    // };
+
+    // const startIndex = getIndex(schedule.startTime || "00:00");
+    // const endIndex = getIndex(schedule.endTime || "24:00");
+
+    // if (status === 'all-open') { // 전체 가능 > 운영 시간 내의 bit값을 1로
+    //     for (let i = startIndex; i < endIndex; i++) {
+    //         if (i >= 0 && i < 48) {
+    //             newBitArray[i] = '1';
+    //         }
+    //     }
+    // }
 
     await updateScheduleBit(
         bizItemId, 
@@ -270,6 +344,7 @@ const config = ref({
     startDate: format(currentDate.value, 'yyyy-MM-dd'),
     cellHeight: 40,
     headerHeight: 64,
+    cellDuration: bookingTime.value === 60 ? 60 : 30,
 
     // 캘렌더 셀 설정
     onBeforeCellRender: (args) => {

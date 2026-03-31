@@ -3,6 +3,7 @@ import icClear from '@/assets/icons/ic_clear.svg'
 import icClock from '@/assets/icons/ic_clock.svg'
 import BottomSheet from './Mobile/BottomSheet.vue';
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { useProductStore } from '@/stores/productStore';
 
 const props = defineProps({
     modelValue: {
@@ -26,6 +27,7 @@ const props = defineProps({
         default: false,
     },
     isMobile: { type: Boolean, default: false }, // 모바일 환경 체크
+    bookingTime: {type: Number, default: 30 }, // 예약시간 단위 -> 에 따라 00, 30 분 분 선택 옵션 달라짐
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -59,8 +61,12 @@ const hourOptions = computed(() => {
     return Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')); // 00 ~ 23
 });
 const minuteOptions = computed(() => {
-    // 30분 단위 옵션
-    return ['00', '30']; 
+    if(props.bookingTime == 60) {
+        return ['00'];
+    } else {
+        // 30분 단위 옵션
+        return ['00', '30']; 
+    }
 });
 
 // --- ModelValue 파싱 및 임시 상태 초기화/업데이트 ---

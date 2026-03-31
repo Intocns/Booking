@@ -20,7 +20,7 @@ import { DAYS_OPTIONS } from "@/constants";
 
 const productStore = useProductStore();
 const modalStore = useModalStore();
-const { productWeekScheduleDataList } = storeToRefs(productStore);
+const { productWeekScheduleDataList, bookingTime } = storeToRefs(productStore);
 
 // props
 const props = defineProps({
@@ -322,6 +322,7 @@ const dayEvents = computed(() => {
 
     const list = [];
     const addedIndices = new Set(); 
+    const interval = bookingTime.value === 60 ? 2 : 1; // 60분이면 2칸(1시간)씩 점프
 
     daySchedule.times.forEach(slot => {
         const startMin = getTotalMinutes(slot.startTime);
@@ -330,8 +331,7 @@ const dayEvents = computed(() => {
         const startIdx = Math.floor(startMin / 30);
         const endIdx = Math.ceil(endMin / 30);
 
-        // 해당 구간 내의 30분 단위 인덱스들을 리스트에 추가
-        for (let i = startIdx; i < endIdx; i++) {
+        for (let i = startIdx; i < endIdx; i += interval) {
             if (!addedIndices.has(i)) {
                 list.push({
                     id: i,
@@ -356,8 +356,13 @@ const modalTitle = computed(() => {
 
 // 상품시간별 운영/미운영 개별 토글 버튼 이벤트
 const handleToggle = (index, isChecked) => {
-    tempBitArray.value[index] = isChecked ? '1' : '0';
-    // tempBitArray.value[index + 1] = isChecked ? '1' : '0'; // TODO: 1시간 단위인 경우, 1시간단위로bit값 수정 되도록 추가
+    const bit = isChecked ? '1' : '0';
+    tempBitArray.value[index] = bit;
+
+    // bookingTime이 60이면 현재 인덱스의 다음 30분 비트도 함께 변경
+    if (bookingTime.value === 60 && index + 1 < tempBitArray.value.length) {
+        tempBitArray.value[index + 1] = bit;
+    }
 };
 
 // 상품시간별 운영/마감 API 호출 및 상태 업데이트
