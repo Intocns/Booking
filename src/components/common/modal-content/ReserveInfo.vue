@@ -314,7 +314,7 @@ const validateReservation = async () => {
     const isMatchingRequired = String(cocode).length < 5;
     const checkClinicType = reserveData.clinicType !== '일반예약' && reserveData.clinicType !== '개인일정'
     
-    if (isMatchingRequired && reserveClientList.value.length > 0) {
+    if (checkClinicType && isMatchingRequired && reserveClientList.value.length > 0) {
         const hasMatchedCustomer = reserveClientList.value.some(item => item.isMatched);
         if (!hasMatchedCustomer) {
             modalStore.confirmModal.openModal({
