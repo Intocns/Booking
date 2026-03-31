@@ -263,6 +263,11 @@ const handleAllStatusChange = async (bizItemId, status) => {
     // const newBitArray = new Array(48).fill('0'); // 배열 하나 초기화
     const newBitArray = schedule.hourBit.split('');
 
+    const getTotalMinutes = (timeStr) => {
+        const [h, m] = timeStr.split(':').map(Number);
+        return h * 60 + m;
+    };
+    
     if (status === 'all-open') {
         // times에 정의된 구간만 '1'로 변경
         schedule.times.forEach(range => {
