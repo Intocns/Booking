@@ -1,7 +1,7 @@
 <!-- 고객 예약 정보 모달 content (기존 로직 스크립트는 웹과동일) -->
 <script setup>
 import { ref, computed, onMounted, nextTick, watch, onUnmounted } from 'vue';
-import { RESERVE_STATUS_CLASS_MAP, PET_GENDER_SHORT_MAP, RESERVE_STATUS_SHORT_MAP, EXTERNAL_LINKS } from '@/constants';
+import { RESERVE_STATUS_CLASS_MAP, PET_GENDER_SHORT_MAP, RESERVE_STATUS_SHORT_MAP, EXTERNAL_LINKS, RESERVE_ROUTE_MAP } from '@/constants';
 import { toggleCustomerMatch as toggleCustomerMatchUtil } from '@/utils/customer';
 import { formatDate, formatTime, formatDateTime, formatTimeToMinutes, formatDateTimeForAPI, formatDateDot } from '@/utils/dateFormatter';
 
@@ -335,11 +335,12 @@ const validateReservation = async () => {
     }
     
     // 6. 고객 매칭 검증 (고객 정보가 있는 경우 반드시 매칭되어야 함)
-    // TODO: cocode가 5자리 미만(10000 미만)인 경우에만 매칭 필수 -- 작업중
+    // cocode가 5자리 미만(10000 미만)인 경우에만 매칭 필수
     const cocode = hospitalStore.hospitalInfo.cocode;
     const isMatchingRequired = String(cocode).length < 5;
+    const checkClinicType = reserveData.clinicType !== '일반예약' && reserveData.clinicType !== '개인일정'
     
-    if (isMatchingRequired && reserveClientList.value.length > 0) {
+    if (checkClinicType && isMatchingRequired && reserveClientList.value.length > 0) {
         const hasMatchedCustomer = reserveClientList.value.some(item => item.isMatched);
         if (!hasMatchedCustomer) {
             modalStore.confirmModal.openModal({
@@ -894,7 +895,8 @@ onUnmounted(() => {
                     <div class="d-flex align-center justify-between">
                         <div class="d-flex gap-8 align-center">
                             <p class="title-l">예약 정보</p>
-                            <span class="flag" :class="RESERVE_STATUS_CLASS_MAP[reserveData.inState]">{{ RESERVE_STATUS_SHORT_MAP[reserveData.inState] }}</span>
+                            <span v-if="reserveData.clinicType == '개인일정' || reserveData.clinicType == '일반예약'" class="flag flag--black">{{ reserveData.clinicType }}</span>
+                            <span v-else class="flag" :class="RESERVE_STATUS_CLASS_MAP[reserveData.inState]">{{ RESERVE_STATUS_SHORT_MAP[reserveData.inState] }}</span>
                         </div>
         
                         <div class="reserve-number">
@@ -929,180 +931,253 @@ onUnmounted(() => {
 
             </div>
 
-            <!-- 정보 -->
-            <div v-show="!isFolded" class="info-lists-wrapper">
-                <div class="info-list">
-                    <div class="info-item">
-                        <p class="label">상품/진료실명</p>
-                        <InputTextBox 
-                            v-model="reserveData.roomName"
-                            :disabled="true"
-                            placeholder="상품명/진료실명"
-                        />
-                    </div>
-                    <div class="info-item">
-                        <p class="label">예약 방문일</p>
-                        <div class="d-flex gap-8 flex-wrap w-100" style="flex:2;">
-                            <CustomDatePicker 
-                                ref="reserveDateRef" 
-                                v-model="reserveDate" 
-                                :range="false" 
-                                :disabled="isCancelled"
-                                :is-mobile="isMobile"
+            <template v-if="reserveData.clinicType == '개인일정' || reserveData.clinicType == '일반예약'">
+                <div class="info-lists-wrapper">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <p class="label">예약 경로</p>
+                            <InputTextBox 
+                                v-model="RESERVE_ROUTE_MAP[reserveData.reRoute]"
+                                :disabled="true"
+                                placeholder="예약 경로"
                             />
-
-                            <!-- 시간 선택 ( 00: 00 ~ 00: 00) -->
-                            <div class="d-flex align-center gap-4" style="flex:2;">
-                                <TimeSelect 
-                                    ref="startTimeRef" 
-                                    v-model="startTime" 
-                                    class="time-select-wrap"
+                        </div>
+                        <div class="info-item">
+                            <p class="label">예약 일시</p>
+                            <div class="d-flex gap-8 flex-wrap w-100" style="flex:2;">
+                                <CustomDatePicker 
+                                    ref="reserveDateRef" 
+                                    v-model="reserveDate" 
+                                    :range="false" 
                                     :disabled="isCancelled"
                                     :is-mobile="isMobile"
                                 />
-                                <span class="time-separator">-</span>
-                                <TimeSelect 
-                                    ref="endTimeRef" 
-                                    v-model="endTime" 
-                                    class="time-select-wrap"
+    
+                                <!-- 시간 선택 ( 00: 00 ~ 00: 00) -->
+                                <div class="d-flex align-center gap-4" style="flex:2;">
+                                    <TimeSelect 
+                                        ref="startTimeRef" 
+                                        v-model="startTime" 
+                                        class="time-select-wrap"
+                                        :disabled="isCancelled"
+                                        :is-mobile="isMobile"
+                                    />
+                                    <span class="time-separator">-</span>
+                                    <TimeSelect 
+                                        ref="endTimeRef" 
+                                        v-model="endTime" 
+                                        class="time-select-wrap"
+                                        :disabled="isCancelled"
+                                        :is-mobile="isMobile"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <p class="label">담당의</p>
+                            <div class="select-wrapper w-100">
+                                <CustomSingleSelect 
+                                    ref="doctorSelectRef"
+                                    :model-value="selectedDoctorId"
+                                    @update:model-value="handleDoctorChange"
+                                    :options="doctorOptions"
+                                    placeholder="담당의 선택"
+                                    select-width="100%"
                                     :disabled="isCancelled"
                                     :is-mobile="isMobile"
                                 />
                             </div>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <p class="label">담당의</p>
-                        <div class="select-wrapper w-100">
-                            <CustomSingleSelect 
-                                ref="doctorSelectRef"
-                                :model-value="selectedDoctorId"
-                                @update:model-value="handleDoctorChange"
-                                :options="doctorOptions"
-                                placeholder="담당의 선택"
-                                select-width="100%"
-                                :disabled="isCancelled"
-                                :is-mobile="isMobile"
-                            />
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <div class="w-100 d-flex align-center justify-between">
-                            <p class="label">병원 메모</p>
-                            <p class="show-more-btn" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">더보기 <img :src="icArrow" alt=" 화살표"></p>
-                        </div>
-                        <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''">    
-                            <span v-if="!reserveData.geReMemo || reserveData.geReMemo.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
-                            <p v-else class="text">{{ reserveData.geReMemo  }}</p>
-                        </div>
-                    </div>
-                    <!-- 예약취소, 거절의 경우 취소일시,취소메모 데이터 따로 보여줌 -->
-                    <template v-if="isCancelled">
-                        <div class="info-item">
-                            <p class="label">{{ confirmedDateTimeLabel }}</p>
-                            <InputTextBox 
-                                :model-value="confirmedDateTime"
-                                :disabled="true"
-                                :placeholder="confirmedDateTimeLabel"
-                            />
                         </div>
                         <div class="info-item">
                             <div class="w-100 d-flex align-center justify-between">
-                                <p class="label">{{ cancelRejectLabel }}</p>
-                                <p class="show-more-btn" @click="openMemo(cancelRejectLabel, reserveData.rejectMsg)">더보기 <img :src="icArrow" alt=" 화살표"></p>
+                                <p class="label">병원 메모</p>
+                                <p class="show-more-btn" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">더보기 <img :src="icArrow" alt=" 화살표"></p>
+                            </div>
+                            <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''">    
+                                <span v-if="!reserveData.geReMemo || reserveData.geReMemo.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
+                                <p v-else class="text">{{ reserveData.geReMemo  }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <template v-else>
+                <!-- 정보 -->
+                <div v-show="!isFolded" class="info-lists-wrapper">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <p class="label">상품/진료실명</p>
+                            <InputTextBox 
+                                v-model="reserveData.roomName"
+                                :disabled="true"
+                                placeholder="상품명/진료실명"
+                            />
+                        </div>
+                        <div class="info-item">
+                            <p class="label">예약 방문일</p>
+                            <div class="d-flex gap-8 flex-wrap w-100" style="flex:2;">
+                                <CustomDatePicker 
+                                    ref="reserveDateRef" 
+                                    v-model="reserveDate" 
+                                    :range="false" 
+                                    :disabled="isCancelled"
+                                    :is-mobile="isMobile"
+                                />
+    
+                                <!-- 시간 선택 ( 00: 00 ~ 00: 00) -->
+                                <div class="d-flex align-center gap-4" style="flex:2;">
+                                    <TimeSelect 
+                                        ref="startTimeRef" 
+                                        v-model="startTime" 
+                                        class="time-select-wrap"
+                                        :disabled="isCancelled"
+                                        :is-mobile="isMobile"
+                                    />
+                                    <span class="time-separator">-</span>
+                                    <TimeSelect 
+                                        ref="endTimeRef" 
+                                        v-model="endTime" 
+                                        class="time-select-wrap"
+                                        :disabled="isCancelled"
+                                        :is-mobile="isMobile"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <p class="label">담당의</p>
+                            <div class="select-wrapper w-100">
+                                <CustomSingleSelect 
+                                    ref="doctorSelectRef"
+                                    :model-value="selectedDoctorId"
+                                    @update:model-value="handleDoctorChange"
+                                    :options="doctorOptions"
+                                    placeholder="담당의 선택"
+                                    select-width="100%"
+                                    :disabled="isCancelled"
+                                    :is-mobile="isMobile"
+                                />
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="w-100 d-flex align-center justify-between">
+                                <p class="label">병원 메모</p>
+                                <p class="show-more-btn" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">더보기 <img :src="icArrow" alt=" 화살표"></p>
+                            </div>
+                            <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''">    
+                                <span v-if="!reserveData.geReMemo || reserveData.geReMemo.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
+                                <p v-else class="text">{{ reserveData.geReMemo  }}</p>
+                            </div>
+                        </div>
+                        <!-- 예약취소, 거절의 경우 취소일시,취소메모 데이터 따로 보여줌 -->
+                        <template v-if="isCancelled">
+                            <div class="info-item">
+                                <p class="label">{{ confirmedDateTimeLabel }}</p>
+                                <InputTextBox 
+                                    :model-value="confirmedDateTime"
+                                    :disabled="true"
+                                    :placeholder="confirmedDateTimeLabel"
+                                />
+                            </div>
+                            <div class="info-item">
+                                <div class="w-100 d-flex align-center justify-between">
+                                    <p class="label">{{ cancelRejectLabel }}</p>
+                                    <p class="show-more-btn" @click="openMemo(cancelRejectLabel, reserveData.rejectMsg)">더보기 <img :src="icArrow" alt=" 화살표"></p>
+                                </div>
+                                <div class="fake-textbox disabled">    
+                                    <span v-if="!reserveData.rejectMsg || reserveData.rejectMsg.trim() === ''" class="empty-text">등록된 내용이 없습니다.</span>
+                                    <p v-else class="text">{{ reserveData.rejectMsg  }}</p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                
+                <div v-show="!isFolded" class="info-lists-wrapper border-top border-bottom">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <div class="w-100 d-flex align-center justify-between">
+                                <p class="label">고객 메모</p>
+                                <p class="show-more-btn" @click="openMemo('고객 메모', reserveData.reMemo)">더보기 <img :src="icArrow" alt=" 화살표"></p>
                             </div>
                             <div class="fake-textbox disabled">    
-                                <span v-if="!reserveData.rejectMsg || reserveData.rejectMsg.trim() === ''" class="empty-text">등록된 내용이 없습니다.</span>
-                                <p v-else class="text">{{ reserveData.rejectMsg  }}</p>
+                                <span v-if="!reserveData.reMemo || reserveData.reMemo.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
+                                <p v-else class="text">{{ reserveData.reMemo }}</p>
                             </div>
                         </div>
-                    </template>
-                </div>
-            </div>
-            
-            <div v-show="!isFolded" class="info-lists-wrapper border-top border-bottom">
-                <div class="info-list">
-                    <div class="info-item">
-                        <div class="w-100 d-flex align-center justify-between">
-                            <p class="label">고객 메모</p>
-                            <p class="show-more-btn" @click="openMemo('고객 메모', reserveData.reMemo)">더보기 <img :src="icArrow" alt=" 화살표"></p>
+                        <div class="info-item">
+                            <div class="w-100 d-flex align-center justify-between">
+                                <p class="label">추가 정보</p>
+                                <p class="show-more-btn" @click="openMemo('추가 정보', reserveData.questions)">더보기 <img :src="icArrow" alt=" 화살표"></p>
+                            </div>
+                            <div class="fake-textbox disabled">
+                                <span v-if="!reserveData.questions || reserveData.questions.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
+                                <p v-else class="text">{{ reserveData.questions }}</p>
+                            </div>
                         </div>
-                        <div class="fake-textbox disabled">    
-                            <span v-if="!reserveData.reMemo || reserveData.reMemo.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
-                            <p v-else class="text">{{ reserveData.reMemo }}</p>
+                        <div v-if="reserveData.reRoute != 2" class="info-item">
+                            <div class="w-100 d-flex align-center justify-between">
+                                <p class="label">옵션</p>
+                                <p class="show-more-btn" @click="openMemo('옵션', reserveData.options)">더보기 <img :src="icArrow" alt=" 화살표"></p>
+                            </div>
+                            <div class="fake-textbox disabled">    
+                                <span v-if="!reserveData.options || reserveData.options.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
+                                <p v-else class="text">{{ reserveData.options  }}</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="info-item">
-                        <div class="w-100 d-flex align-center justify-between">
-                            <p class="label">추가 정보</p>
-                            <p class="show-more-btn" @click="openMemo('추가 정보', reserveData.questions)">더보기 <img :src="icArrow" alt=" 화살표"></p>
+                        <!-- <div class="info-item">
+                            <p class="label">주소</p>
+                            <InputTextBox 
+                                v-model="reserveData.address1"
+                                :disabled="true"
+                                placeholder="주소"
+                            />
+                        </div> -->
+                        <!-- <div class="info-item">
+                            <p class="label">상세 주소</p>
+                            <InputTextBox 
+                                v-model="reserveData.address2"
+                                :disabled="true"
+                                placeholder="상세 주소"
+                            />
+                        </div> -->
+                        <!-- <div class="info-item">
+                            <p class="label">종</p>
+                            <InputTextBox 
+                                v-model="reserveData.spesice"
+                                :disabled="true"
+                                placeholder="종"
+                            />
+                        </div> -->
+                        <!-- <div class="info-item">
+                            <p class="label">품종</p>
+                            <InputTextBox 
+                                :model-value="reserveData.breed || ''"
+                                :disabled="true"
+                                placeholder="품종"
+                            />
+                        </div> -->
+                        <div class="info-item">
+                            <p class="label">접수 일시</p>
+                            <InputTextBox 
+                                :model-value="receivedDateTime"
+                                :disabled="true"
+                                placeholder="접수 일시"
+                            />
                         </div>
-                        <div class="fake-textbox disabled">
-                            <span v-if="!reserveData.questions || reserveData.questions.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
-                            <p v-else class="text">{{ reserveData.questions }}</p>
-                        </div>
-                    </div>
-                    <div v-if="reserveData.reRoute != 2" class="info-item">
-                        <div class="w-100 d-flex align-center justify-between">
-                            <p class="label">옵션</p>
-                            <p class="show-more-btn" @click="openMemo('옵션', reserveData.options)">더보기 <img :src="icArrow" alt=" 화살표"></p>
-                        </div>
-                        <div class="fake-textbox disabled">    
-                            <span v-if="!reserveData.options || reserveData.options.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
-                            <p v-else class="text">{{ reserveData.options  }}</p>
-                        </div>
-                    </div>
-                    <!-- <div class="info-item">
-                        <p class="label">주소</p>
-                        <InputTextBox 
-                            v-model="reserveData.address1"
-                            :disabled="true"
-                            placeholder="주소"
-                        />
-                    </div> -->
-                    <!-- <div class="info-item">
-                        <p class="label">상세 주소</p>
-                        <InputTextBox 
-                            v-model="reserveData.address2"
-                            :disabled="true"
-                            placeholder="상세 주소"
-                        />
-                    </div> -->
-                    <!-- <div class="info-item">
-                        <p class="label">종</p>
-                        <InputTextBox 
-                            v-model="reserveData.spesice"
-                            :disabled="true"
-                            placeholder="종"
-                        />
-                    </div> -->
-                    <!-- <div class="info-item">
-                        <p class="label">품종</p>
-                        <InputTextBox 
-                            :model-value="reserveData.breed || ''"
-                            :disabled="true"
-                            placeholder="품종"
-                        />
-                    </div> -->
-                    <div class="info-item">
-                        <p class="label">접수 일시</p>
-                        <InputTextBox 
-                            :model-value="receivedDateTime"
-                            :disabled="true"
-                            placeholder="접수 일시"
-                        />
                     </div>
                 </div>
-            </div>
-
-            <div class="fold-reserve-info-btn" @click="toggleFold">
-                {{ isFolded ? '예약 정보 펼치기' : '예약 정보 접기' }}
-                <img :src="icDropdownBtn" alt="토글" :style="{ transform: isFolded ? 'rotate(180deg)' : 'rotate(0deg)' }">
-            </div>
+    
+                <div class="fold-reserve-info-btn" @click="toggleFold">
+                    {{ isFolded ? '예약 정보 펼치기' : '예약 정보 접기' }}
+                    <img :src="icDropdownBtn" alt="토글" :style="{ transform: isFolded ? 'rotate(180deg)' : 'rotate(0deg)' }">
+                </div>
+            </template>
         </div>
 
         <!-- 고객정보 (취소/거절 시 테이블 빈 상태만 표시) -->
-        <div class="customer-info-section">
+        <div v-if="reserveData.clinicType !== '개인일정' && reserveData.clinicType !== '일반예약'" class="customer-info-section">
             <!-- 단일 결과 상세 뷰 (취소/거절이 아닐 때만) -->
             <template v-if="showCustomerDetailView">
                 <div class="top">
@@ -1342,9 +1417,13 @@ onUnmounted(() => {
 
     <!-- 버튼 -->
     <div v-if="!isCancelled" class="modal-button-wrapper" :class="isMobile ? 'mobile' : ''">
-        <div class="buttons">
+        <div v-if="reserveData.clinicType !== '개인일정' && reserveData.clinicType !== '일반예약'" class="buttons">
             <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.cancelReserveModal.openModal()">예약거절</button>
             <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation(isConfirmed)">{{ isConfirmed ? '저장' : '예약 확정' }}</button>
+        </div>
+        <div v-else>
+            <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.reserveInfoModal.closeModal()">닫기</button>
+            <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation(isConfirmed)">저장</button>
         </div>
     </div>
 
@@ -1455,7 +1534,7 @@ onUnmounted(() => {
         <template #content>
             <div class="confirm-reserve-bottomSheet-slot">
                 <span class="body-l-mobile">예약을 확정하시겠습니까?</span>
-                <label class="checkbox">
+                <label class="checkbox" v-if="reserveData.clinicType !== '개인일정' && reserveData.clinicType !== '일반예약'">
                     <input type="checkbox" v-model="sendNotification" />
                     <span class="box"></span>
                     <span class="label">고객에게 예약 확정 알림톡 발송</span>

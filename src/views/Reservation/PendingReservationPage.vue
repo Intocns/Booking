@@ -178,7 +178,7 @@ onMounted(() => {
     <!-- 예약 정보 안내 모달 -->
     <Modal
         v-if="modalStore.reserveInfoModal.isVisible"
-        size="l"
+        :size="modalStore.reserveInfoModal.data.reserve.clinicType == '개인일정' || modalStore.reserveInfoModal.data.reserve.clinicType == '일반예약' ? 's' : 'l'"
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >
