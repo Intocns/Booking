@@ -18,6 +18,8 @@ export const useHospitalStore = defineStore("hospital", () => {
             let data = response.data.data;
             hospitalInfo.value = data;
             bookingTime.value = data.bookingTime ?? 30;
+
+            console.log(hospitalInfo.value, bookingTime.value)
         }
     }
 
