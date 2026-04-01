@@ -1,7 +1,7 @@
 <!-- 고객 예약 정보 -->
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
-import { PET_GENDER_MAP, RESERVE_ROUTE_MAP, RESERVE_STATUS_MAP, RESERVE_STATUS_CLASS_MAP, EXTERNAL_LINKS } from '@/constants';
+import { PET_GENDER_MAP, RESERVE_ROUTE_MAP, RESERVE_STATUS_SHORT_MAP, RESERVE_STATUS_CLASS_MAP, EXTERNAL_LINKS } from '@/constants';
 import { toggleCustomerMatch as toggleCustomerMatchUtil } from '@/utils/customer';
 import { formatDate, formatTime, formatDateTime, formatTimeToMinutes, formatDateTimeForAPI, formatDateDot } from '@/utils/dateFormatter';
 
@@ -716,7 +716,7 @@ watch(() => cancelReasonType.value, (newVal) => {
         cancelReasonDirect.value = '';
     }
 });
-// 시작 시간이 선택되면 종료 시간을 자동으로 +30분 설정
+// 시작 시간이 선택되면 종료 시간을 자동으로 +30분, +한시간 설정
 watch(startTime, (newStartTime) => {
     if (!newStartTime) return;
 
@@ -724,17 +724,18 @@ watch(startTime, (newStartTime) => {
     const startTotalMinutes = formatTimeToMinutes(newStartTime);
     
     if (startTotalMinutes !== null) {
-        // 30분 추가
-        const endTotalMinutes = startTotalMinutes + 30;
-        
+        // 30분 || 60 추가
+        const endTotalMinutes = startTotalMinutes + hospitalStore.bookingTime;
+
         // HH:mm 형식으로 변환
         const hours = Math.floor(endTotalMinutes / 60);
         const minutes = endTotalMinutes % 60;
-        
-        const formattedEndTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+        const displayHours = hours >= 24 ? 23 : hours;
+        const displayMinutes = hours >= 24 ? 59 : minutes;
         
         // 종료 시간 자동 업데이트
-        endTime.value = formattedEndTime;
+        endTime.value = `${String(displayHours).padStart(2, '0')}:${String(displayMinutes).padStart(2, '0')}`;
     }
 });
 
@@ -783,7 +784,7 @@ const textPhoneNumber = computed(() => {
                     
                     <div class="d-flex gap-4 align-center">
                         <span v-if="reserveData.clinicType == '개인일정' || reserveData.clinicType == '일반예약'" class="flag flag--black">{{ reserveData.clinicType }}</span>
-                        <span v-else class="flag" :class="RESERVE_STATUS_CLASS_MAP[reserveData.inState]">{{ RESERVE_STATUS_MAP[reserveData.inState] }}</span>
+                        <span v-else class="flag" :class="RESERVE_STATUS_CLASS_MAP[reserveData.inState]">{{ RESERVE_STATUS_SHORT_MAP[reserveData.inState] }}</span>
                     </div>
                 </div>
             </div>

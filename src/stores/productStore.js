@@ -11,7 +11,6 @@ export const useProductStore = defineStore("product", () => {
     const itemDetailInfo = ref({});
     const productScheduleDataList = ref([]); // 간단예약 관리 > 상품별 운영시간 데이터
     const productWeekScheduleDataList = ref([]); // 상품 수정 > 상품 운영시간 데이터 (캘랜더)
-    const bookingTime = ref(30); // 시간 예약 기준 단위 
     const productScheduleInfo = ref([]);
     const temporarySchedules = ref([]); // 임시운영데이터만 따로 저장
     const scrollToItemId = ref(null); // 새상품 등록 후 새상품 id저장
@@ -389,7 +388,6 @@ export const useProductStore = defineStore("product", () => {
         
         const data = response.data.data;
         productScheduleDataList.value = data;
-        bookingTime.value = data[0].bookingTime; 
     }
 
     // 상품 운영시간 변경
@@ -587,7 +585,6 @@ export const useProductStore = defineStore("product", () => {
 
         const data = response.data.data;
         productWeekScheduleDataList.value = data;
-        bookingTime.value = data[0].bookingTime;
     }
 
     // 상품 수정 > 일정 설정 > 진료가능 동물 수, 운영시간 설정 모달창 저장 (캘랜더 > 모달)
@@ -622,7 +619,6 @@ export const useProductStore = defineStore("product", () => {
         itemDetailInfo,
         productScheduleDataList, // 간단예약 관리 > 상품별 운영시간 데이터
         productWeekScheduleDataList, // 상품 수정 > 상품 운영시간 데이터
-        bookingTime,
         productScheduleInfo, //상품 수정 > 예약 정보 데이터
         temporarySchedules, // 임시운영 데이터만
         scrollToItemId,

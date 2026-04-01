@@ -7,7 +7,6 @@ import icPlusBlue from '@/assets/icons/ic_plus_blue.svg';
 import icDel from '@/assets/icons/ic_del.svg';
 import { watch, computed } from 'vue';
 import { getTimeError } from '@/utils/schedule';
-import { useProductStore } from '@/stores/productStore';
 
 const props = defineProps({
     modelValue: Object,
@@ -17,8 +16,6 @@ const emit = defineEmits(['update:modelValue']);
 
 // 부모로부터 받은 객체 참조
 // const config = props.modelValue;
-
-const productStore = useProductStore();
 
 const config = computed({
     get: () => props.modelValue,
@@ -115,10 +112,10 @@ const getDisabledDays = (currentGIdx) => {
                     <!-- 시간 설정 영역 -->
                     <div class="d-flex align-center gap-8">
                         <span class="title-s">시작</span>
-                        <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(modelValue.allDaysTime, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                        <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(modelValue.allDaysTime, tIdx)" select-width="94px" />
                         -
                         <span class="title-s">마지막</span>
-                        <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(modelValue.allDaysTime, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                        <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(modelValue.allDaysTime, tIdx)" select-width="94px" />
                     </div>
     
                     <!-- 버튼 영역 -->
@@ -156,10 +153,10 @@ const getDisabledDays = (currentGIdx) => {
                             <template v-if="tIdx === 0">평일(월~금)</template>
                         </span>
                         <span class="title-s">시작</span>
-                        <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(modelValue.splitTime.weekday, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                        <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(modelValue.splitTime.weekday, tIdx)" select-width="94px" />
                         -
                         <span class="title-s">마지막</span>
-                        <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(modelValue.splitTime.weekday, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                        <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(modelValue.splitTime.weekday, tIdx)" select-width="94px" />
                     </div>
     
                     <!-- 버튼 영역 -->
@@ -197,10 +194,10 @@ const getDisabledDays = (currentGIdx) => {
                                 <CustomSingleSelect v-if="tIdx === 0" v-model="modelValue.splitMode" :options="weekendOptions" select-width="90px" />
                             </div>
                             <span class="title-s">시작</span>
-                            <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(modelValue.splitTime.weekend, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                            <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(modelValue.splitTime.weekend, tIdx)" select-width="94px" />
                             -
                             <span class="title-s">마지막</span>
-                            <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(modelValue.splitTime.weekend, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                            <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(modelValue.splitTime.weekend, tIdx)" select-width="94px" />
                         </div>
     
                         <!-- 버튼 영역 -->
@@ -244,10 +241,10 @@ const getDisabledDays = (currentGIdx) => {
                                 />
                             </div>
                             <span class="title-s">시작</span>
-                            <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(modelValue.splitTime.sat, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                            <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(modelValue.splitTime.sat, tIdx)" select-width="94px" />
                             - 
                             <span class="title-s">마지막</span>
-                            <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(modelValue.splitTime.sat, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                            <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(modelValue.splitTime.sat, tIdx)" select-width="94px" />
                         </div>
     
                         <!-- 버튼 영역 -->
@@ -288,10 +285,10 @@ const getDisabledDays = (currentGIdx) => {
                                 />
                             </div>
                             <span class="title-s">시작</span>
-                            <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(modelValue.splitTime.sun, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                            <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(modelValue.splitTime.sun, tIdx)" select-width="94px" />
                             -
                             <span class="title-s">마지막</span>
-                            <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(modelValue.splitTime.sun, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                            <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(modelValue.splitTime.sun, tIdx)" select-width="94px" />
                         </div>
     
                         <!-- 버튼 영역 -->
@@ -355,10 +352,10 @@ const getDisabledDays = (currentGIdx) => {
                             <!-- 시간 설정 영역 -->
                             <div class="d-flex align-center gap-8">
                                 <span class="title-s">시작</span>
-                                <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(group.times, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                                <TimeSelect v-model="time.startTime" :is-error="!!getTimeError(group.times, tIdx)" select-width="94px" />
                                 -
                                 <span class="title-s">마지막</span>
-                                <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(group.times, tIdx)" select-width="94px" :booking-time="productStore.bookingTime" />
+                                <TimeSelect v-model="time.endTime" :is-error="!!getTimeError(group.times, tIdx)" select-width="94px" />
                             </div>
         
                             <!-- 버튼 영역 -->

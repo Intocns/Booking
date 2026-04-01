@@ -9,7 +9,7 @@ import icNotice from '@/assets/icons/mobile/ic_SNB_notice_m.svg'
 import icOpen from '@/assets/icons/mobile/ic_SNB_open.svg'
 import icClosed from '@/assets/icons/mobile/ic_SNB_closed.svg'
 
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 
 import { useHospitalStore } from '@/stores/hospitalStore';
@@ -82,6 +82,10 @@ watch(() => props.isActive, (val) => {
         document.body.style.overflow = '';
     }
 }, { immediate: true });
+
+onMounted(() => {
+    hospitalStore.getHospitalInfo(); // 병원정보 들고오기
+})
 </script>
 
 <template>

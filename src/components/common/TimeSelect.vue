@@ -3,7 +3,7 @@ import icClear from '@/assets/icons/ic_clear.svg'
 import icClock from '@/assets/icons/ic_clock.svg'
 import BottomSheet from './Mobile/BottomSheet.vue';
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
-import { useProductStore } from '@/stores/productStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
 
 const props = defineProps({
     modelValue: {
@@ -27,13 +27,14 @@ const props = defineProps({
         default: false,
     },
     isMobile: { type: Boolean, default: false }, // 모바일 환경 체크
-    bookingTime: {type: Number, default: 30 }, // 예약시간 단위 -> 에 따라 00, 30 분 분 선택 옵션 달라짐
 });
 
 const emit = defineEmits(['update:modelValue']);
 
 // 플레이스 홀더 고정
 const DEFAULT_PLACEHOLDER = '시간 선택';
+
+const hospitalStore = useHospitalStore();
 
 // --- UI 상태 관리 ---
 const isDropdownVisible = ref(false); // 드롭다운 표시 상태
@@ -61,7 +62,8 @@ const hourOptions = computed(() => {
     return Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')); // 00 ~ 23
 });
 const minuteOptions = computed(() => {
-    if(props.bookingTime == 60) {
+    // 예약시간 단위 -> 에 따라 00, 30 분 분 선택 옵션 달라짐
+    if(hospitalStore.bookingTime == 60) {
         return ['00'];
     } else {
         // 30분 단위 옵션
@@ -162,8 +164,12 @@ const scrollToSelected = async () => {
     if (hourColumnRef.value) {
         const selected = hourColumnRef.value.querySelector('.selected');
         if (selected) {
-            // 선택된 항목이 맨위로
-            hourColumnRef.value.scrollTop = selected.offsetTop - 8; // 상단 패딩값 빼줌
+            if(props.isMobile) {
+                // 선택된 항목이 맨위로
+                selected.scrollIntoView({ block: 'center', inline: 'nearest' });
+            } else {
+                hourColumnRef.value.scrollTop = selected.offsetTop - 8; // 상단 패딩값 빼줌
+            }
         }
     }
 

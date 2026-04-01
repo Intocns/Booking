@@ -724,7 +724,7 @@ watch(() => cancelReasonType.value, (newVal) => {
         cancelReasonDirect.value = '';
     }
 });
-// 시작 시간이 선택되면 종료 시간을 자동으로 +30분 설정
+// 시작 시간이 선택되면 종료 시간을 자동으로 +30분, +한시간 설정
 watch(startTime, (newStartTime) => {
     if (!newStartTime) return;
 
@@ -732,17 +732,18 @@ watch(startTime, (newStartTime) => {
     const startTotalMinutes = formatTimeToMinutes(newStartTime);
     
     if (startTotalMinutes !== null) {
-        // 30분 추가
-        const endTotalMinutes = startTotalMinutes + 30;
-        
+        // 30분 || 60 추가
+        const endTotalMinutes = startTotalMinutes + hospitalStore.bookingTime;
+
         // HH:mm 형식으로 변환
         const hours = Math.floor(endTotalMinutes / 60);
         const minutes = endTotalMinutes % 60;
-        
-        const formattedEndTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+        const displayHours = hours >= 24 ? 23 : hours;
+        const displayMinutes = hours >= 24 ? 59 : minutes;
         
         // 종료 시간 자동 업데이트
-        endTime.value = formattedEndTime;
+        endTime.value = `${String(displayHours).padStart(2, '0')}:${String(displayMinutes).padStart(2, '0')}`;
     }
 });
 

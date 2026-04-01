@@ -21,12 +21,14 @@ import { DayPilot } from '@daypilot/daypilot-lite-vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
 // utils
 import { DAYS_OPTIONS } from '@/constants';
 import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();
 const productStore = useProductStore();
+const hospitalStore = useHospitalStore();
 const route = useRoute();
 
 /**
@@ -244,7 +246,7 @@ const handleModalSave = async () => {
 
                 <!-- 예약 가능 설정 -->
                 <div class="d-flex align-center gap-4 body-s">
-                    매 {{ productStore.bookingTime == 30 ? '30분' : '한시간' }} 마다
+                    매 {{ hospitalStore.bookingTime == 30 ? '30분' : '한시간' }} 마다
                     <CustomSingleSelect 
                         v-model="modalStore.setOperationRuleModal.data.stock" 
                         :options="animalCountOptions" 
@@ -260,10 +262,10 @@ const handleModalSave = async () => {
                     <div v-for="(time, index) in modalStore.setOperationRuleModal.data.times" :key="index">
                         <div class="set-time-item">
                             <span class="title-s">시작</span>
-                            <TimeSelect v-model="time.startTime" :is-error="!!timeErrors[index]" :booking-time="productStore.bookingTime" />
+                            <TimeSelect v-model="time.startTime" :is-error="!!timeErrors[index]" />
                             -
                             <span class="title-s">마지막</span>
-                            <TimeSelect v-model="time.endTime" :is-error="!!timeErrors[index]" :booking-time="productStore.bookingTime" />
+                            <TimeSelect v-model="time.endTime" :is-error="!!timeErrors[index]" />
     
                             <!-- 삭제버튼 -->
                             <button 

@@ -324,8 +324,12 @@ const config = ref({
         }
         
         if(cellDate === today) { // 오늘 날짜 처리
-            // const parts = args.cell.properties.headerHtml;
-            args.cell.properties.headerHtml = "<span class='day-number-wrapper today'>" + header + "</span>";
+            if (header.includes("월")) {
+                const parts = header.split("월");
+                args.cell.properties.headerHtml = "<span class='day-number-wrapper today'>" + parts[1].trim() + "</span>";
+            } else {
+                args.cell.properties.headerHtml = "<span class='day-number-wrapper today'>" + header + "</span>";
+            }
         } 
 
         if(currentMonth !== cellMonth) { // 다른 달 날짜 처리

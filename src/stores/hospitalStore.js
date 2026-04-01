@@ -8,13 +8,16 @@ export const useHospitalStore = defineStore("hospital", () => {
     let hospitalInfo = ref({}) // 예약별 카운트
     let doctorList = ref([]) // 담당의 리스트
 
-    // 병원 정보 가져오기 (대시보드)
+    const bookingTime = ref(30) // 예약 시간 단위
+
+    // 병원 정보 가져오기 (sidebar 메뉴)
     async function getHospitalInfo() {
         const response = await api.get(`/api/{cocode}/hospital/detail`);
 
         if(response.status == 200) {
             let data = response.data.data;
             hospitalInfo.value = data;
+            bookingTime.value = data.bookingTime ?? 30;
         }
     }
 
@@ -45,6 +48,7 @@ export const useHospitalStore = defineStore("hospital", () => {
         hospitalData, // 병원정보 (로그인)
         hospitalInfo, // 대시보드 > 병원 정보
         doctorList, // 담당의 리스트
+        bookingTime,
         // 
         getHospitalInfo, // 병원 정보 가져오기
         getDoctorList, // 담당의 리스트 가져오기

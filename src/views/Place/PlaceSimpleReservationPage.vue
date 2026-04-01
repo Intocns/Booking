@@ -11,10 +11,12 @@ import { formatDate } from '@/utils/dateFormatter';
 import { storeToRefs } from 'pinia';
 // 스토어
 import { useProductStore } from '@/stores/productStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
 import { format } from 'date-fns';
 
 const productStore = useProductStore()
-const { productList, productScheduleDataList, bookingTime } = storeToRefs(productStore);
+const { productList, productScheduleDataList } = storeToRefs(productStore);
+const hospitalStore = useHospitalStore();
 
 /**
  * 상태 관리
@@ -144,7 +146,6 @@ const parseHourBitToEvents = (item) => {
 
     const newEvents = [];
     const dateStr = item.date;
-    const bookingTime = item.bookingTime || 30; // 30 or 60
     const bitString = item.hourBit; // "0000..."
 
     const getTotalMinutes = (timeStr) => {
@@ -157,14 +158,14 @@ const parseHourBitToEvents = (item) => {
         const endTotal = getTotalMinutes(range.endTime);
 
         // 해당 구간 내에서 bookingTime 간격으로 이벤트 생성
-        for (let totalMinutes = startTotal; totalMinutes < endTotal; totalMinutes += bookingTime) {
+        for (let totalMinutes = startTotal; totalMinutes < endTotal; totalMinutes += hospitalStore.bookingTime) {
             const i = totalMinutes / 30; // bitString 인덱스는 항상 30분 기준이므로
             const bit = bitString[i] || '0';
 
             const hour = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
             const min = (totalMinutes % 60).toString().padStart(2, '0');
             
-            const nextTotal = totalMinutes + bookingTime;
+            const nextTotal = totalMinutes + hospitalStore.bookingTime;
             const nextHour = Math.floor(nextTotal / 60).toString().padStart(2, '0');
             const nextMin = (nextTotal % 60).toString().padStart(2, '0');
 
@@ -180,7 +181,7 @@ const parseHourBitToEvents = (item) => {
                 tags: {
                     scheduleId: item.scheduleId,
                     bitValue: bit,
-                    bookingTime: bookingTime, // 추가
+                    bookingTime: hospitalStore.bookingTime, // 추가
                     reserved: slot ? slot.reserved : 0,
                     stock: item.stock,
                 }
@@ -349,7 +350,7 @@ const config = ref({
     startDate: format(currentDate.value, 'yyyy-MM-dd'),
     cellHeight: 40,
     headerHeight: 64,
-    cellDuration: bookingTime.value === 60 ? 60 : 30,
+    cellDuration: hospitalStore.bookingTime === 60 ? 60 : 30,
 
     // 캘렌더 셀 설정
     onBeforeCellRender: (args) => {

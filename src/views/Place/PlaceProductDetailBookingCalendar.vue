@@ -6,6 +6,7 @@ import { storeToRefs } from "pinia";
 // 아이콘
 import icArrowRight from '@/assets/icons/ic_arrow_right_blue.svg'
 import icClear from '@/assets/icons/ic_clear.svg'
+import patternImage from '@/assets/images/Pattern.png';
 // 컴포넌트
 import ModalSimple from "@/components/common/ModalSimple.vue";
 import CustomSingleSelect from "@/components/common/CustomSingleSelect.vue";
@@ -16,11 +17,13 @@ import { useProductStore } from "@/stores/productStore";
 // 
 import { bitToTimeRanges } from "@/utils/schedule";
 import { DAYS_OPTIONS } from "@/constants";
+import { useHospitalStore } from "@/stores/hospitalStore";
 
 
 const productStore = useProductStore();
 const modalStore = useModalStore();
-const { productWeekScheduleDataList, bookingTime } = storeToRefs(productStore);
+const hospitalStore = useHospitalStore();
+const { productWeekScheduleDataList } = storeToRefs(productStore);
 
 // props
 const props = defineProps({
@@ -139,6 +142,9 @@ const parseHourBitToEvents = (daySchedule) => {
         const startIdx = Math.floor(getTotalMinutes(start) / 30);
         const endIdx = Math.ceil(getTotalMinutes(end) / 30); // 추가
 
+        // 해당 times 구간의 비트들만 추출
+        const relevantBits = bitString.substring(startIdx, endIdx);
+
         newEvents.push({
             id: `${dateStr}-${idx}`,
             start: `${dateStr}T${start}:00`,
@@ -152,7 +158,8 @@ const parseHourBitToEvents = (daySchedule) => {
                 endIdx: endIdx,
                 date: dateStr,
                 startTime: start,
-                endTime: end
+                endTime: end,
+                bits: relevantBits,
             }
         })
     })
@@ -274,7 +281,32 @@ const calendarConfig = reactive({
     eventResizeHandling: "Disabled",
     
     onEventClick: handleEventClick,
-    // cellDuration: 60, // TODO: 시간 단위를 60분(1시간)으로 설정 -> 셀 높이값이 작아지기 때문에 해당부분도 수정되어야됨
+    cellDuration: hospitalStore.bookingTime === 60 ? 60 : 30,
+
+    onBeforeEventRender: (args) => {
+        const bits = args.data.tags.bits;
+        if (!bits) return;
+
+        const areas = [];
+        const bitCount = bits.length;
+        const step = hospitalStore.bookingTime === 60 ? 2 : 1;
+        // 비트 문자열을 돌며 '0'(마감)인 구간을 찾아 빗금 영역 추가
+        for (let i = 0; i < bitCount; i+= step) {
+            if (bits[i] === '0') {
+                areas.push({
+                    left: 0,
+                    width: '100%',
+                    height: '32px',
+                    top: (i / bitCount) * 100 + "%",
+                    bottom: 0,
+                    backColor: "#F9F9FA", // 마감 배경색
+                    cssClass: 'event-closed',
+                    html: "<div class='pattern'></div>"
+                });
+            }
+        }
+        args.data.areas = areas;
+    },
 });
 
 // 모달 내에서 편집할 해당 날짜의 전체 시간 리스트
@@ -322,7 +354,7 @@ const dayEvents = computed(() => {
 
     const list = [];
     const addedIndices = new Set(); 
-    const interval = bookingTime.value === 60 ? 2 : 1; // 60분이면 2칸(1시간)씩 점프
+    const interval = hospitalStore.bookingTime === 60 ? 2 : 1; // 60분이면 2칸(1시간)씩 점프
 
     daySchedule.times.forEach(slot => {
         const startMin = getTotalMinutes(slot.startTime);
@@ -360,7 +392,7 @@ const handleToggle = (index, isChecked) => {
     tempBitArray.value[index] = bit;
 
     // bookingTime이 60이면 현재 인덱스의 다음 30분 비트도 함께 변경
-    if (bookingTime.value === 60 && index + 1 < tempBitArray.value.length) {
+    if (hospitalStore.bookingTime === 60 && index + 1 < tempBitArray.value.length) {
         tempBitArray.value[index + 1] = bit;
     }
 };
@@ -494,8 +526,10 @@ const scrollToWorkTime = async() => {
 
     if (calendarEl) {
         // 가장 빠른 시간(earliestStartHour) 기준으로 위치 계산
-        // cellHeight(32px) * 2 = 1시간(64px)
-        const scrollTarget = earliestStartHour.value * (calendarConfig.cellHeight * 2);
+        // 예약 단위(bookingTime)가 60이면 1시간당 1셀, 30이면 1시간당 2셀
+        const cellsPerHour = Number(hospitalStore.bookingTime) === 60 ? 1 : 2;
+
+        const scrollTarget = earliestStartHour.value * (calendarConfig.cellHeight * cellsPerHour);
         calendarEl.scrollTop = scrollTarget;
     }
 };
@@ -671,11 +705,38 @@ onMounted(() => {
         display: inline-block;
         transform: translateY(-1px);
     }
-    :deep(.calendar_default_event) {width: calc(100% + 4px) !important;}
-    :deep(.calendar_default_event_inner) {
-        border: none;
+    :deep(.calendar_default_event) {
+        width: calc(100% + 4px) !important;
+        // 1. 전체 이벤트 영역에 마우스를 올렸을 때
+        &:hover {
+            // 본체 배경색 변경
+            .calendar_default_event_inner {
+                opacity: 0.8;
+                background-color: $primary-100 !important;
+            }
 
-        &:hover {background-color: $primary-100 !important;}
+            // 마감 영역(형제들) 배경색 변경
+            .event-closed {
+                opacity: 0.8;
+                background-color: $primary-100 !important;
+            }
+        }
+
+        // 2. 기본 상태에서의 스타일 (선택 사항)
+        .calendar_default_event_inner {
+            border: none;
+        }
+
+        .event-closed {
+            pointer-events: none; 
+            
+            .pattern {
+                width: 100%;
+                height: 100%;
+                background-image: url('@/assets/images/Pattern.png');
+                background-repeat: repeat;
+            }
+        }
     }
     :deep(.calendar_default_cell_inner) {
         background-color: $gray-00;
@@ -684,18 +745,7 @@ onMounted(() => {
     :deep(.calendar_default_event.event-open) {
         opacity: 0.9;
         background-color: $primary-50;
-    }
-    // 마감 스타일
-    :deep(.calendar_default_event.event-closed) {
-        background-color: $gray-50;
-        opacity: 0.83;
-        .calendar_default_event_inner {
-            background: url('@/assets/images/Pattern.png') repeat !important;
-
-            &:hover {
-                background-color: $gray-200 !important;
-            }
-        }
+        border-bottom: 1px solid $gray-200;
     }
     :deep(.calendar_default_event_bar) {display: none;} // 왼쪽 색상바 안보이도록
     :deep(.calendar_default_shadow) {display: none;}
