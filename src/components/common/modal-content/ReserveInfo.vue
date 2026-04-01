@@ -309,12 +309,13 @@ const validateReservation = async () => {
     }
     
     // 6. 고객 매칭 검증 (고객 정보가 있는 경우 반드시 매칭되어야 함)
-    // cocode가 5자리 미만(10000 미만)인 경우에만 매칭 필수
-    const cocode = hospitalStore.hospitalInfo.cocode;
-    const isMatchingRequired = String(cocode).length < 5;
+    // TODO: cocode가 5자리 미만(10000 미만)인 경우에만 매칭 필수
+    // const cocode = hospitalStore.hospitalInfo.cocode;
+    // const isMatchingRequired = String(cocode).length < 5;
     const checkClinicType = reserveData.clinicType !== '일반예약' && reserveData.clinicType !== '개인일정'
     
-    if (checkClinicType && isMatchingRequired && reserveClientList.value.length > 0) {
+    // if (checkClinicType && isMatchingRequired && reserveClientList.value.length > 0) {
+    if (checkClinicType && reserveClientList.value.length > 0) {
         const hasMatchedCustomer = reserveClientList.value.some(item => item.isMatched);
         if (!hasMatchedCustomer) {
             modalStore.confirmModal.openModal({

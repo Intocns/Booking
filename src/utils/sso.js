@@ -121,15 +121,15 @@ export const initSSOCheck = (onResult) => {
     const callback = function(data) {
         window.removeEventListener('message', messageHandler);
 
-        // cocode 만번대 계정의 경우 차트를 사용하지 않음으로 로그인 막아뒀지만
-        // 인투펫 예약은 사용할 수 있으므로 주석처리 => 예약 승인 시 cocode 체크 후 매칭없이 확정하도록 함 260327
+        // cocode 만번대 계정의 경우 차트를 사용하지 않음으로 로그인 막아둠
+        // TODO: 인투펫 예약은 사용할 수 있으므로 주석처리 => 예약 승인 시 cocode 체크 후 매칭없이 확정하도록 코드는 작성해뒀고 주석처리해둠
 
-        // if(Number(data.cocode) >= 10000) {
-        //     // showAlert('인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.');
-        //     // window.close();
-        //     if (onResult) onResult('cocode');
-        //     return;
-        // }
+        if(Number(data.cocode) >= 10000) {
+            // showAlert('인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.');
+            // window.close();
+            if (onResult) onResult('cocode');
+            return;
+        }
 
         const hospitalStore = useHospitalStore();
         hospitalStore.hospitalData = data;
