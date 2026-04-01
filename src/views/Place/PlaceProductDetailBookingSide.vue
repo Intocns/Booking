@@ -22,6 +22,7 @@ import { format } from "date-fns";
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
 //util
 import { formatDateToDay } from '@/utils/dateFormatter';
 import { setOperatingObject } from '@/utils/product';
@@ -44,6 +45,7 @@ const router = useRouter();
 // 스토어
 const modalStore = useModalStore();
 const productStore = useProductStore();
+const hospitalStore = useHospitalStore();
 
 // 설정 데이터 생성 함수
 const createDefaultConfig = () => ({
