@@ -239,6 +239,11 @@ const handleTouchStart = (e) => {
 const handleTouchMove = (e) => {
     if (!isTrackable) return;
 
+    // 사용자가 커스텀 드래그(접기/펴기) 중일 때 브라우저의 기본 동작 차단
+    if (e.cancelable) {
+        e.preventDefault();
+    }
+
     const touchMoveY = e.touches[0].clientY;
     const diff = touchStartY - touchMoveY;
 
@@ -532,7 +537,7 @@ onMounted(async() => {
                 class="list-area"
                 :class="{ 'expanded': isFolded }"
                 @touchstart="handleTouchStart"
-                @touchmove="handleTouchMove"
+                @touchmove.prevent="handleTouchMove"
                 ref="listAreaRef"
             >
                 <div class="handle"></div>
@@ -796,10 +801,14 @@ onMounted(async() => {
     background-color: #fff;
     transition: all 0.3s ease;
 
+    touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
+
     &.expanded {
         transform: translateY(-0px); // 캘린더가 가려진 만큼 위로 이동
         // height: calc(100vh - 150px); // 화면 전체를 차지하도록 확장
         flex: 1;
+        /* 리스트가 확장되었을 때 끝까지 올린 후 더 당기면 새로고침 되는 현상 방지 */
+        overscroll-behavior-y: contain;
     }
     
     .handle {
@@ -808,6 +817,8 @@ onMounted(async() => {
         background: #ccc;
         margin: 10px auto;
         border-radius: 2px;
+        /* 핸들 자체는 순수하게 드래그 용도이므로 브라우저 간섭을 완전히 차단 */
+        touch-action: none;
     }
 
     .count-div {
