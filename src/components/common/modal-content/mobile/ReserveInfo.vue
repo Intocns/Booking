@@ -392,12 +392,17 @@ const handleConfirmReservationSave = async (isConfirmed) => {
     // 매칭된 고객 정보 추가 (있는 경우)
     const matchedCustomer = reserveClientList.value.find(item => item.isMatched);
     if (matchedCustomer) {
-        if (matchedCustomer.userSno) {
-            confirmData.userSno = matchedCustomer.userSno;
-        }
-        if (matchedCustomer.petSno) {
-            confirmData.petSno = matchedCustomer.petSno;
-        }
+        // if (matchedCustomer.userSno) {
+        //     confirmData.userSno = matchedCustomer.userSno;
+        // }
+        // if (matchedCustomer.petSno) {
+        //     confirmData.petSno = matchedCustomer.petSno;
+        // }
+
+        confirmData.userSno = matchedCustomer.userSno ?? null;
+        confirmData.petSno = matchedCustomer.petSno ?? null;
+        confirmData.petName = matchedCustomer.petName ?? null; // 매칭된 고객 petName,연락처 추가
+        confirmData.userTel = matchedCustomer.userTel ?? null;
     }
 
     const result = await reservationStore.confirmReservation(reserveData.reserveIdx, confirmData);
