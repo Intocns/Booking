@@ -375,7 +375,8 @@ const handleConfirmReservationSave = async (isConfirmed) => {
 
         confirmData.userSno = matchedCustomer.userSno ?? null;
         confirmData.petSno = matchedCustomer.petSno ?? null;
-        confirmData.petName = matchedCustomer.petName ?? null; // 매칭된 고객 petName,연락처 추가
+        confirmData.userName = matchedCustomer.userName ?? null; // 매칭된 고객 userName, petName,연락처 추가
+        confirmData.petName = matchedCustomer.petName ?? null;
         confirmData.userTel = matchedCustomer.userTel ?? null;
     }
 
