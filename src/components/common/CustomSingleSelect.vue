@@ -10,6 +10,7 @@ const props = defineProps({
     disabled: Boolean,
     caption: { type: String, default: '' },
     selectWidth: {type: [String, Number], default: 'auto'},
+    selectHeight: {type: String, default: '32px'},
     isMobile: { type: Boolean, default: false },
 });
 
@@ -145,6 +146,7 @@ onBeforeUnmount(() => {
             :class="{ open: isOpen }" 
             @click="toggle" 
             ref="triggerRef"
+            :style="{ height: selectHeight }"
         >
             <span 
                 class="select__text"

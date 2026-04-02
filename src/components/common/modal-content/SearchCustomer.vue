@@ -247,6 +247,7 @@ const customerColumns = [
                     v-model="selectedSearchType"
                     :options="searchTypeOptions"
                     placeholder="선택"
+                    select-height="40px"
                 />
             </div>
             <FilterKeyword 
