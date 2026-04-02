@@ -764,11 +764,15 @@ watch(endTime, (newEnd) => {
     if (startMin !== null && endMin !== null && endMin <= startMin) {
         showAlert('마지막 시간은 시작 시간보다 빠를 수 없습니다.');
 
-        // 값을 다시 시작 시간 +30분으로 강제 보정 
-        const correctedEnd = startMin + 30;
+        // 값을 다시 시작 시간 +30 || || +60 으로 강제 보정 
+        const correctedEnd = startMin + hospitalStore.bookingTime;
         const h = Math.floor(correctedEnd / 60);
         const m = correctedEnd % 60;
-        endTime.value = `${String(h % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+
+        const displayHours = h >= 24 ? 23 : h;
+        const displayMinutes = h >= 24 ? 59 : m;
+
+        endTime.value = `${String(displayHours).padStart(2, '0')}:${String(displayMinutes).padStart(2, '0')}`;
     }
 });
 
