@@ -12,6 +12,7 @@ import { useReservationStore } from '@/stores/reservationStore';
 import { useModalStore } from '@/stores/modalStore';
 import FilterBtn from '@/components/common/Mobile/filters/FilterBtn.vue';
 import icClose from '@/assets/icons/mobile/ic_close_b.svg'
+import icArrowLeft from '@/assets/icons/ic_arrow_left.svg'
 
 const reservationStore = useReservationStore();
 const modalStore = useModalStore();
@@ -139,8 +140,10 @@ onMounted(() => {
         class="mobile-full-page"
     >
         <header class="mobile-full-page-header">
-            <h2>{{ dynamicTitle }}</h2>
-            <button @click="closeReserveInfoModal"><img :src="icClose" alt="닫기"></button>
+            <button @click="closeReserveInfoModal"><img :src="icArrowLeft" alt="닫기" width="20"></button>
+            <div class="header-title">
+                <h2>{{ dynamicTitle }}</h2>
+            </div>
         </header>
 
         <div class="mobile-full-page-body">

@@ -10,6 +10,7 @@ import FilterDoctorBtn from '@/components/common/Mobile/filters/FilterDoctorBtn.
 import icCheckW from '@/assets/icons/mobile/ic_check_w.svg'
 import icCheckB from '@/assets/icons/mobile/ic_check_b.svg'
 import icClose from '@/assets/icons/mobile/ic_close_b.svg'
+import icArrowLeft from '@/assets/icons/ic_arrow_left.svg'
 
 import { onMounted, computed, ref, watch, nextTick } from 'vue';
 import { formatDate } from "@/utils/dateFormatter";
@@ -251,8 +252,10 @@ onMounted(async() => {
         class="mobile-full-page"
     >
         <header class="mobile-full-page-header">
-            <h2>{{ dynamicTitle }}</h2>
-            <button @click="closeReserveInfoModal"><img :src="icClose" alt="닫기"></button>
+            <button @click="closeReserveInfoModal"><img :src="icArrowLeft" alt="닫기" width="20"></button>
+            <div class="header-title">
+                <h2>{{ dynamicTitle }}</h2>
+            </div>
         </header>
 
         <div class="mobile-full-page-body">

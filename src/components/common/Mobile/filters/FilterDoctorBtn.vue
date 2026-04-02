@@ -5,6 +5,7 @@ import { ref, computed, watch } from 'vue';
 import icDoctorB from '@/assets/icons/mobile/ic_doctor_b.svg'
 import icDoctorW from '@/assets/icons/mobile/ic_doctor_w.svg'
 import icClose from '@/assets/icons/mobile/ic_close_b.svg'
+import icArrowLeft from '@/assets/icons/ic_arrow_left.svg'
 
 const props = defineProps({
     modelValue: { type: Array, default: () => ['all'] },
@@ -132,10 +133,12 @@ watch(() => isOpen.value, (val) => {
 
     <div v-if="isOpen" class="mobile-full-page">
         <header class="mobile-full-page-header">
-            <h2>담당의 선택</h2>
             <button @click="isOpen = false">
-                <img :src="icClose" alt="닫기">
+                <img :src="icArrowLeft" alt="닫기" width="20">
             </button>
+            <div class="header-title">
+                <h2>담당의 선택</h2>
+            </div>
         </header>
 
         <div class="mobile-full-page-content">

@@ -792,13 +792,29 @@ watch(() => modalStore.reserveInfoModal.isVisible, async(val) => {
 
     await nextTick();
     if (val) {
+        // 모달이 열릴 때 히스토리에 가짜 상태 추가
+        // 브라우저는 history 하나 추가됐다고 인식
+        window.history.pushState({ modal: 'reserveInfo' }, '');
+        // 뒤로가기(popstate) 이벤트 리스너 등록
+        window.addEventListener('popstate', handleBackGesture);
+
         // 열리면 배경 스크롤 고정
         document.body.style.overflow = 'hidden';
     } else {
+        // 모달이 정상적으로(닫기 버튼 등) 닫히면 리스너 제거
+        window.removeEventListener('popstate', handleBackGesture);
+
         // 닫히면 배경 스크롤 해제
         document.body.style.overflow = '';
     }
 }, { immediate: true });
+
+const handleBackGesture = () => {
+    // 사용자가 뒤로가기 제스처를 하면 이 함수가 실행됨
+    if (modalStore.reserveInfoModal.isVisible) {
+        modalStore.reserveInfoModal.closeModal();
+    }
+};
 
 // 고객검색 바텀시트 열기/닫기 상태
 const openSearchBottomSheet = computed({

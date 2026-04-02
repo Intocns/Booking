@@ -19,6 +19,7 @@ import icCheckW from '@/assets/icons/mobile/ic_check_w.svg'
 import icCheckB from '@/assets/icons/mobile/ic_check_b.svg'
 import icEmpty from '@/assets/icons/ic_empty.svg'
 import icClose from '@/assets/icons/mobile/ic_close_b.svg'
+import icArrowLeft from '@/assets/icons/ic_arrow_left.svg'
 
 // 예약 상태 아이콘
 import icConfirm from '@/assets/icons/ic_res_confirm.svg'
@@ -606,8 +607,10 @@ onMounted(async() => {
         class="mobile-full-page"
     >
         <header class="mobile-full-page-header">
-            <h2>{{ dynamicTitle }}</h2>
-            <button @click="closeReserveInfoModal"><img :src="icClose" alt="닫기"></button>
+            <button @click="closeReserveInfoModal"><img :src="icArrowLeft" alt="닫기" width="20"></button>
+            <div class="header-title">
+                <h2>{{ dynamicTitle }}</h2>
+            </div>
         </header>
 
         <div class="mobile-full-page-body">
