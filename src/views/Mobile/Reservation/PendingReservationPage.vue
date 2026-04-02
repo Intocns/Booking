@@ -19,6 +19,7 @@ const modalStore = useModalStore();
 const reservationChannelOptions = RESERVE_ROUTE_OPTIONS.filter(opt => opt.value !== 1);
 const reservationChannel = ref(['all']);
 const keyword = ref('');
+const dynamicTitle = ref('고객 예약 정보'); // 고객예약정보 모달 타이틀
 
 const totalCount = computed(() => reservationStore.reservePendingList.length);
 
@@ -78,6 +79,10 @@ const closeReserveInfoModal = () => {
     document.body.style.overflow = '';
 }
 
+const handleTitleUpdate = (newTitle) => {
+    dynamicTitle.value = newTitle;
+};
+
 onMounted(() => {
     window.scrollTo({ top: 0, behavior: 'auto' })
     searchList();
@@ -134,12 +139,12 @@ onMounted(() => {
         class="mobile-full-page"
     >
         <header class="mobile-full-page-header">
-            <h2>고객 예약 정보</h2>
+            <h2>{{ dynamicTitle }}</h2>
             <button @click="closeReserveInfoModal"><img :src="icClose" alt="닫기"></button>
         </header>
 
         <div class="mobile-full-page-body">
-            <ReserveInfo @refresh-list="searchList" :is-mobile="true" />
+            <ReserveInfo @refresh-list="searchList" @update-title="handleTitleUpdate" :is-mobile="true" />
         </div>
     </div>
 </template>

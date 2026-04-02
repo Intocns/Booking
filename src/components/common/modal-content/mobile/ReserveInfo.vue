@@ -43,7 +43,7 @@ const pathIcons = {
     4: icNaver,
 };
 
-const emit = defineEmits(['refresh-list']);
+const emit = defineEmits(['refresh-list', 'update-title']);
 const props = defineProps({
     isMobile: {type: Boolean, default: false,}
 })
@@ -786,8 +786,10 @@ const textPhoneNumber = computed(() => {
     return formatPhone(reserveData.userTel);
 })
 
-// 배경 스크롤 방지 로직
+// 모달 열릴때 watch > 배경 스크롤 방지 로직, 모달 타이틀 초기화
 watch(() => modalStore.reserveInfoModal.isVisible, async(val) => {
+    emit('update-title', '고객 예약 정보');
+
     await nextTick();
     if (val) {
         // 열리면 배경 스크롤 고정
@@ -850,8 +852,17 @@ const isVisible = ref(false);
 const modalInnerRef = ref(null);
 // 스크롤 위치를 감시하는 함수
 const checkScroll = () => {
-    // 보통 300px 정도 내려오면 버튼을 보여줍니다 
-    isVisible.value = modalInnerRef.value.scrollTop > 300;
+    const scrollValue = modalInnerRef.value.scrollTop;
+    // scroll top btn 보여줌
+    isVisible.value = scrollValue > 300;
+
+    // 스크롤이 90px 이상 내려가면 이름 정보를, 아니면 기본 타이틀을 보내기
+    if (scrollValue > 90) {
+        const titleText = `${reserveData.petName} / ${reserveData.userName}`;
+        emit('update-title', titleText);
+    } else {
+        emit('update-title', '고객 예약 정보');
+    }
 };
 const scrollToTop = () => {
     if (modalInnerRef.value) {
@@ -923,7 +934,6 @@ onUnmounted(() => {
                             <span class="name pet">{{ reserveData.petName }}</span>
                             <span class="dot"></span>
                             <span class="name user">{{ reserveData.userName }}</span>
-                            <span class="phone">{{ textPhoneNumber }}</span>
                         </div>
     
                         <div class="icon">
@@ -931,6 +941,8 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="pet-info">
+                        <span class="phone">{{ textPhoneNumber }}</span>
+                        <span class="dot"></span>
                         <span>{{ reserveData.spesice }}</span>
                         <span class="dot"></span>
                         <span>{{  PET_GENDER_SHORT_MAP[reserveData.petSex] }}</span>
@@ -1636,30 +1648,32 @@ onUnmounted(() => {
                 .reserve-info {
                     width: 100%;
                     display: flex;
-                    align-items: center;
+                    // align-items: center;
                     justify-content: space-between;
                     // gap:16px;
         
                     .info {
                         flex: 2 0 0;
                         display: flex;
+                        flex-wrap:wrap;
                         align-items: center;
                         gap: 6px;
+                        row-gap: 0px;
         
                         .name { 
                             @include typo($title-l-mobile-size, $title-l-mobile-weight, $title-l-mobile-spacing, $title-l-mobile-line);
-                            text-overflow: ellipsis;
-                            overflow: hidden;
+                            // text-overflow: ellipsis;
+                            // overflow: hidden;
                             white-space: nowrap;
-                            &.pet {max-width: 60px;}
-                            &.user {max-width: 70px;}
+                            // &.pet {max-width: 80px;}
+                            // &.user {max-width: 80px;}
                         }
                         .phone {
                             @include typo($body-m-mobile-size, $body-m-mobile-weight, $body-m-mobile-spacing, $body-m-mobile-line);
-                            text-overflow: ellipsis;
-                            overflow: hidden;
+                            // text-overflow: ellipsis;
+                            // overflow: hidden;
                             white-space: nowrap;
-                            max-width: 110px;
+                            // max-width: 110px;
                         }
                     }
                     // .icon {flex: 1 0 0;}
@@ -1667,8 +1681,10 @@ onUnmounted(() => {
                 .pet-info {
                     width: 100%;
                     display: flex;
+                    flex-wrap: wrap;
                     align-items: center;
                     gap: 8px;
+                    row-gap:0;
         
                     color: $gray-700;
                 }

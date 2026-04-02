@@ -32,6 +32,7 @@ const reservationChannel = ref(['all']);
 const currentSort = ref('0')
 const keyword = ref('');
 const dateRange = ref([]);
+const dynamicTitle = ref('고객 예약 정보'); // 고객예약정보 모달 타이틀
 
 const reserveStatusOptions = RESERVE_STATUS_OPTIONS;
 const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
@@ -153,6 +154,10 @@ const closeReserveInfoModal = () => {
     document.body.style.overflow = '';
 }
 
+const handleTitleUpdate = (newTitle) => {
+    dynamicTitle.value = newTitle;
+};
+
 watch([reservationStatus, doctorList, reservationChannel, dateRange], () => {
     nextTick(() => searchList());
 }, { deep: true });
@@ -246,12 +251,12 @@ onMounted(async() => {
         class="mobile-full-page"
     >
         <header class="mobile-full-page-header">
-            <h2>고객 예약 정보</h2>
+            <h2>{{ dynamicTitle }}</h2>
             <button @click="closeReserveInfoModal"><img :src="icClose" alt="닫기"></button>
         </header>
 
         <div class="mobile-full-page-body">
-            <ReserveInfo @refresh-list="searchList" :is-mobile="true" />
+            <ReserveInfo @refresh-list="searchList" @update-title="handleTitleUpdate" :is-mobile="true" />
         </div>
     </div>
 </template>

@@ -150,8 +150,8 @@ const handelReserveDetail = (row) => {
                         text-overflow: ellipsis;
                         overflow: hidden;
                         white-space: nowrap;
-                        &.pet {max-width: 60px;}
-                        &.user {max-width: 60px;}
+                        &.pet {max-width: 70px;}
+                        &.user {max-width: 70px;}
                     }
                     .phone {
                         @include typo($body-m-mobile-size, $body-m-mobile-weight, $body-m-mobile-spacing, $body-m-mobile-line);
