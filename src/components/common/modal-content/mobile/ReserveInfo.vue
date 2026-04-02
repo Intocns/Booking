@@ -794,7 +794,7 @@ watch(() => modalStore.reserveInfoModal.isVisible, async(val) => {
     if (val) {
         // 모달이 열릴 때 히스토리에 가짜 상태 추가
         // 브라우저는 history 하나 추가됐다고 인식
-        window.history.pushState({ modal: 'reserveInfo' }, '');
+        window.history.pushState({ modal: 'reserveInfo' }, '', window.location.href);
         // 뒤로가기(popstate) 이벤트 리스너 등록
         window.addEventListener('popstate', handleBackGesture);
 
@@ -854,11 +854,18 @@ const memoDetail = ref({
     title: '',
     content: '',
     disabled: null,
+    placeholder: '',
 });
 
 // 더보기 클릭 시 호출될 함수
 const openMemo = (title, content, disabled = true) => {
     memoDetail.value = {title, content, disabled};
+
+    if(title == '병원 메모') {
+        memoDetail.value.placeholder = '메모를 입력하세요.'
+    } else {
+        memoDetail.value.placeholder = '등록된 정보가 없습니다.'
+    }
 
     isMemoOpen.value = true;
 };
@@ -1030,7 +1037,7 @@ onUnmounted(() => {
                                 <p class="show-more-btn" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">더보기 <img :src="icArrow" alt=" 화살표"></p>
                             </div>
                             <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''">    
-                                <span v-if="!reserveData.geReMemo || reserveData.geReMemo.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
+                                <span v-if="!reserveData.geReMemo || reserveData.geReMemo.trim() === ''" class="empty-text">메모를 입력하세요.</span>
                                 <p v-else class="text">{{ reserveData.geReMemo  }}</p>
                             </div>
                         </div>
@@ -1102,7 +1109,7 @@ onUnmounted(() => {
                                 <p class="show-more-btn" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">더보기 <img :src="icArrow" alt=" 화살표"></p>
                             </div>
                             <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''">    
-                                <span v-if="!reserveData.geReMemo || reserveData.geReMemo.trim() === ''" class="empty-text">등록된 정보가 없습니다.</span>
+                                <span v-if="!reserveData.geReMemo || reserveData.geReMemo.trim() === ''" class="empty-text">메모를 입력하세요.</span>
                                 <p v-else class="text">{{ reserveData.geReMemo  }}</p>
                             </div>
                         </div>
@@ -1478,7 +1485,7 @@ onUnmounted(() => {
                     v-model="memoDetail.content"
                     :disabled="memoDetail.disabled"
                     height="100%"
-                    placeholder="등록된 정보가 없습니다."
+                    :placeholder="memoDetail.placeholder"
                 />
             </div>
         </template>
