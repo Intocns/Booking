@@ -49,13 +49,14 @@ const handelReserveDetail = (row) => {
                             <span class="name pet">{{ row.petName }}</span>
                             <span class="dot"></span>
                             <span class="name user">{{ row.userName }}</span>
-                            <span class="phone">{{ row.phoneTxt }}</span>
                         </div>
     
                         <img :src="pathIcons[row.reRoute]" alt="">
                     </div>
     
                     <div class="pet-info">
+                        <span class="phone">{{ row.phoneTxt }}</span>
+                        <span class="dot"></span>
                         <span>{{ row.speciesName }}</span>
                         <span class="dot"></span>
                         <span>{{ PET_GENDER_SHORT_MAP[row.petSex] }}</span>
@@ -142,23 +143,18 @@ const handelReserveDetail = (row) => {
                 .info {
                     flex: 1 0 0;
                     display: flex;
+                    flex-wrap: wrap;
                     align-items: center;
                     gap: 6px;
+                    row-gap:0;
     
                     .name { 
                         @include typo($title-l-mobile-size, $title-l-mobile-weight, $title-l-mobile-spacing, $title-l-mobile-line);
-                        text-overflow: ellipsis;
-                        overflow: hidden;
-                        white-space: nowrap;
-                        &.pet {max-width: 70px;}
-                        &.user {max-width: 70px;}
-                    }
-                    .phone {
-                        @include typo($body-m-mobile-size, $body-m-mobile-weight, $body-m-mobile-spacing, $body-m-mobile-line);
-                        text-overflow: ellipsis;
+                        // text-overflow: ellipsis;
                         // overflow: hidden;
                         white-space: nowrap;
-                        // max-width: 100px;
+                        // &.pet {max-width: 70px;}
+                        // &.user {max-width: 70px;}
                     }
                 }
             }
@@ -166,10 +162,13 @@ const handelReserveDetail = (row) => {
             .pet-info {
                 width: 100%;
                 display: flex;
+                flex-wrap: wrap;
                 align-items: center;
                 gap: 8px;
+                row-gap:0;
     
                 color: $gray-700;
+                @include typo($body-m-mobile-size, $body-m-mobile-weight, $body-m-mobile-spacing, $body-m-mobile-line);
             }
         }
 
