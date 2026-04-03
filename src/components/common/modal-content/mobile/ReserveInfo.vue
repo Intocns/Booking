@@ -373,7 +373,10 @@ const handleConfirmReservation = async (isConfirmed) => {
 };
 
 // 예약 확정 실행 함수
-const handleConfirmReservationSave = async (isConfirmed) => {
+const handleConfirmReservationSave = async (isConfirmed) => {    
+    // 바텀시트 닫기
+    modalStore.confirmReserveModal.closeModal();
+
     // 선택된 담당의 정보 찾기
     const selectedDoctor = selectedDoctorId.value 
         ? hospitalStore.doctorList.find(doc => doc.id === selectedDoctorId.value)
@@ -410,12 +413,9 @@ const handleConfirmReservationSave = async (isConfirmed) => {
     
     if (result.success) {
         // 성공 시 모달 닫기
-        modalStore.confirmReserveModal.closeModal();
         modalStore.reserveInfoModal.closeModal();
-        
         // 검색 조건 유지한 채로 리스트 새로고침
         emit('refresh-list');
-        
         // 성공 메시지 표시
         modalStore.confirmModal.openModal({
             title: isConfirmed ? '' : '예약 확정',
@@ -824,7 +824,6 @@ const handleBackGesture = () => {
 const openSearchBottomSheet = computed({
   get: () => modalStore.searchCustomerModal.isVisible,
   set: (val) => {
-    // 만약 바텀시트를 닫을 때 Store 값도 바꿔야 한다면 set을 정의합니다.
     modalStore.searchCustomerModal.closeModal();
   }
 }, { immediate: true });
@@ -833,7 +832,6 @@ const openSearchBottomSheet = computed({
 const openConfirmReserveBottomSheet = computed({
   get: () => modalStore.confirmReserveModal.isVisible,
   set: (val) => {
-    // 만약 바텀시트를 닫을 때 Store 값도 바꿔야 한다면 set을 정의합니다.
     modalStore.confirmReserveModal.closeModal();
   }
 }, { immediate: true });
@@ -842,7 +840,6 @@ const openConfirmReserveBottomSheet = computed({
 const openCancelReserveBottomSheet = computed({
   get: () => modalStore.cancelReserveModal.isVisible,
   set: (val) => {
-    // 만약 바텀시트를 닫을 때 Store 값도 바꿔야 한다면 set을 정의합니다.
     modalStore.cancelReserveModal.closeModal();
   }
 }, { immediate: true });
