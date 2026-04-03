@@ -115,7 +115,7 @@ watch(() => isOpen.value, async(val) => {
     if (val) {
         // 모달이 열릴 때 히스토리에 가짜 상태 추가
         // 브라우저는 history 하나 추가됐다고 인식
-        window.history.pushState({ modal: 'filterDoctor' }, '');
+        window.history.pushState({ modal: 'filterDoctor' }, '', window.location.href);
         // 뒤로가기(popstate) 이벤트 리스너 등록
         window.addEventListener('popstate', handleBackGesture);
 
