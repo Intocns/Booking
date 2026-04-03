@@ -1,6 +1,6 @@
 <!-- 담당의 선택 검색필터 버튼 -->
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 
 import icDoctorB from '@/assets/icons/mobile/ic_doctor_b.svg'
 import icDoctorW from '@/assets/icons/mobile/ic_doctor_w.svg'
@@ -110,15 +110,32 @@ const filteredOptions = computed(() => {
 });
 
 // 배경 스크롤 방지 로직
-watch(() => isOpen.value, (val) => {
+watch(() => isOpen.value, async(val) => {
+    await nextTick();
     if (val) {
+        // 모달이 열릴 때 히스토리에 가짜 상태 추가
+        // 브라우저는 history 하나 추가됐다고 인식
+        window.history.pushState({ modal: 'filterDoctor' }, '');
+        // 뒤로가기(popstate) 이벤트 리스너 등록
+        window.addEventListener('popstate', handleBackGesture);
+
         // 열리면 배경 스크롤 고정
         document.body.style.overflow = 'hidden';
     } else {
+         // 모달이 정상적으로(닫기 버튼 등) 닫히면 리스너 제거
+        window.removeEventListener('popstate', handleBackGesture);
+
         // 닫히면 배경 스크롤 해제
         document.body.style.overflow = '';
     }
 }, { immediate: true });
+
+const handleBackGesture = () => {
+    // 사용자가 뒤로가기 제스처를 하면 이 함수가 실행됨
+    if (isOpen.value) {
+        isOpen.value = false;
+    }
+};
 </script>
 
 <template>
