@@ -1037,7 +1037,7 @@ onUnmounted(() => {
                                 <p class="label">병원 메모</p>
                                 <p class="show-more-btn" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">더보기 <img :src="icArrow" alt=" 화살표"></p>
                             </div>
-                            <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''">    
+                            <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">    
                                 <span v-if="!reserveData.geReMemo || reserveData.geReMemo.trim() === ''" class="empty-text">메모를 입력하세요.</span>
                                 <p v-else class="text">{{ reserveData.geReMemo  }}</p>
                             </div>
@@ -1109,7 +1109,7 @@ onUnmounted(() => {
                                 <p class="label">병원 메모</p>
                                 <p class="show-more-btn" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">더보기 <img :src="icArrow" alt=" 화살표"></p>
                             </div>
-                            <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''">    
+                            <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">    
                                 <span v-if="!reserveData.geReMemo || reserveData.geReMemo.trim() === ''" class="empty-text">메모를 입력하세요.</span>
                                 <p v-else class="text">{{ reserveData.geReMemo  }}</p>
                             </div>
