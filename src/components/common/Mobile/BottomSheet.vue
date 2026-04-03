@@ -176,30 +176,28 @@ watch(() => props.modelValue, (val) => {
 /* Transition 스타일 */
 .slide-enter-active,
 .slide-leave-active {
-    transition: opacity 0.3s ease;
-
-    .bottom-sheet {
-        transition: transform 0.3s ease-out;
-    }
+    transition: opacity 0.5s ease;
 }
 
 /* 시작 및 종료 상태 */
 .slide-enter-from,
 .slide-leave-to {
     opacity: 0;
-
-    .bottom-sheet {
-        transform: translateY(100%);
-    }
 }
 
-/* 활성화 상태 (열려있을 때) */
-.slide-enter-to,
-.slide-leave-from {
-    opacity: 1;
+.slide-enter-active .bottom-sheet,
+.slide-leave-active .bottom-sheet {
+    transition: transform 0.5s ease-out; 
+    will-change: transform; 
+}
 
-    .bottom-sheet {
-        transform: translateY(0);
-    }
+.slide-enter-from .bottom-sheet,
+.slide-leave-to .bottom-sheet {
+    transform: translateY(100%) !important;
+}
+
+.slide-enter-to .bottom-sheet,
+.slide-leave-from .bottom-sheet {
+    transform: translateY(0);
 }
 </style>
