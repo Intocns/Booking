@@ -929,8 +929,10 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-    window.removeEventListener('popstate', handleBackGesture);
-    document.body.style.overflow = '';
+    window.removeEventListener('popstate', handleBackGesture); // 제스처이벤트 초기화
+    document.body.style.overflow = ''; // 스크롤 초기화
+    modalStore.searchCustomerModal.closeModal(); // 고객 검색 모달 초기화
+
     if (modalInnerRef.value) {
         modalInnerRef.value.removeEventListener('scroll', checkScroll);
     }
