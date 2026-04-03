@@ -798,7 +798,9 @@ watch(() => modalStore.reserveInfoModal.isVisible, async(val) => {
     if (val) {
         // 모달이 열릴 때 히스토리에 가짜 상태 추가
         // 브라우저는 history 하나 추가됐다고 인식
-        window.history.pushState({ modal: 'reserveInfo' }, '', window.location.href);
+        if (window.history.state?.modal !== 'reserveInfo') {
+            window.history.pushState({ modal: 'reserveInfo' }, '', window.location.href);
+        }
         // 뒤로가기(popstate) 이벤트 리스너 등록
         window.addEventListener('popstate', handleBackGesture);
 
@@ -810,6 +812,12 @@ watch(() => modalStore.reserveInfoModal.isVisible, async(val) => {
 
         // 닫히면 배경 스크롤 해제
         document.body.style.overflow = '';
+
+        // 버튼 클릭으로 닫혔을 때만 히스토리를 뒤로 돌려줌
+        // 뒤로가기 제스처로 닫혔을 때는 이미 히스토리가 빠진 상태라 이 로직이 필요 없음
+        if (window.history.state?.modal === 'reserveInfo') {
+            window.history.back();
+        }
     }
 }, { immediate: true });
 
@@ -921,6 +929,8 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+    window.removeEventListener('popstate', handleBackGesture);
+    document.body.style.overflow = '';
     if (modalInnerRef.value) {
         modalInnerRef.value.removeEventListener('scroll', checkScroll);
     }
