@@ -432,7 +432,7 @@ const formattedTempSchedules = computed(() => {
 
         return {
             id: temp.id, // 수정 시 참조할 ID
-            text: `${formatTempDate(temp.startDate, temp.endDate)} ${timeText} / ${hospitalStore.bookingTime == 30 ? '30분 마다' : '한시간 마다'} ${productStore.productScheduleInfo.reserveCnt}마리`,
+            text: `${formatTempDate(temp.startDate, temp.endDate)} ${timeText} / ${hospitalStore.bookingTime == 30 ? '30분 마다' : '한시간 마다'} ${temp.stock}마리`,
             raw: temp // 수정 시 활용할 원본 데이터
         };
     });
