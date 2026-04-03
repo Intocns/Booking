@@ -395,18 +395,21 @@ async function requestConnect() {
             businessId: Number(bid),
         });
 
-        const res = await api.post('/api/linkbusiness/conn', payload);
+        // skipAlert: true를 보내서 인터셉터의 showAlert를 잠시 끔
+        const res = await api.post('/api/linkbusiness/conn', payload, { skipAlert: true });
 
-        if (isApiSuccess(res)) {
-            hasNaverAccount.value = true;
-            // await fetchAccountInfo(); // 연동 하기  > 1,2번 분리로 주석처리 함 
-            modalStore.naverConnectNoticeModal.openModal();
+        // 인터셉터에서 300 이상을 reject하므로, 여기 왔다면 무조건 성공(200)
+        hasNaverAccount.value = true;
+        // await fetchAccountInfo(); // 연동 하기  > api 1,2번 분리로 주석처리 함 
+        modalStore.naverConnectNoticeModal.openModal();
+
+    } catch (err) {
+        if(err?.status_code == 600) { // 예약 유형이 13번 외의 타입인 경우 status_code: 600 를 return 하고, 이때 연동 불가 안내 팝업 띄워줌
+            modalStore.isConnectionErrorModal.openModal();
         } else {
-            const msg = res.data?.message ?? '연동에 실패했습니다.';
+            const msg = err?.message ?? '연동 요청 중 오류가 발생했습니다.';
             showAlert(msg);
         }
-    } catch (err) {
-        showAlert('연동 요청 중 오류가 발생했습니다.');
     }
 }
 
@@ -1010,7 +1013,7 @@ onUnmounted(() => {
         </div>
     </ModalSimple>
 
-    <!-- 상품 등록 필요 모달 -->
+    <!-- 네이버 계정 연동 진행 후 > 상품 등록 필요 모달 -->
     <Modal
         v-if="modalStore.addProductModal.isVisible"
         title="상품 등록 필요"
@@ -1027,6 +1030,29 @@ onUnmounted(() => {
         <div class="modal-button-wrapper">
             <div class="buttons">
                 <button class="btn btn--size-32 btn--blue btn--c" @click="goToSetProductPage">상품 등록하기</button>
+            </div>
+        </div>
+    </Modal>
+
+    <!-- 연동불가 안내 팝업 (연동하기 진행 후 > 예약 유형이 13번 외의 경우 해당 팝업 띄움) -->
+    <Modal
+        v-if="modalStore.isConnectionErrorModal.isVisible"
+        title="연동 불가 안내"
+        size="xs"
+        :modal-state="modalStore.isConnectionErrorModal"
+    >
+        <div class="modal-contents-inner d-flex flex-col" style="gap: 15px">
+            <p class="body-m">병원 전용 네이버 예약 유형이 아니기에 연동을 진행할 수 없습니다.</p>
+            <p class="body-m">
+                연동 시도 과정에서 <span class="title-s">네이버 예약의 예약받기 및 상품 노출 설정이<br>비활성화 처리</span>되었습니다.<br>
+                <span class="title-s">정상적인 네이버 예약 사용을 위해 네이버 스마트 플레이스에서<br>예약받기 및 상품 노출설정을 [ON]으로 변경</span>해 주세요.
+            </p>
+            <p class="body-m">서비스 이용 및 예약 유형 변경 관련 안내는 고객센터를 통해<br>상세히 안내해 드리겠습니다.</p>
+        </div>
+
+        <div class="modal-button-wrapper">
+            <div class="buttons">
+                <button class="btn btn--size-32 btn--blue btn--c" @click="modalStore.isConnectionErrorModal.closeModal()">확인</button>
             </div>
         </div>
     </Modal>

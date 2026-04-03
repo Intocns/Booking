@@ -50,6 +50,7 @@ export const useModalStore = defineStore("modalStore", () => {
     const naverConnectRequiredModal = createModalState(); // 네이버 연동 필요 (상품/옵션 등 메뉴 접근 시)
     const naverAccountGuideModal = createModalState(); // 네이버 연동 가이드 모달
     const addProductModal = createModalState(); // 네이버 연동 후 > 상품등록 필요 모달
+    const isConnectionErrorModal = createModalState(); // 네이버 연동 후 > 예약 타입이 13번외의 인 경우 연동 불가 안내
 
     // 플레이스 설정
     const bookingGuideModal = createModalState(); // 운영 설정 > 예약 받기 > 자세히 설명 모달
@@ -95,6 +96,7 @@ export const useModalStore = defineStore("modalStore", () => {
         naverConnectRequiredModal,
         naverAccountGuideModal,
         addProductModal,
+        isConnectionErrorModal,
         // 플레이스 설정
         bookingGuideModal,
         bookingGuideTextModal,
