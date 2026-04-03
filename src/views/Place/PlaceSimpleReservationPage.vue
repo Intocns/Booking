@@ -6,7 +6,7 @@ import PageTitle from '@/components/common/PageTitle.vue';
 import TableLayout from '@/components/common/TableLayout.vue';
 
 import { DayPilotCalendar } from "@daypilot/daypilot-lite-vue";
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, reactive } from 'vue';
 import { formatDate } from '@/utils/dateFormatter';
 import { storeToRefs } from 'pinia';
 // 스토어
@@ -336,9 +336,9 @@ const formatTime = (index) => {
 };
 
 // ---------------------------------------------
-// 캘린더 구성 옵션
+// 캘린더 구성 옵션 ref -> reactive 수정 
 // ---------------------------------------------
-const config = ref({
+const config = reactive({
     viewType: "Resources", // 리소스 뷰 모드
     locale: "ko-kr", // 언어 설정
     timeFormat: "Clock24Hours", // 타임 포맷 24시 형식
