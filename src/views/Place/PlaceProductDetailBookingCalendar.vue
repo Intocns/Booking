@@ -234,9 +234,11 @@ const handelSetOperationModalOpen = () => {
     if (daySchedule) {
         modalStore.setOperationRuleModal.openModal({
             date: targetDate.value,
-            stock: daySchedule.stock,
+            stock: productStore.productScheduleInfo.reserveCnt, //daySchedule.stock,
             // 비트를 [{startTime, endTime}] 배열로 변환
-            times: JSON.parse(JSON.stringify(daySchedule.times))
+            // 캘랜더영역 클릭하여 지정할때는 초기화
+            times: [{endTime: "", startTime: ""}], //JSON.parse(JSON.stringify(daySchedule.times))
+            isCalendarClick: 1, // 캘랙더 영역 클릭하여 설정 한다는 flag
         });
     }
 };
