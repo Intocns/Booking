@@ -331,6 +331,7 @@ const getInState = (data) => {
         padding: 0 16px;
         border-radius: 4px;
         background-color: $gray-00;
+        overflow: hidden;
 
         @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line);
         color: $gray-700;
@@ -362,11 +363,11 @@ const getInState = (data) => {
             .count {color: $status-personal_text;}
         } // 개인일정
 
-        &__1::after { content: ''; width: 6px; height: 23px; background-color: $status-confirmed_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 확정
-        &__0::after { content: ''; width: 6px; height: 23px; background-color: $status-onHold_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 대기
-        &__2::after { content: ''; width: 6px; height: 23px; background-color: $status-canceled_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 취소
-        &__3::after { content: ''; width: 6px; height: 23px; background-color: $status-canceled_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 거절
-        &__4::after { content: ''; width: 6px; height: 23px; background-color: $status-personal_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 개인일정
+        &__1::after { content: ''; width: 6px; height: 23px; background-color: $status-confirmed_bg; position:absolute; left:0; top:0;} // 확정
+        &__0::after { content: ''; width: 6px; height: 23px; background-color: $status-onHold_bg; position:absolute; left:0; top:0;} // 대기
+        &__2::after { content: ''; width: 6px; height: 23px; background-color: $status-canceled_bg; position:absolute; left:0; top:0;} // 취소
+        &__3::after { content: ''; width: 6px; height: 23px; background-color: $status-canceled_bg; position:absolute; left:0; top:0;} // 거절
+        &__4::after { content: ''; width: 6px; height: 23px; background-color: $status-personal_bg; position:absolute; left:0; top:0;} // 개인일정
     }
 }
 
@@ -428,6 +429,7 @@ const getInState = (data) => {
         margin-bottom: 8px;
         border-radius: 4px;
         cursor: pointer;
+        overflow: hidden;
 
         @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
         
@@ -478,11 +480,11 @@ const getInState = (data) => {
         &__3 { border: 1px solid $status-canceled_bg; position: relative; } // 거절
         &__4 { border: 1px solid $status-personal_bg; position: relative; } // 개인일정
 
-        &__1::after { content: ''; width: 4px; height: 35px; background-color: $status-confirmed_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 확정
-        &__0::after { content: ''; width: 4px; height: 35px; background-color: $status-onHold_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 대기
-        &__2::after { content: ''; width: 4px; height: 35px; background-color: $status-canceled_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 취소
-        &__3::after { content: ''; width: 4px; height: 35px; background-color: $status-canceled_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 거절
-        &__4::after { content: ''; width: 4px; height: 35px; background-color: $status-personal_bg; position:absolute; left:0; top:0; border-radius: 4px 0 0 4px;} // 개인일정
+        &__1::after { content: ''; width: 4px; height: 34px; background-color: $status-confirmed_bg; position:absolute; left:0; top:0;} // 확정
+        &__0::after { content: ''; width: 4px; height: 34px; background-color: $status-onHold_bg; position:absolute; left:0; top:0;} // 대기
+        &__2::after { content: ''; width: 4px; height: 34px; background-color: $status-canceled_bg; position:absolute; left:0; top:0;} // 취소
+        &__3::after { content: ''; width: 4px; height: 34px; background-color: $status-canceled_bg; position:absolute; left:0; top:0;} // 거절
+        &__4::after { content: ''; width: 4px; height: 34px; background-color: $status-personal_bg; position:absolute; left:0; top:0;} // 개인일정
 
         // &:hover {
         //     filter: brightness(96%);
