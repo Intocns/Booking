@@ -155,7 +155,7 @@ onMounted(() => {
                     </ul>
                     <div class="sub-menu-wrapper" :class="{ 'is-open': isBookingOpen }">
                         <div class="sub-menu" >
-                            <li class="sub-menu__li" @click="openLinkMain">오늘의 예약 현황</li>
+                            <div class="sub-menu__li" @click="openLinkMain">오늘의 예약 현황</div>
                             <RouterLink to="/reservation/list" class="sub-menu__li" active-class="active-text" @click="$emit('close')">
                                 전체 예약 조회
                             </RouterLink>
