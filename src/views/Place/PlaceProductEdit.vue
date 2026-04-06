@@ -21,12 +21,14 @@ import { DayPilot } from '@daypilot/daypilot-lite-vue';
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
 // utils
 import { DAYS_OPTIONS } from '@/constants';
 import { showAlert } from '@/utils/ui';
 
 const modalStore = useModalStore();
 const productStore = useProductStore();
+const hospitalStore = useHospitalStore();
 const route = useRoute();
 
 /**
@@ -126,14 +128,14 @@ watch(
 );
 
 
-// 저장 로직
+// 저장 버튼 클릭 시 로직
 const handleModalSave = async () => {
     const data = modalStore.setOperationRuleModal.data;
 
     // 유효성 검사
     if (!data.stock || data.stock <= 0) return showAlert("진료 가능 동물 수를 선택해주세요.");
     if (data.times.some(t => !t.startTime || !t.endTime)) return showAlert("운영시간을 모두 입력해주세요.");
-
+    
     if (timeErrors.value.some(msg => msg !== "")) {
         return; // 에러 메시지가 있으면 저장 중단
     }
@@ -147,14 +149,39 @@ const handleModalSave = async () => {
         }))
     };
 
+    // 만약 캘랜더 클릭 > 임시운영 설정이고, 해당날짜의 임시운영 값이 이미 있는 상태라면
+    // confirmModal을 한번 더 띄운 후 적용버튼 클릭 시 저장
+    // data.isCalendarClick == 1 (캘랜더클릭)
+    if (data.isCalendarClick === 1) {
+        // 이미 해당 날짜에 설정된 값이 있는지 확인 (startDate 기준으로 비교)
+        const isExist = productStore.temporarySchedules.some(s => s.startDate === data.date);
+
+        if (isExist) {
+            modalStore.confirmModal.openModal({
+                title: '임시 운영 일정 추가',
+                text: '해당 날짜에 이미 입력된 임시 운영 일정이 있습니다.\n지금 입력하신 내용으로 수정 적용하시겠습니까?',
+                onConfirm: () => {
+                    executeSave(params)
+                }
+            })
+        } else {
+            // 데이터가 없으면 바로 저장
+            await executeSave(params);
+        }
+    } else {
+        await executeSave(params);
+    }
+};
+
+// 실제 임시운영 저장 API를 호출하는 로직 (분리)
+const executeSave = async (params) => {
     const response = await productStore.setScheduleModalSave(itemId.value, params);
 
     if (response && response.status_code <= 300) {
         showAlert("저장되었습니다.");
         
-        await productStore.getItemReservationInfo(itemId.value); // 오른쪽 목록 갱신
-        
-        // 지금 보고있는 스케쥴 날짜로 호출
+        // 데이터 갱신
+        await productStore.getItemReservationInfo(itemId.value);
         await productStore.getProductSchedule(itemId.value, {
             startDate: productStore.currentDateForDetailBookingCalendar.startDate,
             endDate: productStore.currentDateForDetailBookingCalendar.endDate,
@@ -244,7 +271,7 @@ const handleModalSave = async () => {
 
                 <!-- 예약 가능 설정 -->
                 <div class="d-flex align-center gap-4 body-s">
-                    매 30분 마다
+                    매 {{ hospitalStore.bookingTime == 30 ? '30분' : '한시간' }} 마다
                     <CustomSingleSelect 
                         v-model="modalStore.setOperationRuleModal.data.stock" 
                         :options="animalCountOptions" 

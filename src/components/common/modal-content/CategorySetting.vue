@@ -306,13 +306,14 @@ const isFixedCategory = (category, type = 'name') => {
 
     // 리스트 컨테이너
     &__list {
+        width:100%;
         flex: 1;
         min-height: 0;
         display: flex;
         flex-direction: column;
         overflow-y: auto;
         // padding-top: 16px;
-        padding-right: 4px;
+        padding-right: 6px;
         
         // 스크롤바 스타일 조정 (더 얇게)
         scrollbar-width: thin; // Firefox
@@ -338,6 +339,7 @@ const isFixedCategory = (category, type = 'name') => {
 }
 
 .category-item {
+    width:100%;
     display: flex;
     flex-direction: column;
     gap: 12px;

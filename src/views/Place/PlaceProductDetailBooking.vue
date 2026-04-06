@@ -17,6 +17,8 @@ import { setOperatingObject } from '@/utils/product';
 import { useProductStore } from '@/stores/productStore';
 import { useModalStore } from '@/stores/modalStore';
 import { useOptionStore } from '@/stores/optionStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
+
 import { useRouter } from 'vue-router';
 import { showAlert } from '@/utils/ui';
 import { validateTimeRanges } from '@/utils/common';
@@ -24,6 +26,7 @@ import { validateTimeRanges } from '@/utils/common';
 const productStore = useProductStore();
 const modalStore = useModalStore();
 const optionStore = useOptionStore();
+const hospitalStore = useHospitalStore();
 const router = useRouter();
 
 // 예약 가능 동물 수 (임시 1~10)
@@ -291,7 +294,7 @@ onMounted(async() => {
             <div class="form-content">
                 <div>
                     <div class="d-flex align-center gap-4 body-s">
-                        매 30분 마다 최대
+                        매 {{ hospitalStore.bookingTime == 30 ? '30분' : '한시간' }} 마다 최대
                         <CustomSingleSelect 
                             v-model="selectedAnimalCount" 
                             :options="animalCountOptions" 

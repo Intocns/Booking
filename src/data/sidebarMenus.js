@@ -1,3 +1,5 @@
+import { EXTERNAL_LINKS } from "@/constants"
+
 export const menus = [
     {
         name: "대시보드",
@@ -38,7 +40,7 @@ export const menus = [
         name: "병원정보 관리",
         icon: "icHospital",
         children: [],
-        path: 'https://intolink.co.kr/mylink/hospital',
+        path: EXTERNAL_LINKS.MY_HOSPITAL,
         isExternal: true,
     }
 ]

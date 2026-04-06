@@ -36,7 +36,8 @@ const activeTab = ref(null); // 현재 선택된 카테고리
 const selectedProduct = ref(''); // 미리보기에서 선택된 상품 (단일 선택)
 const selectionTypeCode = ref(''); // 선택된 카테고리의 유형(타입)
 // 드롭다운 상태 관리
-const activeMenuIndex = ref(null);
+const activeMenuRow = ref(null); // 현재 열린 메뉴의 실제 데이터 저장
+const activeMenuIndex = ref(null); // v-if 조건용
 const menuPosition = ref({ x: 0, y: 0 });
 // 미리보기 컴포넌트 참조
 const optionPreviewRef = ref(null);
@@ -124,26 +125,30 @@ const optionRegisterBtnClick = () => {
 }
 
 // 설정 버튼 클릭 핸들러 (좌표 계산 포함)
-const toggleSettingMenu = (e, index) => {
-    // 이미 열려있는 메뉴를 다시 누르면 닫기
-    if (activeMenuIndex.value === index) {
+const toggleSettingMenu = (e, row) => {
+    e.stopPropagation();
+
+    // 같은 버튼을 누르면 닫기
+    if (activeMenuIndex.value === row.idx) {
         activeMenuIndex.value = null;
+        activeMenuRow.value = null;
         return;
     }
 
     menuPosition.value = {
-        x: e.clientX - 50,
-        y: e.clientY + 8
+        x: e.clientX - 80, // 왼쪽으로 약간 이동 (메뉴 너비 고려)
+        y: e.clientY + 10  // 버튼 바로 아래
     };
     
-    activeMenuIndex.value = index;
+    activeMenuRow.value = row; // 현재 행 데이터 저장
+    activeMenuIndex.value = row.idx;
 };
 
 // 바깥 클릭 시 닫기 로직
 const closeMenu = (e) => {
-    // 클릭된 요소가 설정 버튼 컨테이너 내부가 아니면 닫음
-    if (!e.target.closest('.row__btn-td')) {
+    if (!e.target.closest('.setting-dropdown') && !e.target.closest('.row__btn-td')) {
         activeMenuIndex.value = null;
+        activeMenuRow.value = null;
     }
 };
 
@@ -442,33 +447,10 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
                     <!-- 설정버튼 커스텀 슬롯 td -->
                     <!-- 설정 -->
                     <template #settingBtn="{ row, rowIndex }" @click.stop>
-                        <div class="row__btn-td">
-                            <button 
-                                class="btn btn--size-24 btn--black-outline"
-                                @click.stop="toggleSettingMenu($event, rowIndex)"
-                                :class="{ 'active': activeMenuIndex === rowIndex }"
-                            >
+                        <div class="row__btn-td" @click.stop="toggleSettingMenu($event, row)">
+                            <button class="btn btn--size-24 btn--black-outline">
                                 <img :src="icSetting" alt="설정">
                             </button>
-    
-                            <ul 
-                                v-if="activeMenuIndex === rowIndex"
-                                class="setting-dropdown"
-                                :style="{ left: menuPosition.x + 'px', top: menuPosition.y + 'px' }"
-                            >
-                                <li @click.stop="handleMenuAction('edit', row)">
-                                    <img :src="icEdit" alt="수정아이콘">
-                                    옵션수정
-                                </li>
-                                <li @click.stop="handleMenuAction('copy', row)">
-                                    <img :src="icCopy" alt="복사아이콘">
-                                    옵션복사
-                                </li>
-                                <li @click.stop="handleMenuAction('delete', row)">
-                                    <img :src="icDel" alt="삭제아이콘">
-                                    옵션삭제
-                                </li>
-                            </ul>
                         </div>
                     </template>
                 </CommonTable>
@@ -480,6 +462,25 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
             <OptionPreview ref="optionPreviewRef" v-model:selected-product="selectedProduct" />
         </div>
     </div>
+    
+    <ul 
+        v-if="activeMenuIndex"
+        class="setting-dropdown"
+        :style="{ left: menuPosition.x + 'px', top: menuPosition.y + 'px' }"
+    >
+        <li @click.stop="handleMenuAction('edit', activeMenuRow)">
+            <img :src="icEdit" alt="수정아이콘">
+            옵션수정
+        </li>
+        <li @click.stop="handleMenuAction('copy', activeMenuRow)">
+            <img :src="icCopy" alt="복사아이콘">
+            옵션복사
+        </li>
+        <li @click.stop="handleMenuAction('delete', activeMenuRow)">
+            <img :src="icDel" alt="삭제아이콘">
+            옵션삭제
+        </li>
+    </ul>
 
     <!-- 카테고리 관리 모달 -->
     <Modal
@@ -591,7 +592,7 @@ watch(() => modalStore.optionSettingModal.isVisible, async (isVisible) => {
 
     // 테이블 > 관리 메뉴
     .setting-dropdown {
-        position: absolute;
+        position: fixed;
         display: flex;
         flex-direction: column;
         padding: 10px;

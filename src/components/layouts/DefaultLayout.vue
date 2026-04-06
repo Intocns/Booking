@@ -3,20 +3,34 @@
     import Spinner from '../common/Spinner.vue';
     import ConfirmModal from '../common/ConfirmModal.vue';
     import Modal from '../common/Modal.vue';
+    import MobileHeader from './Mobile/MobileHeader.vue';
+    import MobileSidebar from './Mobile/MobileSidebar.vue';
+    import MobileBottomTab from './Mobile/MobileBottomTab.vue';
 
     import { api } from '@/api/axios';
     import { useModalStore } from '@/stores/modalStore';
     import { useRouter, useRoute } from 'vue-router';
-    import { ref } from 'vue';
+    import { ref, onMounted, onUnmounted } from 'vue';
 
     import icBtnCloseB from '@/assets/icons/ic_btn_close_b.svg';
     import placeConnectButtonAlert from '@/assets/images/place_connect_button_alert.png';
+    import icArrowTop from '@/assets/icons/mobile/ic_arrow_top.svg'
 
     import { PRODUCT_REGISTRATION_COMPLETE_DONT_SHOW_KEY } from '@/constants/naver';
+
+    import { useDevice } from '@/composables/useDevice';
+    
+    const isMobile = useDevice();
 
     const modalStore = useModalStore();
     const router = useRouter();
     const route = useRoute();
+
+    const isMenuOpen = ref(false); // 모바일사이드메뉴 열림 상태
+
+    const toggleMenu = () => { // 모바일 사이드메뉴 토글
+        isMenuOpen.value = !isMenuOpen.value;
+    };
 
     function onGoToNaverAccount() {
         modalStore.naverConnectRequiredModal.closeModal();
@@ -42,12 +56,32 @@
         modalStore.productRegistrationCompleteModal.closeModal();
     };
 
+    // 상단으로 이동 버튼 관련
+    const isVisible = ref(false);
+    // 스크롤 위치를 감시하는 함수
+    const checkScroll = () => {
+    // 보통 300px 정도 내려오면 버튼을 보여줍니다 
+        isVisible.value = window.scrollY > 300;
+    };
+    const scrollToTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+    onMounted(() => {
+        window.addEventListener('scroll', checkScroll);
+    });
+
+    onUnmounted(() => {
+        window.removeEventListener('scroll', checkScroll);
+    });
 </script>
 
 <template>
-    <div class="default-layout">
-        <Sidebar v-if="route.name !== 'maintenance'" />
-
+    <div v-if="!isMobile" class="default-layout">
+        <Sidebar v-if="route.name !== 'maintenance'" /> 
+        
         <main class="main">
             <!-- <router-view :key="$route.fullPath" /> -->
             <router-view v-slot="{ Component }" :key="$route.fullPath">
@@ -59,6 +93,28 @@
             </router-view>
         </main>
     </div>
+
+    <div v-else class="mobile-layout">
+        <MobileHeader v-if="route.name !== 'maintenance'" @toggle="toggleMenu" />
+        <MobileSidebar v-if="route.name !== 'maintenance'" :is-active="isMenuOpen" @close="isMenuOpen = false"/>
+
+        <main class="main has-bottom-tab">
+            <router-view v-slot="{ Component }" :key="$route.fullPath">
+                <transition name="fade" mode="out-in">
+                    <div class="content">
+                        <component :is="Component" />
+                    </div>
+                </transition>
+            </router-view>
+        </main>
+
+        <MobileBottomTab />
+
+        <!-- goToTop버튼 -->
+        <div v-show="isVisible" class="go-to-top" @click="scrollToTop">
+            <img :src="icArrowTop" alt="top">
+        </div>
+    </div>  
 
     <Spinner v-show="api.ing.value" />
 
@@ -142,44 +198,44 @@
         :modal-state="modalStore.productRegistrationCompleteModal"
         modal-width="500px"
     >
-        <div class="modal-contents-inner">
-            <p class="modal-contents-subTitle">상품이 정상적으로 등록되었습니다.</p>
-            <p class="modal-contents-body">
-                마지막으로 원활한 예약 관리를 위해<br/><span class="title-s">네이버 스마트 플레이스로 이동하여 <span class="strong">[플레이스 연결하기]</span>를 진행해주세요.</span>
-            </p>
-            <p class="modal-contents-body caption">
-                버튼 위치: 네이버 스마트플레이스 접속 &gt; 솔루션 메뉴 &gt;
-                <br/>사용중인 솔루션 &gt; '네이버 예약' 항목의 <span class="place-connect-btn-label">플레이스 연결하기</span> 버튼 클릭
-            </p>
-            <div class="product-registration-complete-modal__image-wrap">
-                <img :src="placeConnectButtonAlert" alt="플레이스 연결하기 버튼 위치 안내" class="product-registration-complete-modal__image">
-            </div>
-
-            <div class="d-flex flex-col gap-8 border-top" style="margin-top: 15px; padding-top: 10px;">
-                <p class="title-m">⚠️중요 안내</p>
+        <div class="modal-contents-inner product-registration-complete-modal">
+            <div class="d-flex flex-col gap-16">
+                <p class="body-m">상품이 정상적으로 등록되었습니다.</p>
                 <p class="body-m">
                     기존에 등록된 상품을 불러온 경우, 네이버 시스템에 의해<br/>
-                    <span class="text-blue title-s">상품이 '미노출' 상태로 등록되며 예약받기 설정도 OFF(받지않음)으로 변경</span>됩니다.
+                    <span class="title-s text-blue">상품이 ‘미노출’ 상태로 등록되며 예약받기 설정도 OFF(받지 않음) 으로 변경</span>됩니다.
+                </p>
+                <div class="body-m d-flex flex-col gap-4">
+                    <p class="body-m">
+                        플레이스 연결 완료 후, 예약관리자센터의 네이버 플레이스 관리 메뉴에서<br/>
+                        상품 노출 및 예약받기 설정을 반드시 확인해 주세요.
+                    </p>
+                    <ul class="mt-5">
+                        <li>· 상품 노출 설정: 네이버 플레이스 관리 > 상품 관리 > 노출 설정</li>
+                        <li>· 예약 받기 설정: 네이버 플레이스 관리 > 플레이스 설정 > 운영 설정 > 예약 받기</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="d-flex flex-col gap-10 info-box">
+                <p class="title-s">⚠️중요 안내</p>
+                <p class="body-m">
+                    연동 후 <span class="title-s">네이버 플레이스에서 직접 추가하거나 수정한 내용은 인투링크에 반영되지않을 수 있으며, 일부 기능에서 오류가 발생</span>할 수 있습니다.
                 </p>
 
-                <p class="body-m">플레이스 연결 완료 후, 예약관리자센터의 네이버 플레이스 관리 메뉴에서<br/>상품 노출 및 예약받기 설정을 반드시 확인해 주세요.</p>
-                <ul>
-                    <li>· 상품 노출 설정: 네이버 플레이스 관리 > 상품 관리 > 노출 설정</li>
-                    <li>· 예약 받기 설정: 네이버 플레이스 관리 > 플레이스 설정 > 운영 설정 > 예약 받기</li>
-                </ul>
+                <p class="body-m">안정적인 운영을 위해 관련 정보는 인투링크에서 관리해 주세요.</p>
             </div>
         </div>
         <div class="modal-button-wrapper">
-            <div class="check_section">
-                <label class="checkbox">
-                    <input
-                        type="checkbox"
-                        v-model="modalStore.productRegistrationCompleteDontShow"
-                    />
-                    <span class="box"></span>
-                    <span class="label">다시 보지 않음</span>
-                </label>
-            </div>
+            <label class="checkbox">
+                <input
+                    type="checkbox"
+                    v-model="modalStore.productRegistrationCompleteDontShow"
+                />
+                <span class="box"></span>
+                <span class="label">다시 보지 않음</span>
+            </label>
+
             <div class="buttons">
                 <button type="button" class="btn btn--size-32 btn--blue" @click="closeProductRegistrationCompleteModal">확인</button>
             </div>
@@ -190,22 +246,52 @@
 <style lang="scss" scoped>
     .default-layout {
         display: flex;
+        .main {
+            flex: 1;
+            width: calc(100% - 220px);
+            height: 100vh;
+        }
+        .content {
+            width: 100%;
+            height: 100%;
+            display:flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            background-color: $gray-50;
+            padding: 24px;
+            
+        }
     }
-    .main {
-        flex: 1;
-        width: calc(100% - 220px);
-        height: 100vh;
-    }
-    .content {
-        width: 100%;
-        height: 100%;
-        display:flex;
+
+    .mobile-layout {
+        display: flex;
         flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-        background-color: $gray-50;
-        padding: 24px;
-        
+        width: 100%;
+        min-height: 100dvh;
+        padding-top: env(safe-area-inset-top);
+        .main {
+            flex: 1;
+
+            display: flex;
+            flex-direction: column;
+
+            &.has-bottom-tab {
+                padding-top: 56px;
+                padding-bottom: 88px;
+            }
+        }
+        .content {
+            width: 100%;
+            flex: 1;
+            display:flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            background-color: $gray-50;
+            padding: 8px 0;
+            
+        }
     }
 
     .fade-enter-active, .fade-leave-active {
@@ -213,6 +299,21 @@
     }
     .fade-enter-from, .fade-leave-to {
         opacity: 0;
+    }
+
+    // 상단으로 이동 버튼 (go-to-top버튼)
+    .go-to-top {
+        position: fixed;
+        bottom: 110px;
+        right: 20px;
+        @include flex-center;
+        width: 48px;
+        height: 48px;
+
+        border: 1px solid $gray-300;
+        border-radius: 5px;
+        background-color: $gray-00;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.08);
     }
 
     /* 네이버 연동 필요 모달: 1번사진 스타일 (전체 흰색, 파란 헤더 없음) */
@@ -276,17 +377,6 @@
         gap: 12px;
         padding: 0 24px 24px;
     }
-
-    .product-registration-complete-modal__image-wrap {
-        margin-top: 12px;
-    }
-    .product-registration-complete-modal__image {
-        width: 320px;
-        max-width: 100%;
-        height: auto;
-        display: block;
-        border-radius: 4px;
-    }
     .place-connect-btn-label {
         display: inline-block;
         padding: 2px 6px;
@@ -298,4 +388,12 @@
         border-radius: 4px;
         vertical-align: middle;
     } 
+
+    .product-registration-complete-modal .info-box {
+        border: 1px solid $gray-200; 
+        border-radius: 6px; 
+        padding: 6px 10px; 
+        background-color: $gray-50; 
+        margin-top: 20px;
+    }
 </style>

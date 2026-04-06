@@ -1,9 +1,10 @@
 <!-- 일자 검색 필터 -->
 <script setup>
 import { VueDatePicker } from '@vuepic/vue-datepicker';
-import { ko } from 'date-fns/locale'
+import { ko, tr } from 'date-fns/locale'
 import { startOfMonth, startOfDay, endOfMonth, addMonths, subMonths, startOfWeek, endOfWeek, addWeeks, addDays, subWeeks, subDays, differenceInDays  } from "date-fns";
 import { ref, computed, watch, onMounted } from 'vue';
+import { formatDate } from '@/utils/dateFormatter';
 
 import CustomDatePicker from '@/components/common/CustomDatePicker.vue'
 
@@ -13,7 +14,7 @@ import icInformationB from '@/assets/icons/ic_infomation_b.svg'
 
 const props = defineProps({
     modelValue: {
-        type: [Date, Array, String],
+        type: [Date, Array, String, Object],
         required: true
     },
     buttonType: { // 해당 타입에 따라 빠른 선택 버튼 보기 달라짐
@@ -30,6 +31,8 @@ const props = defineProps({
     tooltipText: {type: String, default: ''}, // 툴팁 텍스트
     useLimit: { type: Boolean, default: false }, // 날짜 선택 기간 제한을 둘지 결정
     limitMonths: { type: Number, default: 3 }, // 몇 개월 전까지 제한할지 결정
+    isMobile: { type: Boolean, default: false, }, // 모바일 환경 체크
+    useMonthPicker: { type: Boolean, default: false, },
 });
 
 // 부모와 날짜를 동기화하기 위한 emit
@@ -38,7 +41,9 @@ const emit = defineEmits(['update:modelValue']);
 // 부모의 v-model(modelValue)과 직접 연결되는 계산된 속성
 const dateRange = computed({
     get: () => props.modelValue,
-    set: (value) => emit('update:modelValue', value)
+    set: (value) => {
+        emit('update:modelValue', value);
+    }
 });
 const today = startOfDay(new Date());
 // dateRange.value = [today, today]; //최초
@@ -55,6 +60,18 @@ const setRange = (days) => {
         end = addDays(today, d);
     }
 
+    // 2. Month Picker 모드일 때의 처리
+    if (props.useMonthPicker) {
+        // 단일 객체 생성 함수
+        const toMonthObj = (date) => ({
+            month: date.getMonth(), // 0 ~ 11
+            year: date.getFullYear()
+        });
+
+        dateRange.value = toMonthObj(start);
+        return;
+    }
+
     // isRange 값에 따라 배열 혹은 단일 객체로 전송
     if (props.isRange) {
         dateRange.value = [start, end];
@@ -65,36 +82,42 @@ const setRange = (days) => {
 
 // 네비게이션 로직 (<, >, 오늘)
 const navigateDate = (direction) => {
-    // 기준 날짜 가져오기 (배열이면 첫 번째 날 기준)
-    const current = Array.isArray(dateRange.value) ? dateRange.value[0] : dateRange.value;
-
-    let baseDate = current ? new Date(current) : new Date();
+    // 1. 기준 날짜(baseDate) 추출 로직 개선
+    let baseDate;
     
-    let start, end;
-
-    if (direction === 'today') {
-        baseDate = new Date(); // 오늘 기준으로 초기화
+    if (props.useMonthPicker && dateRange.value && typeof dateRange.value === 'object' && !Array.isArray(dateRange.value)) {
+        // MonthPicker 모드: { month, year } 객체인 경우
+        baseDate = new Date(dateRange.value.year, dateRange.value.month, 1);
+    } else {
+        // 일반 모드: Date 객체 또는 배열인 경우
+        const current = Array.isArray(dateRange.value) ? dateRange.value[0] : dateRange.value;
+        baseDate = current ? new Date(current) : new Date();
     }
 
-    // 월간 뷰일 때
-    if (props.defaultSelect === '30') {
-        // addMonths는 연도가 바뀌는 것을 자동 계산
+    if (direction === 'today') {
+        baseDate = new Date();
+    }
+
+    // 2. 방향에 따른 날짜 계산
+    let start, end;
+
+    // 월간 이동 (MonthPicker 모드이거나 defaultSelect가 '30'인 경우)
+    if (props.useMonthPicker || props.defaultSelect === '30') {
         const targetMonth = direction === 'prev' ? subMonths(baseDate, 1) : 
                             direction === 'next' ? addMonths(baseDate, 1) : new Date();
         
-        // 연도가 바뀌어도 안전하도록 해당 월의 1일과 말일을 다시 계산
         start = startOfMonth(targetMonth);
         end = endOfMonth(targetMonth);
     } 
-    // 주간 뷰일 때
+    // 주간 이동
     else if (props.defaultSelect === '7') {
         const targetWeek = direction === 'prev' ? subWeeks(baseDate, 1) : 
                             direction === 'next' ? addWeeks(baseDate, 1) : new Date();
         
-        start = startOfWeek(targetWeek, { weekStartsOn: 0 }); // 일요일
-        end = endOfWeek(targetWeek, { weekStartsOn: 0 });   // 토요일
+        start = startOfWeek(targetWeek, { weekStartsOn: 0 });
+        end = endOfWeek(targetWeek, { weekStartsOn: 0 });
     } 
-    // 일간 뷰 
+    // 일간 이동
     else {
         const targetDate = direction === 'prev' ? subDays(baseDate, 1) : 
                             direction === 'next' ? addDays(baseDate, 1) : new Date();
@@ -102,8 +125,14 @@ const navigateDate = (direction) => {
         end = start;
     }
 
-    // 최종 값을 부모에게 전달
-    if (props.isRange) {
+    // 3. 최종 값을 부모에게 전달 (형식 맞춤)
+    if (props.useMonthPicker) {
+        // MonthPicker 모드면 다시 객체 형태로 변환하여 전송
+        dateRange.value = {
+            month: start.getMonth(),
+            year: start.getFullYear()
+        };
+    } else if (props.isRange) {
         dateRange.value = [start, end];
     } else {
         dateRange.value = start;
@@ -129,6 +158,22 @@ const activeQuick = computed(() => {
     return null;
 });
 
+// (모바일) 시작일과 종료일이 같은지(하루만 선택되었는지) 확인하는 계산된 속성
+const isSingleDay = computed(() => {
+    if (!dateRange.value) return false;
+
+    // 기간 선택(Array)인 경우
+    if (Array.isArray(dateRange.value)) {
+        const [start, end] = dateRange.value;
+        if (!start || !end) return false;
+        
+        return formatDate(start) === formatDate(end);
+    }
+    
+    // 단일 선택(Object/Date)인 경우
+    return true;
+});
+
 onMounted(() => {
     // 마운트 시 defaultSelect 값에 따라 범위 설정
     // 기본값은 7일
@@ -139,7 +184,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="search-filter__section search-filter__date">
+    <div v-if="!isMobile" class="search-filter__section search-filter__date">
         <!-- 캘린더 선택 -->
         <div class="search-filter__date-range">
             <span class="search-filter__label title-s">일자</span>
@@ -176,6 +221,38 @@ onMounted(() => {
             <button type="button" class="btn--size-24 btn--black-outline" @click="navigateDate('today')">오늘</button>
         </div>
     </div>
+
+    <!-- 모바일화면 일자필터 -->
+    <div v-else class="search-filter__datepicker mobile">
+        <button 
+            type="button" 
+            class="arrow-btn" 
+            @click="navigateDate('prev')"
+            :class="{ 'disabled': !isSingleDay }" 
+            :disabled="!isSingleDay"
+        >
+            <img :src="icArrowLeft">
+        </button>
+        <CustomDatePicker 
+            v-model="dateRange" 
+            :range="props.isRange" 
+            :use-limit="props.useLimit" 
+            :limit-months="props.limitMonths" 
+            :is-mobile="props.isMobile" 
+            :is-search-filter="true" 
+            :use-month-picker="useMonthPicker"
+        />
+        <button 
+            type="button" 
+            class="arrow-btn" 
+            @click="navigateDate('next')"
+            :class="{ 'disabled': !isSingleDay }" 
+            :disabled="!isSingleDay"
+        >
+            <img :src="icArrowRight">
+        </button>
+        <!-- <button type="button" class="btn--size-24 btn--black-outline" @click="navigateDate('today')">오늘</button> -->
+    </div>
 </template>
 
 <style lang="scss" scoped>
@@ -193,6 +270,27 @@ onMounted(() => {
     .search-filter__datepicker {
         width: 240px;
         height: 32px;
+
+        &.mobile {
+            width: 100%;
+            height: auto;
+            display:flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .arrow-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+
+                &.disabled {
+                    opacity: 0.3;      /* 흐리게 표시 */
+                    pointer-events: none; /* 클릭 이벤트 차단 */
+                }
+            }
+        }
     }
 
     .search-filter__date {

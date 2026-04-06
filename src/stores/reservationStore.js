@@ -35,6 +35,7 @@ export const useReservationStore = defineStore("reservation", () => {
         // 날짜 / 시간
         reTimeTxt: formatDate(row.reTime),
         reTimeHisTxt: formatTime(row.reTime),
+        reTimeAndTxt: formatTime(row.reTimeEnd),
         createdAtTxt: formatDateTime(row.createdAt),
         // 예약상태
         inStateTxt: RESERVE_STATUS_MAP[row.inState] ?? '-',

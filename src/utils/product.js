@@ -16,7 +16,8 @@ export const setOperatingObject = (event, object, scheduleMode) => {
         startDate: event?.[0] ? formatDate(event?.[0]) : null,
         endDate: event?.[1] ? formatDate(event?.[1]) : null,
         isBusinessDay: true,
-        isBasicSchedule: null, //scheduleMode !== 'event', //해당 키값은 임시운영에 대한 키값이므로 주석처리함
+        isBasicSchedule: true, // 해당 키 값이 false인 경우는 임시운영임
+        //scheduleMode !== 'event', //해당 키값은 임시운영에 대한 키값이므로 주석처리함
     };
 
     //운영 시간 라디오 버튼 선택에 따른 분기처리

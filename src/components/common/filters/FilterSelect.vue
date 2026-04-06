@@ -8,7 +8,8 @@ const props = defineProps({
     label: String,
     options: { type: Array, default: () => []},
     modelValue: { type: Array, default: () => []},
-    placeholder: { type: String, default: '선택'}
+    placeholder: { type: String, default: '선택'},
+    isMobile: { type: Boolean, default: false }, // 모바일 환경
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -35,11 +36,12 @@ const localValue = computed({
 
 <template>
     <div class="search-filter__section">
-        <span class="search-filter__label title-s">{{ label }}</span>
+        <span v-if="!isMobile" class="search-filter__label title-s">{{ label }}</span>
         <CustomSelect
             v-model="localValue"
             :options="options"
             :placeholder="placeholder"
+            :is-mobile="isMobile"
         />
 </div>
 </template>
