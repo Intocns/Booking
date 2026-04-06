@@ -5,6 +5,8 @@ import { useHospitalStore } from "@/stores/hospitalStore";
 import { useModalStore } from "@/stores/modalStore";
 import { useProductStore } from "@/stores/productStore";
 import { PLACE_HAS_PRODUCTS_STORAGE_KEY } from "@/constants/naver";
+import { useDevice } from '@/composables/useDevice';
+const isMobile = useDevice();
 
 /** useFlag 1일 때만 접근 가능한 네이버 플레이스 경로 (URL 직접 입력·새로고침 시 차단) */
 const PLACE_PATHS_REQUIRE_LINK = ['/place/product', '/place/option', '/place/simple-reservation', '/place/settings'];
@@ -19,22 +21,55 @@ const router = createRouter({
         { 
             path: '/', 
             redirect: '/dashboard', 
-            meta: { requiresAuth: true },
+            meta: { requiresAuth: true, onlyPC: true, },
         },
-        { path: '/dashboard', name: 'dashboard', component: () => import('@/views/Dashboard/Dashboard.vue'), meta: { requiresAuth: true } },
+        
+        // 대시보드
+        { 
+            path: '/dashboard', 
+            name: 'dashboard', 
+            component: () => import('@/views/Dashboard/Dashboard.vue'),
+            meta: { requiresAuth: true, onlyPC: true, } 
+        },
+
         { path: '/mylink/naverReserveCallBack', name: 'naverReserveCallBack', component: () => import('@/views/Place/NaverCallbackPage.vue'), meta: { requiresAuth: false } },
+
         // 예약 현황
         {
             path: '/reservation',
             name: 'reservation',
             meta: { requiresAuth: true },
             children: [
-                { path: 'list', name: 'reservationList', component: () => import('@/views/Reservation/ReservationListPage.vue') },
-                { path: 'pending', name: 'pendingList', component: () => import('@/views/Reservation/PendingReservationPage.vue') },
-                { path: 'schedule', name: 'reservationShedule', component: () => import('@/views/Reservation/ReservationSchedulePage.vue') },
-                { path: 'sms-history', name: 'smsHistory', component: () => import('@/views/Reservation/SmsHistoryPage.vue') }
+                { 
+                    path: 'list', 
+                    name: 'reservationList', 
+                    component: isMobile
+                        ? () => import('@/views/Mobile/Reservation/ReservationListPage.vue') 
+                        : () => import('@/views/Reservation/ReservationListPage.vue') 
+                },
+                {
+                    path: 'pending', 
+                    name: 'pendingList', 
+                    component: isMobile
+                        ? () => import('@/views/Mobile/Reservation/PendingReservationPage.vue') 
+                        : () => import('@/views/Reservation/PendingReservationPage.vue') 
+                },
+                { 
+                    path: 'schedule', 
+                    name: 'reservationShedule', 
+                    component: isMobile
+                        ? () => import('@/views/Mobile/Reservation/ReservationSchedulePage.vue') 
+                        : () => import('@/views/Reservation/ReservationSchedulePage.vue') 
+                },
+                { 
+                    path: 'sms-history', 
+                    name: 'smsHistory', 
+                    component: () => import('@/views/Reservation/SmsHistoryPage.vue'),
+                    meta: {onlyPC: true} 
+                }
             ]
         },
+
         // 네이버 플레이스 관리
         {
             path: '/place',
@@ -47,33 +82,38 @@ const router = createRouter({
                 { 
                     path: 'product', 
                     name: 'placeProduct', 
-                    component: () => import('@/views/Place/PlaceProductPage.vue') 
+                    component: () => import('@/views/Place/PlaceProductPage.vue'), 
+                    meta: {onlyPC: true}
                 },
                 // 2. 상품 관리 > 등록
                 { 
                     path: 'product/detail', 
                     name: 'placeProductDetail', 
-                    component: () => import('@/views/Place/PlaceProductDetail.vue') 
+                    component: () => import('@/views/Place/PlaceProductDetail.vue'), 
+                    meta: {onlyPC: true}
                 },
                 // 2. 상품 관리 > 수정 
                 { 
                     path: 'product/edit/:id', // id를 파라미터로 받음
                     name: 'placeProductEdit', 
-                    component: () => import('@/views/Place/PlaceProductEdit.vue') 
+                    component: () => import('@/views/Place/PlaceProductEdit.vue'),
+                    meta: {onlyPC: true} 
                 },
                 
                 // 3. 옵션 관리
                 { 
                     path: 'option', 
                     name: 'placeOption', 
-                    component: () => import('@/views/Place/PlaceOptionPage.vue') 
+                    component: () => import('@/views/Place/PlaceOptionPage.vue') ,
+                    meta: {onlyPC: true}
                 },
                 
                 // 4. 간단 예약 관리
                 { 
                     path: 'simple-reservation', 
                     name: 'placeSimpleReservation', 
-                    component: () => import('@/views/Place/PlaceSimpleReservationPage.vue') 
+                    component: () => import('@/views/Place/PlaceSimpleReservationPage.vue'),
+                    meta: {onlyPC: true} 
                 },
                 
                 // 5. 플레이스 설정
@@ -81,9 +121,11 @@ const router = createRouter({
                     path: 'settings', 
                     name: 'placeSettings', 
                     component: () => import('@/views/Place/PlaceSettingsPage.vue'),
+                    meta: {onlyPC: true},
                 }
             ]
         },
+
         // 인투펫 관리
         {
             path: '/intoPet',
@@ -95,19 +137,59 @@ const router = createRouter({
                     path: 'settings', 
                     name: 'intoPetSettings', 
                     component: () => import('@/views/IntoPet/IntoPetSettingsPage.vue'),
+                    meta: {onlyPC: true},
                 },
                 // 2. 진료실 관리
                 { 
                     path: 'clinic', 
                     name: 'intoPetClinic', 
                     component: () => import('@/views/IntoPet/IntoPetClinicPage.vue'),
+                    meta: {onlyPC: true},
                 },
             ]
         },
+
+        // 기타
+        // 서비스 점검
+        {
+            path: '/maintenance',
+            name: 'maintenance',
+            component: () => import('@/views/MaintenanceView.vue'),
+            meta: { isPublic: true }
+        }
     ],
 })
 
 router.beforeEach(async (to, from, next) => {
+    const modalStore = useModalStore();
+    // 점검중일때 해당 값 true로
+    const isMaintenance = false;
+    // 점검중일때 페이지 이동 처리
+    if (isMaintenance) {
+        // 이동하려는 페이지가 점검 페이지가 아니라면 무조건 점검 페이지로 리다이렉트
+        if (to.name !== 'maintenance') {
+            return next({ name: 'maintenance' });
+        }
+    } else {
+        // 점검 중이 아닌데 점검 페이지로 접속하려고 하면 메인으로 튕겨내기
+        if (to.name === 'maintenance') {
+            return next({ name: 'dashboard' }); 
+        }
+    }
+
+    const isMobile = useDevice();
+    if (isMobile && to.matched.some(record => record.meta.onlyPC)) {
+        modalStore.confirmModal.openModal({
+            text: '이 페이지는 PC 환경에서만 사용 가능합니다.',
+            confirmBtnText: '확인',
+            noCancelBtn: true,
+            onConfirm: () => {
+                modalStore.confirmModal.closeModal();
+                router.push({ name: 'reservationList' }); // 전체예약리스트화면으로
+            }
+        })
+        return next(false);
+    }
     const hospitalStore = useHospitalStore(); // SSO 데이터가 담기는 스토어
 
     if (to.matched.some(record => record.meta?.isWaiting) || to.meta?.isWaiting) {
@@ -178,7 +260,18 @@ router.onError((error, to) => {
     if (isChunkError) {
         // alert('새 버전이 업데이트되어 페이지를 새로고침합니다.');
 
-        window.location.href = to.fullPath; 
+        const hasReloaded = window.sessionStorage.getItem('chunk-error-reloaded');
+
+        if(!hasReloaded) {
+            window.sessionStorage.setItem('chunk-error-reloaded', 'true');
+            window.location.href = to.fullPath; 
+        } else {
+            console.error('파일을 불러오지 못함');
+            window.sessionStorage.removeItem('chunk-error-reloaded');
+
+            showAlert('업데이트 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.')
+        }
+
     }
 });
 

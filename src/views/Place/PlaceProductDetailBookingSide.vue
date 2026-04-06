@@ -22,6 +22,7 @@ import { format } from "date-fns";
 // 스토어
 import { useModalStore } from '@/stores/modalStore';
 import { useProductStore } from '@/stores/productStore';
+import { useHospitalStore } from '@/stores/hospitalStore';
 //util
 import { formatDateToDay } from '@/utils/dateFormatter';
 import { setOperatingObject } from '@/utils/product';
@@ -44,6 +45,7 @@ const router = useRouter();
 // 스토어
 const modalStore = useModalStore();
 const productStore = useProductStore();
+const hospitalStore = useHospitalStore();
 
 // 설정 데이터 생성 함수
 const createDefaultConfig = () => ({
@@ -430,7 +432,7 @@ const formattedTempSchedules = computed(() => {
 
         return {
             id: temp.id, // 수정 시 참조할 ID
-            text: `${formatTempDate(temp.startDate, temp.endDate)} ${timeText} / 30분당 ${productStore.productScheduleInfo.reserveCnt}마리`,
+            text: `${formatTempDate(temp.startDate, temp.endDate)} ${timeText} / ${hospitalStore.bookingTime == 30 ? '30분 마다' : '한시간 마다'} ${temp.stock}마리`,
             raw: temp // 수정 시 활용할 원본 데이터
         };
     });
@@ -609,7 +611,15 @@ const initDataMapping = async () => {
     const basicPos = data.pos.filter(item => item.isBasicSchedule !== false);
 
     // 기본 운영 데이터를 시작일 기준 정렬
+    // const sortedPos = [...basicPos].sort((a, b) => {
+    //     return new Date(a.startDate) - new Date(b.startDate);
+    // });
     const sortedPos = [...basicPos].sort((a, b) => {
+        // 1순위: endDate가 없는 항목을 앞으로 보냄
+        if (!a.endDate && b.endDate) return -1; // a는 없고 b는 있으면 a가 앞(-1)
+        if (a.endDate && !b.endDate) return 1;  // a는 있고 b는 없으면 b가 앞(1)
+
+        // 2순위: 둘 다 endDate가 있거나 둘 다 없는 경우, 시작일 기준 정렬
         return new Date(a.startDate) - new Date(b.startDate);
     });
 
@@ -716,7 +726,7 @@ onMounted(async() => {
                     <div class="form-content">
                         <div>
                             <div class="d-flex align-center gap-4 body-s">
-                                매 30분 마다 최대
+                                매 {{ hospitalStore.bookingTime == 30 ? '30분' : '한시간' }} 마다 최대
                                 <CustomSingleSelect 
                                     v-model="selectedAnimalCount" 
                                     :options="animalCountOptions" 

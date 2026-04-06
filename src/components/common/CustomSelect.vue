@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue';
 import { formatSelectedLabels } from '@/utils/selectFormatter';
 import icSelectBoxOpenClosed from '@/assets/icons/ic_selectbox_OpenClosed.svg';
-
+import BottomSheet from './Mobile/BottomSheet.vue';
 
 const props = defineProps({
     modelValue: { type: Array, default: () => [] },  // 선택된 value 목록
@@ -10,6 +10,7 @@ const props = defineProps({
     placeholder: { type: String, default: "선택" },
     disabled: Boolean,
     caption: {type: String, default: ''},
+    isMobile: {type: Boolean, default: false }, // 모바일 환경 체크
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -39,7 +40,7 @@ const toggle = (e) => {
     } else {
         // 열 때는 값 동기화 후 열기만 함
         isOpen.value = true;
-        updatePosition();
+        if (!props.isMobile) updatePosition();
     }
 };
 
@@ -122,9 +123,18 @@ const selectOption = (value) => {
     localSelected.value = newValue;
 };
 
+// 모달이 열릴 때 부모의 값을 임시 값으로 복사 (동기화)
+watch(isOpen, (newVal) => {
+    if (newVal) {
+        localSelected.value = [...props.modelValue];
+    }
+});
+
+
 /* 외부 클릭 → 닫기 */
 const handleClickOutside = (e) => {
     if (!isOpen.value) return;
+    if (props.isMobile) return;
 
     // wrapper(셀렉트 박스 본체) 안을 눌렀는지 확인
     const isInsideWrapper = wrapper.value && wrapper.value.contains(e.target);
@@ -171,8 +181,22 @@ const updatePosition = async () => {
 
 // 스크롤 시 닫기
 const handleScroll = (e) => {
+    if(props.isMobile) return;
+
     if (dropdownRef.value && dropdownRef.value.contains(e.target)) return;
     if (isOpen.value) isOpen.value = false;
+};
+
+// 모바일화면 바텀시트 리스트에 보여줄 리스트 추출 ('all' 제외)
+const filteredOptions = computed(() => {
+    return props.options.filter(opt => opt.value !== 'all');
+});
+
+// 모바일 화면 바텀시트 저장 버튼
+const handleComplete = () => {
+    // 임시로 들고 있던 값을 부모에게 전달 (확정)
+    emit('update:modelValue', localSelected.value);
+    isOpen.value = false;
 };
 
 onMounted(() => {
@@ -208,7 +232,7 @@ onBeforeUnmount(() => {
 
         <teleport to="body">
             <!-- Dropdown -->
-            <div class="select__dropdown" v-if="isOpen" ref="dropdownRef" :style="dropdownStyle">
+            <div class="select__dropdown" v-if="isOpen && !isMobile" ref="dropdownRef" :style="dropdownStyle">
                 <div 
                     v-for="opt in options" 
                     :key="opt.value"
@@ -228,6 +252,19 @@ onBeforeUnmount(() => {
     
                 </div>
             </div>
+
+            <BottomSheet v-if="isMobile" v-model="isOpen" @save="handleComplete">
+                <template #content>
+                    <div v-for="opt in filteredOptions" :key="opt.value" class="select__option--mobile" @click="selectOption(opt.value)">
+                        <label class="checkbox">
+                            <input type="checkbox" :checked="localSelected.includes(opt.value) || (localSelected.includes('all') && opt.value !== 'all')" @click.stop.prevent />
+                            <span class="box"></span>
+                            <span class="label body-m">{{ opt.label }}</span>
+                        </label>
+                    </div>
+                </template>
+            </BottomSheet>
+
         </teleport>
     </div>
 </template>
@@ -296,7 +333,7 @@ onBeforeUnmount(() => {
             padding: 10px;
             max-height: 220px;
             overflow-y: auto;
-            z-index: 50;
+            z-index: 9999;
         }
 
         &__option {

@@ -93,6 +93,7 @@ td { cursor: default }
 .flex-wrap {flex-wrap: wrap;}
 .flex-1 { flex: 1; }
 .flex-shrink-0 { flex-shrink: 0; }
+.gap-24 { gap: 24px; }
 .gap-16 { gap: 16px; }
 .gap-10 {gap: 10px;}
 .gap-8 { gap: 8px; }
@@ -116,15 +117,21 @@ td { cursor: default }
 .heading-l { @include typo($heading-l-size, $heading-l-weight, $heading-l-spacing, $heading-l-line); }
 .heading-m { @include typo($heading-m-size, $heading-m-weight, $heading-m-spacing, $heading-m-line); }
 .heading-s { @include typo($heading-s-size, $heading-s-weight, $heading-s-spacing, $heading-s-line); }
+.title-xl-mobile { @include typo($title-xl-mobile-size, $title-xl-mobile-weight, $title-xl-mobile-spacing, $title-xl-mobile-line); }
+.title-l-mobile { @include typo($title-l-mobile-size, $title-l-mobile-weight, $title-l-mobile-spacing, $title-l-mobile-line); }
 .title-l { @include typo($title-l-size, $title-l-weight, $title-l-spacing, $title-l-line); }
+.title-m-mobile { @include typo($title-m-mobile-size, $title-m-mobile-weight, $title-m-mobile-spacing, $title-m-mobile-line); }
 .title-m { @include typo($title-m-size, $title-m-weight, $title-m-spacing, $title-m-line); }
 .title-s { @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line); }
+.title-s-mobile { @include typo($title-s-mobile-size, $title-s-mobile-weight, $title-s-mobile-spacing, $title-s-mobile-line); }
 .title-xs { @include typo($title-xs-size, $title-xs-weight, $title-xs-spacing, $title-xs-line); }
+.body-l-mobile { @include typo($body-l-mobile-size, $body-l-mobile-weight, $body-l-mobile-spacing, $body-l-mobile-line); }
 .body-l { @include typo($body-l-size, $body-l-weight, $body-l-spacing, $body-l-line); }
 .body-m { @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line); }
 .body-s { @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line); }
 .body-xs { @include typo($body-xs-size, $body-xs-weight, $body-xs-spacing, $body-xs-line); }
 .caption { @include typo($caption-size, $caption-weight, $caption-spacing, $caption-line); }
+.caption-mobile { @include typo($caption-mobile-size, $caption-mobile-weight, $caption-mobile-spacing, $caption-mobile-line); }
 .tooltip { @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line); word-break: keep-all;}
 .text-blue {color: $primary-700;}
 

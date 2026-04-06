@@ -6,6 +6,7 @@ import { storeToRefs } from "pinia";
 // 아이콘
 import icArrowRight from '@/assets/icons/ic_arrow_right_blue.svg'
 import icClear from '@/assets/icons/ic_clear.svg'
+import patternImage from '@/assets/images/Pattern.png';
 // 컴포넌트
 import ModalSimple from "@/components/common/ModalSimple.vue";
 import CustomSingleSelect from "@/components/common/CustomSingleSelect.vue";
@@ -16,10 +17,12 @@ import { useProductStore } from "@/stores/productStore";
 // 
 import { bitToTimeRanges } from "@/utils/schedule";
 import { DAYS_OPTIONS } from "@/constants";
+import { useHospitalStore } from "@/stores/hospitalStore";
 
 
 const productStore = useProductStore();
 const modalStore = useModalStore();
+const hospitalStore = useHospitalStore();
 const { productWeekScheduleDataList } = storeToRefs(productStore);
 
 // props
@@ -66,6 +69,65 @@ const getTotalMinutes = (timeStr) => { // 운영 시간 범위(startTime ~ endTi
     return h * 60 + m;
 };
 
+// const parseHourBitToEvents = (daySchedule) => {
+//     if(!daySchedule || !daySchedule.hourBit) return [];
+//     if(daySchedule.isBusinessDay === false) return []; // 비운영일 경우 빈 배열 반환
+
+//     const bitString = daySchedule.hourBit;
+//     const newEvents = []; // 가공해서 담아줄 데이터
+//     const dateStr = daySchedule.date;
+
+//     // 운영 시간 범위 계산
+//     // const startLimitMin = getTotalMinutes(daySchedule.startTime || "00:00");
+//     // const endLimitMin = getTotalMinutes(daySchedule.endTime || "24:00");
+//     const startLimitMin = getTotalMinutes(daySchedule.times[0].startTime || "00:00");
+//     const endLimitMin = getTotalMinutes(daySchedule.times[daySchedule.times.length - 1].endTime || "24:00");
+
+//     const startIdxLimit = Math.max(0, Math.floor(startLimitMin / 30));
+//     const endIdxLimit = Math.min(bitString.length, Math.ceil(endLimitMin / 30));
+
+//     let i = startIdxLimit;
+
+//     while (i < endIdxLimit) {
+//         const currentBit = bitString[i];
+//         let j = i;
+
+//         // 같은 비트가 연속되는 구간 찾기 (단, endIdxLimit을 넘지 않아야 함)
+//         while (j < endIdxLimit && bitString[j] === currentBit) { // TODO: 1시간 단위일 경우 조건문에 '&& j < i + 2' 추가
+//             j++;
+//         }
+
+//         // 시간 계산 (startIdx부터 endIdx까지 하나의 블록)
+//         const blockStartTotalMin = i * 30;
+//         const blockEndTotalMin = j * 30;
+
+//         const format = (totalMin) => {
+//             const h = Math.floor(totalMin / 60).toString().padStart(2, '0');
+//             const m = (totalMin % 60).toString().padStart(2, '0');
+//             return `${h}:${m}:00`;
+//         };
+
+//         newEvents.push({
+//             id: `${dateStr}-${i}`,
+//             start: `${dateStr}T${format(blockStartTotalMin)}`,
+//             end: `${dateStr}T${format(blockEndTotalMin)}`,
+//             backColor: currentBit === '1' ? '#E3F2FD' : '#F5F5FA', // 운영/마감에 따른 배경색 설정
+//             cssClass: currentBit === '1' ? 'event-open' : 'event-closed', // 운영/마감에 따른 클래스 설정
+
+//             tags: {
+//                 bitValue: currentBit,
+//                 startIdx: i,
+//                 endIdx: j,
+//                 date: dateStr
+//             }
+//         });
+
+//         // 다음 블록 시작점으로 이동
+//         i = j;
+//     }
+//     return newEvents;
+// }
+
 const parseHourBitToEvents = (daySchedule) => {
     if(!daySchedule || !daySchedule.hourBit) return [];
     if(daySchedule.isBusinessDay === false) return []; // 비운영일 경우 빈 배열 반환
@@ -74,52 +136,33 @@ const parseHourBitToEvents = (daySchedule) => {
     const newEvents = []; // 가공해서 담아줄 데이터
     const dateStr = daySchedule.date;
 
-    // 운영 시간 범위 계산
-    const startLimitMin = getTotalMinutes(daySchedule.startTime || "00:00");
-    const endLimitMin = getTotalMinutes(daySchedule.endTime || "24:00");
+    daySchedule.times.forEach((slot, idx) => {
+        const start = slot.startTime;
+        const end = slot.endTime;
+        const startIdx = Math.floor(getTotalMinutes(start) / 30);
+        const endIdx = Math.ceil(getTotalMinutes(end) / 30); // 추가
 
-    const startIdxLimit = Math.max(0, Math.floor(startLimitMin / 30));
-    const endIdxLimit = Math.min(bitString.length, Math.ceil(endLimitMin / 30));
-
-    let i = startIdxLimit;
-
-    while (i < endIdxLimit) {
-        const currentBit = bitString[i];
-        let j = i;
-
-        // 같은 비트가 연속되는 구간 찾기 (단, endIdxLimit을 넘지 않아야 함)
-        while (j < endIdxLimit && bitString[j] === currentBit) {
-            j++;
-        }
-
-        // 시간 계산 (startIdx부터 endIdx까지 하나의 블록)
-        const blockStartTotalMin = i * 30;
-        const blockEndTotalMin = j * 30;
-
-        const format = (totalMin) => {
-            const h = Math.floor(totalMin / 60).toString().padStart(2, '0');
-            const m = (totalMin % 60).toString().padStart(2, '0');
-            return `${h}:${m}:00`;
-        };
+        // 해당 times 구간의 비트들만 추출
+        const relevantBits = bitString.substring(startIdx, endIdx);
 
         newEvents.push({
-            id: `${dateStr}-${i}`,
-            start: `${dateStr}T${format(blockStartTotalMin)}`,
-            end: `${dateStr}T${format(blockEndTotalMin)}`,
-            backColor: currentBit === '1' ? '#E3F2FD' : '#F5F5FA', // 운영/마감에 따른 배경색 설정
-            cssClass: currentBit === '1' ? 'event-open' : 'event-closed', // 운영/마감에 따른 클래스 설정
-
+            id: `${dateStr}-${idx}`,
+            start: `${dateStr}T${start}:00`,
+            end: `${dateStr}T${end}:00`,
+            // times에 들어있는 구간은 운영 구간만 보내줌
+            backColor: '#E3F2FD', 
+            cssClass: 'event-open',
             tags: {
-                bitValue: currentBit,
-                startIdx: i,
-                endIdx: j,
-                date: dateStr
+                bitValue: '1',
+                startIdx: startIdx,
+                endIdx: endIdx,
+                date: dateStr,
+                startTime: start,
+                endTime: end,
+                bits: relevantBits,
             }
-        });
-
-        // 다음 블록 시작점으로 이동
-        i = j;
-    }
+        })
+    })
     return newEvents;
 }
 
@@ -191,24 +234,36 @@ const handelSetOperationModalOpen = () => {
     if (daySchedule) {
         modalStore.setOperationRuleModal.openModal({
             date: targetDate.value,
-            stock: daySchedule.stock,
+            stock: productStore.productScheduleInfo.reserveCnt, //daySchedule.stock,
             // 비트를 [{startTime, endTime}] 배열로 변환
-            times: bitToTimeRanges(daySchedule.hourBit) 
+            // 캘랜더영역 클릭하여 지정할때는 초기화
+            times: [{endTime: "", startTime: ""}], //JSON.parse(JSON.stringify(daySchedule.times))
+            isCalendarClick: 1, // 캘랙더 영역 클릭하여 설정 한다는 flag
         });
     }
 };
 
 // 현재 로드된 events 중 가장 빠른 시간(Hour)을 반환
+// const earliestStartHour = computed(() => {
+//     if (!events.value || events.value.length === 0) return 9; // 데이터 없으면 기본 8시
+
+//     const hours = events.value.map(event => {
+//         // event.start 형식: "2026-01-23T09:00:00"
+//         const timePart = event.start.split('T')[1]; 
+//         return parseInt(timePart.split(':')[0]);
+//     });
+
+//     return Math.min(...hours); // 가장 작은 시간 반환
+// });
 const earliestStartHour = computed(() => {
-    if (!events.value || events.value.length === 0) return 9; // 데이터 없으면 기본 8시
+    if (!productWeekScheduleDataList.value?.length) return 9;
 
-    const hours = events.value.map(event => {
-        // event.start 형식: "2026-01-23T09:00:00"
-        const timePart = event.start.split('T')[1]; 
-        return parseInt(timePart.split(':')[0]);
-    });
+    // 모든 날짜의 모든 times 구간 중 가장 이른 시간 추출
+    const allHours = productWeekScheduleDataList.value
+        .flatMap(day => day.times || [])
+        .map(slot => parseInt(slot.startTime.split(':')[0]));
 
-    return Math.min(...hours); // 가장 작은 시간 반환
+    return allHours.length > 0 ? Math.min(...allHours) : 9;
 });
 
 // 캘린더 설정
@@ -228,41 +283,100 @@ const calendarConfig = reactive({
     eventResizeHandling: "Disabled",
     
     onEventClick: handleEventClick,
+    cellDuration: hospitalStore.bookingTime === 60 ? 60 : 30,
+
+    onBeforeEventRender: (args) => {
+        const bits = args.data.tags.bits;
+        if (!bits) return;
+
+        const areas = [];
+        const bitCount = bits.length;
+        const step = hospitalStore.bookingTime === 60 ? 2 : 1;
+        // 비트 문자열을 돌며 '0'(마감)인 구간을 찾아 빗금 영역 추가
+        for (let i = 0; i < bitCount; i+= step) {
+            if (bits[i] === '0') {
+                areas.push({
+                    left: 0,
+                    width: '100%',
+                    height: '32px',
+                    top: (i / bitCount) * 100 + "%",
+                    bottom: 0,
+                    backColor: "#F9F9FA", // 마감 배경색
+                    cssClass: 'event-closed',
+                    html: "<div class='pattern'></div>"
+                });
+            }
+        }
+        args.data.areas = areas;
+    },
 });
 
 // 모달 내에서 편집할 해당 날짜의 전체 시간 리스트
+// const dayEvents = computed(() => {
+//     if (!selectedEvent.value || tempBitArray.value.length === 0) return [];
+    
+//     const daySchedule = productWeekScheduleDataList.value.find(day => day.date === targetDate.value);
+//     if (!daySchedule) return [];
+
+//     // const startTime = daySchedule.startTime || "00:00";
+//     // const endTime = daySchedule.endTime || "24:00";
+//     const startTime = daySchedule.times[0].startTime || "00:00";
+//     const endTime = daySchedule.times[daySchedule.times.length - 1] || "24:00";
+
+//     const getTotalMinutes = (timeStr) => {
+//         const [h, m] = timeStr.split(':').map(Number);
+//         return h * 60 + m;
+//     };
+
+//     const startLimit = getTotalMinutes(startTime);
+//     const endLimit = getTotalMinutes(endTime);
+//     const list = [];
+
+//     // 임시 배열(tempBitArray)을 기준으로 30분 단위 리스트 생성
+//     for (let i = 0; i < tempBitArray.value.length; i++) { // TODO: i += 2로 1시간 단위로 바꿀 수 있음.
+//         const totalMinutes = i * 30;
+//         if (totalMinutes >= startLimit && totalMinutes < endLimit) {
+//             const hour = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+//             const min = (totalMinutes % 60).toString().padStart(2, '0');
+            
+//             list.push({
+//                 id: i,
+//                 timeText: `${hour}:${min}`,
+//                 bitValue: tempBitArray.value[i] // 임시 상태값
+//             });
+//         }
+//     }
+//     return list;
+// });
 const dayEvents = computed(() => {
     if (!selectedEvent.value || tempBitArray.value.length === 0) return [];
     
     const daySchedule = productWeekScheduleDataList.value.find(day => day.date === targetDate.value);
-    if (!daySchedule) return [];
+    if (!daySchedule?.times?.length) return [];
 
-    const startTime = daySchedule.startTime || "00:00";
-    const endTime = daySchedule.endTime || "24:00";
-
-    const getTotalMinutes = (timeStr) => {
-        const [h, m] = timeStr.split(':').map(Number);
-        return h * 60 + m;
-    };
-
-    const startLimit = getTotalMinutes(startTime);
-    const endLimit = getTotalMinutes(endTime);
     const list = [];
+    const addedIndices = new Set(); 
+    const interval = hospitalStore.bookingTime === 60 ? 2 : 1; // 60분이면 2칸(1시간)씩 점프
 
-    // 임시 배열(tempBitArray)을 기준으로 30분 단위 리스트 생성
-    for (let i = 0; i < tempBitArray.value.length; i++) {
-        const totalMinutes = i * 30;
-        if (totalMinutes >= startLimit && totalMinutes < endLimit) {
-            const hour = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
-            const min = (totalMinutes % 60).toString().padStart(2, '0');
-            
-            list.push({
-                id: i,
-                timeText: `${hour}:${min}`,
-                bitValue: tempBitArray.value[i] // 임시 상태값
-            });
+    daySchedule.times.forEach(slot => {
+        const startMin = getTotalMinutes(slot.startTime);
+        const endMin = getTotalMinutes(slot.endTime);
+
+        const startIdx = Math.floor(startMin / 30);
+        const endIdx = Math.ceil(endMin / 30);
+
+        for (let i = startIdx; i < endIdx; i += interval) {
+            if (!addedIndices.has(i)) {
+                list.push({
+                    id: i,
+                    timeText: formatTime(i),
+                    bitValue: tempBitArray.value[i] // 현재 임시 수정 중인 비트값
+                });
+                addedIndices.add(i);
+            }
         }
-    }
+    });
+
     return list;
 });
 
@@ -276,7 +390,13 @@ const modalTitle = computed(() => {
 
 // 상품시간별 운영/미운영 개별 토글 버튼 이벤트
 const handleToggle = (index, isChecked) => {
-    tempBitArray.value[index] = isChecked ? '1' : '0';
+    const bit = isChecked ? '1' : '0';
+    tempBitArray.value[index] = bit;
+
+    // bookingTime이 60이면 현재 인덱스의 다음 30분 비트도 함께 변경
+    if (hospitalStore.bookingTime === 60 && index + 1 < tempBitArray.value.length) {
+        tempBitArray.value[index + 1] = bit;
+    }
 };
 
 // 상품시간별 운영/마감 API 호출 및 상태 업데이트
@@ -318,27 +438,59 @@ const formatTime = (index) => {
 };
 
 // 전체 가능 / 전체 마감 기능
+// const setAllStatus = (statusBit) => {
+//     const daySchedule = productWeekScheduleDataList.value.find(day => day.date === targetDate.value);
+//     const startIdx = Math.floor(getTotalMinutes(daySchedule.startTime) / 30);
+//     const endIdx = Math.ceil(getTotalMinutes(daySchedule.endTime) / 30);
+
+//     for (let i = startIdx; i < endIdx; i++) {
+//         tempBitArray.value[i] = statusBit;
+//     }
+// };
 const setAllStatus = (statusBit) => {
     const daySchedule = productWeekScheduleDataList.value.find(day => day.date === targetDate.value);
-    const startIdx = Math.floor(getTotalMinutes(daySchedule.startTime) / 30);
-    const endIdx = Math.ceil(getTotalMinutes(daySchedule.endTime) / 30);
+    if (!daySchedule?.times?.length) return;
 
-    for (let i = startIdx; i < endIdx; i++) {
-        tempBitArray.value[i] = statusBit;
-    }
+    // times 리스트에 정의된 구간에 대해 비트 적용
+    daySchedule.times.forEach(slot => {
+        const startIdx = Math.floor(getTotalMinutes(slot.startTime) / 30);
+        const endIdx = Math.ceil(getTotalMinutes(slot.endTime) / 30);
+
+        for (let i = startIdx; i < endIdx; i++) {
+            tempBitArray.value[i] = statusBit;
+        }
+    });
 };
 
 // 시간별 운영 / 마감 모달창 저장 버튼
+// const handleSaveSchedule = async () => {
+//     const daySchedule = productWeekScheduleDataList.value.find(day => day.date === targetDate.value);
+//     if (!daySchedule) return;
+
+//     await updateScheduleBit(
+//         props.savedItemId, 
+//         targetDate.value, 
+//         tempBitArray.value, 
+//         daySchedule.startTime, 
+//         daySchedule.endTime
+//     );
+
+//     modalStore.setDateSettingModal.closeModal();
+// };
 const handleSaveSchedule = async () => {
     const daySchedule = productWeekScheduleDataList.value.find(day => day.date === targetDate.value);
-    if (!daySchedule) return;
+    if (!daySchedule?.times?.length) return;
+
+    // 리스트의 첫 번째와 마지막 시간 추출
+    const firstStart = daySchedule.times[0].startTime;
+    const lastEnd = daySchedule.times[daySchedule.times.length - 1].endTime;
 
     await updateScheduleBit(
         props.savedItemId, 
         targetDate.value, 
         tempBitArray.value, 
-        daySchedule.startTime, 
-        daySchedule.endTime
+        firstStart, // 기존 단일 값 대신 리스트의 시작값 전달
+        lastEnd     // 기존 단일 값 대신 리스트의 끝값 전달
     );
 
     modalStore.setDateSettingModal.closeModal();
@@ -376,8 +528,10 @@ const scrollToWorkTime = async() => {
 
     if (calendarEl) {
         // 가장 빠른 시간(earliestStartHour) 기준으로 위치 계산
-        // cellHeight(32px) * 2 = 1시간(64px)
-        const scrollTarget = earliestStartHour.value * (calendarConfig.cellHeight * 2);
+        // 예약 단위(bookingTime)가 60이면 1시간당 1셀, 30이면 1시간당 2셀
+        const cellsPerHour = Number(hospitalStore.bookingTime) === 60 ? 1 : 2;
+
+        const scrollTarget = earliestStartHour.value * (calendarConfig.cellHeight * cellsPerHour);
         calendarEl.scrollTop = scrollTarget;
     }
 };
@@ -553,11 +707,38 @@ onMounted(() => {
         display: inline-block;
         transform: translateY(-1px);
     }
-    :deep(.calendar_default_event) {width: calc(100% + 4px) !important;}
-    :deep(.calendar_default_event_inner) {
-        border: none;
+    :deep(.calendar_default_event) {
+        width: calc(100% + 4px) !important;
+        // 1. 전체 이벤트 영역에 마우스를 올렸을 때
+        &:hover {
+            // 본체 배경색 변경
+            .calendar_default_event_inner {
+                opacity: 0.8;
+                background-color: $primary-100 !important;
+            }
 
-        &:hover {background-color: $primary-100 !important;}
+            // 마감 영역(형제들) 배경색 변경
+            .event-closed {
+                opacity: 0.8;
+                background-color: $primary-100 !important;
+            }
+        }
+
+        // 2. 기본 상태에서의 스타일 (선택 사항)
+        .calendar_default_event_inner {
+            border: none;
+        }
+
+        .event-closed {
+            pointer-events: none; 
+            
+            .pattern {
+                width: 100%;
+                height: 100%;
+                background-image: url('@/assets/images/Pattern.png');
+                background-repeat: repeat;
+            }
+        }
     }
     :deep(.calendar_default_cell_inner) {
         background-color: $gray-00;
@@ -566,18 +747,7 @@ onMounted(() => {
     :deep(.calendar_default_event.event-open) {
         opacity: 0.9;
         background-color: $primary-50;
-    }
-    // 마감 스타일
-    :deep(.calendar_default_event.event-closed) {
-        background-color: $gray-50;
-        opacity: 0.83;
-        .calendar_default_event_inner {
-            background: url('@/assets/images/Pattern.png') repeat !important;
-
-            &:hover {
-                background-color: $gray-200 !important;
-            }
-        }
+        border-bottom: 1px solid $gray-200;
     }
     :deep(.calendar_default_event_bar) {display: none;} // 왼쪽 색상바 안보이도록
     :deep(.calendar_default_shadow) {display: none;}

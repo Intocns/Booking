@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, TransitionGroup } from 'vue';
 import icSelectBoxOpenClosed from '@/assets/icons/ic_selectbox_OpenClosed.svg';
+import BottomSheet from './Mobile/BottomSheet.vue';
 
 const props = defineProps({
     modelValue: { type: [String, Number], default: '' }, // 단일 값 (문자열 또는 숫자)
@@ -9,6 +10,8 @@ const props = defineProps({
     disabled: Boolean,
     caption: { type: String, default: '' },
     selectWidth: {type: [String, Number], default: 'auto'},
+    selectHeight: {type: String, default: '32px'},
+    isMobile: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -57,6 +60,8 @@ const selectOption = (value) => {
 
 /* 외부 클릭 → 닫기 */
 const handleClickOutside = (e) => {
+    if(props.isMobile) return;
+
     if (wrapper.value && !wrapper.value.contains(e.target)) {
         isOpen.value = false;
     }
@@ -106,6 +111,8 @@ const updatePosition = async () => {
 
 // 스크롤 시 닫기
 const handleScroll = (e) => {
+    if(props.isMobile) return
+
     if (dropdownRef.value && dropdownRef.value.contains(e.target)) {
         return;
     }
@@ -139,6 +146,7 @@ onBeforeUnmount(() => {
             :class="{ open: isOpen }" 
             @click="toggle" 
             ref="triggerRef"
+            :style="{ height: selectHeight }"
         >
             <span 
                 class="select__text"
@@ -157,7 +165,7 @@ onBeforeUnmount(() => {
         <teleport to='body'>
             <div 
                 class="select__dropdown teleported-dropdown" 
-                v-if="isOpen" 
+                v-if="isOpen && !isMobile" 
                 ref="dropdownRef" 
                 :style="dropdownStyle"
             >
@@ -173,6 +181,22 @@ onBeforeUnmount(() => {
                     <span class="label body-m">{{ opt.label }}</span>
                 </div>
             </div>
+
+            <BottomSheet v-if="isMobile" v-model="isOpen">
+                <template #content>
+                    <div 
+                        v-for="(opt, index) in options" 
+                        :key="opt.value"
+                        :ref="el => { if (el) optionRefs[index] = el }"
+                        class="select__option"
+                        :class="{ selected: modelValue === opt.value }"
+                        @click.stop="selectOption(opt.value)"
+                        :title="opt.label"
+                    >
+                        <span class="label body-m">{{ opt.label }}</span>
+                    </div>
+                </template>
+            </BottomSheet>
         </teleport>
     </div>
 </template>
@@ -243,7 +267,7 @@ onBeforeUnmount(() => {
         padding: 5px;
         max-height: 220px;
         overflow-y: auto;
-        z-index: 100;
+        z-index: 9999;
     }
 
     &__option {

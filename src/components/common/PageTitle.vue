@@ -57,7 +57,7 @@ const props = defineProps({
 
         <!-- desc text -->
         <div v-if="descText" class="page-header__desc">
-            <span class="body-l">{{ descText }}</span>
+            <span class="body-m">{{ descText }}</span>
         </div>
 
         <!-- Helper -->
@@ -137,6 +137,9 @@ const props = defineProps({
         }
 
         &__desc {
+            span {
+                white-space: pre-wrap;
+            }
             color: $gray-700;
         }
 
