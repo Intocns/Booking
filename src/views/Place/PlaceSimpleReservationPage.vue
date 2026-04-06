@@ -426,6 +426,7 @@ watch([events, columns, currentDate], ([newEvents, newCols, newDate]) => {
             startDate: format(newDate, 'yyyy-MM-dd'),
             events: newEvents,
             columns: newCols,
+            cellDuration: hospitalStore.bookingTime === 60 ? 60 : 30,
         });
     }
 }, { deep: true });
