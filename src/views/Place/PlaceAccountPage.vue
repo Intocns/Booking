@@ -38,6 +38,7 @@ import { uploadImage } from '@/utils/fileUpload';
 import draggable from 'vuedraggable';
 import { useHospitalStore } from '@/stores/hospitalStore';
 import ModalSimple from '@/components/common/ModalSimple.vue';
+import { EXTERNAL_LINKS } from '@/constants';
 
 // COCODE,HOS_IDX
 const hospitalStore = useHospitalStore();
@@ -68,7 +69,8 @@ function onExistingAccountClick() {
 }
 
 const handelOpenAccountGuideModal = () => {
-    modalStore.naverAccountGuideModal.openModal();
+    // modalStore.naverAccountGuideModal.openModal();
+    window.open(`${EXTERNAL_LINKS.NOTICE_DET}/38`);
 }
 
 // GET /api/linkbusiness/{cocode} 응답으로 채우는 플레이스 상세 필드
@@ -664,13 +666,13 @@ onUnmounted(() => {
                     <h3 class="heading-s">
                         네이버 플레이스 등록 정보
                     </h3>
-                    <div v-if="!hasNaverAccount" class="d-flex gap-4 align-start">
+                    <!-- <div v-if="!hasNaverAccount" class="d-flex gap-4 align-start">
                         <img :src="icInfoBlue" alt="아이콘">
                         <p class="body-s text-blue">
                             아래 입력한 정보는 신규 연동 시 네이버 플레이스 정보로 저장됩니다. (기존 계정 연동시에는 사용되지 않습니다.)<br>
                             정보 입력이 완료되면 상단의 네이버 및 네이버 스마트 플레이스 비즈니스 ID를 입력하여 연동을 진행해주세요.
                         </p>
-                    </div>
+                    </div> -->
                 </div>
                 <ul class="form-container">
                     <li class="form-item">
