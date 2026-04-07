@@ -236,7 +236,7 @@ const handleTouchMove = (e) => {
     // 달력 접기 (위로 밀 때)
     if (!isFolded.value && diff > 30) {
         isFolded.value = true;
-        if (e.cancelable) e.preventDefault();
+        // if (e.cancelable) e.preventDefault();
         return;
     }
 
