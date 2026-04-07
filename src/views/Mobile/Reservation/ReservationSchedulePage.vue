@@ -481,10 +481,14 @@ onMounted(async() => {
 })
 
 onUnmounted(() => {
-    document.documentElement.style.overscrollBehaviorY = 'auto';
-    document.body.style.overflow = 'auto';
-    document.body.style.touchAction = 'auto';
-})
+    // 모든 스크롤 관련 강제 설정을 초기화
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.overscrollBehaviorY = '';
+    
+    document.body.style.overflow = '';
+    document.body.style.touchAction = '';
+    document.body.style.overscrollBehaviorY = '';
+});
 </script>
 
 <template>
