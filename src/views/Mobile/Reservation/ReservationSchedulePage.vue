@@ -244,22 +244,28 @@ const handleTouchMove = (e) => {
     const diff = touchStartY - touchMoveY; // 양수: 위로 스크롤(접기), 음수: 아래로 스크롤(펴기)
     const listEl = listAreaRef.value;
 
-    // 1. 달력이 펴져 있는 상태에서 위로 밀 때 (diff > 0)
-    if (!isFolded.value && diff > 50) {
-        isFolded.value = true;
-        touchStartY = touchMoveY; // 연속 동작 방지를 위해 기준점 갱신
-        return;
-    }
+    // 현재 리스트의 최상단 위치 확인 (내부 스크롤 기준)
+    const isAtTop = listEl ? listEl.scrollTop <= 0 : window.scrollY <= 0;
 
-    // 2. 달력이 접혀 있는 상태에서 아래로 당길 때 (diff < 0)
-    // 리스트 영역이 최상단(scrollTop === 0)일 때만 달력을 펴기
     if (isFolded.value && diff < -50) {
-        if (listEl && listEl.scrollTop <= 0) {
-            // 기본 스크롤 동작을 막고 달력 펴기
+        // 1. 리스트가 완전히 최상단(0)에 도달했을 때만!
+        if (isAtTop) {
+            // 브라우저 새로고침(Pull-to-refresh) 방지
             if (e.cancelable) e.preventDefault();
+            
             isFolded.value = false;
             touchStartY = touchMoveY;
+            return;
         }
+        // 2. 리스트 중간에서 위로 스크롤 중이라면 preventDefault를 하지 않음 
+        // -> 자연스럽게 리스트 윗부분으로 스크롤됨
+    }
+
+    // --- [달력 접기 조건] ---
+    if (!isFolded.value && diff > 50) {
+        if (e.cancelable) e.preventDefault();
+        isFolded.value = true;
+        touchStartY = touchMoveY;
     }
 };
 // 위로 밀어낼 거리 계산
@@ -833,6 +839,8 @@ onUnmounted(() => {
         flex: 1;
         /* 리스트가 확장되었을 때 끝까지 올린 후 더 당기면 새로고침 되는 현상 방지 */
         overscroll-behavior-y: contain;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         display: flex;
         flex-direction: column;
     }
