@@ -229,28 +229,36 @@ const handleTouchStart = (e) => {
 const handleTouchMove = (e) => {
     const touchMoveY = e.touches[0].clientY;
     const diff = touchStartY - touchMoveY;
-    
-    // 스크롤 위치를 확인
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
 
-    // 달력 접기 (위로 밀 때)
+    // 1. 달력이 펼쳐져 있을 때: 무조건 스크롤/새로고침 방지 (접기만 가능)
     if (!isFolded.value) {
-        // 달력이 펼쳐진 상태에서는 브라우저 스크롤 금지 (제스처만 감지)
         if (e.cancelable) e.preventDefault();
-        
-        const touchMoveY = e.touches[0].clientY;
-        const diff = touchStartY - touchMoveY;
-        
         if (diff > 30) {
             isFolded.value = true;
         }
         return;
     }
 
-    if (isFolded.value && scrollTop <= 0 && diff < -50) {
-        // 페이지 최상단(scrollTop <= 0)에서만 아래로 당겼을 때 달력 펼침
-        if (e.cancelable) e.preventDefault();
-        isFolded.value = false;
+    // 2. 달력이 접혀 있을 때 (isFolded === true)
+    if (isFolded.value) {
+        // 페이지가 최상단에 있을 때
+        if (scrollTop <= 0) {
+            // 아래로 당기는 중 (새로고침이 발생하려는 찰나)
+            if (diff < 0) {
+                // 이 동작을 막아야 새로고침이 안 뜹니다.
+                if (e.cancelable) e.preventDefault();
+                
+                // 충분히 당겼다면 달력을 다시 펼쳐줍니다.
+                if (diff < -50) {
+                    isFolded.value = false;
+                }
+            }
+            // 위로 밀 때는(diff > 0) 아무것도 하지 않음 -> 브라우저 기본 스크롤 시작
+        }
+        
+        // 페이지가 이미 스크롤되어 내려가 있다면(scrollTop > 0)
+        // 아무것도 막지 않음 -> 자유롭게 리스트 스크롤 가능
     }
 };
 // 위로 밀어낼 거리 계산
@@ -823,7 +831,7 @@ onUnmounted(() => {
     background-color: #fff;
     transition: all 0.3s ease;
 
-    // touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
+    touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
 
     &.expanded {
         min-height: 150px;
