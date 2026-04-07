@@ -265,7 +265,7 @@ const handleTouchMove = (e) => {
 // 위로 밀어낼 거리 계산
 const translateY = computed(() => {
     if (!isFolded.value) return '0px';
-    const weekHeight = 50;
+    const weekHeight = 45;
     return `-${getWeekIndex() * weekHeight}px`;
 });
 
@@ -689,6 +689,7 @@ onUnmounted(() => {
 }
 .custom-calendar-section {
     padding: 0 20px;
+    padding-bottom: 5px;
     .custom-calendar-header {
         width:100;
         display: flex;
@@ -823,7 +824,7 @@ onUnmounted(() => {
     background-color: #fff;
     transition: all 0.3s ease;
 
-    // touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
+    touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
 
     &.expanded {
         min-height: 0;
