@@ -228,13 +228,16 @@ const handleTouchStart = (e) => {
 // 터치 이벤트
 const handleTouchMove = (e) => {
     const touchMoveY = e.touches[0].clientY;
-    const diff = touchStartY - touchMoveY;
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const diff = touchStartY - touchMoveY; // 양수: 위로 올림(접기), 음수: 아래로 당김(펴기)
+    
+    // 현재 브라우저의 스크롤 위치
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
 
-    // 1. 달력이 펼쳐져 있을 때: 무조건 스크롤/새로고침 방지 (접기만 가능)
+    // 1. 달력이 펼쳐져 있을 때 (접기 제스처 감지)
     if (!isFolded.value) {
-        if (e.cancelable) e.preventDefault();
-        if (diff > 30) {
+        if (e.cancelable) e.preventDefault(); // 펼쳐진 상태에선 새로고침/스크롤 완전 차단
+        
+        if (diff > 30) { 
             isFolded.value = true;
         }
         return;
@@ -242,23 +245,21 @@ const handleTouchMove = (e) => {
 
     // 2. 달력이 접혀 있을 때 (isFolded === true)
     if (isFolded.value) {
-        // 페이지가 최상단에 있을 때
-        if (scrollTop <= 0) {
-            // 아래로 당기는 중 (새로고침이 발생하려는 찰나)
-            if (diff < 0) {
-                // 이 동작을 막아야 새로고침이 안 뜹니다.
-                if (e.cancelable) e.preventDefault();
-                
-                // 충분히 당겼다면 달력을 다시 펼쳐줍니다.
-                if (diff < -50) {
-                    isFolded.value = false;
-                }
+        /* 핵심: 사용자가 리스트를 끝까지 올려서 scrollTop이 0이 되었을 때,
+           그 상태에서 '아래로 더 당기는(diff < 0)' 동작을 감지합니다.
+        */
+        if (scrollTop <= 0 && diff < 0) {
+            // 이 조건에서만 브라우저의 '당겨서 새로고침'을 막고 달력을 폅니다.
+            if (e.cancelable) e.preventDefault();
+
+            // -50만큼 충분히 당겼을 때 달력 펼침
+            if (diff < -50) {
+                isFolded.value = false;
             }
-            // 위로 밀 때는(diff > 0) 아무것도 하지 않음 -> 브라우저 기본 스크롤 시작
         }
         
-        // 페이지가 이미 스크롤되어 내려가 있다면(scrollTop > 0)
-        // 아무것도 막지 않음 -> 자유롭게 리스트 스크롤 가능
+        // scrollTop > 0 이거나 위로 밀고 있다면(diff > 0) 
+        // preventDefault를 하지 않으므로 리스트 스크롤이 자유롭게 일어납니다.
     }
 };
 // 위로 밀어낼 거리 계산
