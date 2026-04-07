@@ -228,26 +228,25 @@ const handleTouchStart = (e) => {
 // 터치 이벤트
 const handleTouchMove = (e) => {
     const touchMoveY = e.touches[0].clientY;
-    const diff = touchStartY - touchMoveY; // 양수: 위로 밀기(접기), 음수: 아래로 당기기(펴기)
-    const listEl = listAreaRef.value;
+    const diff = touchStartY - touchMoveY;
+    
+    // 스크롤 위치를 확인
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
 
-    if (!listEl) return;
-
-    // 1. 달력이 펼쳐진 상태에서 위로 밀 때 -> 달력 접기
+    // 달력 접기 (위로 밀 때)
     if (!isFolded.value && diff > 30) {
         isFolded.value = true;
-        // 접히는 애니메이션 중 스크롤 간섭 방지
         if (e.cancelable) e.preventDefault();
+        return;
     }
 
-    // 2. 달력이 접힌(리스트 확장) 상태에서 아래로 당길 때
-    if (isFolded.value && diff < -30) {
-        // 중요: 리스트의 스크롤 위치가 최상단(0)일 때만 달력을 펼침
-        if (listEl.scrollTop <= 0) {
+    // 달력 펼치기 (아래로 당길 때)
+    if (scrollTop <= 0) {
+        if (e.cancelable) e.preventDefault();
+        if (isFolded.value && diff < -30) {
+            // 페이지가 맨 위에 닿아있을 때 
             isFolded.value = false;
-            if (e.cancelable) e.preventDefault();
         }
-        // scrollTop > 0 이라면 리스트 내부 스크롤이 우선이므로 아무것도 하지 않음 (달력 유지)
     }
 };
 // 위로 밀어낼 거리 계산
@@ -808,6 +807,7 @@ onUnmounted(() => {
     position: relative;
     width: 100%;
     // height: 150px;
+    min-height: 150px;
     border-top: 1px solid $gray-200;
     background-color: #fff;
     transition: all 0.3s ease;
@@ -815,12 +815,10 @@ onUnmounted(() => {
     touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
 
     &.expanded {
-        min-height: 0;
+        min-height: 150px;
         transform: translateY(-0px); // 캘린더가 가려진 만큼 위로 이동
         // height: calc(100vh - 150px); // 화면 전체를 차지하도록 확장
         flex: 1;
-        /* 리스트가 확장되었을 때 끝까지 올린 후 더 당기면 새로고침 되는 현상 방지 */
-        overscroll-behavior-y: contain;
         display: flex;
         flex-direction: column;
     }
@@ -898,7 +896,6 @@ onUnmounted(() => {
     flex-direction: column;
     padding: 0 20px;
     gap: 8px;
-    min-height: 150px;
 
     .res-item {
         position: relative;
