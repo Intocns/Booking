@@ -806,7 +806,7 @@ onUnmounted(() => {
 .list-area {
     position: relative;
     width: 100%;
-    // height: 150px;
+    flex:1;
     min-height: 150px;
     border-top: 1px solid $gray-200;
     background-color: #fff;
@@ -817,7 +817,7 @@ onUnmounted(() => {
     &.expanded {
         min-height: 150px;
         transform: translateY(-0px); // 캘린더가 가려진 만큼 위로 이동
-        // height: calc(100vh - 150px); // 화면 전체를 차지하도록 확장
+        height: calc(100dvh - 405px); // 화면 전체를 차지하도록 확장
         flex: 1;
         display: flex;
         flex-direction: column;
@@ -896,6 +896,7 @@ onUnmounted(() => {
     flex-direction: column;
     padding: 0 20px;
     gap: 8px;
+    overflow-y: auto;
 
     .res-item {
         position: relative;
