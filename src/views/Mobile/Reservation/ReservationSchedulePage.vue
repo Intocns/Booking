@@ -223,43 +223,31 @@ let touchStartY = 0;
 let isTrackable = false; // 터치 추적 시작(Flag)
 // 터치 이벤트
 const handleTouchStart = (e) => {
-   // 리스트 영역(.list-area) 기준
-    // const rect = e.currentTarget.getBoundingClientRect();
-    // const touchY = e.touches[0].clientY;
-
-    // const listStartPos = rect.top; 
-    // const deadZone = 220; // 상단 220px 이내
-
-    // if (touchY >= listStartPos && touchY <= listStartPos + deadZone) {
-    //     isTrackable = true;
-    //     touchStartY = touchY;
-    // } else {
-    //     isTrackable = false;
-    // }
     touchStartY = e.touches[0].clientY;
 };
 // 터치 이벤트
 const handleTouchMove = (e) => {
     const touchMoveY = e.touches[0].clientY;
-    const diff = touchStartY - touchMoveY; // 양수: 위로 스크롤(접기), 음수: 아래로 스크롤(펴기)
+    const diff = touchStartY - touchMoveY; // 양수: 위로 밀기(접기), 음수: 아래로 당기기(펴기)
     const listEl = listAreaRef.value;
 
-    // 1. 달력이 펴져 있는 상태에서 위로 밀 때 (diff > 0)
-    if (!isFolded.value && diff > 50) {
+    if (!listEl) return;
+
+    // 1. 달력이 펼쳐진 상태에서 위로 밀 때 -> 달력 접기
+    if (!isFolded.value && diff > 30) {
         isFolded.value = true;
-        touchStartY = touchMoveY; // 연속 동작 방지를 위해 기준점 갱신
-        return;
+        // 접히는 애니메이션 중 스크롤 간섭 방지
+        if (e.cancelable) e.preventDefault();
     }
 
-    // 2. 달력이 접혀 있는 상태에서 아래로 당길 때 (diff < 0)
-    // 리스트 영역이 최상단(scrollTop === 0)일 때만 달력을 펴기
-    if (isFolded.value && diff < -50) {
-        if (listEl && listEl.scrollTop <= 0) {
-            // 기본 스크롤 동작을 막고 달력 펴기
-            if (e.cancelable) e.preventDefault();
+    // 2. 달력이 접힌(리스트 확장) 상태에서 아래로 당길 때
+    if (isFolded.value && diff < -30) {
+        // 중요: 리스트의 스크롤 위치가 최상단(0)일 때만 달력을 펼침
+        if (listEl.scrollTop <= 0) {
             isFolded.value = false;
-            touchStartY = touchMoveY;
+            if (e.cancelable) e.preventDefault();
         }
+        // scrollTop > 0 이라면 리스트 내부 스크롤이 우선이므로 아무것도 하지 않음 (달력 유지)
     }
 };
 // 위로 밀어낼 거리 계산
@@ -533,7 +521,7 @@ onUnmounted(() => {
 
             <div
                 @touchstart="handleTouchStart"
-                @touchmove="handleTouchMove"
+                @touchmove.prevent="handleTouchMove"
             >
                 <div class="custom-calendar-section">
                     <div class="custom-calendar-header">
