@@ -234,10 +234,16 @@ const handleTouchMove = (e) => {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
 
     // 달력 접기 (위로 밀 때)
-    if (!isFolded.value && diff > 30) {
-        isFolded.value = true;
-        // if (e.cancelable) e.preventDefault();
-        return;
+    if (!isFolded.value) {
+        // 달력이 펼쳐진 상태에서는 브라우저 스크롤 금지 (제스처만 감지)
+        if (e.cancelable) e.preventDefault();
+        
+        const touchMoveY = e.touches[0].clientY;
+        const diff = touchStartY - touchMoveY;
+        
+        if (diff > 30) {
+            isFolded.value = true;
+        }
     }
 
     // 달력 펼치기 (아래로 당길 때)
@@ -386,15 +392,22 @@ const setToday = () => {
 
 const listAreaRef = ref(null);
 // 접힙 상태 감지
+// watch 로직 수정
 watch(isFolded, (newVal) => {
     if (newVal) {
+        // 달력이 접혔을 때: 리스트가 길어지므로 스크롤을 허용해야 함
         document.body.style.overflow = 'auto';
-        document.body.style.touchAction = 'auto';
+        document.body.style.touchAction = 'auto'; 
+        // iOS 등에서 터치 액션이 씹히는 경우 'pan-y'로 설정
+        document.documentElement.style.overflow = 'auto';
     } else {
+        // 달력이 펼쳐졌을 때: 캘린더 안에서의 터치 제스처를 위해 스크롤 방지
         document.body.style.overflow = 'hidden';
         document.body.style.touchAction = 'none';
+        document.documentElement.style.overflow = 'hidden';
+        window.scrollTo(0, 0); // 상단으로 고정
     }
-});
+}, { immediate: true });
 
 const closeReserveInfoModal = () => {
     modalStore.reserveInfoModal.closeModal()
@@ -806,7 +819,7 @@ onUnmounted(() => {
 .list-area {
     position: relative;
     width: 100%;
-    flex:1;
+    // height: 150px;
     min-height: 150px;
     border-top: 1px solid $gray-200;
     background-color: #fff;
@@ -817,10 +830,7 @@ onUnmounted(() => {
     &.expanded {
         min-height: 150px;
         transform: translateY(-0px); // 캘린더가 가려진 만큼 위로 이동
-        height: calc(100dvh - 405px); // 화면 전체를 차지하도록 확장
-        flex: 1;
-        display: flex;
-        flex-direction: column;
+        // height: calc(100vh - 150px); // 화면 전체를 차지하도록 확장
     }
     
     .handle {
@@ -896,7 +906,6 @@ onUnmounted(() => {
     flex-direction: column;
     padding: 0 20px;
     gap: 8px;
-    overflow-y: auto;
 
     .res-item {
         position: relative;
