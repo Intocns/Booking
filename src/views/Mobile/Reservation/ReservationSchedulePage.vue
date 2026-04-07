@@ -224,41 +224,63 @@ let isTrackable = false; // 터치 추적 시작(Flag)
 // 터치 이벤트
 const handleTouchStart = (e) => {
    // 리스트 영역(.list-area) 기준
-    const rect = e.currentTarget.getBoundingClientRect();
-    const touchY = e.touches[0].clientY;
+    // const rect = e.currentTarget.getBoundingClientRect();
+    // const touchY = e.touches[0].clientY;
 
-    const listStartPos = rect.top; 
-    const deadZone = 220; // 상단 220px 이내
+    // const listStartPos = rect.top; 
+    // const deadZone = 220; // 상단 220px 이내
 
-    if (touchY >= listStartPos && touchY <= listStartPos + deadZone) {
-        isTrackable = true;
-        touchStartY = touchY;
-    } else {
-        isTrackable = false;
-    }
+    // if (touchY >= listStartPos && touchY <= listStartPos + deadZone) {
+    //     isTrackable = true;
+    //     touchStartY = touchY;
+    // } else {
+    //     isTrackable = false;
+    // }
+    touchStartY = e.touches[0].clientY;
 };
 // 터치 이벤트
 const handleTouchMove = (e) => {
-    if (!isTrackable) return;
+    // if (!isTrackable) return;
 
+    // const touchMoveY = e.touches[0].clientY;
+    // const diff = touchStartY - touchMoveY;
+
+    // // 아주 미세한 움직임은 스크롤로 간주하고 무시 (임계값 설정)
+    // if (Math.abs(diff) < 10) return;
+
+    // // 접기/펴기 동작이 확실할 때만 기본 스크롤 차단
+    // if (e.cancelable) {
+    //     e.preventDefault();
+    // }
+
+    // if (diff > 50 && !isFolded.value) { 
+    //     isFolded.value = true;
+    //     isTrackable = false;
+    // } else if (diff < -50 && isFolded.value) { 
+    //     // 리스트의 스크롤 위치가 최상단(scrollTop === 0)일 때만 달력을 펼치도록 조건 추가 가능
+    //     isFolded.value = false;
+    //     isTrackable = false;
+    // }
     const touchMoveY = e.touches[0].clientY;
-    const diff = touchStartY - touchMoveY;
+    const diff = touchStartY - touchMoveY; // 양수: 위로 스크롤(접기), 음수: 아래로 스크롤(펴기)
+    const listEl = listAreaRef.value;
 
-    // 아주 미세한 움직임은 스크롤로 간주하고 무시 (임계값 설정)
-    if (Math.abs(diff) < 10) return;
-
-    // 접기/펴기 동작이 확실할 때만 기본 스크롤 차단
-    if (e.cancelable) {
-        e.preventDefault();
+    // 1. 달력이 펴져 있는 상태에서 위로 밀 때 (diff > 0)
+    if (!isFolded.value && diff > 50) {
+        isFolded.value = true;
+        touchStartY = touchMoveY; // 연속 동작 방지를 위해 기준점 갱신
+        return;
     }
 
-    if (diff > 50 && !isFolded.value) { 
-        isFolded.value = true;
-        isTrackable = false;
-    } else if (diff < -50 && isFolded.value) { 
-        // 리스트의 스크롤 위치가 최상단(scrollTop === 0)일 때만 달력을 펼치도록 조건 추가 가능
-        isFolded.value = false;
-        isTrackable = false;
+    // 2. 달력이 접혀 있는 상태에서 아래로 당길 때 (diff < 0)
+    // 리스트 영역이 최상단(scrollTop === 0)일 때만 달력을 펴기
+    if (isFolded.value && diff < -50) {
+        if (listEl && listEl.scrollTop <= 0) {
+            // 기본 스크롤 동작을 막고 달력 펴기
+            if (e.cancelable) e.preventDefault();
+            isFolded.value = false;
+            touchStartY = touchMoveY;
+        }
     }
 };
 // 위로 밀어낼 거리 계산
@@ -530,81 +552,84 @@ onUnmounted(() => {
             </div>
 
 
-            <div class="custom-calendar-section">
-                <div class="custom-calendar-header">
-                    <div class="header-cell sun">일</div>
-                    <div class="header-cell">월</div>
-                    <div class="header-cell">화</div>
-                    <div class="header-cell">수</div>
-                    <div class="header-cell">목</div>
-                    <div class="header-cell">금</div>
-                    <div class="header-cell">토</div>
-                </div>
-    
-                <div :class="['calendar-wrapper', { 'folded': isFolded }]">
-                    <div class="calendar-content">
-                        <DayPilotMonth :config="config" ref="calendarRef" />
-                    </div>
-                </div>
-            </div>
-        
-            <!-- 리스트 영역 -->
-            <div 
-                class="list-area"
-                :class="{ 'expanded': isFolded }"
+            <div
                 @touchstart="handleTouchStart"
                 @touchmove.prevent="handleTouchMove"
-                ref="listAreaRef"
             >
-                <div class="handle"></div>
-
-                <div class="mobile-total-count">
-                    <div class="total">
-                        Total 
-                        <span class="cnt">{{ totalCount }}</span>
+                <div class="custom-calendar-section">
+                    <div class="custom-calendar-header">
+                        <div class="header-cell sun">일</div>
+                        <div class="header-cell">월</div>
+                        <div class="header-cell">화</div>
+                        <div class="header-cell">수</div>
+                        <div class="header-cell">목</div>
+                        <div class="header-cell">금</div>
+                        <div class="header-cell">토</div>
                     </div>
-
-                    <div class="detail-count">
-                        <div v-for="reserve in reserveSummary" class="detail">
-                            <span class="label">{{ reserve.label }}</span>
-                            <span class="cnt" :class="reserve.warning ? 'warning' : ''">{{ reserve.value }}</span>
+        
+                    <div :class="['calendar-wrapper', { 'folded': isFolded }]">
+                        <div class="calendar-content">
+                            <DayPilotMonth :config="config" ref="calendarRef" />
                         </div>
                     </div>
                 </div>
-
-                <div v-if="selectedDateEvents.length > 0" class="reservation-list">
-                    <div 
-                        v-for="event in selectedDateEvents" 
-                        class="res-item"
-                        :class="event.clinicType === '개인일정' ? 'is-personal' : `status-${event.inState}`"
-                        @click="handelReserveDetail(event)"
-                    >
-                        <!-- 좌측: 시간 및 상태 아이콘 -->
-                        <div class="res-time-box">
-                            <img :src="statusIcons[event.clinicType === '개인일정' ? 4 : event.inState]" 
-                                alt="" class="status-icon">
-                            <span class="time-text">{{ event.startDate?.split('T')[1]?.slice(0, 5) }}</span>
+            
+                <!-- 리스트 영역 -->
+                <div 
+                    class="list-area"
+                    :class="{ 'expanded': isFolded }"
+                    ref="listAreaRef"
+                >
+                    <div class="handle"></div>
+    
+                    <div class="mobile-total-count">
+                        <div class="total">
+                            Total 
+                            <span class="cnt">{{ totalCount }}</span>
                         </div>
-
-                        <!-- 중앙: 정보 (예약자/반려동물/경로) -->
-                        <div class="res-info-box">
-                            <div v-if="event.clinicType !== '개인일정' && event.clinicType !== '일반예약'" class="user-pet-info">
-                                <img v-if="pathIcons[event.reRoute]" :src="pathIcons[event.reRoute]" alt="" class="path-icon">
-                                <span class="name">{{ event.userName }}({{ event.petName }})</span>
+    
+                        <div class="detail-count">
+                            <div v-for="reserve in reserveSummary" class="detail">
+                                <span class="label">{{ reserve.label }}</span>
+                                <span class="cnt" :class="reserve.warning ? 'warning' : ''">{{ reserve.value }}</span>
                             </div>
                         </div>
-
-                        <!-- 우측: 진료실 -->
-                        <div class="res-location-box">
-                            <span class="room-badge">{{ event.clinicType === '개인일정' || event.clinicType == '일반예약' ? event.clinicType : event.roomName }}</span>
-                        </div>
                     </div>
-
-                </div>
-
-                <div v-else class="empty-box">
-                    <img :src="icEmpty" alt="비어있음 아이콘">
-                    <span class="empty-span">일정이 없습니다.</span>
+    
+                    <div v-if="selectedDateEvents.length > 0" class="reservation-list">
+                        <div 
+                            v-for="event in selectedDateEvents" 
+                            class="res-item"
+                            :class="event.clinicType === '개인일정' ? 'is-personal' : `status-${event.inState}`"
+                            @click="handelReserveDetail(event)"
+                        >
+                            <!-- 좌측: 시간 및 상태 아이콘 -->
+                            <div class="res-time-box">
+                                <img :src="statusIcons[event.clinicType === '개인일정' ? 4 : event.inState]" 
+                                    alt="" class="status-icon">
+                                <span class="time-text">{{ event.startDate?.split('T')[1]?.slice(0, 5) }}</span>
+                            </div>
+    
+                            <!-- 중앙: 정보 (예약자/반려동물/경로) -->
+                            <div class="res-info-box">
+                                <div v-if="event.clinicType !== '개인일정' && event.clinicType !== '일반예약'" class="user-pet-info">
+                                    <img v-if="pathIcons[event.reRoute]" :src="pathIcons[event.reRoute]" alt="" class="path-icon">
+                                    <span class="name">{{ event.userName }}({{ event.petName }})</span>
+                                </div>
+                            </div>
+    
+                            <!-- 우측: 진료실 -->
+                            <div class="res-location-box">
+                                <span class="room-badge">{{ event.clinicType === '개인일정' || event.clinicType == '일반예약' ? event.clinicType : event.roomName }}</span>
+                            </div>
+                        </div>
+    
+                    </div>
+    
+                    <div v-else class="empty-box">
+                        <img :src="icEmpty" alt="비어있음 아이콘">
+                        <span class="empty-span">일정이 없습니다.</span>
+                    </div>
                 </div>
             </div>
         </template>
