@@ -819,7 +819,7 @@ onUnmounted(() => {
     background-color: #fff;
     transition: all 0.3s ease;
 
-    touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
+    // touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
 
     &.expanded {
         min-height: 0;
@@ -830,12 +830,6 @@ onUnmounted(() => {
         overscroll-behavior-y: contain;
         display: flex;
         flex-direction: column;
-
-        .reservation-list {
-            flex: 1;
-            overflow-y: auto; // (핵심) 리스트 본문만 스크롤 발생
-            -webkit-overflow-scrolling: touch;
-        }
     }
     
     .handle {

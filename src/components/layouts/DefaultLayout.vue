@@ -278,7 +278,7 @@
 
             &.has-bottom-tab {
                 padding-top: 56px;
-                padding-bottom: 88px;
+                padding-bottom: 80px;
             }
         }
         .content {
