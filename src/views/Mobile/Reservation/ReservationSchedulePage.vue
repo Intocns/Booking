@@ -137,11 +137,16 @@ const summaryEvents = computed(() => {
         }
 
         // 상태값 체크 (RESERVE_STATUS_MAP: 0 대기, 1 확정)
-        if (ev.inState === 0) dayStatus[date].hasPending = true;
-        if (ev.inState === 1) dayStatus[date].hasConfirmed = true;
-        if (ev.inState === 2) dayStatus[date].hasReject = true;
-        if (ev.inState === 3) dayStatus[date].hasCanceled = true;
-        if (ev.clinicType == '개인일정') dayStatus[date].hasPersonal = true;
+        if (ev.clinicType === '개인일정') {
+            // 1. 개인일정인 경우: inState와 상관없이 personal만 true로 설정
+            dayStatus[date].hasPersonal = true;
+        } else {
+            // 2. 개인일정이 아닌 경우에만 inState에 따른 상태값 체크
+            if (ev.inState === 0) dayStatus[date].hasPending = true;
+            else if (ev.inState === 1) dayStatus[date].hasConfirmed = true;
+            else if (ev.inState === 2) dayStatus[date].hasReject = true;
+            else if (ev.inState === 3) dayStatus[date].hasCanceled = true;
+        }
 
         dayStatus[date].originList.push({ ...ev });
     });
