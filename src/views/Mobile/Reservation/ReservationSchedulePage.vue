@@ -244,15 +244,13 @@ const handleTouchMove = (e) => {
         if (diff > 30) {
             isFolded.value = true;
         }
+        return;
     }
 
-    // 달력 펼치기 (아래로 당길 때)
-    if (scrollTop <= 0) {
+    if (isFolded.value && scrollTop <= 0 && diff < -50) {
+        // 페이지 최상단(scrollTop <= 0)에서만 아래로 당겼을 때 달력 펼침
         if (e.cancelable) e.preventDefault();
-        if (isFolded.value && diff < -30) {
-            // 페이지가 맨 위에 닿아있을 때 
-            isFolded.value = false;
-        }
+        isFolded.value = false;
     }
 };
 // 위로 밀어낼 거리 계산
@@ -825,7 +823,7 @@ onUnmounted(() => {
     background-color: #fff;
     transition: all 0.3s ease;
 
-    touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
+    // touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
 
     &.expanded {
         min-height: 150px;
