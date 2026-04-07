@@ -245,11 +245,9 @@ const handleTouchMove = (e) => {
 
     // 2. 달력이 접혀 있을 때 (isFolded === true)
     if (isFolded.value) {
-        /* 핵심: 사용자가 리스트를 끝까지 올려서 scrollTop이 0이 되었을 때,
-           그 상태에서 '아래로 더 당기는(diff < 0)' 동작을 감지합니다.
-        */
+        // 사용자가 리스트를 끝까지 올려서 scrollTop이 0이 되었을 때 그 상태에서 아래로 더 당기는(diff < 0)' 감지
         if (scrollTop <= 0 && diff < 0) {
-            // 이 조건에서만 브라우저의 '당겨서 새로고침'을 막고 달력을 폅니다.
+            // '당겨서 새로고침'을 막고 달력 펴기
             if (e.cancelable) e.preventDefault();
 
             // -50만큼 충분히 당겼을 때 달력 펼침
@@ -259,7 +257,7 @@ const handleTouchMove = (e) => {
         }
         
         // scrollTop > 0 이거나 위로 밀고 있다면(diff > 0) 
-        // preventDefault를 하지 않으므로 리스트 스크롤이 자유롭게 일어납니다.
+        // preventDefault를 하지 않으므로 리스트 스크롤
     }
 };
 // 위로 밀어낼 거리 계산
@@ -483,6 +481,7 @@ onMounted(async() => {
 })
 
 onUnmounted(() => {
+    document.documentElement.style.overscrollBehaviorY = 'auto';
     document.body.style.overflow = 'auto';
     document.body.style.touchAction = 'auto';
 })
