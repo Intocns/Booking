@@ -241,18 +241,22 @@ const handleTouchStart = (e) => {
 const handleTouchMove = (e) => {
     if (!isTrackable) return;
 
-    // 사용자가 커스텀 드래그(접기/펴기) 중일 때 브라우저의 기본 동작 차단
+    const touchMoveY = e.touches[0].clientY;
+    const diff = touchStartY - touchMoveY;
+
+    // 아주 미세한 움직임은 스크롤로 간주하고 무시 (임계값 설정)
+    if (Math.abs(diff) < 10) return;
+
+    // 접기/펴기 동작이 확실할 때만 기본 스크롤 차단
     if (e.cancelable) {
         e.preventDefault();
     }
 
-    const touchMoveY = e.touches[0].clientY;
-    const diff = touchStartY - touchMoveY;
-
-    if (diff > 50) { 
+    if (diff > 50 && !isFolded.value) { 
         isFolded.value = true;
         isTrackable = false;
-    } else if (diff < -50) { 
+    } else if (diff < -50 && isFolded.value) { 
+        // 리스트의 스크롤 위치가 최상단(scrollTop === 0)일 때만 달력을 펼치도록 조건 추가 가능
         isFolded.value = false;
         isTrackable = false;
     }
@@ -818,11 +822,20 @@ onUnmounted(() => {
     touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
 
     &.expanded {
+        min-height: 0;
         transform: translateY(-0px); // 캘린더가 가려진 만큼 위로 이동
         // height: calc(100vh - 150px); // 화면 전체를 차지하도록 확장
         flex: 1;
         /* 리스트가 확장되었을 때 끝까지 올린 후 더 당기면 새로고침 되는 현상 방지 */
         overscroll-behavior-y: contain;
+        display: flex;
+        flex-direction: column;
+
+        .reservation-list {
+            flex: 1;
+            overflow-y: auto; // (핵심) 리스트 본문만 스크롤 발생
+            -webkit-overflow-scrolling: touch;
+        }
     }
     
     .handle {
