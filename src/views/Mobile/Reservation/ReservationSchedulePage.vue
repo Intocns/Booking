@@ -6,7 +6,7 @@ import ReserveInfo from '@/components/common/modal-content/mobile/ReserveInfo.vu
 import { DayPilot, DayPilotMonth } from "@daypilot/daypilot-lite-vue";
 import { startOfMonth, endOfMonth, format, lastDayOfMonth } from "date-fns";
 
-import { onMounted, ref, computed, watch } from 'vue';
+import { onMounted, ref, computed, watch, onUnmounted } from 'vue';
 
 // 스토어
 import { useReservationStore } from '@/stores/reservationStore';
@@ -228,7 +228,7 @@ const handleTouchStart = (e) => {
     const touchY = e.touches[0].clientY;
 
     const listStartPos = rect.top; 
-    const deadZone = 60; // 상단 60px 이내
+    const deadZone = 220; // 상단 220px 이내
 
     if (touchY >= listStartPos && touchY <= listStartPos + deadZone) {
         isTrackable = true;
@@ -468,6 +468,11 @@ onMounted(async() => {
     if (selectedDoctors.value.length > 0 && !activeDoctorId.value) {
         activeDoctorId.value = selectedDoctors.value[0].value;
     }
+})
+
+onUnmounted(() => {
+    document.body.style.overflow = 'auto';
+    document.body.style.touchAction = 'auto';
 })
 </script>
 
