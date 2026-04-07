@@ -240,27 +240,6 @@ const handleTouchStart = (e) => {
 };
 // 터치 이벤트
 const handleTouchMove = (e) => {
-    // if (!isTrackable) return;
-
-    // const touchMoveY = e.touches[0].clientY;
-    // const diff = touchStartY - touchMoveY;
-
-    // // 아주 미세한 움직임은 스크롤로 간주하고 무시 (임계값 설정)
-    // if (Math.abs(diff) < 10) return;
-
-    // // 접기/펴기 동작이 확실할 때만 기본 스크롤 차단
-    // if (e.cancelable) {
-    //     e.preventDefault();
-    // }
-
-    // if (diff > 50 && !isFolded.value) { 
-    //     isFolded.value = true;
-    //     isTrackable = false;
-    // } else if (diff < -50 && isFolded.value) { 
-    //     // 리스트의 스크롤 위치가 최상단(scrollTop === 0)일 때만 달력을 펼치도록 조건 추가 가능
-    //     isFolded.value = false;
-    //     isTrackable = false;
-    // }
     const touchMoveY = e.touches[0].clientY;
     const diff = touchStartY - touchMoveY; // 양수: 위로 스크롤(접기), 음수: 아래로 스크롤(펴기)
     const listEl = listAreaRef.value;
@@ -286,7 +265,7 @@ const handleTouchMove = (e) => {
 // 위로 밀어낼 거리 계산
 const translateY = computed(() => {
     if (!isFolded.value) return '0px';
-    const weekHeight = 45; // DayPilot 한 주(세로 한 칸)의 대략적인 높이
+    const weekHeight = 50;
     return `-${getWeekIndex() * weekHeight}px`;
 });
 
@@ -554,7 +533,7 @@ onUnmounted(() => {
 
             <div
                 @touchstart="handleTouchStart"
-                @touchmove.prevent="handleTouchMove"
+                @touchmove="handleTouchMove"
             >
                 <div class="custom-calendar-section">
                     <div class="custom-calendar-header">
