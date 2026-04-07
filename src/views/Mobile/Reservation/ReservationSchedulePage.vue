@@ -521,7 +521,7 @@ onUnmounted(() => {
 
             <div
                 @touchstart="handleTouchStart"
-                @touchmove.prevent="handleTouchMove"
+                @touchmove.no-passive="handleTouchMove"
             >
                 <div class="custom-calendar-section">
                     <div class="custom-calendar-header">
@@ -898,6 +898,7 @@ onUnmounted(() => {
     flex-direction: column;
     padding: 0 20px;
     gap: 8px;
+    min-height: 150px;
 
     .res-item {
         position: relative;
