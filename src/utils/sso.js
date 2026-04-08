@@ -76,7 +76,7 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
                 window.location.href = response.data.data.returnUrl; // returnUrl로 이동
             }
         } else {
-            modalStore.confirmModal.openModal({
+            modalStore.confirmModal.openModal({ // TODO: 강제로그인 로직 확인 후 추후 삭제
                 text: "현재 예약 서비스 개편 작업이 진행중 입니다.\n4월 중 더 나은 모습으로 찾아뵙겠습니다.\n\n이용을 원하시는 경우 웹에서 확인해 주시기 바랍니다.",
                 confirmText: "확인",
                 noCancelBtn: true,
@@ -94,7 +94,7 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
             // })
         }
     } catch (err) {
-        modalStore.confirmModal.openModal({
+        modalStore.confirmModal.openModal({ // TODO: 강제로그인 로직 확인 후 추후 삭제
             text: "현재 예약 서비스 개편 작업이 진행중 입니다.\n4월 중 더 나은 모습으로 찾아뵙겠습니다.\n\n이용을 원하시는 경우 웹에서 확인해 주시기 바랍니다.",
             confirmText: "확인",
             noCancelBtn: true,
