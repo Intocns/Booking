@@ -17,21 +17,14 @@ export const loadSSOScript = () => {
 
 // sso 강제 로그인 (차트사용) (현재 사용하지 않음.)
 export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
+    const nextUrl = window.location.origin + window.location.pathname;
+    
     const urlParams = new URLSearchParams(window.location.search);
-    const bizNo = urlParams.get('biz_No') || import.meta.env.VITE_BIZ_NO; // TODO:차트에서 보내주는 사업자번호 키값 확인 후 변경 //compnum
-    const cocode = urlParams.get('cocode') || import.meta.env.VITE_COCODE; // TODO: 차트에서 보내주는 cocode 키값 확인 후 변경 
-    // const cocode = localStorage.getItem('HOSUUID'); // 추후삭제 차트에서 보내주는 cocode값으로 변경
+    const bizNo = urlParams.get('biz_no')// || import.meta.env.VITE_BIZ_NO;
+    const cocode = urlParams.get('cocode')// || import.meta.env.VITE_COCODE;
 
-    if(!bizNo && !cocode) {
+    if(!bizNo || !cocode) {
         showAlert('잘못된 접근입니다.');
-    }
-    if(!bizNo) {
-        showAlert('사업자번호가 존재하지 않습니다.');
-        return;
-    }
-    if(!cocode) {
-        showAlert('병원코드가 존재하지 않습니다.');
-        return;
     }
 
     if(Number(cocode) >= 10000) {
@@ -43,13 +36,11 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
 
     const isLocal = import.meta.env.VITE_IS_LOCAL === 'true';
 
-    let finalNextUrl = isLocal ? window.location.origin : import.meta.env.VITE_MAIN_URL;
-
     const sendData = { 
         cocode: cocode, 
         // user_id: '',
         biz_no: bizNo, 
-        next: finalNextUrl
+        next: nextUrl
     };
 
     const encryptedData = AesCbc.encrypt(
@@ -77,12 +68,12 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
                 window.location.href = response.data.data.returnUrl; // returnUrl로 이동
             }
         } else {
-            showAlert('인증에 실패했습니다.');
+            showAlert('인증에 실패하였습니다. 다시 시도해주세요.');
             // 브라우저 창닫기 
-            window.close();
+            // window.close();
         }
     } catch (err) {
-        showAlert('인증에 실패했습니다.');
+        showAlert('인증에 실패하였습니다. 다시 시도해주세요.');
         console.error("SSO 로그인 실패:", err);
         // 브라우저 창닫기
         // window.close();
