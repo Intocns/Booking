@@ -152,7 +152,7 @@ const handelReserveDetail = (row) => {
                         @include typo($title-l-mobile-size, $title-l-mobile-weight, $title-l-mobile-spacing, $title-l-mobile-line);
                         // text-overflow: ellipsis;
                         // overflow: hidden;
-                        white-space: nowrap;
+                        // white-space: nowrap;
                         // &.pet {max-width: 70px;}
                         // &.user {max-width: 70px;}
                     }

@@ -6,7 +6,7 @@ import ReserveInfo from '@/components/common/modal-content/mobile/ReserveInfo.vu
 import { DayPilot, DayPilotMonth } from "@daypilot/daypilot-lite-vue";
 import { startOfMonth, endOfMonth, format, lastDayOfMonth } from "date-fns";
 
-import { onMounted, ref, computed, watch } from 'vue';
+import { onMounted, ref, computed, watch, onUnmounted } from 'vue';
 
 // 스토어
 import { useReservationStore } from '@/stores/reservationStore';
@@ -137,11 +137,16 @@ const summaryEvents = computed(() => {
         }
 
         // 상태값 체크 (RESERVE_STATUS_MAP: 0 대기, 1 확정)
-        if (ev.inState === 0) dayStatus[date].hasPending = true;
-        if (ev.inState === 1) dayStatus[date].hasConfirmed = true;
-        if (ev.inState === 2) dayStatus[date].hasReject = true;
-        if (ev.inState === 3) dayStatus[date].hasCanceled = true;
-        if (ev.clinicType == '개인일정') dayStatus[date].hasPersonal = true;
+        if (ev.clinicType === '개인일정') {
+            // 1. 개인일정인 경우: inState와 상관없이 personal만 true로 설정
+            dayStatus[date].hasPersonal = true;
+        } else {
+            // 2. 개인일정이 아닌 경우에만 inState에 따른 상태값 체크
+            if (ev.inState === 0) dayStatus[date].hasPending = true;
+            else if (ev.inState === 1) dayStatus[date].hasConfirmed = true;
+            else if (ev.inState === 2) dayStatus[date].hasReject = true;
+            else if (ev.inState === 3) dayStatus[date].hasCanceled = true;
+        }
 
         dayStatus[date].originList.push({ ...ev });
     });
@@ -223,44 +228,47 @@ let touchStartY = 0;
 let isTrackable = false; // 터치 추적 시작(Flag)
 // 터치 이벤트
 const handleTouchStart = (e) => {
-   // 리스트 영역(.list-area) 기준
-    const rect = e.currentTarget.getBoundingClientRect();
-    const touchY = e.touches[0].clientY;
-
-    const listStartPos = rect.top; 
-    const deadZone = 60; // 상단 60px 이내
-
-    if (touchY >= listStartPos && touchY <= listStartPos + deadZone) {
-        isTrackable = true;
-        touchStartY = touchY;
-    } else {
-        isTrackable = false;
-    }
+    touchStartY = e.touches[0].clientY;
 };
 // 터치 이벤트
 const handleTouchMove = (e) => {
-    if (!isTrackable) return;
+    const touchMoveY = e.touches[0].clientY;
+    const diff = touchStartY - touchMoveY; // 양수: 위로 올림(접기), 음수: 아래로 당김(펴기)
+    
+    // 현재 브라우저의 스크롤 위치
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop;
 
-    // 사용자가 커스텀 드래그(접기/펴기) 중일 때 브라우저의 기본 동작 차단
-    if (e.cancelable) {
-        e.preventDefault();
+    // 1. 달력이 펼쳐져 있을 때 (접기 제스처 감지)
+    if (!isFolded.value) {
+        if (e.cancelable) e.preventDefault(); // 펼쳐진 상태에선 새로고침/스크롤 완전 차단
+        
+        if (diff > 30) { 
+            isFolded.value = true;
+        }
+        return;
     }
 
-    const touchMoveY = e.touches[0].clientY;
-    const diff = touchStartY - touchMoveY;
+    // 2. 달력이 접혀 있을 때 (isFolded === true)
+    if (isFolded.value) {
+        // 사용자가 리스트를 끝까지 올려서 scrollTop이 0이 되었을 때 그 상태에서 아래로 더 당기는(diff < 0)' 감지
+        if (scrollTop <= 0 && diff < 0) {
+            // '당겨서 새로고침'을 막고 달력 펴기
+            if (e.cancelable) e.preventDefault();
 
-    if (diff > 50) { 
-        isFolded.value = true;
-        isTrackable = false;
-    } else if (diff < -50) { 
-        isFolded.value = false;
-        isTrackable = false;
+            // -50만큼 충분히 당겼을 때 달력 펼침
+            if (diff < -50) {
+                isFolded.value = false;
+            }
+        }
+        
+        // scrollTop > 0 이거나 위로 밀고 있다면(diff > 0) 
+        // preventDefault를 하지 않으므로 리스트 스크롤
     }
 };
 // 위로 밀어낼 거리 계산
 const translateY = computed(() => {
     if (!isFolded.value) return '0px';
-    const weekHeight = 45; // DayPilot 한 주(세로 한 칸)의 대략적인 높이
+    const weekHeight = 45;
     return `-${getWeekIndex() * weekHeight}px`;
 });
 
@@ -394,15 +402,22 @@ const setToday = () => {
 
 const listAreaRef = ref(null);
 // 접힙 상태 감지
+// watch 로직 수정
 watch(isFolded, (newVal) => {
     if (newVal) {
+        // 달력이 접혔을 때: 리스트가 길어지므로 스크롤을 허용해야 함
         document.body.style.overflow = 'auto';
-        document.body.style.touchAction = 'auto';
+        document.body.style.touchAction = 'auto'; 
+        // iOS 등에서 터치 액션이 씹히는 경우 'pan-y'로 설정
+        document.documentElement.style.overflow = 'auto';
     } else {
+        // 달력이 펼쳐졌을 때: 캘린더 안에서의 터치 제스처를 위해 스크롤 방지
         document.body.style.overflow = 'hidden';
         document.body.style.touchAction = 'none';
+        document.documentElement.style.overflow = 'hidden';
+        window.scrollTo(0, 0); // 상단으로 고정
     }
-});
+}, { immediate: true });
 
 const closeReserveInfoModal = () => {
     modalStore.reserveInfoModal.closeModal()
@@ -469,6 +484,16 @@ onMounted(async() => {
         activeDoctorId.value = selectedDoctors.value[0].value;
     }
 })
+
+onUnmounted(() => {
+    // 모든 스크롤 관련 강제 설정을 초기화
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.overscrollBehaviorY = '';
+    
+    document.body.style.overflow = '';
+    document.body.style.touchAction = '';
+    document.body.style.overscrollBehaviorY = '';
+});
 </script>
 
 <template>
@@ -521,81 +546,84 @@ onMounted(async() => {
             </div>
 
 
-            <div class="custom-calendar-section">
-                <div class="custom-calendar-header">
-                    <div class="header-cell sun">일</div>
-                    <div class="header-cell">월</div>
-                    <div class="header-cell">화</div>
-                    <div class="header-cell">수</div>
-                    <div class="header-cell">목</div>
-                    <div class="header-cell">금</div>
-                    <div class="header-cell">토</div>
-                </div>
-    
-                <div :class="['calendar-wrapper', { 'folded': isFolded }]">
-                    <div class="calendar-content">
-                        <DayPilotMonth :config="config" ref="calendarRef" />
-                    </div>
-                </div>
-            </div>
-        
-            <!-- 리스트 영역 -->
-            <div 
-                class="list-area"
-                :class="{ 'expanded': isFolded }"
+            <div
                 @touchstart="handleTouchStart"
-                @touchmove.prevent="handleTouchMove"
-                ref="listAreaRef"
+                @touchmove.no-passive="handleTouchMove"
             >
-                <div class="handle"></div>
-
-                <div class="mobile-total-count">
-                    <div class="total">
-                        Total 
-                        <span class="cnt">{{ totalCount }}</span>
+                <div class="custom-calendar-section">
+                    <div class="custom-calendar-header">
+                        <div class="header-cell sun">일</div>
+                        <div class="header-cell">월</div>
+                        <div class="header-cell">화</div>
+                        <div class="header-cell">수</div>
+                        <div class="header-cell">목</div>
+                        <div class="header-cell">금</div>
+                        <div class="header-cell">토</div>
                     </div>
-
-                    <div class="detail-count">
-                        <div v-for="reserve in reserveSummary" class="detail">
-                            <span class="label">{{ reserve.label }}</span>
-                            <span class="cnt" :class="reserve.warning ? 'warning' : ''">{{ reserve.value }}</span>
+        
+                    <div :class="['calendar-wrapper', { 'folded': isFolded }]">
+                        <div class="calendar-content">
+                            <DayPilotMonth :config="config" ref="calendarRef" />
                         </div>
                     </div>
                 </div>
-
-                <div v-if="selectedDateEvents.length > 0" class="reservation-list">
-                    <div 
-                        v-for="event in selectedDateEvents" 
-                        class="res-item"
-                        :class="event.clinicType === '개인일정' ? 'is-personal' : `status-${event.inState}`"
-                        @click="handelReserveDetail(event)"
-                    >
-                        <!-- 좌측: 시간 및 상태 아이콘 -->
-                        <div class="res-time-box">
-                            <img :src="statusIcons[event.clinicType === '개인일정' ? 4 : event.inState]" 
-                                alt="" class="status-icon">
-                            <span class="time-text">{{ event.startDate?.split('T')[1]?.slice(0, 5) }}</span>
+            
+                <!-- 리스트 영역 -->
+                <div 
+                    class="list-area"
+                    :class="{ 'expanded': isFolded }"
+                    ref="listAreaRef"
+                >
+                    <div class="handle"></div>
+    
+                    <div class="mobile-total-count">
+                        <div class="total">
+                            Total 
+                            <span class="cnt">{{ totalCount }}</span>
                         </div>
-
-                        <!-- 중앙: 정보 (예약자/반려동물/경로) -->
-                        <div class="res-info-box">
-                            <div v-if="event.clinicType !== '개인일정' && event.clinicType !== '일반예약'" class="user-pet-info">
-                                <img v-if="pathIcons[event.reRoute]" :src="pathIcons[event.reRoute]" alt="" class="path-icon">
-                                <span class="name">{{ event.userName }}({{ event.petName }})</span>
+    
+                        <div class="detail-count">
+                            <div v-for="reserve in reserveSummary" class="detail">
+                                <span class="label">{{ reserve.label }}</span>
+                                <span class="cnt" :class="reserve.warning ? 'warning' : ''">{{ reserve.value }}</span>
                             </div>
                         </div>
-
-                        <!-- 우측: 진료실 -->
-                        <div class="res-location-box">
-                            <span class="room-badge">{{ event.clinicType === '개인일정' || event.clinicType == '일반예약' ? event.clinicType : event.roomName }}</span>
-                        </div>
                     </div>
-
-                </div>
-
-                <div v-else class="empty-box">
-                    <img :src="icEmpty" alt="비어있음 아이콘">
-                    <span class="empty-span">일정이 없습니다.</span>
+    
+                    <div v-if="selectedDateEvents.length > 0" class="reservation-list">
+                        <div 
+                            v-for="event in selectedDateEvents" 
+                            class="res-item"
+                            :class="event.clinicType === '개인일정' ? 'is-personal' : `status-${event.inState}`"
+                            @click="handelReserveDetail(event)"
+                        >
+                            <!-- 좌측: 시간 및 상태 아이콘 -->
+                            <div class="res-time-box">
+                                <img :src="statusIcons[event.clinicType === '개인일정' ? 4 : event.inState]" 
+                                    alt="" class="status-icon">
+                                <span class="time-text">{{ event.startDate?.split('T')[1]?.slice(0, 5) }}</span>
+                            </div>
+    
+                            <!-- 중앙: 정보 (예약자/반려동물/경로) -->
+                            <div class="res-info-box">
+                                <div v-if="event.clinicType !== '개인일정' && event.clinicType !== '일반예약'" class="user-pet-info">
+                                    <img v-if="pathIcons[event.reRoute]" :src="pathIcons[event.reRoute]" alt="" class="path-icon">
+                                    <span class="name">{{ event.userName }}({{ event.petName }})</span>
+                                </div>
+                            </div>
+    
+                            <!-- 우측: 진료실 -->
+                            <div class="res-location-box">
+                                <span class="room-badge">{{ event.clinicType === '개인일정' || event.clinicType == '일반예약' ? event.clinicType : event.roomName }}</span>
+                            </div>
+                        </div>
+    
+                    </div>
+    
+                    <div v-else class="empty-box">
+                        <img :src="icEmpty" alt="비어있음 아이콘">
+                        <span class="empty-span">일정이 없습니다.</span>
+                    </div>
                 </div>
             </div>
         </template>
@@ -676,6 +704,7 @@ onMounted(async() => {
 }
 .custom-calendar-section {
     padding: 0 20px;
+    padding-bottom: 5px;
     .custom-calendar-header {
         width:100;
         display: flex;
@@ -806,6 +835,7 @@ onMounted(async() => {
     position: relative;
     width: 100%;
     // height: 150px;
+    min-height: 150px;
     border-top: 1px solid $gray-200;
     background-color: #fff;
     transition: all 0.3s ease;
@@ -813,11 +843,9 @@ onMounted(async() => {
     touch-action: pan-y; // 세로 스크롤은 허용하되 브라우저 제스처는 제한
 
     &.expanded {
+        min-height: 150px;
         transform: translateY(-0px); // 캘린더가 가려진 만큼 위로 이동
         // height: calc(100vh - 150px); // 화면 전체를 차지하도록 확장
-        flex: 1;
-        /* 리스트가 확장되었을 때 끝까지 올린 후 더 당기면 새로고침 되는 현상 방지 */
-        overscroll-behavior-y: contain;
     }
     
     .handle {
