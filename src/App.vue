@@ -50,6 +50,7 @@ onMounted(async () => {
         initSSOCheck((handleAuthResult) => { // sso 로그인 체크
             if (handleAuthResult === 'success') {
                 isAuthChecked.value = true;
+                router.replace({ path: router.path }) // 쿼리값 남아있지 않도록 삭제
             } else {
                 forceSsoLogin(); // 실패시 강제 로그인
             }
