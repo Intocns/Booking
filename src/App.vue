@@ -38,15 +38,6 @@ onMounted(async () => {
                     window.close(); // 실패 시 창 닫기
                 }
             })
-        } else if(status == 'forceLogin') { // TODO: 강제로그인 로직 확인 후 추후 삭제
-            modalStore.confirmModal.openModal({
-                text: "현재 예약 서비스 개편 작업이 진행중 입니다.\n4월 중 더 나은 모습으로 찾아뵙겠습니다.\n\n이용을 원하시는 경우 웹에서 확인해 주시기 바랍니다.",
-                confirmText: "확인",
-                noCancelBtn: true,
-                onConfirm: () => {
-                    window.close(); // 실패 시 창 닫기
-                }
-            })
         } else {
             modalStore.confirmModal.openModal({
                 text: "인증에 실패하였습니다. 다시 시도해주세요.",
@@ -78,7 +69,7 @@ onMounted(async () => {
                 if (bizNo && cocode) {
                     forceSsoLogin(bizNo, cocode);
                 } else {
-                    handleAuthResult('forceLogin');
+                    handleAuthResult(status);
                 }
             }
         });
