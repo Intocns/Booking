@@ -19,6 +19,12 @@ const modalStore = useModalStore();
 const isAuthChecked = ref(false); // SSO 체크 완료 여부 (UI 렌더링 제어)
 
 onMounted(async () => {    
+    const urlParams = new URLSearchParams(window.location.search);
+    const at = urlParams.get('at');
+    const rt = urlParams.get('rt');
+    const bizNo = urlParams.get('biz_no');
+    const cocode = urlParams.get('cocode');
+
     // 인증 결과에 따른 처리를 위한 공통 콜백 함수
     const handleAuthResult = (status) => {
         if (status === 'success') {
@@ -47,12 +53,24 @@ onMounted(async () => {
     try {
         await loadSSOScript(); // sso 스크립트 로드
 
-        initSSOCheck((handleAuthResult) => { // sso 로그인 체크
-            if (handleAuthResult === 'success') {
+        if (at && rt) { // 강제로그인 시도 성공 후
+            //  SSO 체크를 수행하여 정보를 받아옴
+            initSSOCheck(handleAuthResult);
+            return;
+        }
+
+        initSSOCheck((status) => {
+            if (status === 'success') {
                 isAuthChecked.value = true;
-                router.replace({ path: router.path }) // 쿼리값 남아있지 않도록 삭제
+                // 쿼리 정리
+                router.replace({ path: router.path })
             } else {
-                forceSsoLogin(); // 실패시 강제 로그인
+                // 기본 sso 로그인 체크 실패시 강제 로그인 시도
+                if (bizNo && cocode) {
+                    forceSsoLogin(bizNo, cocode);
+                } else {
+                    handleAuthResult(status);
+                }
             }
         });
 
