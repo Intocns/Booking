@@ -16,6 +16,7 @@ export const loadSSOScript = () => {
     });
 };
 
+// 현재 강제 로그인은 사용하지 않음. 260409
 // sso 강제 로그인
 // 인투링크에서 예약 관리자 센터 접속시 도메인이 달라 sso로그인 실패하는 경우 강제로그인 처리함
 export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
