@@ -13,6 +13,7 @@ import { useDevice } from '@/composables/useDevice';
     
 const isMobile = useDevice();
 
+const route = useRoute();
 const router = useRouter();
 const modalStore = useModalStore();
 
@@ -53,39 +54,46 @@ onMounted(async () => {
     try {
         await loadSSOScript(); // sso 스크립트 로드
 
-        if (at && rt) { // 강제로그인 시도 성공 후
-            const expires = new Date();
-            expires.setDate(expires.getDate() + 3); // 라이브러리 설정과 동일하게 3일
+        // 현재 강제 로그인은 사용하지 않음. 260409
+        // if (at && rt) { // 강제로그인 시도 성공 후
+        //     const expires = new Date();
+        //     expires.setDate(expires.getDate() + 3); // 라이브러리 설정과 동일하게 3일
     
-            // 라이브러리가 iframe 내부에서 하려던 토큰저장을 여기서 수행
-            document.cookie = `INTO_ACCESS=${encodeURI(at)};SameSite=None;Secure;path=/;expires=${expires.toUTCString()}`;
-            document.cookie = `INTO_REFRESH=${encodeURI(rt)};SameSite=None;Secure;path=/;expires=${new Date(new Date().getTime() + 27*24*60*60*1000).toUTCString()}`;
-            window.localStorage.setItem("INTO_ACCESS", at);
-            window.localStorage.setItem("INTO_REFRESH", rt);
+        //     // 라이브러리가 iframe 내부에서 하려던 토큰저장을 여기서 수행
+        //     document.cookie = `INTO_ACCESS=${encodeURI(at)};SameSite=None;Secure;path=/;expires=${expires.toUTCString()}`;
+        //     document.cookie = `INTO_REFRESH=${encodeURI(rt)};SameSite=None;Secure;path=/;expires=${new Date(new Date().getTime() + 27*24*60*60*1000).toUTCString()}`;
+        //     window.localStorage.setItem("INTO_ACCESS", at);
+        //     window.localStorage.setItem("INTO_REFRESH", rt);
 
-            await router.replace({ path: window.location.pathname, query: {} });
+        //     await router.replace({ path: window.location.pathname, query: {} });
     
-            //  SSO 체크를 수행하여 정보를 받아옴
-            initSSOCheck(handleAuthResult);
-            return;
+        //     //  SSO 체크를 수행하여 정보를 받아옴
+        //     initSSOCheck(handleAuthResult);
+        //     return;
+        // }
+
+        // initSSOCheck((status) => {
+        //     if (status === 'success') {
+        //         isAuthChecked.value = true;
+        //         // 쿼리 정리
+        //         router.replace({ path: route.path })
+        //     } else {
+        //         // 기본 sso 로그인 체크 실패시 강제 로그인 시도
+        //         if (bizNo && cocode) {
+        //             forceSsoLogin(bizNo, cocode);
+        //         } else {
+        //             handleAuthResult(status);
+        //         }
+        //     }
+        // });
+
+        if(bizNo && cocode) { // 강제로그인 사용하지 않음으로, 링크에서 보내주는 강제로그인에 필요한 쿼리값 지워줌
+            await router.replace({ 
+                path: window.location.pathname, 
+                query: {} 
+            });
         }
-
-        initSSOCheck((status) => {
-            if (status === 'success') {
-                isAuthChecked.value = true;
-                // 쿼리 정리
-                router.replace({ path: router.path })
-            } else {
-                // 기본 sso 로그인 체크 실패시 강제 로그인 시도
-                if (bizNo && cocode) {
-                    forceSsoLogin(bizNo, cocode);
-                } else {
-                    handleAuthResult(status);
-                }
-            }
-        });
-
-        // initSSOCheck(handleAuthResult); // sso 로그인 체크
+        initSSOCheck(handleAuthResult); // sso 로그인 체크
 
     } catch (err) {
         console.error("SSO 프로세스 오류:", err);
