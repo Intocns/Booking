@@ -18,12 +18,13 @@ const modalStore = useModalStore();
 
 const isAuthChecked = ref(false); // SSO 체크 완료 여부 (UI 렌더링 제어)
 
-onMounted(async () => {
-    // 강제 로그인 후 리턴 url에 at,rt값 포함하여 옴
+onMounted(async () => {    
     const urlParams = new URLSearchParams(window.location.search);
-    const at = urlParams.get('at'); // 해당 값 저장 후
+    const at = urlParams.get('at');
     const rt = urlParams.get('rt');
-    
+    const bizNo = urlParams.get('biz_no');
+    const cocode = urlParams.get('cocode');
+
     // 인증 결과에 따른 처리를 위한 공통 콜백 함수
     const handleAuthResult = (status) => {
         if (status === 'success') {
@@ -52,21 +53,28 @@ onMounted(async () => {
     try {
         await loadSSOScript(); // sso 스크립트 로드
 
-        if(at && rt) { // 강제 로그인 후 
-            await router.replace({ query: {} }); // url에 남아있는 토큰 비워줌
-        } 
+        if (at && rt) { // 강제로그인 시도 성공 후
+            //  SSO 체크를 수행하여 정보를 받아옴
+            initSSOCheck(handleAuthResult);
+            return;
+        }
 
-        // 현재 강제 로그인 로직은 실행하지 않음 > 주석처리
-        // initSSOCheck((status) => {
-        //     if (status === 'success') {
-        //         isAuthChecked.value = true;
-        //     } else {
-        //         // 강제 로그인
-        //         forceSsoLogin();
-        //     }
-        // });
+        initSSOCheck((status) => {
+            if (status === 'success') {
+                isAuthChecked.value = true;
+                // 쿼리 정리
+                router.replace({ path: router.path })
+            } else {
+                // 기본 sso 로그인 체크 실패시 강제 로그인 시도
+                if (bizNo && cocode) {
+                    forceSsoLogin(bizNo, cocode);
+                } else {
+                    handleAuthResult(status);
+                }
+            }
+        });
 
-        initSSOCheck(handleAuthResult); // sso 로그인 체크
+        // initSSOCheck(handleAuthResult); // sso 로그인 체크
 
     } catch (err) {
         console.error("SSO 프로세스 오류:", err);
