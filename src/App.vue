@@ -53,28 +53,28 @@ onMounted(async () => {
     try {
         await loadSSOScript(); // sso 스크립트 로드
 
-        if (at && rt) { // 강제로그인 시도 성공 후
-            //  SSO 체크를 수행하여 정보를 받아옴
-            initSSOCheck(handleAuthResult);
-            return;
-        }
+        // if (at && rt) { // 강제로그인 시도 성공 후
+        //     //  SSO 체크를 수행하여 정보를 받아옴
+        //     initSSOCheck(handleAuthResult);
+        //     return;
+        // }
 
-        initSSOCheck((status) => {
-            if (status === 'success') {
-                isAuthChecked.value = true;
-                // 쿼리 정리
-                router.replace({ path: router.path })
-            } else {
-                // 기본 sso 로그인 체크 실패시 강제 로그인 시도
-                if (bizNo && cocode) {
-                    forceSsoLogin(bizNo, cocode);
-                } else {
-                    handleAuthResult(status);
-                }
-            }
-        });
+        // initSSOCheck((status) => {
+        //     if (status === 'success') {
+        //         isAuthChecked.value = true;
+        //         // 쿼리 정리
+        //         router.replace({ path: router.path })
+        //     } else {
+        //         // 기본 sso 로그인 체크 실패시 강제 로그인 시도
+        //         if (bizNo && cocode) {
+        //             forceSsoLogin(bizNo, cocode);
+        //         } else {
+        //             handleAuthResult(status);
+        //         }
+        //     }
+        // });
 
-        // initSSOCheck(handleAuthResult); // sso 로그인 체크
+        initSSOCheck(handleAuthResult); // sso 로그인 체크
 
     } catch (err) {
         console.error("SSO 프로세스 오류:", err);
