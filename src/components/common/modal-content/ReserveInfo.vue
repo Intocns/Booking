@@ -1402,8 +1402,6 @@ const textPhoneNumber = computed(() => {
 
         &.clinic-type {
             overflow:visible;
-
-            .info-lists-wrapper {overflow: visible !important;}
         }
     }
 
@@ -1419,7 +1417,7 @@ const textPhoneNumber = computed(() => {
     .info-lists-wrapper {
         display:flex;
         gap:8px;
-        overflow-y: auto;
+        // overflow-y: auto;
 
         .left {width: 50%;}
         .right {width: 50%;}
