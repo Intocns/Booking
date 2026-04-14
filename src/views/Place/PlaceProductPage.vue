@@ -120,14 +120,14 @@ const importIntoPetRoom = async() => {
         // 새로 추가된 첫 번째 상품 찾기
         const newItem = productStore.productList.find(item => !oldIds.includes(item.bizItemId));
         
-        const confirmText1 = '선택하신 진료실을 기반으로 상품이 등록되었습니다.\n상품 등록 기준에 맞지 않는 일부 정보는 자동으로 변경되었습니다.';
-        const confirmText2 = '\n\n· 대표 사진이 없거나 등록이 불가능한 확장자로 확인 되면\n기본 사진으로 대체됩니다.\n· 상품명 또는 설명에 사용할 수 없는 문자가 포함된 경우,\n삭제 되어 등록됩니다.\n\n';
+        const confirmText1 = '선택하신 진료실을 기반으로 상품이 등록되었습니다.\n상품 등록 과정에서 일부 정보가 자동으로 변경되었을 수 있으므로,\n상품 노출 전 반드시 내용을 확인해 주세요.';
+        const confirmText2 = '\n\n· 대표 사진이 없거나 등록이 불가능한 확장자로 확인 되면\n기본 사진으로 대체됩니다.\n· 상품명 또는 설명에 사용할 수 없는 문자가 포함된 경우,\n삭제 되어 등록됩니다.\n· 예약 시간 단위가 네이버 상품 기준과 다른 경우\n예약 시간이 조정되어 등록됩니다.';
         const confirmText3 = '정확한 노출을 위해 상품 정보를 확인하고\n필요 시 수정 후 다시 저장해 주세요.';
 
         // 불러오기 등록 완료 안내 팝업 추가
         modalStore.confirmModal.openModal({
             title: '상품 등록 완료',
-            text: `${confirmText1}${confirmText2}${confirmText3}`,
+            text: `${confirmText1}${confirmText2}`,
             noCancelBtn: true,
             onConfirm: () => {
                 if (newItem) { // 불러온 상품 위치로 스크롤
@@ -558,7 +558,7 @@ onMounted(async () => {
 
                     <p class="body-xs caption-l">
                         등록되어 있는 정보를 불러와 상품으로 등록합니다.<br/>
-                        상품 등록 기준에 맞지 않는 사진이나 문자는 자동으로 변경되어 등록됩니다.
+                        상품 등록 기준에 맞지 않는 사진, 문자, 예약 시간은 자동으로 조정되어 등록됩니다.
                     </p>
                 </div>
             </div>
