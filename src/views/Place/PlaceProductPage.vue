@@ -407,7 +407,7 @@ onMounted(async () => {
             <div v-for="product in dragList" class="item-box" :key="product.bizItemId" :data-product-id="product.bizItemId">
                 <!-- top -->
                 <div class="top">
-                    <div class="item-box__img" @click="goProductDetail(product.bizItemId)">
+                    <div class="item-box__img" :class="product.isImp == '0' ? 'disabled' : ''" @click="goProductDetail(product.bizItemId)">
 
                         <img
                             v-if="JSON.parse(product.imageUrls)?.length"
@@ -418,7 +418,7 @@ onMounted(async () => {
                         <p class="item-box__name">{{ product.name }}</p>
                     </div>
 
-                    <div class="item-box__content">
+                    <div class="item-box__content" :class="product.isImp == '0' ? 'disabled' : ''">
                         <div class="d-flex align-center justify-between">
                             <p class="body-l">{{ IS_IMP_TYPE[Number(product.isImp)].label }}</p>
         
@@ -693,8 +693,12 @@ onMounted(async () => {
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 0, 0, 0.5);
+                background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 100%);
                 pointer-events: none;
+            }
+
+            &.disabled::after {
+                background: rgba(140,140,140,.6);
             }
 
             img {
