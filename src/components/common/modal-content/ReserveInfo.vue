@@ -784,7 +784,12 @@ const textPhoneNumber = computed(() => {
 </script>
 
 <template>
-    <div class="modal-contents-inner">
+    <div 
+        class="modal-contents-inner"
+        :class="{
+            'clinic-type' : reserveData.clinicType == '개인일정' || reserveData.clinicType == '일반예약',
+        }"
+    >
         <!-- 예약 정보 -->
         <div class="d-flex flex-col gap-8">
 
@@ -1394,6 +1399,12 @@ const textPhoneNumber = computed(() => {
         flex-grow: 1;
         // overflow: hidden; // 전체 스크롤 제거
         min-height: 0;
+
+        &.clinic-type {
+            overflow:visible;
+
+            .info-lists-wrapper {overflow: visible !important;}
+        }
     }
 
     .modal-content-title-wrapper {
