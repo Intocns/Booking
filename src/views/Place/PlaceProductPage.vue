@@ -120,14 +120,14 @@ const importIntoPetRoom = async() => {
         // 새로 추가된 첫 번째 상품 찾기
         const newItem = productStore.productList.find(item => !oldIds.includes(item.bizItemId));
         
-        const confirmText1 = '선택하신 진료실을 기반으로 상품이 등록되었습니다.\n상품 등록 기준에 맞지 않는 일부 정보는 자동으로 변경되었습니다.';
-        const confirmText2 = '\n\n· 대표 사진이 없거나 등록이 불가능한 확장자로 확인 되면\n기본 사진으로 대체됩니다.\n· 상품명 또는 설명에 사용할 수 없는 문자가 포함된 경우,\n삭제 되어 등록됩니다.\n\n';
+        const confirmText1 = '선택하신 진료실을 기반으로 상품이 등록되었습니다.\n상품 등록 과정에서 일부 정보가 자동으로 변경되었을 수 있으므로,\n상품 노출 전 반드시 내용을 확인해 주세요.';
+        const confirmText2 = '\n\n· 대표 사진이 없거나 등록이 불가능한 확장자로 확인 되면\n기본 사진으로 대체됩니다.\n· 상품명 또는 설명에 사용할 수 없는 문자가 포함된 경우,\n삭제 되어 등록됩니다.\n· 예약 시간 단위가 네이버 상품 기준과 다른 경우\n예약 시간이 조정되어 등록됩니다.';
         const confirmText3 = '정확한 노출을 위해 상품 정보를 확인하고\n필요 시 수정 후 다시 저장해 주세요.';
 
         // 불러오기 등록 완료 안내 팝업 추가
         modalStore.confirmModal.openModal({
             title: '상품 등록 완료',
-            text: `${confirmText1}${confirmText2}${confirmText3}`,
+            text: `${confirmText1}${confirmText2}`,
             noCancelBtn: true,
             onConfirm: () => {
                 if (newItem) { // 불러온 상품 위치로 스크롤
@@ -303,6 +303,36 @@ const bookingConfirmCode = (code) => {
             return '';
     }
 }
+const bookingConfirmOptions = ref(
+    [
+        {value: 'CF01', label: '신청과 동시에 확정'},
+        {value: 'CF02', label: '관리자 확인 후 확정'},
+    ]
+)
+
+// 확정 방식 변경 시 api 호출
+const handleBookingConfirmUpdate = async (product, newValue, oldValue) => {
+    if(newValue === oldValue) {
+        return; // 값이 변경되지 않았으면 api 호출하지 않음
+    }
+
+    const bookingConfirmValue = {
+        'CF01': 0,
+        'CF02': 1,
+    }
+
+    try {
+        const response = await productStore.updateProductConfirmType(product.bizItemId, bookingConfirmValue[newValue]); 
+        
+        if (response.status_code <= 300) {
+            showAlert(`[${product.name}]의 확정 방식이 변경되었습니다.`);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+    productStore.getProductList(); // 상품 관리 기존 화면 새로고침용
+};
+
 
 onMounted(async () => {
     await productStore.getProductList();
@@ -377,7 +407,7 @@ onMounted(async () => {
             <div v-for="product in dragList" class="item-box" :key="product.bizItemId" :data-product-id="product.bizItemId">
                 <!-- top -->
                 <div class="top">
-                    <div class="item-box__img" @click="goProductDetail(product.bizItemId)">
+                    <div class="item-box__img" :class="product.isImp == '0' ? 'disabled' : ''" @click="goProductDetail(product.bizItemId)">
 
                         <img
                             v-if="JSON.parse(product.imageUrls)?.length"
@@ -388,7 +418,7 @@ onMounted(async () => {
                         <p class="item-box__name">{{ product.name }}</p>
                     </div>
 
-                    <div class="item-box__content">
+                    <div class="item-box__content" :class="product.isImp == '0' ? 'disabled' : ''">
                         <div class="d-flex align-center justify-between">
                             <p class="body-l">{{ IS_IMP_TYPE[Number(product.isImp)].label }}</p>
         
@@ -397,8 +427,12 @@ onMounted(async () => {
                                 <span class="toggle-img"></span>
                             </label>
                         </div>
-        
-                        <span class="item-box__sub-text body-xs">{{ bookingConfirmCode(product.bookingConfirmCode) }}</span>
+
+                        <CustomSingleSelect
+                            :model-value="product.bookingConfirmCode"
+                            :options="bookingConfirmOptions"
+                            @update:model-value="(newValue) => handleBookingConfirmUpdate(product, newValue, product.bookingConfirmCode)"
+                        />
                     </div>
                 </div>
 
@@ -524,7 +558,7 @@ onMounted(async () => {
 
                     <p class="body-xs caption-l">
                         등록되어 있는 정보를 불러와 상품으로 등록합니다.<br/>
-                        상품 등록 기준에 맞지 않는 사진이나 문자는 자동으로 변경되어 등록됩니다.
+                        상품 등록 기준에 맞지 않는 사진, 문자, 예약 시간은 자동으로 조정되어 등록됩니다.
                     </p>
                 </div>
             </div>
@@ -640,7 +674,7 @@ onMounted(async () => {
         .top {
             display: flex;
             flex-direction: column;
-            cursor: pointer;
+            // cursor: pointer;
         }
 
         &__img {
@@ -648,6 +682,7 @@ onMounted(async () => {
             height: 184px;
             @include flex-center;
             overflow: hidden;
+            cursor: pointer;
 
             border-radius: 8px 8px 0 0;
 
@@ -658,8 +693,12 @@ onMounted(async () => {
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 0, 0, 0.5);
+                background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 100%);
                 pointer-events: none;
+            }
+
+            &.disabled::after {
+                background: rgba(140,140,140,.6);
             }
 
             img {
@@ -688,6 +727,21 @@ onMounted(async () => {
             gap: 4px;
             
             border-bottom: 1px solid $gray-200;
+
+            :deep(.select__box) {
+                width: 145px;
+                border: none;
+                padding: 0 3px;
+                box-shadow: none !important;
+
+                &:hover {
+                    background-color: $gray-50;
+                }
+            }
+
+            &.disabled {
+                p {color: $gray-500;}
+            }
         }
 
 

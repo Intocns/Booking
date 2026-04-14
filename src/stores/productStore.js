@@ -610,6 +610,13 @@ export const useProductStore = defineStore("product", () => {
         }
     }
 
+    //  상품 확정 타입 수정
+    const updateProductConfirmType = async(itemId, code) => {
+        const response = await api.get(`/api/{cocode}/item/${itemId}/confirm/${code}`); 
+        
+        return response.data;
+    }
+
     return {
         // 
         //
@@ -642,5 +649,6 @@ export const useProductStore = defineStore("product", () => {
         getProductSchedule, // 상품 수정 > 상품 운영시간 불러오기
         getItemReservationInfo, // 상품 수정 > 상품 예약 정보 불러오기
         setScheduleModalSave, // 상품 수정 > 일정 설정 > 진료가능 동물 수, 운영시간 설정 모달창 저장
+        updateProductConfirmType, // 상품 확정 타입 수정
     }
 })
