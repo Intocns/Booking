@@ -303,6 +303,36 @@ const bookingConfirmCode = (code) => {
             return '';
     }
 }
+const bookingConfirmOptions = ref(
+    [
+        {value: 'CF01', label: '신청과 동시에 확정'},
+        {value: 'CF02', label: '관리자 확인 후 확정'},
+    ]
+)
+
+// 확정 방식 변경 시 api 호출
+const handleBookingConfirmUpdate = async (product, newValue, oldValue) => {
+    if(newValue === oldValue) {
+        return; // 값이 변경되지 않았으면 api 호출하지 않음
+    }
+
+    const bookingConfirmValue = {
+        'CF01': 0,
+        'CF02': 1,
+    }
+
+    try {
+        const response = await productStore.updateProductConfirmType(product.bizItemId, bookingConfirmValue[newValue]); 
+        
+        if (response.status_code <= 300) {
+            showAlert(`[${product.name}]의 확정 방식이 변경되었습니다.`);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+    productStore.getProductList(); // 상품 관리 기존 화면 새로고침용
+};
+
 
 onMounted(async () => {
     await productStore.getProductList();
@@ -397,8 +427,12 @@ onMounted(async () => {
                                 <span class="toggle-img"></span>
                             </label>
                         </div>
-        
-                        <span class="item-box__sub-text body-xs">{{ bookingConfirmCode(product.bookingConfirmCode) }}</span>
+
+                        <CustomSingleSelect
+                            :model-value="product.bookingConfirmCode"
+                            :options="bookingConfirmOptions"
+                            @update:model-value="(newValue) => handleBookingConfirmUpdate(product, newValue, product.bookingConfirmCode)"
+                        />
                     </div>
                 </div>
 
@@ -640,7 +674,7 @@ onMounted(async () => {
         .top {
             display: flex;
             flex-direction: column;
-            cursor: pointer;
+            // cursor: pointer;
         }
 
         &__img {
@@ -648,6 +682,7 @@ onMounted(async () => {
             height: 184px;
             @include flex-center;
             overflow: hidden;
+            cursor: pointer;
 
             border-radius: 8px 8px 0 0;
 
@@ -688,6 +723,21 @@ onMounted(async () => {
             gap: 4px;
             
             border-bottom: 1px solid $gray-200;
+
+            :deep(.select__box) {
+                width: 145px;
+                border: none;
+                padding: 0 3px;
+                box-shadow: none !important;
+
+                &:hover {
+                    background-color: $gray-50;
+                }
+            }
+
+            &.disabled {
+                p {color: $gray-500;}
+            }
         }
 
 
