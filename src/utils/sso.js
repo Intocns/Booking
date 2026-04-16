@@ -36,12 +36,12 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
         return;
     }
 
-    if(Number(cocode) >= 10000) {
-        showAlert('인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.');
-        // window.close();
-        // return {data: {returnUrl: '', message:'인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.'}};
-        return;
-    }
+    // if(Number(cocode) >= 10000) {
+    //     showAlert('인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.');
+    //     // window.close();
+    //     // return {data: {returnUrl: '', message:'인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.'}};
+    //     return;
+    // }
 
     const isLocal = import.meta.env.VITE_IS_LOCAL === 'true';
 
@@ -149,10 +149,10 @@ export const initSSOCheck = (onResult) => {
 
         // cocode 만번대 계정의 경우 차트를 사용하지 않음으로 로그인 막아둠
         // TODO: 인투펫 예약은 사용할 수 있으므로 주석처리 => 예약 승인 시 cocode 체크 후 매칭없이 확정하도록 코드는 작성해뒀고 주석처리해둠
-        if(Number(data.cocode) >= 10000) {
-            if (onResult) onResult('cocode');
-            return;
-        }
+        // if(Number(data.cocode) >= 10000) {
+        //     if (onResult) onResult('cocode');
+        //     return;
+        // }
 
         const hospitalStore = useHospitalStore();
         hospitalStore.hospitalData = data;
