@@ -265,7 +265,7 @@ onMounted(async() => {
                                 <button type="button" class="btn btn--size-24 btn--black-outline" @click="getSmsPointInfo" title="잔여건수 새로고침">
                                     <img :src="icReload" alt="새로고침" width="10">
                                 </button>
-                                <button type="button" class="btn btn--size-24 btn--black-outline" @click="openChargePoint">
+                                <button type="button" class="btn btn--size-24 btn--black-outline" @click="openChargePoint" v-if="reservationStore.operatorSettingInfo?.chargePointUrl">
                                     <img :src="icSms" alt="아이콘" width="14">SMS 충전하기
                                 </button>
                             </div>
@@ -273,7 +273,7 @@ onMounted(async() => {
                                 <span class="body-m">잔여건수 조회 중...</span>
                             </div>
                             <div v-else class="d-flex align-center gap-8">
-                                <button type="button" class="btn btn--size-24 btn--black-outline" @click="openChargePoint">
+                                <button type="button" class="btn btn--size-24 btn--black-outline" @click="openChargePoint" v-if="reservationStore.operatorSettingInfo?.chargePointUrl">
                                     <img :src="icSms" alt="아이콘" width="14">SMS 충전하기
                                 </button>
                             </div>
