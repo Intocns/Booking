@@ -38,11 +38,9 @@ export const validateTimeRanges = (timeRanges) => {
     for (let i = 0; i < timeRanges.length; i++) {
         const current = timeRanges[i];
 
-        if ((current.startTime && !current.endTime) || (!current.startTime && current.endTime)) {
+        if (!current.startTime || !current.endTime) {
             return { isValid: false, message: '시작 시간과 종료 시간을 모두 입력해주세요.' };
         }
-
-        if (!current.startTime && !current.endTime) continue;
 
         if (current.startTime >= current.endTime) {
             return { isValid: false, message: '마지막 시간은 시작 시간보다 빠를 수 없습니다.' };
