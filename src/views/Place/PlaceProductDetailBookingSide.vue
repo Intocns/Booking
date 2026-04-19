@@ -829,7 +829,8 @@ onMounted(async() => {
                             </div>
                         </div>
 
-                        <div class="d-flex justify-end">
+                        <!-- 260420 특정 병원에서 오류가 많이 발생해서 해당 부분 주석처리(운영시간 초기화 후 휴무일 수정하면 운영시간도 함께 저장함) -->
+                        <!-- <div class="d-flex justify-end">
                             <button 
                                 @click="onClearConfig"
                                 class="btn btn--size-24 btn--black-outline"
@@ -837,7 +838,7 @@ onMounted(async() => {
                                 <img :src="icReset" alt="아이콘">
                                 운영시간 초기화
                             </button>
-                        </div>
+                        </div> -->
                     </div>
                 </li>
 
