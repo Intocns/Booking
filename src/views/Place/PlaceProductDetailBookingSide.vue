@@ -206,16 +206,20 @@ const updateItemSchedule = (async(type) => {
         } 
         else if (config.operatingMode === 'daily') {
             // 각 요일 그룹별로 별도로 검사
-            config.dailyGroups.forEach(g => {
+            for (const g of config.dailyGroups) {
+                if(g.selectedDays && g.selectedDays.length <= 0) {
+                    showAlert('요일을 선택해 주세요.');
+                    return;
+                }
                 if (g.times && g.times.length) {
                     validationGroups.push(g.times);
                 }
-            });
+            }
         }
 
         // 추출된 각 그룹별로 유효성 검사 실시
         for (const range of validationGroups) {
-            const result = validateTimeRanges(range);
+            const result = validateTimeRanges(range, type);
             if (!result.isValid) {
                 showAlert(result.message);
                 return;
@@ -245,7 +249,7 @@ const updateItemSchedule = (async(type) => {
     let impos = null;
     if(type == 'operating'){ // 수정화면 저장
         //수정화면 오픈 시 조회햇던 holiday 그대로 가져올 것
-        impos = proSchInfo.impos;
+        impos = isHolidayEnabled.value ? proSchInfo.impos : null;
     }else{ // holiday
         impos = isHolidayEnabled.value ? holidayFormRef.value.setSaveFormat() : null;
     }
@@ -523,22 +527,43 @@ const mapImposConfig = (impos) => {
     if (!impos) return;
 
     // 1. 정기 휴무일 처리
-    const regularData = (impos.week && impos.week.length > 0) ? impos.week[0] : null;
-    let regText = '';
+    const regularDataWeek = (impos.week && impos.week.length > 0) ? impos.week[0] : null;
+    const regularDataMonList = (impos.mon && impos.mon.length > 0) ? impos.mon : null;
+
+    let regWeekText = '';
+    let regMonText = '';
+
+    const typeMap = {
+        'WEEKLY': '매주',
+        'BI_WEEKLY': '격주',
+        'MONTHLY': '매달'
+    };
     
-    if (regularData?.weekdays && regularData.weekdays.length > 0) {
+    if (regularDataWeek?.weekdays && regularDataWeek.weekdays.length > 0) {
         // daysOptions에서 라벨 매핑 (daysOptions는 상단에 정의되어 있어야 함)
-        const dayLabels = regularData.weekdays
+        const dayLabels = regularDataWeek.weekdays
             .map(d => DAYS_OPTIONS.find(opt => opt.value === d)?.label)
             .filter(l => l)
             .join(', ');
 
-        const typeMap = {
-            'WEEKLY': '매주',
-            'BI_WEEKLY': '격주',
-            'MONTHLY': '매달'
-        };
-        regText = `${typeMap[regularData.repetitionType] || ''} ${dayLabels}`;
+        regWeekText = `${typeMap[regularDataWeek.repetitionType] || ''} ${dayLabels}`;
+    }
+
+    if (regularDataMonList?.length > 0) {
+        regMonText = regularDataMonList.map(item => {
+            if (!item.weekdays || item.weekdays.length === 0) return '';
+
+            const dayLabels = item.weekdays
+                .map(d => DAYS_OPTIONS.find(opt => opt.value === d)?.label)
+                .filter(l => l)
+                .join(', ');
+
+            const weekInfo = item.weekNumbers ? `${item.weekNumbers}째주` : '';
+            
+            return `${typeMap[item.repetitionType] || '매달'} ${weekInfo} ${dayLabels}`;
+        })
+        .filter(text => text !== '')
+        .join(', ');
     }
 
     // 2. 법정 공휴일 처리
@@ -546,13 +571,17 @@ const mapImposConfig = (impos) => {
     let pubText = '';
 
     if (hoDay.length > 0) {
-        const mappedLabels = hoDay.map(serverVal => {
+        const mappedLabels = hoDay.reduce((acc, serverVal) => {
             // 옵션 리스트에서 apiValue 또는 label이 서버값과 일치하는 항목 찾기
             const matchedOpt = PUBLIC_HOLIDAYS_OPTIONS.find(opt => 
                 opt.apiValue === serverVal || opt.label === serverVal
             );
-            return matchedOpt ? matchedOpt.label : serverVal;
-        });
+
+            if (matchedOpt) {
+                acc.push(matchedOpt.label);
+            }
+            return acc; // 매칭된 라벨만 보여줌
+        }, []);
         pubText = mappedLabels.join(', ');
     }
 
@@ -572,14 +601,67 @@ const mapImposConfig = (impos) => {
 
     // 최종 객체 업데이트
     holidayTexts.value = {
-        regular: regText,
+        regular: regWeekText + regMonText, //regText,
         public: pubText,
         custom: cusText
     };
 };
 
+// 운영시간 검증
+const checkOperatingSchedule = () => {
+    // 운영시간 데이터 체크
+    for (const config of configs.value) {
+        let validationGroups = []; // 검사할 배열들의 묶음
+
+        if (config.operatingMode === 'all') {
+            // 모든 날 동일: 한 묶음만 검사
+            validationGroups.push(config.allDaysTime);
+        } 
+        else if (config.operatingMode === 'split') {
+            // 주간/주말/토/일 각각 별도로 검사해야 함
+            if (config.splitTime.weekday.length) validationGroups.push(config.splitTime.weekday);
+            if (config.splitTime.weekend.length) validationGroups.push(config.splitTime.weekend);
+            if (config.splitTime.sat.length) validationGroups.push(config.splitTime.sat);
+            if (config.splitTime.sun.length) validationGroups.push(config.splitTime.sun);
+        } 
+        else if (config.operatingMode === 'daily') {
+            // 각 요일 그룹별로 별도로 검사
+            for (const g of config.dailyGroups) {
+                if(g.selectedDays && g.selectedDays.length <= 0) {
+                    return false;
+                }
+                if (g.times && g.times.length) {
+                    validationGroups.push(g.times);
+                }
+            }
+        }
+
+        // 추출된 각 그룹별로 유효성 검사 실시
+        for (const range of validationGroups) {
+            const result = validateTimeRanges(range, 'holiday');
+            if (!result.isValid) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 // 휴무일 수정 모달 오픈
 const openHolidayModal = async () => {
+    const proSchInfo = productStore.productScheduleInfo || {};
+    const isImposEmpty = !proSchInfo.impos || Object.values(proSchInfo.impos).every(val => !val);
+
+    const validation = checkOperatingSchedule();
+
+    if (!validation) {
+        if(isImposEmpty) {
+            isHolidayEnabled.value = false; // 휴무일 설정 토글을 원래대로 돌려놓음
+        }
+        showAlert(`운영 시간을 먼저 설정해주세요.`);
+        return;
+    }
+
     modalStore.holidaySettingModal.openModal();
     
     setTimeout(() => {
@@ -590,8 +672,12 @@ const openHolidayModal = async () => {
 };
 
 const handleToggleChange = (event) => {
+    const isChecked = event.target.checked;
+    const proSchInfo = productStore.productScheduleInfo || {};
+    const isImposEmpty = !proSchInfo.impos || Object.values(proSchInfo.impos).every(val => !val);
+
     // 체크박스가 체크된 상태(on)일 때만 모달 열기
-    if (event.target.checked) {
+    if (isChecked && isImposEmpty) {
         openHolidayModal();
     }
 };
@@ -829,7 +915,8 @@ onMounted(async() => {
                             </div>
                         </div>
 
-                        <div class="d-flex justify-end">
+                        <!-- 260420 특정 병원에서 오류가 많이 발생해서 해당 부분 주석처리(운영시간 초기화 후 휴무일 수정하면 운영시간도 함께 저장함) -->
+                        <!-- <div class="d-flex justify-end">
                             <button 
                                 @click="onClearConfig"
                                 class="btn btn--size-24 btn--black-outline"
@@ -837,7 +924,7 @@ onMounted(async() => {
                                 <img :src="icReset" alt="아이콘">
                                 운영시간 초기화
                             </button>
-                        </div>
+                        </div> -->
                     </div>
                 </li>
 
