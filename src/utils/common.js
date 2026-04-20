@@ -34,12 +34,15 @@ export const getFieldError = (value, min, max) => {
  * timeRanges: [{startTime, endTime}, ...]
  * return: true/false
  */
-export const validateTimeRanges = (timeRanges) => {
+export const validateTimeRanges = (timeRanges, type) => {
     for (let i = 0; i < timeRanges.length; i++) {
         const current = timeRanges[i];
 
         if (!current.startTime || !current.endTime) {
-            return { isValid: false, message: '시작 시간과 종료 시간을 모두 입력해주세요.' };
+            return { 
+                isValid: false, 
+                message: type === 'holiday' ? '운영 시간이 설정 되지 않았습니다.\n운영 시간을 먼저 설정해주세요.' : '시작 시간과 종료 시간을 모두 입력해주세요.'
+            };
         }
 
         if (current.startTime >= current.endTime) {
