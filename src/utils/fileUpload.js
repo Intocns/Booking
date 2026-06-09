@@ -19,3 +19,20 @@ export const uploadImage = async (file) => {
     }
     
 }
+
+// 엑셀 파일 업로드
+export const uploadExcel = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await api.post('/api/{cocode}/e/excel/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
+    } catch {
+        showAlert('엑셀파일 업로드에 실패하였습니다.')
+    }
+}

@@ -155,11 +155,17 @@ const clickNextBtn = (async() => {
             validationGroups.push(config.allDaysTime);
         } 
         else if (config.operatingMode === 'split') {
-            // 주간/주말/토/일 각각 별도로 검사해야 함
-            if (config.splitTime.weekday.length) validationGroups.push(config.splitTime.weekday);
-            if (config.splitTime.weekend.length) validationGroups.push(config.splitTime.weekend);
-            if (config.splitTime.sat.length) validationGroups.push(config.splitTime.sat);
-            if (config.splitTime.sun.length) validationGroups.push(config.splitTime.sun);
+            // 평일은 항상 필수
+            validationGroups.push(config.splitTime.weekday);
+
+            // 주말 운영 방식에 따라 검사
+            if (config.splitMode === 'weekend_all') {
+                validationGroups.push(config.splitTime.weekend);
+            }
+            else if (config.splitMode === 'weekend_split') {
+                validationGroups.push(config.splitTime.sat);
+                validationGroups.push(config.splitTime.sun);
+            }
         } 
         else if (config.operatingMode === 'daily') {
             // 각 요일 그룹별로 별도로 검사
