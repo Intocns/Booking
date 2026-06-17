@@ -206,10 +206,12 @@ const handleMobileSelect = () => {
     // VueDatePicker의 내장 selectDate 함수를 직접 호출
     if (mobileDpRef.value) {
         // 라이브러리 내부의 selectDate 메서드 호출
-        mobileDpRef.value.selectDate(); 
+        mobileDpRef.value.selectDate();
     }
     isBottomSheetOpen.value = false;
 };
+
+defineExpose({ openDatePicker });
 </script>
 
 <template>

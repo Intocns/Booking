@@ -34,6 +34,14 @@ const currentSort = ref('0')
 const keyword = ref('');
 const dateRange = ref([]);
 const dynamicTitle = ref('고객 예약 정보'); // 고객예약정보 모달 타이틀
+const categoryFilter = ref([1, 2, 3, 4, 5]); // 전체 선택 기본값
+const categoryOptions = [
+    { label: '진료 예약', value: 1, color: '#3B82F6' },
+    { label: '진료 예정', value: 2, color: '#22C55E' },
+    { label: '백신', value: 3, color: '#A855F7' },
+    { label: '미용', value: 4, color: '#F97316' },
+    { label: '기타', value: 5, color: '#6B7280' },
+];
 
 const reserveStatusOptions = RESERVE_STATUS_OPTIONS;
 const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
@@ -61,18 +69,22 @@ const endDate = computed(() => formatDate(dateRange.value?.[1]));
 const totalCount = computed(() => reservationStore.reserveList.length);
 
 const reserveSummary = computed(() => {
-    const counts = { confirmed: 0, pending: 0, canceled: 0 };
-    
+    const counts = { medical: 0, scheduled: 0, vaccine: 0, grooming: 0, etc: 0 };
+
     reservationStore.reserveList.forEach(row => {
-        if (row.inState === 1) counts.confirmed++;
-        else if (row.inState === 0) counts.pending++;
-        else if (row.inState === 2 || row.inState === 3) counts.canceled++;
+        if (row.reRoute === 1) counts.medical++;
+        else if (row.reRoute === 2) counts.scheduled++;
+        else if (row.reRoute === 3) counts.vaccine++;
+        else if (row.reRoute === 4) counts.grooming++;
+        else counts.etc++;
     });
 
     return [
-        { label: '확정', value: counts.confirmed.toString().padStart(2, '0') },
-        { label: '대기', value: counts.pending.toString().padStart(2, '0') },
-        { label: '취소 · 거절', value: counts.canceled.toString().padStart(2, '0'), warning: true },
+        { label: '진료 예약', value: counts.medical.toString().padStart(2, '0') },
+        { label: '진료 예정', value: counts.scheduled.toString().padStart(2, '0') },
+        { label: '백신', value: counts.vaccine.toString().padStart(2, '0') },
+        { label: '미용', value: counts.grooming.toString().padStart(2, '0') },
+        { label: '기타', value: counts.etc.toString().padStart(2, '0') },
     ];
 });
 
@@ -116,12 +128,13 @@ const searchList = async () => {
     const isStatusEmpty = !reservationStatus.value?.length;
     const isDoctorEmpty = !doctorList.value?.length;
     const isRouteEmpty = !reservationChannel.value?.length;
-    
-    if (isStatusEmpty || isDoctorEmpty || isRouteEmpty) {
+    const isCategoryEmpty = !categoryFilter.value?.length;
+
+    if (isStatusEmpty || isDoctorEmpty || isRouteEmpty || isCategoryEmpty) {
         reservationStore.reserveList = [];
         return;
     }
-    
+
     reservationStore.getReservationList({
         status: convertFilterParam(reservationStatus.value),
         doctorId: convertFilterParam(doctorList.value),
@@ -129,6 +142,7 @@ const searchList = async () => {
         startDate: startDate.value,
         endDate: endDate.value,
         reRoute: convertFilterParam(reservationChannel.value),
+        category: categoryFilter.value.length === categoryOptions.length ? null : categoryFilter.value,
     });
 };
 
@@ -159,7 +173,7 @@ const handleTitleUpdate = (newTitle) => {
     dynamicTitle.value = newTitle;
 };
 
-watch([reservationStatus, doctorList, reservationChannel, dateRange], () => {
+watch([reservationStatus, doctorList, reservationChannel, categoryFilter, dateRange], () => {
     nextTick(() => searchList());
 }, { deep: true });
 
@@ -179,8 +193,8 @@ onMounted(async() => {
         <template #filter>
             <div class="d-flex flex-col gap-16">
                 <div class="d-flex flex-col align-center">
-                    <FilterDate  
-                        v-model="dateRange" 
+                    <FilterDate
+                        v-model="dateRange"
                         :default-select="'today'"
                         :is-mobile="true"
                     />
@@ -196,7 +210,7 @@ onMounted(async() => {
                     />
     
                     <div class="d-flex justify-between align-center flex-wrap gap-6">
-                        <div 
+                        <div
                             class="btn btn--mobile-option"
                             :class="{ 'selected': isTodayActive }"
                             @click="setToday"
@@ -212,7 +226,9 @@ onMounted(async() => {
                                 :options="doctorOptions"
                             />
                             <!-- 조회 필터 버튼 -->
-                            <FilterBtn 
+                            <FilterBtn
+                                v-model:category="categoryFilter"
+                                :category-options="categoryOptions"
                                 v-model:status="reservationStatus"
                                 v-model:channel="reservationChannel"
                                 v-model:sort="currentSort"
@@ -229,15 +245,17 @@ onMounted(async() => {
 
         <template #table>
             <div class="mobile-total-count">
-                <div class="total">
-                    Total 
-                    <span class="cnt">{{ totalCount }}</span>
-                </div>
+                <div class="total-row">
+                    <div class="total">
+                        Total
+                        <span class="cnt">{{ totalCount }}</span>
+                    </div>
 
-                <div class="detail-count">
-                    <div v-for="reserve in reserveSummary" class="detail">
-                        <span class="label">{{ reserve.label }}</span>
-                        <span class="cnt" :class="reserve.warning ? 'warning' : ''">{{ reserve.value }}</span>
+                    <div class="detail-count">
+                        <div v-for="(reserve, index) in reserveSummary" :key="index" class="detail">
+                            <span class="label">{{ reserve.label }}</span>
+                            <span class="cnt">{{ reserve.value }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -268,11 +286,14 @@ onMounted(async() => {
 .reserve-list-info {color: $gray-700;}
 
 .mobile-total-count {
-    display: flex;
-    flex-wrap:wrap;
-    justify-content: space-between;
-    align-items: center;
     padding: 0 20px;
+
+    .total-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+    }
 
     .total {
         @include typo($title-l-mobile-size, $title-l-mobile-weight, $title-l-mobile-spacing, $title-l-mobile-line);
@@ -285,8 +306,8 @@ onMounted(async() => {
 
     .detail-count {
         display: flex;
-        flex-wrap:wrap;
-        gap:6px;
+        flex-wrap: wrap;
+        gap: 6px;
 
         .detail {
             display: flex;
@@ -301,7 +322,7 @@ onMounted(async() => {
                 margin-left: 4px;
             }
 
-            &:last-child::after {content:none;}
+            &:last-child::after { content: none; }
 
             .label {
                 color: $gray-700;
@@ -313,8 +334,6 @@ onMounted(async() => {
                 color: $gray-900;
                 @include typo($title-s-mobile-size, $title-s-mobile-weight, $title-s-mobile-spacing, $title-s-mobile-line);
                 line-height: 1;
-                
-                &.warning {color: $warning-500;}
             }
         }
     }

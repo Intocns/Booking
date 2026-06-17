@@ -797,12 +797,13 @@ const textPhoneNumber = computed(() => {
             <div class="modal-content-title-wrapper">
                 <div class="d-flex gap-8 align-items-center">
                     <p class="title-l">예약 정보</p>
-                    
+
                     <div class="d-flex gap-4 align-center">
                         <span v-if="reserveData.clinicType == '개인일정' || reserveData.clinicType == '일반예약'" class="flag flag--black">{{ reserveData.clinicType }}</span>
                         <span v-else class="flag" :class="RESERVE_STATUS_CLASS_MAP[reserveData.inState]">{{ RESERVE_STATUS_SHORT_MAP[reserveData.inState] }}</span>
                     </div>
                 </div>
+                <span class="body-m" style="color: #86868a;">예약 번호  {{ reserveData.reserveIdx }}</span>
             </div>
 
             <template v-if="reserveData.clinicType == '개인일정' || reserveData.clinicType == '일반예약'">

@@ -8,6 +8,12 @@ import { formatDate } from '@/utils/dateFormatter';
 
 import CustomDatePicker from '@/components/common/CustomDatePicker.vue'
 
+const customDatePickerRef = ref(null);
+const openMobileDatePicker = () => {
+    customDatePickerRef.value?.openDatePicker();
+};
+defineExpose({ openMobileDatePicker });
+
 import icArrowLeft from '@/assets/icons/ic_arrow_left.svg'
 import icArrowRight from '@/assets/icons/ic_arrow_right.svg'
 import icInformationB from '@/assets/icons/ic_infomation_b.svg'
@@ -48,8 +54,11 @@ const dateRange = computed({
 const today = startOfDay(new Date());
 // dateRange.value = [today, today]; //최초
 
+const isCustomMode = ref(false); // 기간선택 버튼 활성 상태
+
 // 빠른 선택 로직
 const setRange = (days) => {
+    isCustomMode.value = false;
     let start, end;
     if (days === 'today') {
         start = today;
@@ -142,19 +151,16 @@ const navigateDate = (direction) => {
 
 const activeQuick = computed(() => {
     if (props.buttonType !== 'quick' || !Array.isArray(dateRange.value)) return null;
-    
+
     const [start, end] = dateRange.value;
     if (!start || !end) return null;
-    
-    // 종료일이 오늘인지 확인 (오늘 기준 빠른 선택일 경우)
+
     const isStartToday = startOfDay(new Date(start)).getTime() === today.getTime();
     if (!isStartToday) return null;
 
     const diff = differenceInDays(startOfDay(new Date(end)), today);
     if (diff === 0) return 'today';
     if (diff === 7) return '7';
-    if (diff === 15) return '15';
-    if (diff === 30) return '30';
     return null;
 });
 
@@ -197,15 +203,20 @@ onMounted(() => {
             </div>
 
             <div class="search-filter__datepicker">
-                <CustomDatePicker v-model="dateRange" :range="props.isRange" :use-limit="props.useLimit" :limit-months="props.limitMonths" />
+                <CustomDatePicker ref="customDatePickerRef" v-model="dateRange" :range="props.isRange" :use-limit="props.useLimit" :limit-months="props.limitMonths" />
             </div>
         </div>
 
-        <!-- 빠른 선택 버튼 (오늘/7일/15일/1개월) -->
+        <!-- 빠른 선택 버튼 (오늘/7일/기간선택) -->
         <div v-if="props.buttonType === 'quick'" class="search-filter__date-buttons">
-            <div class="search-filter__date-button" v-for="opt in [['today', '오늘'], [7, '7일'], [15, '15일'], [30, '1개월']]" :key="opt[0]">
-                <label :class="['btn btn--size-24 btn--black-outline', { selected: activeQuick === String(opt[0]) }]" @click="setRange(opt[0])">
+            <div class="search-filter__date-button" v-for="opt in [['today', '오늘'], [7, '7일']]" :key="opt[0]">
+                <label :class="['btn btn--size-24 btn--black-outline', { selected: !isCustomMode && activeQuick === String(opt[0]) }]" @click="setRange(opt[0])">
                     <span>{{ opt[1] }}</span>
+                </label>
+            </div>
+            <div class="search-filter__date-button">
+                <label :class="['btn btn--size-24 btn--black-outline', { selected: isCustomMode }]" @click="isCustomMode = true; customDatePickerRef?.openDatePicker()">
+                    <span>기간선택</span>
                 </label>
             </div>
         </div>
@@ -233,13 +244,14 @@ onMounted(() => {
         >
             <img :src="icArrowLeft">
         </button>
-        <CustomDatePicker 
-            v-model="dateRange" 
-            :range="props.isRange" 
-            :use-limit="props.useLimit" 
-            :limit-months="props.limitMonths" 
-            :is-mobile="props.isMobile" 
-            :is-search-filter="true" 
+        <CustomDatePicker
+            ref="customDatePickerRef"
+            v-model="dateRange"
+            :range="props.isRange"
+            :use-limit="props.useLimit"
+            :limit-months="props.limitMonths"
+            :is-mobile="props.isMobile"
+            :is-search-filter="true"
             :use-month-picker="useMonthPicker"
         />
         <button 

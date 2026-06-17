@@ -1,6 +1,7 @@
 <script setup>
 import FilterDate from '@/components/common/filters/FilterDate.vue';
 import FilterDoctorBtn from '@/components/common/Mobile/filters/FilterDoctorBtn.vue';
+import FilterBtn from '@/components/common/Mobile/filters/FilterBtn.vue';
 import ReserveInfo from '@/components/common/modal-content/mobile/ReserveInfo.vue';
 
 import { DayPilot, DayPilotMonth } from "@daypilot/daypilot-lite-vue";
@@ -9,6 +10,7 @@ import { startOfMonth, endOfMonth, format, lastDayOfMonth } from "date-fns";
 import { onMounted, ref, computed, watch, onUnmounted } from 'vue';
 
 // 스토어
+import { RESERVE_STATUS_OPTIONS, RESERVE_ROUTE_OPTIONS } from "@/constants";
 import { useReservationStore } from '@/stores/reservationStore';
 import { useHospitalStore } from '@/stores/hospitalStore';
 import { useModalStore } from '@/stores/modalStore';
@@ -56,6 +58,19 @@ const activeDoctorId = ref(null); // 현재 달력에서 상세히 보고있는 
 const isFolded = ref(false); // 리스트가 올라왔는지 여부
 const calendarRef = ref(null);
 const dynamicTitle = ref('고객 예약 정보'); // 고객예약정보 모달 타이틀
+
+const categoryFilter = ref([1, 2, 3, 4, 5]);
+const categoryOptions = [
+    { label: '진료 예약', value: 1, color: '#3B82F6' },
+    { label: '진료 예정', value: 2, color: '#22C55E' },
+    { label: '백신', value: 3, color: '#A855F7' },
+    { label: '미용', value: 4, color: '#F97316' },
+    { label: '기타', value: 5, color: '#6B7280' },
+];
+const reservationStatus = ref(['all']);
+const reservationChannel = ref(['all']);
+const reserveStatusOptions = RESERVE_STATUS_OPTIONS;
+const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
 
 const dateRange = computed({
     get: (oldValue) => {
@@ -535,13 +550,26 @@ onUnmounted(() => {
                     />
                 </div>
     
-                <div 
-                    class="btn btn--mobile-option"
-                    :class="{ 'selected': isTodayActive }"
-                    @click="setToday"
-                >
-                    <img :src="isTodayActive ? icCheckW : icCheckB" alt="체크아이콘">
-                    <span>Today</span>
+                <div class="d-flex gap-8">
+                    <div
+                        class="btn btn--mobile-option"
+                        :class="{ 'selected': isTodayActive }"
+                        @click="setToday"
+                    >
+                        <img :src="isTodayActive ? icCheckW : icCheckB" alt="체크아이콘">
+                        <span>Today</span>
+                    </div>
+
+                    <FilterBtn
+                        v-model:category="categoryFilter"
+                        :category-options="categoryOptions"
+                        v-model:status="reservationStatus"
+                        :status-options="reserveStatusOptions"
+                        v-model:channel="reservationChannel"
+                        :channel-options="reservationChannelOptions"
+                        :sort-options="[]"
+                        :show-reset-btn="true"
+                    />
                 </div>
             </div>
 
