@@ -176,28 +176,12 @@ onMounted(() => {
                     </div>
                 </div> -->
 
-                <!-- naver -->
+                <!-- 진료 예약 -->
                 <div class="count-card count-card--waiting">
                     <div class="count-card__title">
-                        <div class="icon_wrapper naver">
-                            <img :src="icNaver" alt="waiting icon">
+                        <div class="icon_wrapper">
                         </div>
-                        <span class="body-m">Naver</span>
-                    </div>
-
-                    <div class="count-card__value">
-                        <p class="val">{{ formatCount(count.cnt2) }}</p>
-                        <span class="txt">건</span>
-                    </div>
-                </div>
-
-                <!-- intoVetGE -->
-                <div class="count-card count-card--waiting">
-                    <div class="count-card__title">
-                        <div class="icon_wrapper into">
-                            <img :src="icInto" alt="waiting icon">
-                        </div>
-                        <span class="body-m">IntoVet GE</span>
+                        <span class="body-m">진료 예약</span>
                     </div>
 
                     <div class="count-card__value">
@@ -206,17 +190,44 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- intoPEt -->
+                <!-- 진료 예정 -->
                 <div class="count-card count-card--waiting">
                     <div class="count-card__title">
-                        <div class="icon_wrapper pet">
-                            <img :src="icIntoPet" alt="waiting icon">
+                        <div class="icon_wrapper">
                         </div>
-                        <span class="body-m">IntoPet</span>
+                        <span class="body-m">진료 예정</span>
+                    </div>
+
+                    <div class="count-card__value">
+                        <p class="val">{{ formatCount(count.cnt2) }}</p>
+                        <span class="txt">건</span>
+                    </div>
+                </div>
+
+                <!-- 백신 -->
+                <div class="count-card count-card--waiting">
+                    <div class="count-card__title">
+                        <div class="icon_wrapper">
+                        </div>
+                        <span class="body-m">백신</span>
                     </div>
 
                     <div class="count-card__value">
                         <p class="val">{{ formatCount(count.cnt3) }}</p>
+                        <span class="txt">건</span>
+                    </div>
+                </div>
+
+                <!-- 미용 -->
+                <div class="count-card count-card--waiting">
+                    <div class="count-card__title">
+                        <div class="icon_wrapper">
+                        </div>
+                        <span class="body-m">미용</span>
+                    </div>
+
+                    <div class="count-card__value">
+                        <p class="val">{{ formatCount(count.cnt4) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>
