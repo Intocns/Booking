@@ -8,6 +8,8 @@ import icFilterW from '@/assets/icons/mobile/ic_filter_w.svg'
 import icDropdown from '@/assets/icons/mobile/ic_dropdown.svg'
 
 const props = defineProps({
+    category: { type: Array, default: () => [1, 2, 3, 4, 5] },
+    categoryOptions: { type: Array, default: () => [] },
     status: { type: Array, default: () => ['all'] },
     channel: { type: Array, default: () => ['all'] },
     sort: { type: String, default: () => '0' },
@@ -17,14 +19,16 @@ const props = defineProps({
     showResetBtn: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['update:status', 'update:channel', 'update:sort']);
+const emit = defineEmits(['update:category', 'update:status', 'update:channel', 'update:sort']);
 const isOpen = ref(false);
  
 // 바텀시트 안에서만 쓰일 임시 값 (저장 전까지 부모는 모름)
+const tempCategory = ref([...props.category]);
 const tempStatus = ref([...props.status]);
 const tempChannel = ref([...props.channel]);
 const tempSort = ref(props.sort);
 const activeGroups = ref({
+    category: true,
     sort: true,
     channel: true,
     status: true
@@ -38,6 +42,7 @@ const toggleGroup = (groupName) => {
 // 바텀시트가 열릴 때 부모의 최신 값을 임시 값에 복사 (동기화)
 watch(isOpen, (val) => {
     if (val) {
+        tempCategory.value = [...props.category];
         tempStatus.value = [...props.status];
         tempChannel.value = [...props.channel];
         tempSort.value = props.sort;
@@ -47,6 +52,31 @@ watch(isOpen, (val) => {
 // 정렬 선택 (단일 선택)
 const selectSort = (val) => {
     tempSort.value = val;
+};
+
+// 카테고리 토글 (전체선택 / 개별선택)
+const toggleCategory = (value) => {
+    const allValues = props.categoryOptions.map(o => o.value);
+    let current = [...tempCategory.value];
+
+    if (value === 'all') {
+        // 전체선택: 이미 전부 선택이면 전부 해제, 아니면 전부 선택
+        tempCategory.value = current.length === allValues.length ? [] : [...allValues];
+        return;
+    }
+
+    const idx = current.indexOf(value);
+    if (idx > -1) {
+        current.splice(idx, 1);
+    } else {
+        current.push(value);
+    }
+    tempCategory.value = current;
+};
+
+const isCategoryChecked = (value) => {
+    if (value === 'all') return tempCategory.value.length === props.categoryOptions.length;
+    return tempCategory.value.includes(value);
 };
 
 // 다중 선택 공통 로직
@@ -91,6 +121,8 @@ const toggleMultiSelect = (type, value, options) => {
 
 // 초기화 함수 (기획안의 '초기화' 버튼 대응)
 const resetFilters = () => {
+    const allCategoryValues = props.categoryOptions.map(o => o.value);
+    tempCategory.value = [...allCategoryValues];
     tempSort.value = '0'; // 첫 번째 정렬 기준
     tempStatus.value = ['all'];
     tempChannel.value = ['all'];
@@ -98,6 +130,7 @@ const resetFilters = () => {
 
 const handleSave = () => {
     // 확정 버튼을 눌렀을 때만 부모에게 알림
+    emit('update:category', tempCategory.value);
     emit('update:status', tempStatus.value);
     emit('update:channel', tempChannel.value);
     emit('update:sort', tempSort.value);
@@ -106,6 +139,7 @@ const handleSave = () => {
 
 const handelReset = () => {
     resetFilters();
+    emit('update:category', tempCategory.value);
     emit('update:status', tempStatus.value);
     emit('update:channel', tempChannel.value);
     emit('update:sort', tempSort.value);
@@ -121,6 +155,32 @@ const handelReset = () => {
     <BottomSheet v-model="isOpen" save-btn-text="확인" @save="handleSave" @reset="handelReset" :show-reset-btn="showResetBtn">
         <template #content>
             <div class="filter">
+                <div v-if="categoryOptions.length > 0" class="filter__group">
+                    <div class="filter__title" @click="toggleGroup('category')">
+                        <span class="title">예약 항목</span>
+                        <img :src="icDropdown" alt="접기" :class="{ 'is-closed': !activeGroups.category }">
+                    </div>
+
+                    <div class="option-list-wrapper" :class="{ 'is-closed': !activeGroups.category }">
+                        <ul class="option-list option-list--grid">
+                            <li @click.stop="toggleCategory('all')">
+                                <label class="checkbox">
+                                    <input type="checkbox" :checked="isCategoryChecked('all')" @click.stop.prevent>
+                                    <span class="box"></span>
+                                    <span class="label body-m">전체선택</span>
+                                </label>
+                            </li>
+                            <li v-for="opt in categoryOptions" :key="opt.value" @click.stop="toggleCategory(opt.value)">
+                                <label class="checkbox">
+                                    <input type="checkbox" :checked="isCategoryChecked(opt.value)" @click.stop.prevent>
+                                    <span class="box" :style="isCategoryChecked(opt.value) ? `background-color: ${opt.color}; border-color: ${opt.color};` : ''"></span>
+                                    <span class="label body-m">{{ opt.label }}</span>
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
                 <div v-if="sortOptions.length > 0" class="filter__group">
                     <div class="filter__title" @click="toggleGroup('sort')">
                         <span class="title">정렬</span>
@@ -140,40 +200,40 @@ const handelReset = () => {
                     </div>
                 </div>
     
-                <div v-if="channelOptions.length > 0" class="filter__group">
-                    <div class="filter__title" @click="toggleGroup('channel')">
-                        <span class="title">예약 경로</span>
-                        <img :src="icDropdown" alt="접기" :class="{ 'is-closed': !activeGroups.channel }">
-                    </div>
-    
-                    <div class="option-list-wrapper" :class="{ 'is-closed': !activeGroups.channel }">
-                        <ul class="option-list">
-                            <li v-for="c in channelOptions" :key="c.value" 
-                                @click.stop="toggleMultiSelect('channel', c.value, channelOptions)">
-                                <label class="checkbox">
-                                    <input type="checkbox" :checked="tempChannel.includes(c.value) || (tempChannel.includes('all') && c.value !== 'all')" @click.stop.prevent>
-                                    <span class="box"></span>
-                                    <span class="label body-m">{{ c.label }}</span>
-                                </label>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-    
                 <div v-if="statusOptions.length > 0" class="filter__group">
                     <div class="filter__title" @click="toggleGroup('status')">
                         <span class="title">예약 상태</span>
                         <img :src="icDropdown" alt="접기" :class="{ 'is-closed': !activeGroups.status }">
                     </div>
-    
+
                     <div class="option-list-wrapper" :class="{ 'is-closed': !activeGroups.status }">
-                        <ul class="option-list">
-                            <li v-for="st in statusOptions" :key="st.value" 
+                        <ul class="option-list option-list--grid">
+                            <li v-for="st in statusOptions" :key="st.value"
                                 @click.stop="toggleMultiSelect('status', st.value, statusOptions)">
                                 <label class="checkbox">
                                     <input type="checkbox" :checked="tempStatus.includes(st.value) || (tempStatus.includes('all') && st.value !== 'all')" @click.stop.prevent>
                                     <span class="box"></span>
                                     <span class="label body-m">{{ st.label }}</span>
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div v-if="channelOptions.length > 0" class="filter__group">
+                    <div class="filter__title" @click="toggleGroup('channel')">
+                        <span class="title">예약 경로</span>
+                        <img :src="icDropdown" alt="접기" :class="{ 'is-closed': !activeGroups.channel }">
+                    </div>
+
+                    <div class="option-list-wrapper" :class="{ 'is-closed': !activeGroups.channel }">
+                        <ul class="option-list option-list--grid">
+                            <li v-for="c in channelOptions" :key="c.value"
+                                @click.stop="toggleMultiSelect('channel', c.value, channelOptions)">
+                                <label class="checkbox">
+                                    <input type="checkbox" :checked="tempChannel.includes(c.value) || (tempChannel.includes('all') && c.value !== 'all')" @click.stop.prevent>
+                                    <span class="box"></span>
+                                    <span class="label body-m">{{ c.label }}</span>
                                 </label>
                             </li>
                         </ul>
@@ -224,9 +284,15 @@ const handelReset = () => {
             padding: 16px;
             flex-direction: column;
             gap: 10px;
-    
+
             border-radius: 8px;
-            background: $gray-50;;
+            background: $gray-50;
+
+            &--grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
         }
     }
 }

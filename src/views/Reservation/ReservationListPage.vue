@@ -15,6 +15,7 @@ import Modal from '@/components/common/Modal.vue';
 import FilterDate from '@/components/common/filters/FilterDate.vue';
 import FilterSelect from '@/components/common/filters/FilterSelect.vue';
 import FilterKeywordBtn from '@/components/common/filters/FilterKeywordBtn.vue';
+import FilterCheckbox from '@/components/common/filters/FilterCheckbox.vue';
 import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
 import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
 import icSms from '@/assets/icons/ic_sms.svg';
@@ -49,11 +50,10 @@ const openSmsModal = (row) => {
 
 // 테이블 col 정의
 const columns = [
-    { key: 'idx', label: 'No.', width: '6%' },
+    { key: 'reTimeTxt', label: '예약일자', width: '8%', sortable: true, },
+    { key: 'reTimeHisTxt', label: '예약시간', width: '6%' },
     { key: 'inStateTxt', label: '예약상태', width: '6%' },
-    { key: 'reTimeTxt', label: '예약일자', width: '7%', sortable: true,}, // sortable 값 추가시 정렬 기능
-    { key: 'reTimeHisTxt', label: '예약시간', width: '5%' },
-    { key: 'roomName', label: '상품명/진료실명', width: '12%' },
+    { key: 'roomName', label: '예약 내용', width: '12%' },
     { key: 'userName', label: '고객명', width: '7%', sortable: true, },
     { key: 'phoneTxt', label: '전화번호', width: '10%' },
     { key: 'petName', label: '동물명', width: '8%' },
@@ -69,6 +69,15 @@ const reservationStatus = ref(['all']);
 const doctorList = ref(['all']);
 const reservationChannel = ref(['all']);
 const keyword = ref('');
+const showDetailFilter = ref(false);
+const categoryFilter = ref([1, 2, 3, 4, 5]); // 전체 선택 기본값
+const categoryOptions = [
+    { label: '진료 예약', value: 1, color: '#3B82F6' },
+    { label: '진료 예정', value: 2, color: '#22C55E' },
+    { label: '백신', value: 3, color: '#A855F7' },
+    { label: '미용', value: 4, color: '#F97316' },
+    { label: '기타', value: 5, color: '#6B7280' },
+];
 const dateRange = ref([]);
 
 const reserveStatusOptions = RESERVE_STATUS_OPTIONS;
@@ -91,18 +100,22 @@ const endDate = computed(() => formatDate(dateRange.value?.[1]));
 const totalCount = computed(() => reservationStore.reserveList.length);
 
 const reserveSummary = computed(() => {
-    const counts = { confirmed: 0, pending: 0, canceled: 0 };
-    
+    const counts = { medical: 0, scheduled: 0, vaccine: 0, grooming: 0, etc: 0 };
+
     reservationStore.reserveList.forEach(row => {
-        if (row.inState === 1) counts.confirmed++;
-        else if (row.inState === 0) counts.pending++;
-        else if (row.inState === 2 || row.inState === 3) counts.canceled++;
+        if (row.reRoute === 1) counts.medical++;
+        else if (row.reRoute === 2) counts.scheduled++;
+        else if (row.reRoute === 3) counts.vaccine++;
+        else if (row.reRoute === 4) counts.grooming++;
+        else counts.etc++;
     });
 
     return [
-        { label: '확정', value: counts.confirmed.toString().padStart(2, '0') },
-        { label: '대기', value: counts.pending.toString().padStart(2, '0') },
-        { label: '취소 · 거절', value: counts.canceled.toString().padStart(2, '0'), warning: true },
+        { label: '진료 예약', value: counts.medical.toString().padStart(2, '0') },
+        { label: '진료 예정', value: counts.scheduled.toString().padStart(2, '0') },
+        { label: '백신', value: counts.vaccine.toString().padStart(2, '0') },
+        { label: '미용', value: counts.grooming.toString().padStart(2, '0') },
+        { label: '기타', value: counts.etc.toString().padStart(2, '0') },
     ];
 });
 
@@ -174,25 +187,14 @@ onMounted(async () => {
     <!-- 테이블 콘텐츠 (검색필터 + 테이블) -->
     <TableLayout>
         <!-- 검색필터 -->
-        <template #filter>         
+        <template #filter>
             <FilterDate v-model="dateRange" :default-select="'today'" />
-            <FilterSelect 
-                label="예약상태"
-                :options="reserveStatusOptions"
-                v-model="reservationStatus"
-            />
-            <FilterSelect 
+            <FilterSelect
                 label="담당의"
                 :options="doctorOptions"
                 v-model="doctorList"
                 />
-            <FilterSelect
-                label="예약경로"
-                :options="reservationChannelOptions"
-                v-model="reservationChannel"
-            />
-            
-            <FilterKeywordBtn 
+            <FilterKeywordBtn
                 v-model="keyword"
                 :placeholder="'고객명, 동물명, 전화번호 검색'"
                 @search="searchList()" />
@@ -200,6 +202,29 @@ onMounted(async () => {
             <button class="btn btn--size-32 btn--black-outline" @click="searchClear()" style="width: 40px;">
                 <img :src="icReset" alt="초기화아이콘">
             </button>
+
+            <FilterCheckbox
+                v-model="categoryFilter"
+                :options="categoryOptions"
+            />
+
+            <button class="btn btn--size-32 btn--black-outline" @click="showDetailFilter = !showDetailFilter">
+                상세 조회
+            </button>
+
+            <!-- 상세 조회 필터 (토글) -->
+            <div v-if="showDetailFilter" class="detail-filter">
+                <FilterSelect
+                    label="예약상태"
+                    :options="reserveStatusOptions"
+                    v-model="reservationStatus"
+                />
+                <FilterSelect
+                    label="예약 경로"
+                    :options="reservationChannelOptions"
+                    v-model="reservationChannel"
+                />
+            </div>
         </template>
 
         <!-- 테이블 -->
@@ -257,5 +282,13 @@ onMounted(async () => {
     :deep(.row-canceled) {
         // pointer-events: none;
         td {color: $gray-400}
+    }
+
+    .detail-filter {
+        width: 100%;
+        display: flex;
+        gap: 16px;
+        padding-top: 12px;
+        border-top: 1px solid $gray-100;
     }
 </style>

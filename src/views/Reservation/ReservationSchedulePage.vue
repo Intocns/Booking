@@ -5,6 +5,7 @@ import PageTitle from '@/components/common/PageTitle.vue'
 import TableLayout from '@/components/common/TableLayout.vue';
 import FilterDate from '@/components/common/filters/FilterDate.vue';
 import FilterSelect from '@/components/common/filters/FilterSelect.vue';
+import FilterCheckbox from '@/components/common/filters/FilterCheckbox.vue';
 import ScheduleBoard from '@/components/common/ScheduleBoard.vue';
 import ScheduleBoardWeekly from '@/components/common/ScheduleBoardWeekly.vue';
 import ScheduleBoardMonthly from '@/components/common/ScheduleBoardMonthly.vue';
@@ -104,6 +105,14 @@ const reserveStatusOptions = RESERVE_STATUS_OPTIONS;
 const reservationChannel = ref(['all']);
 // 예약경로 옵션 정의
 const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
+
+// 체크박스 필터
+const categoryFilter = ref([1, 2]);
+const categoryOptions = [
+    { label: '진료 예약', value: 1 },
+    { label: '미용', value: 2 },
+    { label: '기타', value: 3 },
+];
 
 // 검색 파라미터 생성 로직 (현재 뷰에 따라 시작/종료일 자동 계산)
 const fetchParams = computed(() => {
@@ -208,6 +217,11 @@ onMounted(async() => {
             <button class="btn btn--size-32 btn--black-outline" @click="searchClear()" style="width: 40px;">
                 <img :src="icReset" alt="초기화아이콘">
             </button>
+
+            <FilterCheckbox
+                v-model="categoryFilter"
+                :options="categoryOptions"
+            />
         </template>
 
         <template #table>
