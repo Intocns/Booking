@@ -32,24 +32,11 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
   const urlParams = new URLSearchParams(window.location.search);
   const isLocal = import.meta.env.VITE_IS_LOCAL === "true";
  
-  const sendData = {
-    cocode: cocode,
-    // user_id: '',
-    biz_no: bizNo,
-    next: nextUrl,
-  };
- 
   const tokens = {
     at: urlParams.get("at"),
     rt: urlParams.get("rt"),
     service_id: "intobooking",
   };
- 
-  const encryptedData = AesCbc.encrypt(
-    JSON.stringify(sendData),
-    import.meta.env.VITE_SSO_KEY,
-    import.meta.env.VITE_SSO_IV,
-  );
  
   const requestData = JSON.stringify(tokens);
   // const decryptData = AesCbc.decrypt(encryptedData,import.meta.env.VITE_SSO_KEY, import.meta.env.VITE_SSO_IV )
@@ -61,7 +48,6 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
       isLocal
         ? "/sso-api/autoSignIn"
         : `${import.meta.env.VITE_SSO_URL}/internalAuth`,
-      { encodeData: encryptedData },
       { headers: { "Content-Type": "application/json" } },
       { body: tokens },
     );
