@@ -45,11 +45,17 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
   try {
     // 강제 로그인 시도
     const response = await axios.post(
-      isLocal
-        ? "/sso-api/autoSignIn"
-        : `https://sso.intolink.co.kr/internalAuth`,
-      { headers: { "Content-Type": "application/json" } },
-      { body: tokens },
+      "https://sso.intolink.co.kr/internalAuth",
+      {
+        at: tokens.at,
+        rt: tokens.rt,
+        service_id: "intobooking",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
     );
  
     // const result = response.json();
