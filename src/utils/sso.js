@@ -30,31 +30,6 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
   const nextUrl = window.location.origin + window.location.pathname;
  
   const urlParams = new URLSearchParams(window.location.search);
-  const bizNo = urlParams.get("biz_no") || getCookie("biz_no") || _businessNo; // || import.meta.env.VITE_BIZ_NO;
-  const cocode = urlParams.get("cocode") || getCookie("cocode"); // || import.meta.env.VITE_COCODE;
- 
-  console.log("bizNo", bizNo);
-  console.log("cocode", cocode);
-  console.log("nextUrl", nextUrl);
- 
-  if (!bizNo) {
-    showAlert("사업자번호가 존재하지 않습니다.");
-    return;
-  }
-  if (!cocode) {
-    showAlert("병원코드가 존재하지 않습니다.");
-    return;
-  }
- 
-  if (Number(cocode) >= 10000) {
-    showAlert(
-      "인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.",
-    );
-    // window.close();
-    // return {data: {returnUrl: '', message:'인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.'}};
-    return;
-  }
- 
   const isLocal = import.meta.env.VITE_IS_LOCAL === "true";
  
   const sendData = {
