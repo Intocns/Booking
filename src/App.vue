@@ -55,12 +55,12 @@ onMounted(async () => {
   console.log("at4  ", getCookie("INTO_ACCESS"));
   console.log("rt4  ", getCookie("INTO_REFRESH"));
  
-  // if (params.has("at")) {
-  //   console.log("강제로그인 시도");
+  if (params.has("at")) {
+    console.log("강제로그인 시도");
  
-  //   await forceSsoLogin();
-  //   return;
-  // }
+    await forceSsoLogin();
+    return;
+  }
  
   const at = params.get("at");
   const rt = params.get("rt");
