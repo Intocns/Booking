@@ -47,7 +47,7 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
     const response = await axios.post(
       isLocal
         ? "/sso-api/autoSignIn"
-        : `${import.meta.env.VITE_SSO_URL}/internalAuth`,
+        : `https://sso.intolink.co.kr/internalAuth`,
       { headers: { "Content-Type": "application/json" } },
       { body: tokens },
     );
