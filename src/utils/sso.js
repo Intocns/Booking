@@ -148,7 +148,7 @@ export const initSSOCheck = (onResult) => {
   );
 
   const isSession = false; // 현재 사이트 자체 세션 유무
-  const isTest = import.meta.env.VITE_IS_TEST === "true";
+  const isTest = import.meta.env.VITE_IS_TEST === "false";
   const sso = new INTOSSO("intobooking", false, isTest); // test일경우 마지막 인자값 true, live일 경우 false
 
   window.addEventListener("message", (e) => {
