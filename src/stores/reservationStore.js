@@ -45,7 +45,7 @@ export const useReservationStore = defineStore("reservation", () => {
         rowClass: row.inState === 0 ? 'row-pending' : row.inState == 2 || row.inState == 3 ? 'row-canceled' : '',
     })
 
-    //전체 예약 내역 불러오기
+    // 전체 예약 내역 불러오기
     async function getReservationList(params) {
         isLoading.value = true;
         try {
