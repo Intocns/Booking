@@ -161,10 +161,6 @@ export const initSSOCheck = (onResult) => {
  
   console.log("isTest  ", isTest);
   console.log("isSession  ", isSession);
-  console.log("INTO_ACCESS  ", document.localStorage.getItem("INTO_ACCESS"));
-  console.log("INTO_REFRESH  ", document.localStorage.getItem("INTO_REFRESH"));
-  console.log("at  ", document.localStorage.getItem("at"));
-  console.log("rt  ", document.localStorage.getItem("rt"));
   const sso = new INTOSSO("intobooking", false, isTest); // test일경우 마지막 인자값 true, live일 경우 false
  
   window.addEventListener("message", (e) => {
