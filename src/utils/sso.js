@@ -137,15 +137,6 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
  
 // SSO 초기화 및 로직
 export const initSSOCheck = (onResult) => {
-    const data = {
-            'at' : 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoienppc29vIiwiaWF0IjoxNzgxODYzNzA2LCJleHAiOjE3ODE4NzA5MDZ9.o3_GnvUNkMLNEwsF3fTeuFm0OKtI-mAR1A7Sjy8VMg4',
-            'rt' : 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoienppc29vIiwiaWF0IjoxNzgxODYzNzA2LCJleHAiOjE3ODMwNzMzMDZ9.f91Ra3gh3X0FEMZjh_P6JJGNJ2DG-fDl8p12y3JGlco',
-            'service_id':'intolink'
-    }
-    let ret = SsoApi('https://sso.intolink.co.kr/internalAuth', data)
-
-    console.log("ssoapi :: ".ret)
-
   console.log("COOKIE", document.cookie);
   window.localStorage.setItem(
     "INTO_ACCESS",
