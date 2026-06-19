@@ -23,7 +23,7 @@ function getCookie(name) {
  
   return value ? decodeURIComponent(value[2]) : null;
 }
-
+ 
 onMounted(async () => {
   const params = new URLSearchParams(location.search);
   console.log("at  ", getCookie("at"));
@@ -34,11 +34,21 @@ onMounted(async () => {
  
   if (new URLSearchParams(location.search).has("at")) {
     console.log("location.search -> " + location.search);
-    document.cookie = `INTO_ACCESS=${encodeURIComponent(params.get("at"))}; path=/;`;
-    document.cookie = `INTO_REFRESH=${encodeURIComponent(params.get("rt"))}; path=/;`;
+    const accessDate = new Date();
+    accessDate.setDate(accessDate.getDate() + 3);
+ 
+    const refreshDate = new Date();
+    refreshDate.setDate(refreshDate.getDate() + 30);
+ 
+    document.cookie = `INTO_ACCESS=${params.get("at")};SameSite=None;Secure;path=/;expires=${accessDate.toUTCString()}`;
+    document.cookie = `INTO_REFRESH=${params.get("rt")};SameSite=None;Secure;path=/;expires=${refreshDate.toUTCString()}`;
+ 
+    window.localStorage.setItem("INTO_ACCESS", getCookie("INTO_ACCESS"));
+    window.localStorage.setItem("INTO_REFRESH", getCookie("INTO_REFRESH"));
     document.cookie = `at=${encodeURIComponent(params.get("at"))}; path=/;`;
     document.cookie = `rt=${encodeURIComponent(params.get("rt"))}; path=/;`;
   }
+ 
   console.log("at3  ", getCookie("at"));
   console.log("rt3  ", getCookie("rt"));
  
@@ -80,6 +90,11 @@ onMounted(async () => {
         confirmText: "확인",
         noCancelBtn: true,
         onConfirm: () => {
+          console.log("at5  ", getCookie("at"));
+          console.log("rt5  ", getCookie("rt"));
+ 
+          console.log("at6  ", getCookie("INTO_ACCESS"));
+          console.log("rt6  ", getCookie("INTO_REFRESH"));
           window.location.href =
             "http://192.168.0.44:20080/user/ssoRedirect?service=intobooking&next=" +
             window.location;
@@ -163,3 +178,5 @@ onMounted(async () => {
   background-color: $gray-50;
 }
 </style>
+ 
+ 
