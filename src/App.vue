@@ -24,10 +24,7 @@ function getCookie(name) {
   return value ? decodeURIComponent(value[2]) : null;
 }
 
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
 onMounted(async () => {
-  await sleep(3000);
   const params = new URLSearchParams(location.search);
   console.log("at  ", getCookie("at"));
   console.log("rt  ", getCookie("rt"));
@@ -42,7 +39,6 @@ onMounted(async () => {
     document.cookie = `at=${encodeURIComponent(params.get("at"))}; path=/;`;
     document.cookie = `rt=${encodeURIComponent(params.get("rt"))}; path=/;`;
   }
-  await sleep(3000);
   console.log("at3  ", getCookie("at"));
   console.log("rt3  ", getCookie("rt"));
  
