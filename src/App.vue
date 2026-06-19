@@ -2,50 +2,60 @@
 import Cookies from "js-cookie";
 import DefaultLayout from "./components/layouts/DefaultLayout.vue";
 import ConfirmModal from "./components/common/ConfirmModal.vue";
-
+ 
 import { onMounted, ref } from "vue";
 import { loadSSOScript, initSSOCheck, forceSsoLogin } from "@/utils/sso";
 import { useRoute, useRouter } from "vue-router";
 import { showAlert } from "./utils/ui";
 import { useModalStore } from "./stores/modalStore";
-
+ 
 import { useDevice } from "@/composables/useDevice";
-
+ 
 const isMobile = useDevice();
-
+ 
 const route = useRoute();
 const router = useRouter();
 const modalStore = useModalStore();
-
+ 
 const isAuthChecked = ref(false); // SSO 체크 완료 여부 (UI 렌더링 제어)
 function getCookie(name) {
   const value = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-
+ 
   return value ? decodeURIComponent(value[2]) : null;
 }
-
+ 
 onMounted(async () => {
   const params = new URLSearchParams(location.search);
+  console.log("at  ", getCookie("at"));
+  console.log("rt  ", getCookie("rt"));
+ 
+  console.log("at2  ", getCookie("INTO_ACCESS"));
+  console.log("rt2  ", getCookie("INTO_REFRESH"));
+ 
   if (new URLSearchParams(location.search).has("at")) {
     console.log("location.search -> " + location.search);
     document.cookie = `INTO_ACCESS=${encodeURIComponent(params.get("at"))}; path=/;`;
     document.cookie = `INTO_REFRESH=${encodeURIComponent(params.get("rt"))}; path=/;`;
-    document.cookie = `biz_no=${encodeURIComponent(params.get("biz_no"))}; path=/;`;
-    document.cookie = `cocode=${encodeURIComponent(params.get("cocode"))}; path=/;`;
+    document.cookie = `at=${encodeURIComponent(params.get("at"))}; path=/;`;
+    document.cookie = `rt=${encodeURIComponent(params.get("rt"))}; path=/;`;
   }
-
+ 
+  console.log("at3  ", getCookie("at"));
+  console.log("rt3  ", getCookie("rt"));
+ 
+  console.log("at4  ", getCookie("INTO_ACCESS"));
+  console.log("rt4  ", getCookie("INTO_REFRESH"));
+ 
   // if (params.has("at")) {
   //   console.log("강제로그인 시도");
-
+ 
   //   await forceSsoLogin();
   //   return;
   // }
-
+ 
   const at = params.get("at");
   const rt = params.get("rt");
-  const bizNo = params.get("biz_no");
-  const cocode = params.get("cocode");
-
+ 
   // 인증 결과에 따른 처리를 위한 공통 콜백 함수
   const handleAuthResult = (status) => {
     if (status === "success") {
@@ -63,41 +73,43 @@ onMounted(async () => {
       // if (!getCookie("INTO_ACCESS")) {
       //   window.location.href = "http://192.168.0.44:20080/user/ssoRedirect";
       // }
-
+ 
       //forceSsoLogin(bizNo, cocode);
-
+ 
       modalStore.confirmModal.openModal({
         text: "인증에 실패하였습니다. 다시 시도해주세요.",
         confirmText: "확인",
         noCancelBtn: true,
         onConfirm: () => {
-          window.location.href = "http://192.168.0.44:20080/user/ssoRedirect";
+          window.location.href =
+            "http://192.168.0.44:20080/user/ssoRedirect?service=intobooking&next=" +
+            window.location;
         },
       });
     }
   };
-
+ 
   try {
     await loadSSOScript(); // sso 스크립트 로드
-
+ 
     // 현재 강제 로그인은 사용하지 않음. 260409
     // if (at && rt) { // 강제로그인 시도 성공 후
     //     const expires = new Date();
     //     expires.setDate(expires.getDate() + 3); // 라이브러리 설정과 동일하게 3일
-
+ 
     //     // 라이브러리가 iframe 내부에서 하려던 토큰저장을 여기서 수행
     //     document.cookie = `INTO_ACCESS=${encodeURI(at)};SameSite=None;Secure;path=/;expires=${expires.toUTCString()}`;
     //     document.cookie = `INTO_REFRESH=${encodeURI(rt)};SameSite=None;Secure;path=/;expires=${new Date(new Date().getTime() + 27*24*60*60*1000).toUTCString()}`;
     //     window.localStorage.setItem("INTO_ACCESS", at);
     //     window.localStorage.setItem("INTO_REFRESH", rt);
-
+ 
     //     await router.replace({ path: window.location.pathname, query: {} });
-
+ 
     //     //  SSO 체크를 수행하여 정보를 받아옴
     //     initSSOCheck(handleAuthResult);
     //     return;
     // }
-
+ 
     // initSSOCheck((status) => {
     //     if (status === 'success') {
     //         isAuthChecked.value = true;
@@ -112,7 +124,7 @@ onMounted(async () => {
     //         }
     //     }
     // });
-
+ 
     // if (bizNo && cocode) {
     //   // 강제로그인 사용하지 않음으로, 링크에서 보내주는 강제로그인에 필요한 쿼리값 지워줌
     //   await router.replace({
@@ -136,14 +148,14 @@ onMounted(async () => {
   }
 });
 </script>
-
+ 
 <template>
   <DefaultLayout v-if="isAuthChecked" />
   <div v-else class="auth-loading"></div>
-
+ 
   <ConfirmModal :is-mobile="isMobile" />
 </template>
-
+ 
 <style lang="scss" scoped>
 .auth-loading {
   width: 100%;
