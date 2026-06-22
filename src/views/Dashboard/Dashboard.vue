@@ -15,7 +15,7 @@ import SearchCustomer from '@/components/common/modal-content/SearchCustomer.vue
 import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useReservationStore } from '@/stores/reservationStore'
 import { useHospitalStore } from '@/stores/hospitalStore'
 import { useNoticeStore } from '@/stores/noticeStore'
@@ -156,7 +156,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val blue">{{ formatCount(count.total_cnt) }}</p>
+                        <p class="val blue">{{ formatCount((count.reserveCnt || 0) + (count.planCnt || 0) + (count.vaccineCnt || 0) + (count.beautyCnt || 0)) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>
@@ -185,7 +185,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val">{{ formatCount(count.cnt1) }}</p>
+                        <p class="val">{{ formatCount(count.reserveCnt) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>
@@ -199,7 +199,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val">{{ formatCount(count.cnt2) }}</p>
+                        <p class="val">{{ formatCount(count.planCnt) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>
@@ -213,7 +213,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val">{{ formatCount(count.cnt3) }}</p>
+                        <p class="val">{{ formatCount(count.vaccineCnt) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>
@@ -227,7 +227,7 @@ onMounted(() => {
                     </div>
 
                     <div class="count-card__value">
-                        <p class="val">{{ formatCount(count.cnt4) }}</p>
+                        <p class="val">{{ formatCount(count.beautyCnt) }}</p>
                         <span class="txt">건</span>
                     </div>
                 </div>

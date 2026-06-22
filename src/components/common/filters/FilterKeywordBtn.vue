@@ -1,6 +1,6 @@
 <!-- 검색어 필터 + 검색버튼 버전 -->
 <script setup>
-import icSearch from '@/assets/icons/ic_search_w.svg';
+import icSearch from '@/assets/icons/ic_search.svg';
 import icClear from '@/assets/icons/ic_clear.svg';
 import { computed } from 'vue';
 
@@ -30,31 +30,31 @@ const onSearch = (e) => {
         <span class="search-filter__label title-s">검색</span>
     
         <div class="search-filter__control search-filter__search_text_box">
-            <input 
+            <input
                 type="text"
                 v-model="keyword"
-                class="body-m" 
+                class="body-m"
                 :placeholder="placeholder"
                 @keyup.enter="onSearch"
             >
-    
+
             <!-- 아이콘 -->
             <span class="search-filter__icons">
-                <!-- clear icon: 값 있을 때만 표시 -->
-                <img 
-                    :src="icClear" 
+                <img
+                    :src="icSearch"
+                    alt="검색 아이콘"
+                    class="search-icon"
+                    @click="onSearch"
+                >
+                <img
+                    v-if="keyword.length > 0"
+                    :src="icClear"
                     alt="입력 삭제 아이콘"
                     class="clear-icon"
-                    :class="{ visible: keyword.length > 0 }"
                     @click="keyword = ''"
                 >
             </span>
         </div>
-
-        <button class="btn btn--size-32 btn--blue search-btn" @click="onSearch">
-            <img :src="icSearch" alt="검색 아이콘"/>
-            검색
-        </button>
     </div>
 </template>
 
@@ -65,19 +65,20 @@ const onSearch = (e) => {
         align-items: center;
     }
     .search-filter__icons {
-        // width: 36px;
         display: flex;
-        justify-content: flex-end;
+        align-items: center;
         gap: 4px;
+
+        .search-icon {
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+        }
 
         .clear-icon {
             cursor: pointer;
-            opacity: 0;
-            visibility: hidden;
-        }
-        .clear-icon.visible {
-            opacity: 1;
-            visibility: visible;
+            width: 14px;
+            height: 14px;
         }
     }
 
@@ -132,8 +133,4 @@ const onSearch = (e) => {
         }
     }
 
-    .search-btn {
-        @include flex-center;
-        gap:3px;
-    }
 </style>
