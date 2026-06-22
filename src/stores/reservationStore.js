@@ -21,16 +21,23 @@ export const useReservationStore = defineStore("reservation", () => {
 
     let isLoading = ref(false);
 
+    // data.list 에서 오는 카테고리 (진료예약, 미용, 기타)
+    const LIST_CATEGORY_KEY_MAP = {
+        '진료예약': '진료예약',
+        '미용': '미용',
+        '기타': '기타',
+    };
+
+    // data.planVaccineList 에서 오는 카테고리
+    const PLAN_VACCINE_CATEGORIES = ['진료예정', '백신'];
+
+
     const mapReserveRow = (row) => ({
         ...row,
         // 일반 예약의 경우 리스트에서 동물 정보, 고객 정보 미노출 필요
-        // 고객명
-        userName: row.clinicType == '일반예약' ? '' : row.userName, 
-        // 전화번호
+        userName: row.clinicType == '일반예약' ? '' : row.userName,
         phoneTxt: row.clinicType == '일반예약' ? '' : formatPhone(row.phone),
-        // 동물명
         petName: row.clinicType == '일반예약' ? '' : row.petName,
-        // 종
         speciesName: row.clinicType == '일반예약' ? '' : row.speciesName,
         // 날짜 / 시간
         reTimeTxt: formatDate(row.reTime),
@@ -45,18 +52,55 @@ export const useReservationStore = defineStore("reservation", () => {
         rowClass: row.inState === 0 ? 'row-pending' : row.inState == 2 || row.inState == 3 ? 'row-canceled' : '',
     })
 
+    // planVaccineList 항목을 예약 리스트와 동일한 형태로 변환
+    const mapPlanVaccineRow = (row) => ({
+        ...row,
+        roomName: row.clinicType || '',
+        clinicType: row.gubun === 1 ? '진료예정' : '백신',
+        geReMemo: row.geReMemo || '',
+        createdAt: row.reTime,
+    })
+
     // 전체 예약 내역 불러오기
-    async function getReservationList(params) {
+    // categories: 선택된 카테고리 배열 (예: ['진료예약', '진료예정', '백신', '미용', '기타'])
+    async function getReservationList(params, categories = null) {
         isLoading.value = true;
         try {
-            const response = await api.post(`/api/{cocode}/reserve/list`, params);
+            // 선택된 카테고리 중 list / planVaccineList 대상 분리
+            const needList = !categories || categories.some(c => !!LIST_CATEGORY_KEY_MAP[c]);
+            const needPlanVaccine = !categories || categories.some(c => PLAN_VACCINE_CATEGORIES.includes(c));
+
+            const response = await api.post(`/api/{cocode}/reserve/type/list`, params);
             if(response.status <= 300){
                 let data = response.data.data;
-                reserveList.value = data.list.map(mapReserveRow);
+                const rows = [];
+
+                // data.list: 진료예약, 미용, 기타 (list 카테고리만 처리)
+                if (needList && data.list && typeof data.list === 'object') {
+                    Object.entries(data.list).forEach(([key, items]) => {
+                        const category = LIST_CATEGORY_KEY_MAP[key] ?? '기타';
+                        items.forEach(item => {
+                            rows.push(mapReserveRow({ ...item, category }));
+                        });
+                    });
+                }
+
+                // data.planVaccineList: 진료예정, 백신 데이터 (객체: { "진료예정": [...], "백신": [...] })
+                if (needPlanVaccine && data.planVaccineList && typeof data.planVaccineList === 'object') {
+                    Object.entries(data.planVaccineList).forEach(([key, items]) => {
+                        if (!Array.isArray(items)) return;
+                        const category = PLAN_VACCINE_CATEGORIES.includes(key) ? key : '기타';
+                        items.forEach(item => {
+                            rows.push(mapReserveRow({ ...mapPlanVaccineRow(item), category }));
+                        });
+                    });
+                }
+
+                reserveList.value = rows;
             }
         } catch (error) {
             console.error(error);
-            throw error; // 호출한 쪽에서 에러 처리 가능
+            throw error;
         } finally {
             isLoading.value = false;
         }
@@ -64,12 +108,14 @@ export const useReservationStore = defineStore("reservation", () => {
 
     // 예약 종류별 카운트 (대시보드)
     async function getReserveCount() {
-        const response = await api.get(`/api/{cocode}/reserve/cnt`);
+        const response = await api.get(`/api/{cocode}/reserve/type/cnt`);
 
         if(response.status <= 300) {
-            // console.log(response);
             let data = response.data.data;
-            reserveCount.value = data;
+            reserveCount.value = {
+                ...data.totalCnt,
+                ...data.totalCountByType,
+            };
         }
     }
 
@@ -80,10 +126,41 @@ export const useReservationStore = defineStore("reservation", () => {
             const response = await api.get(`/api/{cocode}/reserve/pendinglist`, {params: params});
 
             if(response.status <= 300) {
-                // console.log(response)
                 let data = response.data.data;
-                reservePendingList.value = data.map(mapReserveRow);
+                const rows = [];
+
+                // reserve: 일반 예약 데이터
+                if (Array.isArray(data.reserve)) {
+                    data.reserve.forEach(item => rows.push(item));
+                }
+
+                // plan/vaccine: clinicType이 치료명이므로 roomName으로 매핑
+                const mapPlanItem = (item) => ({
+                    ...item,
+                    roomName: item.clinicType || '',
+                    createdAt: item.createdAt || item.reTime,
+                    clinicType: '', // mapReserveRow의 일반예약 체크에 영향 안주도록
+                });
+
+                if (Array.isArray(data.plan)) {
+                    data.plan.forEach(item => rows.push(mapPlanItem(item)));
+                }
+                if (Array.isArray(data.vaccine)) {
+                    data.vaccine.forEach(item => rows.push(mapPlanItem(item)));
+                }
+
+                // 배열이 아닌 경우(이전 API 호환)
+                if (Array.isArray(data)) {
+                    reservePendingList.value = data.map(mapReserveRow);
+                } else {
+                    reservePendingList.value = rows.map(row => {
+                        try { return mapReserveRow(row); }
+                        catch(e) { console.error('pendinglist row map error:', e, row); return null; }
+                    }).filter(Boolean);
+                }
             }
+        } catch (error) {
+            console.error('pendinglist error:', error);
         } finally {
             isLoading.value = false;
         }
