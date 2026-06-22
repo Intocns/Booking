@@ -93,7 +93,7 @@ onMounted(async () => {
       }
     } else {
       window.location.href =
-        "http://localhost:20080/user/ssoRedirect?service=intobooking&next=" +
+        "http://192.168.0.44:20080/user/ssoRedirect?service=intobooking&next=" +
         window.location;
     }
 

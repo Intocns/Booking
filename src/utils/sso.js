@@ -108,7 +108,7 @@ export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
 // SSO 초기화 및 로직
 export const initSSOCheck = (onResult) => {
   const isSession = false; // 현재 사이트 자체 세션 유무
-  const isTest = import.meta.env.VITE_IS_TEST === "true";
+  const isTest = import.meta.env.VITE_IS_TEST === "false";
 
   const sso = new INTOSSO("intobooking", false, isTest); // test일경우 마지막 인자값 true, live일 경우 false
 
