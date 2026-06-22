@@ -22,6 +22,7 @@ const pathIcons = {
 
 const props = defineProps({
     rows: {type: Array, default: null},
+    categoryType: {type: Number, default: null}, // 1: 진료예약, 2: 진료예정, 3: 백신, 4: 미용, 5: 기타
 })
 
 const handelReserveDetail = (row) => {
@@ -32,37 +33,38 @@ const handelReserveDetail = (row) => {
 <template>
     <div class="mobile-list-table-wrapper">
         <div v-for="row in rows" class="list" @click="handelReserveDetail(row)">
+            <!-- 상단: 진료 예약(1)은 날짜+시간+상태, 나머지는 날짜만 -->
             <div class="list__top">
                 <div class="time title-s-mobile">
                     <span>{{ row.reTimeTxt }}</span>
-                    <span>{{ row.reTimeHisTxt }} - {{ row.reTimeAndTxt }}</span>
+                    <span v-if="categoryType === 1 || !categoryType">{{ row.reTimeHisTxt }} - {{ row.reTimeAndTxt }}</span>
                 </div>
 
-                <div class="flag" :class="RESERVE_STATUS_CLASS_MAP[row.inState]">
+                <div v-if="categoryType === 1 || !categoryType" class="flag" :class="RESERVE_STATUS_CLASS_MAP[row.inState]">
                     {{ RESERVE_STATUS_SHORT_MAP[row.inState] }}
                 </div>
             </div>
+
             <div class="list__bottom">
                 <div class="list__bottom__top">
                     <div class="reserve-info">
-                        <div class="info"> 
+                        <div class="info">
                             <span class="name pet">{{ row.petName }}</span>
                             <span class="dot"></span>
                             <span class="name user">{{ row.userName }}</span>
                         </div>
-    
-                        <img :src="pathIcons[row.reRoute]" alt="">
-                    </div>
-    
-                    <div class="pet-info">
+
                         <span class="phone">{{ row.phoneTxt }}</span>
-                        <span class="dot"></span>
+                        <img v-if="categoryType === 1 || !categoryType" :src="pathIcons[row.reRoute]" alt="">
+                    </div>
+
+                    <div class="pet-info">
                         <span>{{ row.speciesName }}</span>
                         <span class="dot"></span>
                         <span>{{ PET_GENDER_SHORT_MAP[row.petSex] }}</span>
                     </div>
                 </div>
-                
+
                 <div class="border"></div>
 
                 <div class="list__bottom__bottom">
@@ -70,18 +72,18 @@ const handelReserveDetail = (row) => {
                         <span class="room-name">{{ row.roomName }}</span>
                         <span class="doctor">{{ row.doctor }}</span>
                     </div>
-                    <div class="memo-wrapper">
+                    <div v-if="categoryType === 1 || categoryType === 2 || !categoryType" class="memo-wrapper">
                         <p class="memo">{{ row.reMemo }}</p>
                     </div>
                 </div>
 
-                <div class="created">
+                <div v-if="categoryType === 1 || !categoryType" class="created">
                     <span>접수</span>
                     <span>{{ row.createdAtTxt }}</span>
                 </div>
             </div>
         </div>
-    
+
         <div v-if="rows.length == 0" class="empty-wrapper">
             <div class="empty-box">
                 <img :src="icEmpty" alt="">
@@ -138,8 +140,8 @@ const handelReserveDetail = (row) => {
                 width: 100%;
                 display: flex;
                 align-items: center;
-                gap:16px;
-    
+                gap: 8px;
+
                 .info {
                     flex: 1 0 0;
                     display: flex;
@@ -147,18 +149,19 @@ const handelReserveDetail = (row) => {
                     align-items: center;
                     gap: 6px;
                     row-gap:0;
-    
-                    .name { 
+
+                    .name {
                         @include typo($title-l-mobile-size, $title-l-mobile-weight, $title-l-mobile-spacing, $title-l-mobile-line);
-                        // text-overflow: ellipsis;
-                        // overflow: hidden;
-                        // white-space: nowrap;
-                        // &.pet {max-width: 70px;}
-                        // &.user {max-width: 70px;}
                     }
                 }
+
+                .phone {
+                    color: $gray-700;
+                    @include typo($body-m-mobile-size, $body-m-mobile-weight, $body-m-mobile-spacing, $body-m-mobile-line);
+                    white-space: nowrap;
+                }
             }
-    
+
             .pet-info {
                 width: 100%;
                 display: flex;
@@ -166,7 +169,7 @@ const handelReserveDetail = (row) => {
                 align-items: center;
                 gap: 8px;
                 row-gap:0;
-    
+
                 color: $gray-700;
                 @include typo($body-m-mobile-size, $body-m-mobile-weight, $body-m-mobile-spacing, $body-m-mobile-line);
             }

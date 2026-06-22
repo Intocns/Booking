@@ -72,10 +72,10 @@ const reserveSummary = computed(() => {
     const counts = { medical: 0, scheduled: 0, vaccine: 0, grooming: 0, etc: 0 };
 
     reservationStore.reserveList.forEach(row => {
-        if (row.reRoute === 1) counts.medical++;
-        else if (row.reRoute === 2) counts.scheduled++;
-        else if (row.reRoute === 3) counts.vaccine++;
-        else if (row.reRoute === 4) counts.grooming++;
+        if (row.category === 1) counts.medical++;
+        else if (row.category === 2) counts.scheduled++;
+        else if (row.category === 3) counts.vaccine++;
+        else if (row.category === 4) counts.grooming++;
         else counts.etc++;
     });
 
@@ -118,6 +118,41 @@ const sortedReserveList = computed(() => {
     });
 });
 
+// 카테고리별로 그룹핑된 리스트
+const collapsedSections = ref({});
+
+const toggleSection = (categoryValue) => {
+    collapsedSections.value[categoryValue] = !collapsedSections.value[categoryValue];
+};
+
+const isSectionCollapsed = (categoryValue) => {
+    return !!collapsedSections.value[categoryValue];
+};
+
+const groupedReserveList = computed(() => {
+    const list = sortedReserveList.value;
+    if (!list.length) return [];
+
+    const categoryMap = {};
+    categoryOptions.forEach(opt => {
+        categoryMap[opt.value] = { ...opt, items: [] };
+    });
+
+    list.forEach(row => {
+        const cat = row.category;
+        if (categoryMap[cat]) {
+            categoryMap[cat].items.push(row);
+        } else {
+            categoryMap[5].items.push(row); // 기타
+        }
+    });
+
+    // 필터에 선택된 카테고리만, 아이템이 있는 것만 반환
+    return categoryOptions
+        .filter(opt => categoryFilter.value.includes(opt.value) && categoryMap[opt.value].items.length > 0)
+        .map(opt => categoryMap[opt.value]);
+});
+
 // 필터 값 변환 헬퍼 함수 ('all'이 포함되어 있으면 null로 변환)
 const convertFilterParam = (value) => {
     if (!value || value.length === 0 || value.includes('all')) return null;
@@ -142,7 +177,8 @@ const searchList = async () => {
         startDate: startDate.value,
         endDate: endDate.value,
         reRoute: convertFilterParam(reservationChannel.value),
-        category: categoryFilter.value.length === categoryOptions.length ? null : categoryFilter.value,
+        clinicType: categoryFilter.value.length === categoryOptions.length ? null : categoryFilter.value,
+        order: 0,
     });
 };
 
@@ -245,22 +281,38 @@ onMounted(async() => {
 
         <template #table>
             <div class="mobile-total-count">
-                <div class="total-row">
-                    <div class="total">
-                        Total
-                        <span class="cnt">{{ totalCount }}</span>
-                    </div>
+                <div class="total">
+                    Total
+                    <span class="cnt">{{ totalCount }}</span>
+                </div>
 
-                    <div class="detail-count">
-                        <div v-for="(reserve, index) in reserveSummary" :key="index" class="detail">
-                            <span class="label">{{ reserve.label }}</span>
-                            <span class="cnt">{{ reserve.value }}</span>
-                        </div>
+                <div class="detail-count">
+                    <div v-for="(reserve, index) in reserveSummary" :key="index" class="detail">
+                        <span class="label">{{ reserve.label }}</span>
+                        <span class="cnt">{{ reserve.value }}</span>
                     </div>
                 </div>
             </div>
 
-            <ListTable :rows="sortedReserveList" />
+            <div v-if="sortedReserveList.length > 0" class="mobile-grouped-list">
+                <div v-for="group in groupedReserveList" :key="group.value" class="category-section">
+                    <div
+                        class="category-section__header"
+                        :style="{ backgroundColor: group.color }"
+                        @click="toggleSection(group.value)"
+                    >
+                        <span class="category-section__label">{{ group.label }}</span>
+                    </div>
+
+                    <div v-if="!isSectionCollapsed(group.value)" class="category-section__content">
+                        <ListTable :rows="group.items" :category-type="group.value" />
+                    </div>
+                </div>
+            </div>
+
+            <div v-else class="mobile-list-table-wrapper">
+                <ListTable :rows="[]" />
+            </div>
         </template>
     </TableLayout>
 
@@ -287,13 +339,9 @@ onMounted(async() => {
 
 .mobile-total-count {
     padding: 0 20px;
-
-    .total-row {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-    }
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 
     .total {
         @include typo($title-l-mobile-size, $title-l-mobile-weight, $title-l-mobile-spacing, $title-l-mobile-line);
@@ -336,6 +384,30 @@ onMounted(async() => {
                 line-height: 1;
             }
         }
+    }
+}
+
+.mobile-grouped-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.category-section {
+    &__header {
+        margin: 0 20px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    &__label {
+        color: #fff;
+        @include typo($title-s-mobile-size, $title-s-mobile-weight, $title-s-mobile-spacing, $title-s-mobile-line);
+    }
+
+    &__content {
+        margin-top: 8px;
     }
 }
 </style>
