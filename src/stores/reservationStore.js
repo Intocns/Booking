@@ -62,8 +62,7 @@ export const useReservationStore = defineStore("reservation", () => {
     })
 
     // 전체 예약 내역 불러오기
-    // categories: 선택된 카테고리 배열 (예: ['진료예약', '진료예정', '백신', '미용', '기타'])
-    async function getReservationList(params, categories = null) {
+    async function getReservationList(params) {
         isLoading.value = true;
         try {
             // 선택된 카테고리 중 list / planVaccineList 대상 분리
