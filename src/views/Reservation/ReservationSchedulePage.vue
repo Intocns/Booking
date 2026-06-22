@@ -107,11 +107,11 @@ const reservationChannel = ref(['all']);
 const reservationChannelOptions = RESERVE_ROUTE_OPTIONS;
 
 // 체크박스 필터
-const categoryFilter = ref([1, 2]);
+const categoryFilter = ref(['진료예약', '미용', '기타']);
 const categoryOptions = [
-    { label: '진료 예약', value: 1 },
-    { label: '미용', value: 2 },
-    { label: '기타', value: 3 },
+    { label: '진료 예약', value: '진료예약' },
+    { label: '미용', value: '미용' },
+    { label: '기타', value: '기타' },
 ];
 
 // 검색 파라미터 생성 로직 (현재 뷰에 따라 시작/종료일 자동 계산)
@@ -132,14 +132,15 @@ const fetchParams = computed(() => {
     return {
         status: reservationStatus.value, // 예약상태
         doctorId: selectedDoctorList.value, // 담당의
-        startDate: start, 
+        startDate: start,
         endDate: end,
         reRoute: reservationChannel.value, // 예약 경로
+        clinicType: categoryFilter.value.length === categoryOptions.length ? null : categoryFilter.value,
     };
 });
 
 // [수정] 날짜, 뷰, 담당의 변경 시마다 호출
-watch([currentDate, currentView, selectedDoctorList, reservationStatus, reservationChannel], () => {
+watch([currentDate, currentView, selectedDoctorList, reservationStatus, reservationChannel, categoryFilter], () => {
     reservationStore.getReserveSchedule(fetchParams.value);
 }, { deep: true });
 
