@@ -165,7 +165,7 @@ const sortedRows = computed(() => {
                             :style="{ textAlign: col.text_align }"
                         >
                             <!-- 기본 데이터 출력 -->
-                            <span v-if="!definedSlotKeys.has(col.key)">{{ row[col.key] }}</span>
+                            <span v-if="!definedSlotKeys.has(col.key)">{{ row[col.key] != null && row[col.key] !== '' ? row[col.key] : '-' }}</span>
                             <!-- 커스텀 슬롯 존재 시 -->
                             <div v-else class="d-flex justify-center gap-4">
                                 <slot
@@ -243,7 +243,7 @@ const sortedRows = computed(() => {
     flex: 1 1 auto;
     min-height:0;
     height: 100%;
-    overflow: hidden;
+    overflow-y: auto;
     // border-bottom: 1px solid $gray-300;
     background-color: $gray-00;
 }

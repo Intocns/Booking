@@ -78,9 +78,11 @@ const props = defineProps({
         // justify-content: space-between;
         align-items: center;
         margin-bottom: 8px;
+        white-space: nowrap;
 
         .page-title {
             color: $gray-900;
+            flex-shrink: 0;
         }
 
         .page-summary {
@@ -88,6 +90,7 @@ const props = defineProps({
             align-items: center;
             gap: 16px;
             flex:2;
+            flex-shrink: 0;
 
             &__total {
                 @include flex-center;

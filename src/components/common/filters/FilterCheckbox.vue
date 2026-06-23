@@ -46,6 +46,8 @@ const isChecked = (value) => props.modelValue.includes(value);
 .filter-checkbox {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 </style>

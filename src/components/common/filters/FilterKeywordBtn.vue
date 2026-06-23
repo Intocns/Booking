@@ -51,7 +51,7 @@ const onSearch = (e) => {
                     :src="icClear"
                     alt="입력 삭제 아이콘"
                     class="clear-icon"
-                    @click="keyword = ''"
+                    @click="keyword = ''; emit('search')"
                 >
             </span>
         </div>
@@ -85,7 +85,7 @@ const onSearch = (e) => {
     // 검색 인풋
     .search-filter__search_text_box {
         display: flex;
-        // width: 240px;
+        min-width: 200px;
         flex: 1;
         height: 32px;
         padding: 0 10px;

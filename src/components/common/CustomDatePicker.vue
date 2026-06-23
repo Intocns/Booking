@@ -257,7 +257,7 @@ defineExpose({ openDatePicker });
             week-start="0"
             :time-config="{ enableTimePicker: false }"
             :hide-input="true"
-            :teleport-center="false"
+            teleport="body"
             class="hidden-datepicker-instance"
             :disabled="disabled"
             @update:model-value="onDateUpdate"
@@ -301,12 +301,11 @@ defineExpose({ openDatePicker });
 
 <style lang="scss" scoped>
 // datepicker 라이브러리 커스텀 스타일
-:deep(.dp__main) { 
+:deep(.dp__main) {
     position: absolute;
     top: 0;
-    left: -40px;
+    left: 0;
     height: 32px;
-    // display: none;
 }
 :deep(.dp__input) { 
     height: 32px;
@@ -320,7 +319,7 @@ defineExpose({ openDatePicker });
 
 :deep(.dp--menu-wrapper),
 :deep(.dp__menu),
-:deep(.dp__menu > div) {width:240px !important; min-width: 240px !important; left: 40px !important;}
+:deep(.dp__menu > div) {width:240px !important; min-width: 240px !important;}
 
 .date-picker-container {
     position: relative;
@@ -500,5 +499,15 @@ defineExpose({ openDatePicker });
     :deep(.dp__action_row) {
         display: none;
     }
+}
+</style>
+
+<style lang="scss">
+/* teleport="body"로 렌더링되는 캘린더 팝업 글로벌 스타일 */
+.dp__month_year_wrap {
+    gap: 0 !important;
+}
+.dp__month_year_select[data-dp-element="overlay-year"] {
+    &::after { content: "년"; }
 }
 </style>
