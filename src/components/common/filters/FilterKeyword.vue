@@ -61,7 +61,7 @@ const emit = defineEmits(['update:modelValue', 'search']);
                     :src="icClear"
                     class="clear-icon"
                     :class="{ visible: props.modelValue.length > 0 }"
-                    @click="emit('update:modelValue', '')"
+                    @click="emit('update:modelValue', ''); emit('search')"
                 />
             </span>
         </div>
