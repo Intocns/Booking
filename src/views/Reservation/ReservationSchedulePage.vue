@@ -215,9 +215,11 @@ onMounted(async() => {
                 :options="reservationChannelOptions" 
                 v-model="reservationChannel" 
             />
-            <button class="btn btn--size-32 btn--black-outline" @click="searchClear()" style="width: 40px;">
+            <button class="btn btn--size-32 btn--dark reset-btn" @click="searchClear()" style="width: 40px;">
                 <img :src="icReset" alt="초기화아이콘">
             </button>
+
+            <div class="filter-spacer"></div>
 
             <FilterCheckbox
                 v-model="categoryFilter"
@@ -267,6 +269,24 @@ onMounted(async() => {
 </template>
 
 <style lang="scss" scoped>
+    :deep(.search-filter__datepicker) {
+        width: 160px;
+    }
+
+    :deep(.search-filter) {
+        flex-wrap: nowrap;
+    }
+
+    .filter-spacer {
+        flex: 1;
+    }
+
+    .reset-btn {
+        background-color: #0C0C0D;
+        border-color: #0C0C0D;
+        img { filter: brightness(0) invert(0.9); }
+    }
+
     .change-view-buttons {
         @include flex-center;
         padding: 4px;

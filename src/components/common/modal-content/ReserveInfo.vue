@@ -781,13 +781,25 @@ const handleViewChart = () => {
 const textPhoneNumber = computed(() => {
     return formatPhone(reserveData.userTel);
 })
+
+// clinicType 그룹 판별
+const isClinicReservation = computed(() => reserveData.clinicType === '진료예약');
+const isPlanOrVaccine = computed(() => reserveData.clinicType === '진료예정' || reserveData.clinicType === '백신');
+const isBeauty = computed(() => reserveData.clinicType === '미용' || reserveData.clinicType === '미용예약');
+const isSimpleType = computed(() => !isClinicReservation.value && !isPlanOrVaccine.value && !isBeauty.value);
+
+// clinicType 표시 라벨
+const clinicTypeLabel = computed(() => {
+    const map = { '진료예약': '진료 예약', '진료예정': '진료 예정', '미용예약': '미용' };
+    return map[reserveData.clinicType] || reserveData.clinicType || '';
+});
 </script>
 
 <template>
     <div 
         class="modal-contents-inner"
         :class="{
-            'clinic-type' : reserveData.clinicType == '개인일정' || reserveData.clinicType == '일반예약',
+            'clinic-type' : !isClinicReservation,
         }"
     >
         <!-- 예약 정보 -->
@@ -797,16 +809,15 @@ const textPhoneNumber = computed(() => {
             <div class="modal-content-title-wrapper">
                 <div class="d-flex gap-8 align-items-center">
                     <p class="title-l">예약 정보</p>
-
-                    <div class="d-flex gap-4 align-center">
-                        <span v-if="reserveData.clinicType == '개인일정' || reserveData.clinicType == '일반예약'" class="flag flag--black">{{ reserveData.clinicType }}</span>
-                        <span v-else class="flag" :class="RESERVE_STATUS_CLASS_MAP[reserveData.inState]">{{ RESERVE_STATUS_SHORT_MAP[reserveData.inState] }}</span>
-                    </div>
+                    <span class="title-s">{{ clinicTypeLabel }}</span>
+                    <span v-if="RESERVE_STATUS_SHORT_MAP[reserveData.inState]" class="flag" :class="RESERVE_STATUS_CLASS_MAP[reserveData.inState]">
+                        {{ RESERVE_STATUS_SHORT_MAP[reserveData.inState] }}
+                    </span>
                 </div>
-                <span class="body-m" style="color: #86868a;">예약 번호  {{ reserveData.reserveIdx }}</span>
+                <span v-if="isClinicReservation" class="body-m" style="color: #86868a;">예약 번호  {{ reserveData.reserveIdx }}</span>
             </div>
 
-            <template v-if="reserveData.clinicType == '개인일정' || reserveData.clinicType == '일반예약'">
+            <template v-if="isSimpleType">
                 <div class="info-lists-wrapper">
                     <div class="info-list w-100">
                         <div class="info-item">
@@ -873,6 +884,87 @@ const textPhoneNumber = computed(() => {
                 </div>
             </template>
 
+            <!-- 진료예정 / 백신 / 미용 -->
+            <template v-else-if="isPlanOrVaccine || isBeauty">
+                <!-- 고객/동물 정보 -->
+                <div class="info-lists-wrapper">
+                    <div class="info-list w-100">
+                        <div class="info-item">
+                            <div class="d-flex align-center gap-6">
+                                <p class="label">예약 고객명</p>
+                                <InputTextBox v-model="reserveData.userName" :disabled="true" placeholder="예약 고객명" width="50%" />
+                            </div>
+                            <div class="d-flex align-center gap-6">
+                                <p class="label">고객 전화번호</p>
+                                <InputTextBox v-model="textPhoneNumber" :disabled="true" placeholder="고객 전화번호" width="50%" />
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="d-flex align-center gap-6">
+                                <p class="label">동물명</p>
+                                <InputTextBox v-model="reserveData.petName" :disabled="true" placeholder="동물명" width="50%" />
+                            </div>
+                            <div class="d-flex align-center gap-6">
+                                <p class="label">동물 성별</p>
+                                <InputTextBox v-model="PET_GENDER_MAP[reserveData.petSex]" :disabled="true" placeholder="성별" width="50%" />
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <p class="label">종</p>
+                            <InputTextBox v-model="reserveData.spesice" :disabled="true" placeholder="종" />
+                        </div>
+                        <div class="info-item">
+                            <p class="label">품종</p>
+                            <InputTextBox :model-value="reserveData.breed || ''" :disabled="true" placeholder="품종" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 예약 정보 -->
+                <div class="info-lists-wrapper">
+                    <div class="info-list w-100">
+                        <div class="info-item">
+                            <p class="label">예약 내용</p>
+                            <InputTextBox :model-value="reserveData.roomName" :disabled="true" placeholder="예약 내용" />
+                        </div>
+                        <div class="info-item">
+                            <p class="label">예약 일시</p>
+                            <div class="d-flex gap-8" style="flex:2;">
+                                <CustomDatePicker v-model="reserveDate" :range="false" :disabled="true" />
+                                <!-- 미용만 시간 표시 -->
+                                <div v-if="isBeauty" class="d-flex align-center gap-4" style="flex:2;">
+                                    <TimeSelect v-model="startTime" class="time-select-wrap" :disabled="true" />
+                                    <span class="time-separator">-</span>
+                                    <TimeSelect v-model="endTime" class="time-select-wrap" :disabled="true" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <p class="label">담당의</p>
+                            <div class="select-wrapper">
+                                <CustomSingleSelect
+                                    :model-value="selectedDoctorId"
+                                    :options="doctorOptions"
+                                    placeholder="담당의 선택"
+                                    select-width="100%"
+                                    :disabled="true"
+                                />
+                            </div>
+                        </div>
+                        <div class="info-item align-start">
+                            <p class="label" style="padding-top: 10px;">병원 메모</p>
+                            <TextAreaBox
+                                :model-value="reserveData.geReMemo"
+                                :disabled="true"
+                                placeholder="병원 메모"
+                                height="100px"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- 진료예약: 기존 풀 레이아웃 -->
             <template v-else>
                 <!-- 정보 -->
                 <div class="info-lists-wrapper">
@@ -1083,8 +1175,8 @@ const textPhoneNumber = computed(() => {
 
         </div>
 
-        <!-- 고객정보 (취소/거절 시 테이블 빈 상태만 표시) -->
-        <div v-if="reserveData.clinicType !== '개인일정' && reserveData.clinicType !== '일반예약'" class="d-flex flex-col gap-6 customer-info-section">
+        <!-- 고객정보 (진료예약만 표시) -->
+        <div v-if="isClinicReservation" class="d-flex flex-col gap-6 customer-info-section">
             <!-- 단일 결과 상세 뷰 (취소/거절이 아닐 때만) -->
             <template v-if="showCustomerDetailView">
                 <!-- 타이틀 --> 
@@ -1275,13 +1367,19 @@ const textPhoneNumber = computed(() => {
 
     <!-- 버튼 -->
     <div v-if="!isCancelled" class="modal-button-wrapper">
-        <div v-if="reserveData.clinicType !== '개인일정' && reserveData.clinicType !== '일반예약'" class="buttons">
+        <!-- 진료예약: 예약거절 + 확정/저장 -->
+        <div v-if="isClinicReservation" class="buttons">
             <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.cancelReserveModal.openModal()">예약거절</button>
             <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation(isConfirmed)">{{ isConfirmed ? '저장' : '예약 확정' }}</button>
         </div>
-        <div v-else class="buttons">
+        <!-- 개인일정/일반예약/기타: 닫기 + 저장 -->
+        <div v-else-if="isSimpleType" class="buttons">
             <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.reserveInfoModal.closeModal()">닫기</button>
             <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation(isConfirmed)">저장</button>
+        </div>
+        <!-- 진료예정/백신/미용: 닫기만 -->
+        <div v-else class="buttons">
+            <button class="btn btn--size-40 btn--black-outline" @click="modalStore.reserveInfoModal.closeModal()">닫기</button>
         </div>
     </div>
 
@@ -1372,7 +1470,7 @@ const textPhoneNumber = computed(() => {
         <div class="modal-contents-inner">
             <div class="d-flex flex-col gap-16">
                 <span class="body-m">예약을 확정하시겠습니까?</span>
-                <label class="checkbox" v-if="reserveData.clinicType !== '개인일정' && reserveData.clinicType !== '일반예약'">
+                <label class="checkbox" v-if="isClinicReservation">
                     <input type="checkbox" v-model="sendNotification" />
                     <span class="box"></span>
                     <span class="label">고객에게 예약 확정 알림톡 발송</span>

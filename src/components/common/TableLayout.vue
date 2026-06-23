@@ -79,11 +79,14 @@ defineOptions({
         border: 1px solid $gray-200;
         background-color: $gray-00;
         width: 100%;
+        min-width: 0;
+        overflow: hidden;
     }
 
     .search-filter {
         display: flex;
         gap: 16px;
         flex-wrap: wrap;
+        min-width: 0;
     }
 </style>

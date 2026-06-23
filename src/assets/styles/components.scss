@@ -797,6 +797,8 @@
     background-color: $gray-00;
     border-radius: 8px;
     border: 1px solid $gray-200;
+    min-width: 0;
+    overflow: hidden;
 }
 
 // ======================================================================

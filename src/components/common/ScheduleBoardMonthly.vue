@@ -344,12 +344,17 @@ onMounted(() => {
                             </div>
                             <div class="event-info">
                                 <div class="d-flex align-center gap-4 flex-1">
-                                    <template v-if="ev.clinicType !== '개인일정' && ev.clinicType !== '일반예약'">
+                                    <template v-if="ev.clinicType !== '개인일정'">
                                         <img :src="pathIcons[ev.reRoute] || ''" alt="경로아이콘" width="13">
                                         <span class="patient body-s">{{ ev.userName }}{{ ev.petName ? '(' + ev.petName + ')' : '' }}</span>
                                     </template>
                                 </div>
-                                <span class="memo body-s">{{ ev.clinicType == '개인일정' || ev.clinicType == '일반예약' ? ev.clinicType : ev.roomName }}</span>
+                                <span class="memo body-s">
+                                    <template v-if="ev.clinicType === '개인일정'">개인일정</template>
+                                    <template v-else-if="ev.clinicType === '일반예약'">일반 예약</template>
+                                    <template v-else-if="ev.clinicType === '미용' || ev.clinicType === '미용예약'">미용예약</template>
+                                    <template v-else>{{ ev.roomName }}</template>
+                                </span>
                             </div>
                         </div>  
                     </div>

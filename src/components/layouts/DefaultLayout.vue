@@ -249,10 +249,13 @@
         .main {
             flex: 1;
             width: calc(100% - 220px);
+            min-width: 0;
             height: 100vh;
+            overflow: hidden;
         }
         .content {
             width: 100%;
+            min-width: 0;
             height: 100%;
             display:flex;
             flex-direction: column;
@@ -260,7 +263,7 @@
             gap: 16px;
             background-color: $gray-50;
             padding: 24px;
-            
+            overflow: hidden;
         }
     }
 

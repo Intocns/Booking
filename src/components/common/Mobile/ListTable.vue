@@ -22,62 +22,76 @@ const pathIcons = {
 
 const props = defineProps({
     rows: {type: Array, default: null},
-    categoryType: {type: Number, default: null}, // 1: 진료예약, 2: 진료예정, 3: 백신, 4: 미용, 5: 기타
 })
 
 const handelReserveDetail = (row) => {
     reservationStore.getReserveInfo(row.idx);
 };
+
+// clinicType별 표시 항목 정의
+const showTime = (type) => type === '개인일정' || type === '일반예약';
+const showPetName = (type) => type !== '개인일정';
+const showUserName = (type) => type !== '개인일정';
+const showPhone = (type) => type !== '개인일정';
+const showSpecies = (type) => type !== '미용' && type !== '미용예약' && type !== '개인일정';
+const showBreed = (type) => type === '진료예정' || type === '일반예약';
+const showHospitalMemo = (type) => type === '진료예정' || type === '미용' || type === '미용예약' || type === '개인일정';
 </script>
 
 <template>
     <div class="mobile-list-table-wrapper">
         <div v-for="row in rows" class="list" @click="handelReserveDetail(row)">
-            <!-- 상단: 진료 예약(1)은 날짜+시간+상태, 나머지는 날짜만 -->
+            <!-- 상단: 날짜 + 시간(개인일정/일반예약만) + 상태 -->
             <div class="list__top">
                 <div class="time title-s-mobile">
                     <span>{{ row.reTimeTxt }}</span>
-                    <span v-if="categoryType === 1 || !categoryType">{{ row.reTimeHisTxt }} - {{ row.reTimeAndTxt }}</span>
+                    <span v-if="showTime(row.clinicType) && row.reTimeHisTxt">{{ row.reTimeHisTxt }} - {{ row.reTimeAndTxt }}</span>
                 </div>
 
-                <div v-if="categoryType === 1 || !categoryType" class="flag" :class="RESERVE_STATUS_CLASS_MAP[row.inState]">
+                <div class="flag" :class="RESERVE_STATUS_CLASS_MAP[row.inState]">
                     {{ RESERVE_STATUS_SHORT_MAP[row.inState] }}
                 </div>
             </div>
 
             <div class="list__bottom">
-                <div class="list__bottom__top">
+                <!-- 고객/동물 정보 (개인일정은 미표시) -->
+                <div v-if="showPetName(row.clinicType) || showUserName(row.clinicType)" class="list__bottom__top">
                     <div class="reserve-info">
                         <div class="info">
-                            <span class="name pet">{{ row.petName }}</span>
-                            <span class="dot"></span>
-                            <span class="name user">{{ row.userName }}</span>
+                            <span v-if="showPetName(row.clinicType)" class="name pet">{{ row.petName }}</span>
+                            <span v-if="showPetName(row.clinicType) && showUserName(row.clinicType) && row.userName" class="dot"></span>
+                            <span v-if="showUserName(row.clinicType)" class="name user">{{ row.userName }}</span>
                         </div>
 
-                        <span class="phone">{{ row.phoneTxt }}</span>
-                        <img v-if="categoryType === 1 || !categoryType" :src="pathIcons[row.reRoute]" alt="">
+                        <span v-if="showPhone(row.clinicType) && row.phoneTxt" class="phone">{{ row.phoneTxt }}</span>
+                        <img v-if="pathIcons[row.reRoute]" :src="pathIcons[row.reRoute]" alt="">
                     </div>
 
-                    <div class="pet-info">
+                    <!-- 종/품종 -->
+                    <div v-if="showSpecies(row.clinicType)" class="pet-info">
                         <span>{{ row.speciesName }}</span>
-                        <span class="dot"></span>
-                        <span>{{ PET_GENDER_SHORT_MAP[row.petSex] }}</span>
+                        <template v-if="showBreed(row.clinicType) && row.breedName">
+                            <span class="dot"></span>
+                            <span>{{ row.breedName }}</span>
+                        </template>
                     </div>
                 </div>
 
                 <div class="border"></div>
 
+                <!-- 예약 내용 / 담당의 / 메모 -->
                 <div class="list__bottom__bottom">
                     <div class="product-info">
-                        <span class="room-name">{{ row.roomName }}</span>
+                        <span class="room-name">{{ row.clinicType === '개인일정' ? '개인일정' : row.clinicType === '일반예약' ? '일반 예약' : row.roomName }}</span>
                         <span class="doctor">{{ row.doctor }}</span>
                     </div>
-                    <div v-if="categoryType === 1 || categoryType === 2 || !categoryType" class="memo-wrapper">
-                        <p class="memo">{{ row.reMemo }}</p>
+                    <!-- 병원 메모 (진료예정/미용/개인일정만) -->
+                    <div v-if="showHospitalMemo(row.clinicType) && row.geReMemo" class="memo-wrapper">
+                        <p class="memo">{{ row.geReMemo }}</p>
                     </div>
                 </div>
 
-                <div v-if="categoryType === 1 || !categoryType" class="created">
+                <div class="created">
                     <span>접수</span>
                     <span>{{ row.createdAtTxt }}</span>
                 </div>

@@ -34,13 +34,13 @@ const currentSort = ref('0')
 const keyword = ref('');
 const dateRange = ref([]);
 const dynamicTitle = ref('고객 예약 정보'); // 고객예약정보 모달 타이틀
-const categoryFilter = ref([1, 2, 3, 4, 5]); // 전체 선택 기본값
+const categoryFilter = ref(['진료예약', '진료예정', '백신', '미용', '기타']); // 전체 선택 기본값
 const categoryOptions = [
-    { label: '진료 예약', value: 1, color: '#3B82F6' },
-    { label: '진료 예정', value: 2, color: '#22C55E' },
-    { label: '백신', value: 3, color: '#A855F7' },
-    { label: '미용', value: 4, color: '#F97316' },
-    { label: '기타', value: 5, color: '#6B7280' },
+    { label: '진료 예약', value: '진료예약', color: '#3B82F6' },
+    { label: '진료 예정', value: '진료예정', color: '#22C55E' },
+    { label: '백신', value: '백신', color: '#A855F7' },
+    { label: '미용', value: '미용', color: '#F97316' },
+    { label: '기타', value: '기타', color: '#6B7280' },
 ];
 
 const reserveStatusOptions = RESERVE_STATUS_OPTIONS;
@@ -68,24 +68,34 @@ const startDate = computed(() => formatDate(dateRange.value?.[0]));
 const endDate = computed(() => formatDate(dateRange.value?.[1]));
 const totalCount = computed(() => reservationStore.reserveList.length);
 
+// 탭 선택 상태 (null이면 전체)
+const activeTab = ref(null);
+
+const selectTab = (categoryValue) => {
+    activeTab.value = activeTab.value === categoryValue ? null : categoryValue;
+};
+
 const reserveSummary = computed(() => {
-    const counts = { medical: 0, scheduled: 0, vaccine: 0, grooming: 0, etc: 0 };
+    const counts = {};
+    categoryOptions.forEach(opt => { counts[opt.value] = 0; });
 
     reservationStore.reserveList.forEach(row => {
-        if (row.category === 1) counts.medical++;
-        else if (row.category === 2) counts.scheduled++;
-        else if (row.category === 3) counts.vaccine++;
-        else if (row.category === 4) counts.grooming++;
-        else counts.etc++;
+        const cat = row.category;
+        if (counts[cat] !== undefined) counts[cat]++;
+        else counts['기타']++;
     });
 
-    return [
-        { label: '진료 예약', value: counts.medical.toString().padStart(2, '0') },
-        { label: '진료 예정', value: counts.scheduled.toString().padStart(2, '0') },
-        { label: '백신', value: counts.vaccine.toString().padStart(2, '0') },
-        { label: '미용', value: counts.grooming.toString().padStart(2, '0') },
-        { label: '기타', value: counts.etc.toString().padStart(2, '0') },
-    ];
+    return categoryOptions.map(opt => ({
+        label: opt.label,
+        value: counts[opt.value].toString().padStart(2, '0'),
+        categoryValue: opt.value,
+    }));
+});
+
+// 탭 필터링된 리스트
+const filteredByTab = computed(() => {
+    if (activeTab.value === null) return sortedReserveList.value;
+    return sortedReserveList.value.filter(row => row.category === activeTab.value);
 });
 
 // 정렬된 리스트 computed
@@ -281,38 +291,24 @@ onMounted(async() => {
 
         <template #table>
             <div class="mobile-total-count">
-                <div class="total">
-                    Total
+                <div class="tab-item" :class="{ active: activeTab === null }" @click="selectTab(null)">
+                    <span class="label">Total</span>
                     <span class="cnt">{{ totalCount }}</span>
                 </div>
 
-                <div class="detail-count">
-                    <div v-for="(reserve, index) in reserveSummary" :key="index" class="detail">
-                        <span class="label">{{ reserve.label }}</span>
-                        <span class="cnt">{{ reserve.value }}</span>
-                    </div>
+                <div
+                    v-for="(reserve, index) in reserveSummary"
+                    :key="index"
+                    class="tab-item"
+                    :class="{ active: activeTab === reserve.categoryValue }"
+                    @click="selectTab(reserve.categoryValue)"
+                >
+                    <span class="label">{{ reserve.label }}</span>
+                    <span class="cnt">{{ reserve.value }}</span>
                 </div>
             </div>
 
-            <div v-if="sortedReserveList.length > 0" class="mobile-grouped-list">
-                <div v-for="group in groupedReserveList" :key="group.value" class="category-section">
-                    <div
-                        class="category-section__header"
-                        :style="{ backgroundColor: group.color }"
-                        @click="toggleSection(group.value)"
-                    >
-                        <span class="category-section__label">{{ group.label }}</span>
-                    </div>
-
-                    <div v-if="!isSectionCollapsed(group.value)" class="category-section__content">
-                        <ListTable :rows="group.items" :category-type="group.value" />
-                    </div>
-                </div>
-            </div>
-
-            <div v-else class="mobile-list-table-wrapper">
-                <ListTable :rows="[]" />
-            </div>
+            <ListTable :rows="filteredByTab" />
         </template>
     </TableLayout>
 
@@ -340,74 +336,41 @@ onMounted(async() => {
 .mobile-total-count {
     padding: 0 20px;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    gap: 16px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
 
-    .total {
-        @include typo($title-l-mobile-size, $title-l-mobile-weight, $title-l-mobile-spacing, $title-l-mobile-line);
-        color: $gray-700;
+    &::-webkit-scrollbar { display: none; }
+
+    .tab-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+        cursor: pointer;
+        padding-bottom: 16px;
+        border-bottom: 2px solid transparent;
+
+        &.active {
+            border-bottom-color: $gray-900;
+
+            .label { color: $gray-900; }
+            .cnt { color: $primary-700; }
+        }
+
+        .label {
+            color: $gray-500;
+            @include typo($body-s-mobile-size, $body-s-mobile-weight, $body-s-mobile-spacing, $body-s-mobile-line);
+            line-height: 1;
+        }
 
         .cnt {
-            color: $primary-700;
+            color: $gray-500;
+            @include typo($title-s-mobile-size, $title-s-mobile-weight, $title-s-mobile-spacing, $title-s-mobile-line);
+            line-height: 1;
         }
-    }
-
-    .detail-count {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-
-        .detail {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-
-            &::after {
-                content: '';
-                width: 1px;
-                height: 12px;
-                background-color: $gray-300;
-                margin-left: 4px;
-            }
-
-            &:last-child::after { content: none; }
-
-            .label {
-                color: $gray-700;
-                @include typo($body-s-mobile-size, $body-s-mobile-weight, $body-s-mobile-spacing, $body-s-mobile-line);
-                line-height: 1;
-            }
-
-            .cnt {
-                color: $gray-900;
-                @include typo($title-s-mobile-size, $title-s-mobile-weight, $title-s-mobile-spacing, $title-s-mobile-line);
-                line-height: 1;
-            }
-        }
-    }
-}
-
-.mobile-grouped-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.category-section {
-    &__header {
-        margin: 0 20px;
-        padding: 8px 16px;
-        border-radius: 6px;
-        cursor: pointer;
-    }
-
-    &__label {
-        color: #fff;
-        @include typo($title-s-mobile-size, $title-s-mobile-weight, $title-s-mobile-spacing, $title-s-mobile-line);
-    }
-
-    &__content {
-        margin-top: 8px;
     }
 }
 </style>

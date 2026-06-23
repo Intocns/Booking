@@ -6,6 +6,10 @@ import icNaver from '@/assets/icons/ic_naver_w.svg'
 import icInto from '@/assets/icons/ic_into_w.svg'
 import icIntoPet from '@/assets/icons/ic_intoPet_w.svg'
 import icSms from '@/assets/icons/ic_sms.svg'
+import icDash1 from '@/assets/icons/Ic_dash1.svg'
+import icDash2 from '@/assets/icons/Ic_dash2.svg'
+import icDash3 from '@/assets/icons/Ic_dash3.svg'
+import icDash4 from '@/assets/icons/Ic_dash4.svg'
 // 컴포넌트
 import CommonTable from '@/components/common/CommonTable.vue'
 import CommonHorizontalTable from '@/components/common/CommonHorizontalTable.vue'
@@ -180,6 +184,7 @@ onMounted(() => {
                 <div class="count-card count-card--waiting">
                     <div class="count-card__title">
                         <div class="icon_wrapper">
+                            <img :src="icDash1" alt="진료 예약 icon">
                         </div>
                         <span class="body-m">진료 예약</span>
                     </div>
@@ -194,6 +199,7 @@ onMounted(() => {
                 <div class="count-card count-card--waiting">
                     <div class="count-card__title">
                         <div class="icon_wrapper">
+                            <img :src="icDash2" alt="진료 예정 icon">
                         </div>
                         <span class="body-m">진료 예정</span>
                     </div>
@@ -208,6 +214,7 @@ onMounted(() => {
                 <div class="count-card count-card--waiting">
                     <div class="count-card__title">
                         <div class="icon_wrapper">
+                            <img :src="icDash3" alt="백신 icon">
                         </div>
                         <span class="body-m">백신</span>
                     </div>
@@ -222,6 +229,7 @@ onMounted(() => {
                 <div class="count-card count-card--waiting">
                     <div class="count-card__title">
                         <div class="icon_wrapper">
+                            <img :src="icDash4" alt="미용 icon">
                         </div>
                         <span class="body-m">미용</span>
                     </div>
@@ -318,6 +326,7 @@ onMounted(() => {
 <style lang="scss" scoped>
     .summary--header {
         width: 100%;
+        overflow: hidden;
 
         &__section {
             width: 100%;
@@ -405,6 +414,7 @@ onMounted(() => {
         width: 100%;
         flex: 1;
         min-height: 0;
+        min-width: 0;
         display: flex;
         gap: 16px;
 
@@ -420,12 +430,10 @@ onMounted(() => {
         @include flex-center;
         width: 40px;
         height: 40px;
-        padding: 2px 8px;
-        border-radius: 28px;
-        background-color: $primary-50;
 
-        &.naver {background-color: $brand-naver;}
-        &.into {background-color: $primary-700;}
-        &.pet {background-color: $brand-intoPet;}
+        img {
+            width: 100%;
+            height: 100%;
+        }
     }
 </style>

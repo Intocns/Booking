@@ -216,12 +216,17 @@ const getInState = (data) => {
                         </div>
                         <div class="event-info">
                             <div class="d-flex align-center gap-4 flex-1">
-                                <template v-if="event.clinicType !== '개인일정' && event.clinicType !== '일반예약'">
+                                <template v-if="event.clinicType !== '개인일정'">
                                     <img :src="pathIcons[event.reRoute] || ''" alt="경로아이콘" width="13">
                                     <span class="patient">{{ event.userName }}{{ event.petName ? '(' + event.petName + ')' : '' }}</span>
                                 </template>
                             </div>
-                            <span class="memo">{{ event.clinicType == '개인일정' || event.clinicType == '일반예약' ? event.clinicType : event.roomName }}</span>
+                            <span class="memo">
+                                <template v-if="event.clinicType === '개인일정'">개인일정</template>
+                                <template v-else-if="event.clinicType === '일반예약'">일반 예약</template>
+                                <template v-else-if="event.clinicType === '미용' || event.clinicType === '미용예약'">미용예약</template>
+                                <template v-else>{{ event.roomName }}</template>
+                            </span>
                         </div>
                     </div>
                     <div v-if="selectedEvents.length === 0" class="no-data">일정이 없습니다.</div>

@@ -62,7 +62,7 @@ export const useReservationStore = defineStore("reservation", () => {
     })
 
     // 전체 예약 내역 불러오기
-    async function getReservationList(params) {
+    async function getReservationList(params, categories = null) {
         isLoading.value = true;
         try {
             // 선택된 카테고리 중 list / planVaccineList 대상 분리
@@ -186,11 +186,6 @@ export const useReservationStore = defineStore("reservation", () => {
     // 고객 매칭용 목록 및 예약 정보
     async function getReserveInfo(reserveIdx) {
         try {
-            const response = await api.get(`/api/{cocode}/reserve/${reserveIdx}/cm`)
-            if(response.data.status_code <= 300) {
-                let data = response.data.data
-                reserveInfo.value = data;
-                modalStore.reserveInfoModal.openModal(reserveInfo.value)
             } else {
                 reserveInfo.value = '';
             }
@@ -214,6 +209,11 @@ export const useReservationStore = defineStore("reservation", () => {
             return [];
         } catch (error) {
             console.error('고객 검색 오류:', error);
+            const response = await api.get(`/api/{cocode}/reserve/${reserveIdx}/cm`)
+            if(response.data.status_code <= 300) {
+                let data = response.data.data
+                reserveInfo.value = data;
+                modalStore.reserveInfoModal.openModal(reserveInfo.value)
             return [];
         }
     }

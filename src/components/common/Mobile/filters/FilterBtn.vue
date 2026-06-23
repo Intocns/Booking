@@ -200,26 +200,6 @@ const handelReset = () => {
                     </div>
                 </div>
     
-                <div v-if="statusOptions.length > 0" class="filter__group">
-                    <div class="filter__title" @click="toggleGroup('status')">
-                        <span class="title">예약 상태</span>
-                        <img :src="icDropdown" alt="접기" :class="{ 'is-closed': !activeGroups.status }">
-                    </div>
-
-                    <div class="option-list-wrapper" :class="{ 'is-closed': !activeGroups.status }">
-                        <ul class="option-list option-list--grid">
-                            <li v-for="st in statusOptions" :key="st.value"
-                                @click.stop="toggleMultiSelect('status', st.value, statusOptions)">
-                                <label class="checkbox">
-                                    <input type="checkbox" :checked="tempStatus.includes(st.value) || (tempStatus.includes('all') && st.value !== 'all')" @click.stop.prevent>
-                                    <span class="box"></span>
-                                    <span class="label body-m">{{ st.label }}</span>
-                                </label>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
                 <div v-if="channelOptions.length > 0" class="filter__group">
                     <div class="filter__title" @click="toggleGroup('channel')">
                         <span class="title">예약 경로</span>
@@ -234,6 +214,26 @@ const handelReset = () => {
                                     <input type="checkbox" :checked="tempChannel.includes(c.value) || (tempChannel.includes('all') && c.value !== 'all')" @click.stop.prevent>
                                     <span class="box"></span>
                                     <span class="label body-m">{{ c.label }}</span>
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div v-if="statusOptions.length > 0" class="filter__group">
+                    <div class="filter__title" @click="toggleGroup('status')">
+                        <span class="title">예약 상태</span>
+                        <img :src="icDropdown" alt="접기" :class="{ 'is-closed': !activeGroups.status }">
+                    </div>
+
+                    <div class="option-list-wrapper" :class="{ 'is-closed': !activeGroups.status }">
+                        <ul class="option-list option-list--grid">
+                            <li v-for="st in statusOptions" :key="st.value"
+                                @click.stop="toggleMultiSelect('status', st.value, statusOptions)">
+                                <label class="checkbox">
+                                    <input type="checkbox" :checked="tempStatus.includes(st.value) || (tempStatus.includes('all') && st.value !== 'all')" @click.stop.prevent>
+                                    <span class="box"></span>
+                                    <span class="label body-m">{{ st.label }}</span>
                                 </label>
                             </li>
                         </ul>

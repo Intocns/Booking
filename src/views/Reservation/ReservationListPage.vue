@@ -10,7 +10,6 @@ import { useModalStore } from '@/stores/modalStore';
 import { useTalkSmsStore } from '@/stores/talkSmsStore';
 import PageTitle from '@/components/common/PageTitle.vue';
 import TableLayout from '@/components/common/TableLayout.vue';
-import CommonTable from '@/components/common/CommonTable.vue';
 import Modal from '@/components/common/Modal.vue';
 import FilterDate from '@/components/common/filters/FilterDate.vue';
 import FilterSelect from '@/components/common/filters/FilterSelect.vue';
@@ -20,9 +19,6 @@ import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
 import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
 import icSms from '@/assets/icons/ic_sms.svg';
 import icReset from '@/assets/icons/ic_reset.svg';
-import icSort from '@/assets/icons/ic_sort.svg';
-import icSortUp from '@/assets/icons/ic_sort_up.svg';
-import icSortDown from '@/assets/icons/ic_sort_down.svg';
 const reservationStore = useReservationStore();
 const hospitalStore = useHospitalStore();
 const modalStore = useModalStore();
@@ -72,7 +68,6 @@ const reservationStatus = ref(['all']);
 const doctorList = ref(['all']);
 const reservationChannel = ref(['all']);
 const keyword = ref('');
-const showDetailFilter = ref(false);
 const categoryFilter = ref(['진료예약', '진료예정', '백신', '미용', '기타']); // 전체 선택 기본값
 const categoryOptions = [
     { label: '진료 예약', value: '진료예약', color: '#3B82F6' },
@@ -253,38 +248,33 @@ onMounted(async () => {
                 label="담당의"
                 :options="doctorOptions"
                 v-model="doctorList"
-                />
+            />
+            <FilterSelect
+                label="예약상태"
+                :options="reserveStatusOptions"
+                v-model="reservationStatus"
+            />
+            <FilterSelect
+                label="예약 경로"
+                :options="reservationChannelOptions"
+                v-model="reservationChannel"
+            />
             <FilterKeywordBtn
                 v-model="keyword"
                 :placeholder="'고객명, 동물명, 전화번호 검색'"
-                @search="searchList()" />
+                @search="searchList()"
+            />
 
-            <button class="btn btn--size-32 btn--black-outline" @click="searchClear()" style="width: 40px;">
+            <button class="btn btn--size-32 btn--dark reset-btn" @click="searchClear()" style="width: 40px;">
                 <img :src="icReset" alt="초기화아이콘">
             </button>
+
+            <div class="filter-spacer"></div>
 
             <FilterCheckbox
                 v-model="categoryFilter"
                 :options="categoryOptions"
             />
-
-            <button class="btn btn--size-32 btn--black-outline" @click="showDetailFilter = !showDetailFilter">
-                상세 조회
-            </button>
-
-            <!-- 상세 조회 필터 (토글) -->
-            <div v-if="showDetailFilter" class="detail-filter">
-                <FilterSelect
-                    label="예약상태"
-                    :options="reserveStatusOptions"
-                    v-model="reservationStatus"
-                />
-                <FilterSelect
-                    label="예약 경로"
-                    :options="reservationChannelOptions"
-                    v-model="reservationChannel"
-                />
-            </div>
         </template>
 
         <!-- 테이블 -->
@@ -309,11 +299,14 @@ onMounted(async () => {
                                     <div class="d-flex align-center justify-center gap-4">
                                         {{ col.label }}
                                         <span v-if="col.sortable" class="sort-icons">
-                                            <template v-if="sortConfig.key === col.key">
-                                                <span v-if="sortConfig.order === 'asc'"><img :src="icSortUp" alt="정렬" width="20"></span>
-                                                <span v-if="sortConfig.order === 'desc'"><img :src="icSortDown" alt="정렬" width="20"></span>
-                                            </template>
-                                            <span v-else><img :src="icSort" alt="정렬" width="20"></span>
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="0.5" y="0.5" width="23" height="23" rx="3.5" fill="white"/>
+                                                <rect x="0.5" y="0.5" width="23" height="23" rx="3.5" stroke="#CDCDD1"/>
+                                                <path d="M15.8459 10.3333C16.2836 10.3333 16.51 9.8107 16.2107 9.49136L12.7295 5.77817C12.3345 5.35676 11.6655 5.35676 11.2705 5.77817L7.78935 9.49136C7.48997 9.8107 7.7164 10.3333 8.15412 10.3333H15.8459Z"
+                                                    :fill="sortConfig.key === col.key ? (sortConfig.order === 'asc' ? '#0C75FF' : '#CDCDD1') : '#49494D'" />
+                                                <path d="M15.8459 13.6667C16.2836 13.6667 16.51 14.1893 16.2107 14.5086L12.7295 18.2218C12.3345 18.6432 11.6655 18.6432 11.2705 18.2218L7.78935 14.5086C7.48997 14.1893 7.7164 13.6667 8.15412 13.6667H15.8459Z"
+                                                    :fill="sortConfig.key === col.key ? (sortConfig.order === 'desc' ? '#0C75FF' : '#CDCDD1') : '#49494D'" />
+                                            </svg>
                                         </span>
                                     </div>
                                 </th>
@@ -323,6 +316,7 @@ onMounted(async () => {
                             <!-- 카테고리 그룹 헤더 -->
                             <tr class="category-group-header">
                                 <td :colspan="columns.length">
+                                    <span class="category-dot"></span>
                                     {{ group.groupLabel }}
                                 </td>
                             </tr>
@@ -394,21 +388,62 @@ onMounted(async () => {
 </template>
 
 <style lang="scss" scoped>
-    // 예약 대기 tr 배경색
+    // 예약 대기 tr 배경색 (노란색)
     .row-pending {
-        background-color: $status-onHold_table_bg !important;
+        background-color: #FFF6D9 !important;
     }
     // 예약 취소/거절 tr 연하게
     .row-canceled {
         td {color: $gray-400}
     }
 
-    .detail-filter {
-        width: 100%;
+    .status-cell {
         display: flex;
-        gap: 16px;
-        padding-top: 12px;
-        border-top: 1px solid $gray-100;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    :deep(.search-filter) {
+        width: 100%;
+        flex-wrap: nowrap;
+        align-items: center;
+
+        .search-filter__label {
+            white-space: nowrap;
+        }
+    }
+
+    // 일자 datepicker 너비 축소
+    :deep(.search-filter__datepicker) {
+        width: 220px;
+    }
+
+    // 오늘, 7일, 기간선택 버튼 + 초기화 버튼 selected 스타일
+    :deep(.search-filter__date-button) {
+        .btn.selected {
+            background-color: $gray-900;
+            color: $gray-200;
+            border-color: $gray-900;
+        }
+    }
+
+    .btn--black-outline {
+        &:hover, &.selected {
+            background-color: $gray-900;
+            color: $gray-200;
+            border-color: $gray-900;
+        }
+    }
+
+    .reset-btn {
+        background-color: #0C0C0D;
+        border-color: #0C0C0D;
+        img { filter: brightness(0) invert(0.9); }
+    }
+
+    .filter-spacer {
+        flex: 1;
     }
 
     .table-section {
@@ -428,8 +463,7 @@ onMounted(async () => {
         width: 100%;
         flex: 1 1 auto;
         min-height: 0;
-        overflow-x: hidden;
-        overflow-y: auto;
+        overflow: hidden;
     }
 
     .table {
@@ -474,7 +508,7 @@ onMounted(async () => {
             height: 36px;
             background-color: $gray-00;
 
-            &:hover:not(.category-group-header) { background-color: $primary-50; }
+            &:hover:not(.category-group-header) { background-color: #E2F3FF; }
 
             &.is-clickable td { cursor: pointer; }
         }
@@ -492,6 +526,16 @@ onMounted(async () => {
             border-bottom: 1px solid $gray-300;
             @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
             color: $gray-900;
+        }
+
+        .category-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #7899F0;
+            margin-right: 6px;
+            vertical-align: middle;
         }
     }
 

@@ -132,11 +132,13 @@ const config = ref({
             4: '#D2FAE2', // 개인(불가)
         };
 
-        // clinicType이 '개인일정'인 경우
         if (clinicType == '개인일정') {
             args.data.backColor = bgColors[4];
+        } else if (clinicType === '미용' || clinicType === '미용예약') {
+            args.data.backColor = '#FFE8CC'; // 미용: 주황 배경
+        } else if (clinicType === '일반예약') {
+            args.data.backColor = '#cceaff'; // 일반예약: 파랑 배경
         } else {
-            // 2. 그 외에는 status(inState) 값에 따라 색상 결정
             args.data.backColor = bgColors[status];
         }
 
@@ -401,22 +403,15 @@ onUnmounted(() => {
                     <!-- 예약 상태 아이콘 -->
                     <div class="reserve-name">
                         <img :src="statusIcons[getInState(event.data)] || ''" alt="상태아이콘">
-                        <span 
+                        <span
                             v-if="event.data.clinicType == '개인일정'"
                             class="title"
                             :class="`title__${getInState(event.data)}`"
                         >
                             {{ event.data.clinicType }}
                         </span>
-                        <span 
-                            v-else-if="event.data.clinicType == '일반예약'"
-                            class="title"
-                            :class="`title__${getInState(event.data)}`"
-                        >
-                            일반 예약
-                        </span>
                         <span v-else
-                            class="title" 
+                            class="title"
                             :class="`title__${getInState(event.data)}`"
                         >
                             {{ event.data.userName }} {{ event.data.petName ? '(' + event.data.petName + ')' : '' }}
@@ -429,10 +424,26 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <div class="event-content">
-                    <!-- 상품명/진료실명 -->
-                    <p class="reserve-title" :class="`reserve-title__${getInState(event.data)}`">{{ event.data.roomName }}</p>
-                    <!-- 병원 메모 -->
-                    <p class="reserve-memo">{{ event.data.geReMemo }}</p>
+                    <!-- 미용: 타이틀 '미용예약' 고정 -->
+                    <template v-if="event.data.clinicType === '미용' || event.data.clinicType === '미용예약'">
+                        <p class="reserve-title" :class="`reserve-title__${getInState(event.data)}`">미용예약</p>
+                        <p class="reserve-memo">{{ event.data.roomName }}</p>
+                    </template>
+                    <!-- 일반예약: 타이틀 '일반 예약' 고정 -->
+                    <template v-else-if="event.data.clinicType === '일반예약'">
+                        <p class="reserve-title" :class="`reserve-title__${getInState(event.data)}`">일반 예약</p>
+                        <p class="reserve-memo">{{ event.data.geReMemo }}</p>
+                    </template>
+                    <!-- 기타(개인일정 제외): 타이틀 '기타 일정' 고정 -->
+                    <template v-else-if="event.data.clinicType !== '개인일정' && event.data.clinicType !== '진료예약'">
+                        <p class="reserve-title" :class="`reserve-title__${getInState(event.data)}`">{{ event.data.clinicType || '기타 일정' }}</p>
+                        <p class="reserve-memo">{{ event.data.geReMemo }}</p>
+                    </template>
+                    <!-- 진료예약 / 개인일정: 기존 -->
+                    <template v-else>
+                        <p class="reserve-title" :class="`reserve-title__${getInState(event.data)}`">{{ event.data.roomName }}</p>
+                        <p class="reserve-memo">{{ event.data.geReMemo }}</p>
+                    </template>
                 </div>
             </template>
         </DayPilotCalendar>
