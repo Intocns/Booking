@@ -72,7 +72,7 @@ watch([reservationChannel], () => {
 }, { deep: true });
 
 const handelReserveDetail = (row) => {
-    reservationStore.getReserveInfo(row.idx);
+    reservationStore.getReserveInfo(row.idx, row);
 }
 
 const closeReserveInfoModal = () => {

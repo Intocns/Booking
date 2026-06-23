@@ -155,32 +155,6 @@ const handelReset = () => {
     <BottomSheet v-model="isOpen" save-btn-text="확인" @save="handleSave" @reset="handelReset" :show-reset-btn="showResetBtn">
         <template #content>
             <div class="filter">
-                <div v-if="categoryOptions.length > 0" class="filter__group">
-                    <div class="filter__title" @click="toggleGroup('category')">
-                        <span class="title">예약 항목</span>
-                        <img :src="icDropdown" alt="접기" :class="{ 'is-closed': !activeGroups.category }">
-                    </div>
-
-                    <div class="option-list-wrapper" :class="{ 'is-closed': !activeGroups.category }">
-                        <ul class="option-list option-list--grid">
-                            <li @click.stop="toggleCategory('all')">
-                                <label class="checkbox">
-                                    <input type="checkbox" :checked="isCategoryChecked('all')" @click.stop.prevent>
-                                    <span class="box"></span>
-                                    <span class="label body-m">전체선택</span>
-                                </label>
-                            </li>
-                            <li v-for="opt in categoryOptions" :key="opt.value" @click.stop="toggleCategory(opt.value)">
-                                <label class="checkbox">
-                                    <input type="checkbox" :checked="isCategoryChecked(opt.value)" @click.stop.prevent>
-                                    <span class="box" :style="isCategoryChecked(opt.value) ? `background-color: ${opt.color}; border-color: ${opt.color};` : ''"></span>
-                                    <span class="label body-m">{{ opt.label }}</span>
-                                </label>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
                 <div v-if="sortOptions.length > 0" class="filter__group">
                     <div class="filter__title" @click="toggleGroup('sort')">
                         <span class="title">정렬</span>

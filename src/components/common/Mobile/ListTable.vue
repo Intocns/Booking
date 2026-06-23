@@ -25,7 +25,7 @@ const props = defineProps({
 })
 
 const handelReserveDetail = (row) => {
-    reservationStore.getReserveInfo(row.idx);
+    reservationStore.getReserveInfo(row.idx, row);
 };
 
 // clinicType별 표시 항목 정의
@@ -77,7 +77,7 @@ const showHospitalMemo = (type) => type === '진료예정' || type === '미용' 
                     </div>
                 </div>
 
-                <div class="border"></div>
+                <div v-if="showPetName(row.clinicType) || showUserName(row.clinicType)" class="border"></div>
 
                 <!-- 예약 내용 / 담당의 / 메모 -->
                 <div class="list__bottom__bottom">

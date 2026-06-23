@@ -260,7 +260,7 @@ onMounted(async() => {
     <!-- 예약 정보 안내 모달 -->
     <Modal
         v-if="modalStore.reserveInfoModal.isVisible"
-        :size="modalStore.reserveInfoModal.data.reserve.clinicType == '개인일정' || modalStore.reserveInfoModal.data.reserve.clinicType == '일반예약' ? 's' : 'l'"
+        :size="modalStore.reserveInfoModal.data.reserve.clinicType == '진료예약' ? 'l' : 's'"
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >
@@ -270,11 +270,25 @@ onMounted(async() => {
 
 <style lang="scss" scoped>
     :deep(.search-filter__datepicker) {
-        width: 160px;
+        min-width: 210px;
+        white-space: nowrap;
     }
 
     :deep(.search-filter) {
         flex-wrap: nowrap;
+
+        .search-filter__label {
+            white-space: nowrap;
+        }
+    }
+
+    :deep(.search-filter__date) {
+        flex-shrink: 0;
+    }
+
+    :deep(.search-filter__date-nav) {
+        flex-shrink: 0;
+        white-space: nowrap;
     }
 
     .filter-spacer {
@@ -282,6 +296,7 @@ onMounted(async() => {
     }
 
     .reset-btn {
+        flex-shrink: 0;
         background-color: #0C0C0D;
         border-color: #0C0C0D;
         img { filter: brightness(0) invert(0.9); }

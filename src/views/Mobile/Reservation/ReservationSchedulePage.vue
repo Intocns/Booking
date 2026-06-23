@@ -440,7 +440,7 @@ const closeReserveInfoModal = () => {
 }
 
 const handelReserveDetail = (row) => {
-    reservationStore.getReserveInfo(row.reserveIdx);
+    reservationStore.getReserveInfo(row.reserveIdx, row);
 };
 
 const refreshSchedule = () => {

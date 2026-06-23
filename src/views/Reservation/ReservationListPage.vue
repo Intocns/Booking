@@ -19,6 +19,7 @@ import ReserveInfo from '@/components/common/modal-content/ReserveInfo.vue';
 import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
 import icSms from '@/assets/icons/ic_sms.svg';
 import icReset from '@/assets/icons/ic_reset.svg';
+import icEmpty from '@/assets/icons/ic_empty.svg';
 const reservationStore = useReservationStore();
 const hospitalStore = useHospitalStore();
 const modalStore = useModalStore();
@@ -163,7 +164,7 @@ const groupedReserveList = computed(() => {
     });
 
     return categoryOptions
-        .filter(opt => categoryFilter.value.includes(opt.value) && categoryMap[opt.value].items.length > 0)
+        .filter(opt => categoryFilter.value.includes(opt.value))
         .map(opt => ({
             ...categoryMap[opt.value],
             groupLabel: categoryGroupLabels[opt.value] || opt.label,
@@ -217,7 +218,7 @@ watch([reservationStatus, doctorList, reservationChannel, dateRange, categoryFil
 }, { deep: true });
 
 const handelReserveDetail = (row) => {
-    reservationStore.getReserveInfo(row.idx);
+    reservationStore.getReserveInfo(row.idx, row);
 };
 
 onMounted(async () => {
@@ -321,37 +322,48 @@ onMounted(async () => {
                                 </td>
                             </tr>
                             <!-- 데이터 행 -->
-                            <tr
-                                v-for="row in group.items"
-                                :key="row.idx"
-                                @click="handelReserveDetail(row)"
-                                :class="[row.rowClass, 'is-clickable']"
-                            >
-                                <td v-for="col in columns" :key="col.key">
-                                    <!-- 예약상태 -->
-                                    <template v-if="col.key === 'inStateTxt'">
-                                        <div class="status-cell" :class="`status-cell--state-${row.inState}`">
-                                            {{ row[col.key] }}
-                                        </div>
-                                    </template>
-                                    <!-- 예약경로 -->
-                                    <template v-else-if="col.key === 'reRouteTxt'">
-                                        <div class="status-cell">
-                                            <span class="dot" :class="`dot--route-${row.reRoute}`"></span>
-                                            {{ row[col.key] }}
-                                        </div>
-                                    </template>
-                                    <!-- 관리 버튼 -->
-                                    <template v-else-if="col.key === 'actions'">
-                                        <div class="d-flex justify-center gap-4">
-                                            <button class="btn btn--size-24 btn--black-outline" @click.stop="handelReserveDetail(row)">상세</button>
-                                            <button class="btn btn--size-24 btn--black-outline" @click.stop="openSmsModal(row)"><img :src="icSms" alt="SMS"></button>
-                                        </div>
-                                    </template>
-                                    <!-- 기본 -->
-                                    <template v-else>
-                                        {{ row[col.key] }}
-                                    </template>
+                            <template v-if="group.items.length > 0">
+                                <tr
+                                    v-for="row in group.items"
+                                    :key="row.idx"
+                                    @click="handelReserveDetail(row)"
+                                    :class="[row.rowClass, 'is-clickable']"
+                                >
+                                    <td v-for="col in columns" :key="col.key">
+                                        <!-- 예약상태 -->
+                                        <template v-if="col.key === 'inStateTxt'">
+                                            <div class="status-cell" :class="`status-cell--state-${row.inState}`">
+                                                {{ row[col.key] }}
+                                            </div>
+                                        </template>
+                                        <!-- 예약경로 -->
+                                        <template v-else-if="col.key === 'reRouteTxt'">
+                                            <div class="status-cell">
+                                                <span class="dot" :class="`dot--route-${row.reRoute}`"></span>
+                                                {{ row[col.key] }}
+                                            </div>
+                                        </template>
+                                        <!-- 관리 버튼 -->
+                                        <template v-else-if="col.key === 'actions'">
+                                            <div class="d-flex justify-center gap-4">
+                                                <button class="btn btn--size-24 btn--black-outline" @click.stop="handelReserveDetail(row)">상세</button>
+                                                <button class="btn btn--size-24 btn--black-outline" @click.stop="openSmsModal(row)"><img :src="icSms" alt="SMS"></button>
+                                            </div>
+                                        </template>
+                                        <!-- 기본 -->
+                                        <template v-else>
+                                            {{ row[col.key] != null && row[col.key] !== '' ? row[col.key] : '-' }}
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
+                            <!-- 데이터 없음 -->
+                            <tr v-else class="category-empty-row">
+                                <td :colspan="columns.length">
+                                    <div class="category-empty">
+                                        <img :src="icEmpty" alt="비어있음 아이콘">
+                                        <span class="body-m">등록된 내역이 없습니다.</span>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -369,7 +381,7 @@ onMounted(async () => {
     <!-- 예약 정보 안내 모달 -->
     <Modal
         v-if="modalStore.reserveInfoModal.isVisible"
-        :size="modalStore.reserveInfoModal.data.reserve.clinicType == '개인일정' || modalStore.reserveInfoModal.data.reserve.clinicType == '일반예약' ? 's' : 'l'"
+        :size="modalStore.reserveInfoModal.data.reserve.clinicType == '진료예약' ? 'l' : 's'"
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >
@@ -437,6 +449,7 @@ onMounted(async () => {
     }
 
     .reset-btn {
+        flex-shrink: 0;
         background-color: #0C0C0D;
         border-color: #0C0C0D;
         img { filter: brightness(0) invert(0.9); }
@@ -463,7 +476,7 @@ onMounted(async () => {
         width: 100%;
         flex: 1 1 auto;
         min-height: 0;
-        overflow: hidden;
+        overflow-y: auto;
     }
 
     .table {
@@ -539,7 +552,21 @@ onMounted(async () => {
         }
     }
 
-    .sort-icons { flex-shrink: 0; }
+    .category-empty-row {
+        &:hover { background-color: $gray-00 !important; }
+
+        .category-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 24px 0;
+            color: $gray-400;
+        }
+    }
+
+    .sort-icons { flex-shrink: 0; display: flex; align-items: center; }
 
     .empty-box {
         height: 200px;

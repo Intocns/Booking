@@ -117,7 +117,7 @@ watch([reservationChannel], () => {
 }, { deep: true });
 
 const handelReserveDetail = (row) => {
-    reservationStore.getReserveInfo(row.idx);
+    reservationStore.getReserveInfo(row.idx, row);
 };
 
 onMounted(() => {
@@ -178,7 +178,7 @@ onMounted(() => {
     <!-- 예약 정보 안내 모달 -->
     <Modal
         v-if="modalStore.reserveInfoModal.isVisible"
-        :size="modalStore.reserveInfoModal.data.reserve.clinicType == '개인일정' || modalStore.reserveInfoModal.data.reserve.clinicType == '일반예약' ? 's' : 'l'"
+        :size="modalStore.reserveInfoModal.data.reserve.clinicType == '진료예약' ? 'l' : 's'"
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >
