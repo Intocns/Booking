@@ -807,14 +807,17 @@ const clinicTypeLabel = computed(() => {
 
             <!-- 타이틀 -->
             <div class="modal-content-title-wrapper">
-                <div class="d-flex gap-8 align-items-center">
+                <div class="title-row">
                     <p class="title-l">예약 정보</p>
-                    <span class="title-s">{{ clinicTypeLabel }}</span>
+                    <span class="clinic-type-label body-l">{{ clinicTypeLabel }}</span>
                     <span v-if="RESERVE_STATUS_SHORT_MAP[reserveData.inState]" class="flag" :class="RESERVE_STATUS_CLASS_MAP[reserveData.inState]">
                         {{ RESERVE_STATUS_SHORT_MAP[reserveData.inState] }}
                     </span>
                 </div>
-                <span v-if="isClinicReservation" class="body-m" style="color: #86868a;">예약 번호  {{ reserveData.reserveIdx }}</span>
+                <span v-if="isClinicReservation" class="body-m" style="color: #86868a; display: inline-flex; gap: 8px;">
+                    <span>예약 번호</span>
+                    <span>{{ reserveData.reserveIdx }}</span>
+                </span>
             </div>
 
             <template v-if="isSimpleType">
@@ -1082,11 +1085,11 @@ const clinicTypeLabel = computed(() => {
                                 />
                             </div>
                             <div class="info-item">
-                                <p class="label">상품/진료실명</p>
+                                <p class="label">예약 내용</p>
                                 <InputTextBox 
                                     v-model="reserveData.roomName"
                                     :disabled="true"
-                                    placeholder="상품명/진료실명"
+                                    placeholder="예약 내용"
                                 />
                             </div>
                             <div class="info-item">
@@ -1369,17 +1372,12 @@ const clinicTypeLabel = computed(() => {
     <div v-if="!isCancelled" class="modal-button-wrapper">
         <!-- 진료예약: 예약거절 + 확정/저장 -->
         <div v-if="isClinicReservation" class="buttons">
-            <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.cancelReserveModal.openModal()">예약거절</button>
+            <button class="btn btn--size-40 btn--black" @click="modalStore.cancelReserveModal.openModal()">예약거절</button>
             <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation(isConfirmed)">{{ isConfirmed ? '저장' : '예약 확정' }}</button>
         </div>
-        <!-- 개인일정/일반예약/기타: 닫기 + 저장 -->
-        <div v-else-if="isSimpleType" class="buttons">
-            <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.reserveInfoModal.closeModal()">닫기</button>
-            <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation(isConfirmed)">저장</button>
-        </div>
-        <!-- 진료예정/백신/미용: 닫기만 -->
+        <!-- 진료예약 외: 닫기만 -->
         <div v-else class="buttons">
-            <button class="btn btn--size-40 btn--black-outline" @click="modalStore.reserveInfoModal.closeModal()">닫기</button>
+            <button class="btn btn--size-40 btn--black" @click="modalStore.reserveInfoModal.closeModal()">닫기</button>
         </div>
     </div>
 
@@ -1509,6 +1507,17 @@ const clinicTypeLabel = computed(() => {
         justify-content: space-between;
         align-items: center;
         gap: 8px;
+    }
+
+    .title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .clinic-type-label {
+        color: $gray-900;
+        white-space: nowrap;
     }
 
     .helper__text {color: $primary-700;}

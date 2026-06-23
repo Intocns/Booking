@@ -132,8 +132,8 @@ const statusLabels = {
 };
 
 // 예약 상세보기 핸들러
-const handelReserveDetail = (reserveIdx) => {
-    reservationStore.getReserveInfo(reserveIdx)
+const handelReserveDetail = (eventData) => {
+    reservationStore.getReserveInfo(eventData.reserveIdx, eventData)
 }
 
 const getInState = (data) => {
@@ -204,7 +204,7 @@ const getInState = (data) => {
                         v-for="event in selectedEvents" 
                         :key="event.id" 
                         :class="['detail-item', `detail-item__${getInState(event)}`]"
-                        @click="handelReserveDetail(event.reserveIdx)"
+                        @click="handelReserveDetail(event)"
                     >
                         <div class="time-box">
                             <img 
@@ -218,12 +218,12 @@ const getInState = (data) => {
                             <div class="d-flex align-center gap-4 flex-1">
                                 <template v-if="event.clinicType !== '개인일정'">
                                     <img :src="pathIcons[event.reRoute] || ''" alt="경로아이콘" width="13">
-                                    <span class="patient">{{ event.userName }}{{ event.petName ? '(' + event.petName + ')' : '' }}</span>
+                                    <span class="patient">{{ event.userName || '-' }}{{ event.petName ? '(' + event.petName + ')' : '(-)' }}</span>
                                 </template>
                             </div>
                             <span class="memo">
                                 <template v-if="event.clinicType === '개인일정'">개인일정</template>
-                                <template v-else-if="event.clinicType === '일반예약'">일반 예약</template>
+                                <template v-else-if="event.clinicType === '일반예약'">일반예약</template>
                                 <template v-else-if="event.clinicType === '미용' || event.clinicType === '미용예약'">미용예약</template>
                                 <template v-else>{{ event.roomName }}</template>
                             </span>

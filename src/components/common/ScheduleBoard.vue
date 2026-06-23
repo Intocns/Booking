@@ -117,7 +117,7 @@ const config = ref({
     businessBeginsHour: earliestStartHour.value,           // 시작 시간
     
     onEventClick: (args) => {
-        handelReserveDetail(args.e.data.reserveIdx)
+        handelReserveDetail(args.e.data)
     },
 
     onBeforeEventRender: (args) => {
@@ -172,8 +172,8 @@ watch(() => [props.viewType, props.events, props.staffs, props.startDate], ([new
 }, { deep: true });
 
 // 예약 상세보기 핸들러
-const handelReserveDetail = (reserveIdx) => {
-    reservationStore.getReserveInfo(reserveIdx)
+const handelReserveDetail = (eventData) => {
+    reservationStore.getReserveInfo(eventData.reserveIdx, eventData)
 }
 
 // 캘린더 스크롤을 운영시작 위치로 이동
@@ -414,7 +414,7 @@ onUnmounted(() => {
                             class="title"
                             :class="`title__${getInState(event.data)}`"
                         >
-                            {{ event.data.userName }} {{ event.data.petName ? '(' + event.data.petName + ')' : '' }}
+                            {{ event.data.userName || '-' }} {{ event.data.petName ? '(' + event.data.petName + ')' : '(-)' }}
                         </span>
                     </div>
                     
@@ -431,7 +431,7 @@ onUnmounted(() => {
                     </template>
                     <!-- 일반예약: 타이틀 '일반 예약' 고정 -->
                     <template v-else-if="event.data.clinicType === '일반예약'">
-                        <p class="reserve-title" :class="`reserve-title__${getInState(event.data)}`">일반 예약</p>
+                        <p class="reserve-title" :class="`reserve-title__${getInState(event.data)}`">일반예약</p>
                         <p class="reserve-memo">{{ event.data.geReMemo }}</p>
                     </template>
                     <!-- 기타(개인일정 제외): 타이틀 '기타 일정' 고정 -->

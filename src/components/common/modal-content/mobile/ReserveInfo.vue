@@ -950,11 +950,10 @@ onUnmounted(() => {
                     <div class="d-flex align-center justify-between">
                         <div class="d-flex gap-8 align-center">
                             <p class="title-l">예약 정보</p>
-                            <span v-if="reserveData.clinicType == '개인일정' || reserveData.clinicType == '일반예약'" class="flag flag--black">{{ reserveData.clinicType }}</span>
-                            <span v-else class="flag" :class="RESERVE_STATUS_CLASS_MAP[reserveData.inState]">{{ RESERVE_STATUS_SHORT_MAP[reserveData.inState] }}</span>
+                            <span class="flag" :class="RESERVE_STATUS_CLASS_MAP[reserveData.inState]">{{ RESERVE_STATUS_SHORT_MAP[reserveData.inState] }}</span>
                         </div>
-        
-                        <div class="reserve-number">
+
+                        <div v-if="reserveData.clinicType === '진료예약'" class="reserve-number">
                             예약번호 <span>{{ reserveData.reserveIdx }}</span>
                         </div> 
                     </div>
@@ -991,11 +990,11 @@ onUnmounted(() => {
                 <div class="info-lists-wrapper">
                     <div class="info-list">
                         <div class="info-item">
-                            <p class="label">예약 경로</p>
-                            <InputTextBox 
-                                v-model="RESERVE_ROUTE_MAP[reserveData.reRoute]"
+                            <p class="label">예약 내용</p>
+                            <InputTextBox
+                                v-model="reserveData.roomName"
                                 :disabled="true"
-                                placeholder="예약 경로"
+                                placeholder="예약 내용"
                             />
                         </div>
                         <div class="info-item">
@@ -1063,37 +1062,37 @@ onUnmounted(() => {
                 <div v-show="!isFolded" class="info-lists-wrapper">
                     <div class="info-list">
                         <div class="info-item">
-                            <p class="label">상품/진료실명</p>
-                            <InputTextBox 
+                            <p class="label">예약 내용</p>
+                            <InputTextBox
                                 v-model="reserveData.roomName"
                                 :disabled="true"
-                                placeholder="상품명/진료실명"
+                                placeholder="예약 내용"
                             />
                         </div>
                         <div class="info-item">
-                            <p class="label">예약 방문일</p>
+                            <p class="label">예약 일시</p>
                             <div class="d-flex gap-8 flex-wrap w-100" style="flex:2;">
-                                <CustomDatePicker 
-                                    ref="reserveDateRef" 
-                                    v-model="reserveDate" 
-                                    :range="false" 
+                                <CustomDatePicker
+                                    ref="reserveDateRef"
+                                    v-model="reserveDate"
+                                    :range="false"
                                     :disabled="isCancelled"
                                     :is-mobile="isMobile"
                                 />
-    
-                                <!-- 시간 선택 ( 00: 00 ~ 00: 00) -->
-                                <div class="d-flex align-center gap-4" style="flex:2;">
-                                    <TimeSelect 
-                                        ref="startTimeRef" 
-                                        v-model="startTime" 
+
+                                <!-- 시간 선택: 미용, 미용예약, 진료예약만 표시 -->
+                                <div v-if="reserveData.clinicType === '미용' || reserveData.clinicType === '미용예약' || reserveData.clinicType === '진료예약'" class="d-flex align-center gap-4" style="flex:2;">
+                                    <TimeSelect
+                                        ref="startTimeRef"
+                                        v-model="startTime"
                                         class="time-select-wrap"
                                         :disabled="isCancelled"
                                         :is-mobile="isMobile"
                                     />
                                     <span class="time-separator">-</span>
-                                    <TimeSelect 
-                                        ref="endTimeRef" 
-                                        v-model="endTime" 
+                                    <TimeSelect
+                                        ref="endTimeRef"
+                                        v-model="endTime"
                                         class="time-select-wrap"
                                         :disabled="isCancelled"
                                         :is-mobile="isMobile"
@@ -1116,12 +1115,12 @@ onUnmounted(() => {
                                 />
                             </div>
                         </div>
-                        <div class="info-item">
+                        <div v-if="reserveData.clinicType !== '백신'" class="info-item">
                             <div class="w-100 d-flex align-center justify-between">
                                 <p class="label">병원 메모</p>
                                 <p class="show-more-btn" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">더보기 <img :src="icArrow" alt=" 화살표"></p>
                             </div>
-                            <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">    
+                            <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">
                                 <span v-if="!reserveData.geReMemo || reserveData.geReMemo.trim() === ''" class="empty-text">메모를 입력하세요.</span>
                                 <p v-else class="text">{{ reserveData.geReMemo  }}</p>
                             </div>

@@ -221,8 +221,8 @@ const handleDateSelection = (clickedDateStr) => {
 };
 
 // 예약 상세보기 핸들러
-const handelReserveDetail = (reserveIdx) => {
-    reservationStore.getReserveInfo(reserveIdx)
+const handelReserveDetail = (eventData) => {
+    reservationStore.getReserveInfo(eventData.reserveIdx, eventData)
 }
 
 // 스태프별로 열림/닫힘 상태를 관리할 객체 (기본적으로 모두 열어두려면 초기값 설정)
@@ -332,7 +332,7 @@ onMounted(() => {
                             :key="ev.id" 
                             class="detail-item" 
                             :class="`detail-item__${ev.clinicType === '개인일정' ? 4 : ev.inState}`"
-                            @click="handelReserveDetail(ev.reserveIdx)"
+                            @click="handelReserveDetail(ev)"
                         >
                             <div class="time-box">
                                 <img 
@@ -346,12 +346,12 @@ onMounted(() => {
                                 <div class="d-flex align-center gap-4 flex-1">
                                     <template v-if="ev.clinicType !== '개인일정'">
                                         <img :src="pathIcons[ev.reRoute] || ''" alt="경로아이콘" width="13">
-                                        <span class="patient body-s">{{ ev.userName }}{{ ev.petName ? '(' + ev.petName + ')' : '' }}</span>
+                                        <span class="patient body-s">{{ ev.userName || '-' }}{{ ev.petName ? '(' + ev.petName + ')' : '(-)' }}</span>
                                     </template>
                                 </div>
                                 <span class="memo body-s">
                                     <template v-if="ev.clinicType === '개인일정'">개인일정</template>
-                                    <template v-else-if="ev.clinicType === '일반예약'">일반 예약</template>
+                                    <template v-else-if="ev.clinicType === '일반예약'">일반예약</template>
                                     <template v-else-if="ev.clinicType === '미용' || ev.clinicType === '미용예약'">미용예약</template>
                                     <template v-else>{{ ev.roomName }}</template>
                                 </span>
