@@ -55,7 +55,6 @@ export const useReservationStore = defineStore("reservation", () => {
     // planVaccineList 항목을 예약 리스트와 동일한 형태로 변환
     const mapPlanVaccineRow = (row) => ({
         ...row,
-        roomName: row.clinicType || '',
         clinicType: row.gubun === 1 ? '진료예정' : '백신',
         geReMemo: row.geReMemo || '',
         createdAt: row.reTime,
@@ -133,12 +132,9 @@ export const useReservationStore = defineStore("reservation", () => {
                     data.reserve.forEach(item => rows.push(item));
                 }
 
-                // plan/vaccine: clinicType이 치료명이므로 roomName으로 매핑
                 const mapPlanItem = (item) => ({
                     ...item,
-                    roomName: item.clinicType || '',
                     createdAt: item.createdAt || item.reTime,
-                    clinicType: '', // mapReserveRow의 일반예약 체크에 영향 안주도록
                 });
 
                 if (Array.isArray(data.plan)) {
@@ -184,8 +180,24 @@ export const useReservationStore = defineStore("reservation", () => {
     }
 
     // 고객 매칭용 목록 및 예약 정보
-    async function getReserveInfo(reserveIdx) {
+    async function getReserveInfo(reserveIdx, rowData = null) {
+        // 진료예약이 아닌 경우 API 호출 없이 리스트 데이터로 모달 열기
+        if (rowData && rowData.clinicType !== '진료예약') {
+            reserveInfo.value = {
+                reserve: rowData,
+                clientPet: null,
+                clientList: [],
+            };
+            modalStore.reserveInfoModal.openModal(reserveInfo.value);
+            return;
+        }
+
         try {
+            const response = await api.get(`/api/{cocode}/reserve/${reserveIdx}/cm`)
+            if(response.data.status_code <= 300) {
+                let data = response.data.data
+                reserveInfo.value = data;
+                modalStore.reserveInfoModal.openModal(reserveInfo.value)
             } else {
                 reserveInfo.value = '';
             }
@@ -209,11 +221,6 @@ export const useReservationStore = defineStore("reservation", () => {
             return [];
         } catch (error) {
             console.error('고객 검색 오류:', error);
-            const response = await api.get(`/api/{cocode}/reserve/${reserveIdx}/cm`)
-            if(response.data.status_code <= 300) {
-                let data = response.data.data
-                reserveInfo.value = data;
-                modalStore.reserveInfoModal.openModal(reserveInfo.value)
             return [];
         }
     }

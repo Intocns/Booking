@@ -1,6 +1,6 @@
 //예약상태 define
 export const RESERVE_STATUS_OPTIONS = [
-    { label: '전체선택', value: 'all' },
+    { label: '전체', value: 'all' },
     { label: '대기', value: 0 },
     { label: '확정', value: 1 },
     { label: '취소', value: 2 },
@@ -8,10 +8,10 @@ export const RESERVE_STATUS_OPTIONS = [
 ]
 
 export const RESERVE_STATUS_MAP = {
-    0: '예약대기',
-    1: '예약확정',
-    2: '예약취소',
-    3: '예약거절'
+    0: '대기',
+    1: '확정',
+    2: '취소',
+    3: '거절'
 }
 
 export const RESERVE_STATUS_SHORT_MAP = {
@@ -30,7 +30,7 @@ export const RESERVE_STATUS_CLASS_MAP = {
 
 //예약경로 define
 export const RESERVE_ROUTE_OPTIONS = [
-    { label: '전체선택', value: 'all' },
+    { label: '전체', value: 'all' },
     { label: '네이버 예약', value: 4 },
     { label: 'IntoVET', value: 1 },
     { label: '인투펫', value: 2 },

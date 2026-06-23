@@ -74,7 +74,7 @@ const openSmsModal = (row) => {
 // 대기중인 예약 테이블 col 정의
 const columns = [
     { key: 'idx', label: 'No.', width: '6%' },
-    { key: 'reTimeTxt', label: '예약일자', width: '7%' },
+    { key: 'reTimeTxt', label: '예약방문일', width: '7%' },
     { key: 'reTimeHisTxt', label: '예약시간', width: '5%' },
     { key: 'roomName', label: '상품명/진료실명', width: '12%' },
     { key: 'userName', label: '고객명', width: '7%' },
@@ -107,7 +107,7 @@ const openNoticeDetail = (row) => {
 
 // 예약 상세보기 핸들러
 const handelReserveDetail = (row) => {
-    reservationStore.getReserveInfo(row.idx)
+    reservationStore.getReserveInfo(row.idx, row)
 }
 
 const refreshDashboard = () => {
@@ -305,7 +305,7 @@ onMounted(() => {
     <!-- 예약 정보 안내 모달 -->
     <Modal
         v-if="modalStore.reserveInfoModal.isVisible"
-        :size="modalStore.reserveInfoModal.data.reserve.clinicType == '개인일정' || modalStore.reserveInfoModal.data.reserve.clinicType == '일반예약' ? 's' : 'l'"
+        :size="modalStore.reserveInfoModal.data.reserve.clinicType == '진료예약' ? 'l' : 's'"
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >
