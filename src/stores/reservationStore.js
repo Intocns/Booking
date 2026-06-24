@@ -25,6 +25,7 @@ export const useReservationStore = defineStore("reservation", () => {
     const LIST_CATEGORY_KEY_MAP = {
         '진료예약': '진료예약',
         '미용': '미용',
+        '미용예약': '미용',
         '기타': '기타',
     };
 
@@ -34,11 +35,13 @@ export const useReservationStore = defineStore("reservation", () => {
 
     const mapReserveRow = (row) => ({
         ...row,
-        // 일반 예약의 경우 리스트에서 동물 정보, 고객 정보 미노출 필요
-        userName: row.clinicType == '일반예약' ? '' : row.userName,
-        phoneTxt: row.clinicType == '일반예약' ? '' : formatPhone(row.phone),
-        petName: row.clinicType == '일반예약' ? '' : row.petName,
-        speciesName: row.clinicType == '일반예약' ? '' : row.speciesName,
+        // 기타(일반예약/개인일정)의 경우 고객/동물 정보 하이픈 처리
+        userName: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '-' : row.userName,
+        phoneTxt: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '-' : formatPhone(row.phone),
+        petName: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '-' : row.petName,
+        speciesName: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '-' : row.speciesName,
+        // 기타(개인일정/일반예약)의 경우 roomName 대신 clinicType 표시
+        roomName: (row.clinicType === '개인일정' || row.clinicType === '일반예약') ? row.clinicType : row.roomName,
         // 날짜 / 시간
         reTimeTxt: formatDate(row.reTime),
         reTimeHisTxt: formatTime(row.reTime),

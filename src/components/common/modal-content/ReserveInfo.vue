@@ -824,14 +824,6 @@ const clinicTypeLabel = computed(() => {
                 <div class="info-lists-wrapper">
                     <div class="info-list w-100">
                         <div class="info-item">
-                            <p class="label">예약 경로</p>
-                            <InputTextBox 
-                                v-model="RESERVE_ROUTE_MAP[reserveData.reRoute]"
-                                :disabled="true"
-                                placeholder="예약 경로"
-                            />
-                        </div>
-                        <div class="info-item">
                             <p class="label">예약 일시</p>
                             <div class="d-flex gap-8" style="flex:2;">
                                 <CustomDatePicker 
@@ -1195,9 +1187,9 @@ const clinicTypeLabel = computed(() => {
                     </div>
 
                     <!-- 고객 검색 버튼 -->
-                    <button 
-                        v-if="!isCancelled && !isConfirmed"
-                        class="btn btn--size-24 btn--black" 
+                    <button
+                        v-if="!isCancelled"
+                        class="btn btn--size-24 btn--black"
                         @click="modalStore.searchCustomerModal.openModal()"
                     >
                         <img :src="icSearchW" alt="아이콘">
@@ -1250,11 +1242,9 @@ const clinicTypeLabel = computed(() => {
                         <!-- 동물 정보 (오른쪽) - 2열 테이블 형태 -->
                         <div class="d-flex align-center justify-between" style="height: 24px;">
                             <p class="title-s">동물 정보</p>
-                            <button 
-                                v-if="!isConfirmed"
-                                class="btn btn--size-24 btn--black-outline" 
-                                :class="{'is-disabled':isCancelled}"
-                                :disabled="isCancelled" 
+                            <button
+                                v-if="!isCancelled"
+                                class="btn btn--size-24 btn--black-outline"
                                 @click="unmatchCustomer">
                                     매칭해제
                             </button>
@@ -1335,9 +1325,9 @@ const clinicTypeLabel = computed(() => {
                     </div>
 
                     <!-- 고객 검색 버튼 (취소/거절 시 미표시) -->
-                    <button 
-                        v-if="!isCancelled && !isConfirmed"
-                        class="btn btn--size-24 btn--black" 
+                    <button
+                        v-if="!isCancelled"
+                        class="btn btn--size-24 btn--black"
                         @click="modalStore.searchCustomerModal.openModal()"
                     >
                         <img :src="icSearchW" alt="아이콘">

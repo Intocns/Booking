@@ -25,6 +25,13 @@ const hospitalStore = useHospitalStore();
 const modalStore = useModalStore();
 const talkSmsStore = useTalkSmsStore();
 
+// 예약 정보 모달 사이즈
+const reserveInfoModalSize = computed(() => {
+    const clinicType = modalStore.reserveInfoModal.data?.reserve?.clinicType;
+    if (clinicType === '진료예약') return 'l';
+    return 's';
+});
+
 // SMS 모달 컴포넌트 ref 및 선택된 예약 데이터
 const sendSmsTalkRef = ref(null);
 const selectedReservation = ref(null);
@@ -381,7 +388,7 @@ onMounted(async () => {
     <!-- 예약 정보 안내 모달 -->
     <Modal
         v-if="modalStore.reserveInfoModal.isVisible"
-        :size="modalStore.reserveInfoModal.data.reserve.clinicType == '진료예약' ? 'l' : 's'"
+        :size="reserveInfoModalSize"
         title="고객 예약 정보"
         :modalState="modalStore.reserveInfoModal"
     >

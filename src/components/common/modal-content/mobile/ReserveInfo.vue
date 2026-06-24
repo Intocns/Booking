@@ -992,7 +992,7 @@ onUnmounted(() => {
                         <div class="info-item">
                             <p class="label">예약 내용</p>
                             <InputTextBox
-                                v-model="reserveData.roomName"
+                                :model-value="reserveData.roomName || reserveData.clinicType"
                                 :disabled="true"
                                 placeholder="예약 내용"
                             />
@@ -1064,7 +1064,7 @@ onUnmounted(() => {
                         <div class="info-item">
                             <p class="label">예약 내용</p>
                             <InputTextBox
-                                v-model="reserveData.roomName"
+                                :model-value="reserveData.roomName || reserveData.clinicType"
                                 :disabled="true"
                                 placeholder="예약 내용"
                             />
