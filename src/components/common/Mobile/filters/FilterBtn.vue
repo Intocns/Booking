@@ -60,13 +60,15 @@ const toggleCategory = (value) => {
     let current = [...tempCategory.value];
 
     if (value === 'all') {
-        // 전체선택: 이미 전부 선택이면 전부 해제, 아니면 전부 선택
-        tempCategory.value = current.length === allValues.length ? [] : [...allValues];
+        // 전체선택: 이미 전부 선택이면 첫 번째 항목만 남김, 아니면 전부 선택
+        tempCategory.value = current.length === allValues.length ? [allValues[0]] : [...allValues];
         return;
     }
 
     const idx = current.indexOf(value);
     if (idx > -1) {
+        // 마지막 1개는 해제 불가
+        if (current.length <= 1) return;
         current.splice(idx, 1);
     } else {
         current.push(value);
@@ -78,6 +80,7 @@ const isCategoryChecked = (value) => {
     if (value === 'all') return tempCategory.value.length === props.categoryOptions.length;
     return tempCategory.value.includes(value);
 };
+
 
 // 다중 선택 공통 로직
 const toggleMultiSelect = (type, value, options) => {
@@ -155,6 +158,33 @@ const handelReset = () => {
     <BottomSheet v-model="isOpen" save-btn-text="확인" @save="handleSave" @reset="handelReset" :show-reset-btn="showResetBtn">
         <template #content>
             <div class="filter">
+                <div v-if="categoryOptions.length > 0" class="filter__group">
+                    <div class="filter__title" @click="toggleGroup('category')">
+                        <span class="title">예약 항목</span>
+                        <img :src="icDropdown" alt="접기" :class="{ 'is-closed': !activeGroups.category }">
+                    </div>
+
+                    <div class="option-list-wrapper" :class="{ 'is-closed': !activeGroups.category }">
+                        <ul class="option-list option-list--grid">
+                            <li @click.stop="toggleCategory('all')">
+                                <label class="checkbox">
+                                    <input type="checkbox" :checked="isCategoryChecked('all')" @click.stop.prevent>
+                                    <span class="box"></span>
+                                    <span class="label body-m">전체선택</span>
+                                </label>
+                            </li>
+                            <li v-for="opt in categoryOptions" :key="opt.value"
+                                @click.stop="toggleCategory(opt.value)">
+                                <label class="checkbox">
+                                    <input type="checkbox" :checked="isCategoryChecked(opt.value)" @click.stop.prevent>
+                                    <span class="box"></span>
+                                    <span class="label body-m">{{ opt.label }}</span>
+                                </label>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
                 <div v-if="sortOptions.length > 0" class="filter__group">
                     <div class="filter__title" @click="toggleGroup('sort')">
                         <span class="title">정렬</span>
@@ -267,6 +297,7 @@ const handelReset = () => {
                 grid-template-columns: 1fr 1fr;
                 gap: 10px;
             }
+
         }
     }
 }

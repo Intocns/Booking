@@ -59,13 +59,11 @@ const isFolded = ref(false); // 리스트가 올라왔는지 여부
 const calendarRef = ref(null);
 const dynamicTitle = ref('고객 예약 정보'); // 고객예약정보 모달 타이틀
 
-const categoryFilter = ref([1, 2, 3, 4, 5]);
+const categoryFilter = ref(['진료예약', '미용', '기타']);
 const categoryOptions = [
-    { label: '진료 예약', value: 1, color: '#3B82F6' },
-    { label: '진료 예정', value: 2, color: '#22C55E' },
-    { label: '백신', value: 3, color: '#A855F7' },
-    { label: '미용', value: 4, color: '#F97316' },
-    { label: '기타', value: 5, color: '#6B7280' },
+    { label: '진료 예약', value: '진료예약' },
+    { label: '미용', value: '미용' },
+    { label: '기타', value: '기타' },
 ];
 const reservationStatus = ref(['all']);
 const reservationChannel = ref(['all']);
@@ -235,6 +233,7 @@ const fetchParams = computed(() => {
         startDate: format(startOfMonth(currentDate.value), 'yyyy-MM-dd'),
         endDate: format(endOfMonth(currentDate.value), 'yyyy-MM-dd'),
         reRoute: null,
+        clinicType: categoryFilter.value.length === categoryOptions.length ? null : categoryFilter.value,
    };
 });
 
@@ -453,7 +452,7 @@ const handleTitleUpdate = (newTitle) => {
 
 
 // 1. 조회 조건이 바뀔 때만 API 호출
-watch([dateRange, selectedDoctors], () => {
+watch([dateRange, selectedDoctors, categoryFilter], () => {
     reservationStore.getReserveSchedule(fetchParams.value);
 }, { deep: true });
 
