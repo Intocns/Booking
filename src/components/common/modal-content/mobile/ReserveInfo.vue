@@ -1472,13 +1472,12 @@ onUnmounted(() => {
 
     <!-- 버튼 -->
     <div v-if="!isCancelled" class="modal-button-wrapper" :class="isMobile ? 'mobile' : ''">
-        <div v-if="reserveData.clinicType !== '개인일정' && reserveData.clinicType !== '일반예약'" class="buttons">
+        <div v-if="reserveData.clinicType === '진료예약'" class="buttons">
             <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.cancelReserveModal.openModal()">예약거절</button>
             <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation(isConfirmed)">{{ isConfirmed ? '저장' : '예약 확정' }}</button>
         </div>
         <div v-else class="buttons">
-            <button class="btn btn--size-40 btn--blue-outline" @click="modalStore.reserveInfoModal.closeModal()">닫기</button>
-            <button class="btn btn--size-40 btn--blue" @click="handleConfirmReservation(isConfirmed)">저장</button>
+            <button class="btn btn--size-40 btn--blue" @click="modalStore.reserveInfoModal.closeModal()">닫기</button>
         </div>
     </div>
 
