@@ -43,9 +43,12 @@ export const useReservationStore = defineStore("reservation", () => {
         // 모달에서 사용하는 필드명 매핑 (리스트 데이터를 모달에 그대로 전달하므로)
         userTel: row.phone || row.userTel,
         spesice: row.speciesName || row.spesice,
-        roomName: row.roomName,
+        // 진료예정/백신 & 시간 00:00인 경우: roomName → clinicTypeTxt로 이동, roomName은 빈값
+        roomName: (row.clinicType === '백신' || row.clinicType === '진료예정') && formatTime(row.reTime) === '00:00' ? '' : row.roomName,
         // 예약 타입 표시 텍스트
-        clinicTypeTxt: row.reRoute !== 1 ? '외부예약' : row.clinicType,
+        clinicTypeTxt: (row.clinicType === '백신' || row.clinicType === '진료예정') && formatTime(row.reTime) === '00:00'
+            ? row.roomName
+            : (row.reRoute !== 1 ? '외부예약' : row.clinicType),
         // 날짜 / 시간
         reTimeTxt: formatDate(row.reTime),
         reTimeHisTxt: (row.clinicType === '백신' || row.clinicType === '진료예정') && formatTime(row.reTime) === '00:00' ? '' : formatTime(row.reTime),
