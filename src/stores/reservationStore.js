@@ -35,11 +35,14 @@ export const useReservationStore = defineStore("reservation", () => {
 
     const mapReserveRow = (row) => ({
         ...row,
-        // 기타(일반예약/개인일정)의 경우 고객/동물 정보 하이픈 처리
-        userName: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '-' : row.userName,
-        phoneTxt: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '-' : formatPhone(row.phone),
-        petName: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '-' : row.petName,
-        speciesName: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '-' : row.speciesName,
+        // 기타(일반예약/개인일정)의 경우 고객/동물 정보 공백 처리
+        userName: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '' : row.userName,
+        phoneTxt: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '' : formatPhone(row.phone),
+        petName: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '' : row.petName,
+        speciesName: (row.clinicType == '일반예약' || row.clinicType == '개인일정') ? '' : row.speciesName,
+        // 모달에서 사용하는 필드명 매핑 (리스트 데이터를 모달에 그대로 전달하므로)
+        userTel: row.phone || row.userTel,
+        spesice: row.speciesName || row.spesice,
         // 기타(개인일정/일반예약)의 경우 roomName 대신 clinicType 표시
         roomName: (row.clinicType === '개인일정' || row.clinicType === '일반예약') ? row.clinicType : row.roomName,
         // 날짜 / 시간
