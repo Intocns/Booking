@@ -26,19 +26,11 @@ const isAuthChecked = ref(false); // SSO 체크 완료 여부 (UI 렌더링 제�
 onMounted(async () => {
   const params = new URLSearchParams(location.search);
 
-  const at = getCookie("at") ?? getCookie("INTO_ACCESS");
-  const rt = getCookie("rt") ?? getCookie("INTO_REFRESH");
-
-  if(new URLSearchParams(location.search).has("next") && (at && rt)){
-    window.location.href = `${params.get("next")}?at=${at}&rt=${rt}&befor=${window.location.pathname}`;
-  }else if(new URLSearchParams(location.search).has("next") &&  (at == '' && !rt == '')){
-    alert(2)
-    window.location.href = `${params.get("next")}`;
-  }
+  const at = getCookie("at") ?? getCookie("INTO_ACCESS") ?? null;
+  const rt = getCookie("rt") ?? getCookie("INTO_REFRESH") ?? null;
 
 
   if (new URLSearchParams(location.search).has("at")) {
-    console.log("url 에 at 확인");
     setCookieByParams();
   }
 
@@ -63,7 +55,6 @@ onMounted(async () => {
     await loadSSOScript(); // sso 스크립트 로드
 
     if (params.has("at") || (at && rt)) {
-      console.log("쿠키저장");
       if (params.has("at")) {
         setCookieByParams();
       }
@@ -72,11 +63,9 @@ onMounted(async () => {
         setCookieByAtRt();
       }
 
-      console.log("로그인 시도");
       const response = await authSsoLogin();
 
       if (response.status == 200) {
-        console.log("로그인 성공");
         const hospitalStore = useHospitalStore();
         hospitalStore.hospitalData = response.data.member;
         isAuthChecked.value = true;
