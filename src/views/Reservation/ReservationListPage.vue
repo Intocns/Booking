@@ -359,7 +359,7 @@ onMounted(async () => {
                                         </template>
                                         <!-- 기본 -->
                                         <template v-else>
-                                            {{ row[col.key] != null && row[col.key] !== '' ? row[col.key] : '-' }}
+                                            {{ row[col.key] != null && row[col.key] !== '' ? row[col.key] : '' }}
                                         </template>
                                     </td>
                                 </tr>
