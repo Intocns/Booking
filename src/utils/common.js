@@ -59,3 +59,34 @@ export const validateTimeRanges = (timeRanges, type) => {
     }
     return { isValid: true };
 };
+
+export const getCookie = (name) => {
+  const value = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+
+  return value ? decodeURIComponent(value[2]) : null;
+};
+
+export const getAccessDate = () => {
+  const accessDate = new Date();
+  accessDate.setDate(accessDate.getDate() + 3);
+  return accessDate;
+};
+
+export const getRefreshDate = () => {
+  const refreshDate = new Date();
+  refreshDate.setDate(refreshDate.getDate() + 30);
+  return refreshDate
+};
+
+export const setCookieByParams = () => {
+    const params = new URLSearchParams(location.search);
+    document.cookie = `INTO_ACCESS=${params.get("at")};SameSite=None;Secure;path=/;expires=${getAccessDate().toUTCString()}`;
+    document.cookie = `INTO_REFRESH=${params.get("rt")};SameSite=None;Secure;path=/;expires=${getRefreshDate().toUTCString()}`;
+    document.cookie = `at=${encodeURIComponent(params.get("at"))}; path=/;`;
+    document.cookie = `rt=${encodeURIComponent(params.get("rt"))}; path=/;`;
+};
+
+export const setCookieByAtRt = () => {
+  document.cookie = `INTO_ACCESS=${getCookie("at")};path=/;`;
+  document.cookie = `INTO_REFRESH=${getCookie("rt")};path=/;`;
+};

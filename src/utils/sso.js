@@ -1,8 +1,7 @@
 import axios from "axios"; // 인터셉터 없는 순수 axios (헤더 없이 보내기용)
-import { AesCbc } from "./crypto";
 import { useHospitalStore } from "@/stores/hospitalStore";
-import { showAlert } from "./ui";
 import { useModalStore } from "@/stores/modalStore";
+import { getCookie } from "@/utils/common";
 
 // 스크립트 로드
 export const loadSSOScript = () => {
@@ -16,91 +15,39 @@ export const loadSSOScript = () => {
   });
 };
 
-function getCookie(name) {
-  const value = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-
-  return value ? decodeURIComponent(value[2]) : null;
-}
-
-// 현재 강제 로그인은 사용하지 않음. 260409
-// sso 강제 로그인
-// 인투링크에서 예약 관리자 센터 접속시 도메인이 달라 sso로그인 실패하는 경우 강제로그인 처리함
-export const forceSsoLogin = async (_businessNo = null, next_url = null) => {
+export const authSsoLogin = async (_businessNo = null, next_url = null) => {
   const modalStore = useModalStore();
-  const nextUrl = window.location.origin + window.location.pathname;
-
   const urlParams = new URLSearchParams(window.location.search);
-  const isLocal = import.meta.env.VITE_IS_LOCAL === "true";
   const at = urlParams.get("at") ?? getCookie("at") ?? getCookie("INTO_ACCESS");
-
-  const rt =
-    urlParams.get("rt") ?? getCookie("rt") ?? getCookie("INTO_REFRESH");
-
-  const tokens = {
-    at: at,
-    rt: rt,
-    service_id: "intobooking",
-  };
-
-  const requestData = JSON.stringify(tokens);
-  // const decryptData = AesCbc.decrypt(encryptedData,import.meta.env.VITE_SSO_KEY, import.meta.env.VITE_SSO_IV )
-  // console.log(decryptData)
+  const rt = urlParams.get("rt") ?? getCookie("rt") ?? getCookie("INTO_REFRESH");
 
   try {
-    // 강제 로그인 시도
     const response = await axios.post(
-      "https://sso.intolink.co.kr/internalAuth",
+      `${import.meta.env.VITE_SSO_URL}internalAuth`,
       {
-        at: tokens.at,
-        rt: tokens.rt,
+        at: at,
+        rt: rt,
         service_id: "intobooking",
       },
       {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       },
     );
     if (response.data.data) {
       return response.data;
     } else {
       console.log(response);
-      modalStore.confirmModal.openModal({
-        // TODO: 강제로그인 로직 확인 후 추후 삭제
-        text: "현재 예약 서비스 개편 작업이 진행중 입니다.\n4월 중 더 나은 모습으로 찾아뵙겠습니다.\n\n이용을 원하시는 경우 웹에서 확인해 주시기 바랍니다.",
-        confirmText: "확인",
-        noCancelBtn: true,
-        onConfirm: () => {
-          window.close(); // 실패 시 창 닫기
-        },
-      });
-      // modalStore.confirmModal.openModal({
-      //     text: "인증에 실패하였습니다. 다시 시도해주세요.",
-      //     confirmText: "확인",
-      //     noCancelBtn: true,
-      //     onConfirm: () => {
-      //         window.close(); // 실패 시 창 닫기
-      //     }
-      // })
+      return response.data;
     }
   } catch (err) {
     modalStore.confirmModal.openModal({
-      // TODO: 강제로그인 로직 확인 후 추후 삭제
-      text: "현재 예약 서비스 개편 작업이 진행중 입니다.\n4월 중 더 나은 모습으로 찾아뵙겠습니다.\n\n이용을 원하시는 경우 웹에서 확인해 주시기 바랍니다.",
+      text: "로그인 인증 실패",
       confirmText: "확인",
       noCancelBtn: true,
       onConfirm: () => {
         window.close(); // 실패 시 창 닫기
       },
     });
-    // modalStore.confirmModal.openModal({
-    //     text: "인증에 실패하였습니다. 다시 시도해주세요.",
-    //     confirmText: "확인",
-    //     noCancelBtn: true,
-    //     onConfirm: () => {
-    //         window.close(); // 실패 시 창 닫기
-    //     }
-    // })
     console.error("SSO 로그인 실패:", err);
   }
 };
