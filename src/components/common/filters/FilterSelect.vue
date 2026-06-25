@@ -53,6 +53,6 @@ const localValue = computed({
         align-items: center;
     }
 
-    :deep(.select) {min-width: 100px; flex: 0 1 auto;}
-    :deep(.select__box) {max-width: 130px;}
+    :deep(.select) {min-width: 120px; flex: 0 1 auto;}
+    :deep(.select__box) {max-width: 150px;}
 </style>

@@ -17,6 +17,7 @@ const props = defineProps({
     channelOptions: { type: Array, default: () => [] },
     sortOptions: { type: Array, default: () => [] },
     showResetBtn: { type: Boolean, default: false },
+    showCategory: { type: Boolean, default: true },
 });
 
 const emit = defineEmits(['update:category', 'update:status', 'update:channel', 'update:sort']);
@@ -158,7 +159,7 @@ const handelReset = () => {
     <BottomSheet v-model="isOpen" save-btn-text="확인" @save="handleSave" @reset="handelReset" :show-reset-btn="showResetBtn">
         <template #content>
             <div class="filter">
-                <div v-if="categoryOptions.length > 0" class="filter__group">
+                <div v-if="showCategory && categoryOptions.length > 0" class="filter__group">
                     <div class="filter__title" @click="toggleGroup('category')">
                         <span class="title">예약 항목</span>
                         <img :src="icDropdown" alt="접기" :class="{ 'is-closed': !activeGroups.category }">

@@ -20,6 +20,7 @@ import SendSmsTalk from '@/components/common/modal-content/SendSmsTalk.vue';
 import icSms from '@/assets/icons/ic_sms.svg';
 import icReset from '@/assets/icons/ic_reset.svg';
 import icEmpty from '@/assets/icons/ic_empty.svg';
+import icInformationB from '@/assets/icons/ic_infomation_b.svg';
 const reservationStore = useReservationStore();
 const hospitalStore = useHospitalStore();
 const modalStore = useModalStore();
@@ -60,13 +61,13 @@ const columns = [
     { key: 'reTimeTxt', label: '예약일자', width: '8%', sortable: true, },
     { key: 'reTimeHisTxt', label: '예약시간', width: '6%', sortable: true, },
     { key: 'inStateTxt', label: '예약상태', width: '6%' },
-    { key: 'roomName', label: '예약 내용', width: '12%' },
+    { key: 'clinicTypeTxt', label: '예약 타입', width: '8%' },
+    { key: 'roomName', label: '상품명/진료실명', width: '10%', tooltip: 'Intovet GE 또는 Intovet Cloud에서 직접 생성한 예약의 경우,\n해당 예약으로 인해 마감된 상품명/진료실명이 표시됩니다.' },
     { key: 'userName', label: '고객명', width: '7%', sortable: true, },
     { key: 'phoneTxt', label: '전화번호', width: '10%' },
     { key: 'petName', label: '동물명', width: '8%' },
     { key: 'speciesName', label: '종', width: '6%' },
     { key: 'doctor', label: '담당의', width: '7%' },
-    { key: 'geReMemo', label: '병원 메모', width: '12%' },
     { key: 'reRouteTxt', label: '예약경로', width: '7%' },
     { key: 'createdAtTxt', label: '접수일시', width: '10%', sortable: true, },
     { key: 'actions', label: '관리', width: '7%' },
@@ -306,6 +307,12 @@ onMounted(async () => {
                                 >
                                     <div class="d-flex align-center justify-center gap-4">
                                         {{ col.label }}
+                                        <div v-if="col.tooltip" class="helper">
+                                            <img :src="icInformationB" alt="안내아이콘" class="helper__icon">
+                                            <div class="tooltip-content">
+                                                {{ col.tooltip }}
+                                            </div>
+                                        </div>
                                         <span v-if="col.sortable" class="sort-icons">
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <rect x="0.5" y="0.5" width="23" height="23" rx="3.5" fill="white"/>
@@ -410,6 +417,7 @@ onMounted(async () => {
     // 예약 대기 tr 배경색 (노란색)
     .row-pending {
         background-color: #FFF6D9 !important;
+        &:hover { background-color: #E2F3FF !important; }
     }
     // 예약 취소/거절 tr 연하게
     .row-canceled {
@@ -582,5 +590,43 @@ onMounted(async () => {
         align-items: center;
         justify-content: center;
         gap: 8px;
+    }
+
+    .helper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+
+        &__icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .tooltip-content {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            top: 10px;
+            left: calc(100% + 8px);
+            width: max-content;
+            max-width: 400px;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid $primary-700;
+            background-color: $primary-50;
+            @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            white-space: pre-wrap;
+            text-align: left;
+            z-index: 1;
+        }
+
+        &:hover {
+            .tooltip-content {
+                visibility: visible;
+                opacity: 1;
+            }
+        }
     }
 </style>

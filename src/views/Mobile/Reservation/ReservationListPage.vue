@@ -282,6 +282,7 @@ onMounted(async() => {
                                 :channel-options="reservationChannelOptions"
                                 :sort-options="sortOptions"
                                 :show-reset-btn="true"
+                                :show-category="false"
                             />
                         </div>
                     </div>

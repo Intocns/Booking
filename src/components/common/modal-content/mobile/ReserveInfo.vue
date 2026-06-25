@@ -937,6 +937,11 @@ onUnmounted(() => {
         modalInnerRef.value.removeEventListener('scroll', checkScroll);
     }
 });
+
+// 예약 타입 표시 텍스트 (외부예약 판별 포함)
+const clinicTypeTxt = computed(() => {
+    return reserveData.reRoute !== 1 ? '외부예약' : reserveData.clinicType || '';
+});
 </script>
 
 <template>
@@ -990,37 +995,37 @@ onUnmounted(() => {
                 <div class="info-lists-wrapper">
                     <div class="info-list">
                         <div class="info-item">
-                            <p class="label">예약 내용</p>
+                            <p class="label">예약 타입</p>
                             <InputTextBox
-                                :model-value="reserveData.roomName || reserveData.clinicType"
+                                :model-value="clinicTypeTxt"
                                 :disabled="true"
-                                placeholder="예약 내용"
+                                placeholder="예약 타입"
                             />
                         </div>
                         <div class="info-item">
                             <p class="label">예약 일시</p>
                             <div class="d-flex gap-8 flex-wrap w-100" style="flex:2;">
-                                <CustomDatePicker 
-                                    ref="reserveDateRef" 
-                                    v-model="reserveDate" 
-                                    :range="false" 
+                                <CustomDatePicker
+                                    ref="reserveDateRef"
+                                    v-model="reserveDate"
+                                    :range="false"
                                     :disabled="isCancelled"
                                     :is-mobile="isMobile"
                                 />
-    
+
                                 <!-- 시간 선택 ( 00: 00 ~ 00: 00) -->
                                 <div class="d-flex align-center gap-4" style="flex:2;">
-                                    <TimeSelect 
-                                        ref="startTimeRef" 
-                                        v-model="startTime" 
+                                    <TimeSelect
+                                        ref="startTimeRef"
+                                        v-model="startTime"
                                         class="time-select-wrap"
                                         :disabled="isCancelled"
                                         :is-mobile="isMobile"
                                     />
                                     <span class="time-separator">-</span>
-                                    <TimeSelect 
-                                        ref="endTimeRef" 
-                                        v-model="endTime" 
+                                    <TimeSelect
+                                        ref="endTimeRef"
+                                        v-model="endTime"
                                         class="time-select-wrap"
                                         :disabled="isCancelled"
                                         :is-mobile="isMobile"
@@ -1031,7 +1036,7 @@ onUnmounted(() => {
                         <div class="info-item">
                             <p class="label">담당의</p>
                             <div class="select-wrapper w-100">
-                                <CustomSingleSelect 
+                                <CustomSingleSelect
                                     ref="doctorSelectRef"
                                     :model-value="selectedDoctorId"
                                     @update:model-value="handleDoctorChange"
@@ -1048,10 +1053,18 @@ onUnmounted(() => {
                                 <p class="label">병원 메모</p>
                                 <p class="show-more-btn" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">더보기 <img :src="icArrow" alt=" 화살표"></p>
                             </div>
-                            <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">    
+                            <div class="fake-textbox" :class="isCancelled ? 'disabled' : ''" @click="openMemo('병원 메모', reserveData.geReMemo, isCancelled)">
                                 <span v-if="!reserveData.geReMemo || reserveData.geReMemo.trim() === ''" class="empty-text">메모를 입력하세요.</span>
                                 <p v-else class="text">{{ reserveData.geReMemo  }}</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="reserveData.roomName" class="info-lists-wrapper">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <p class="label">상품명/진료실명</p>
+                            <InputTextBox :model-value="reserveData.roomName" :disabled="true" placeholder="상품명/진료실명" />
                         </div>
                     </div>
                 </div>
@@ -1062,11 +1075,11 @@ onUnmounted(() => {
                 <div v-show="!isFolded" class="info-lists-wrapper">
                     <div class="info-list">
                         <div class="info-item">
-                            <p class="label">예약 내용</p>
+                            <p class="label">예약 타입</p>
                             <InputTextBox
-                                :model-value="reserveData.roomName || reserveData.clinicType"
+                                :model-value="clinicTypeTxt"
                                 :disabled="true"
-                                placeholder="예약 내용"
+                                placeholder="예약 타입"
                             />
                         </div>
                         <div class="info-item">
@@ -1148,7 +1161,15 @@ onUnmounted(() => {
                         </template>
                     </div>
                 </div>
-                
+                <div v-if="reserveData.roomName" v-show="!isFolded" class="info-lists-wrapper">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <p class="label">상품명/진료실명</p>
+                            <InputTextBox :model-value="reserveData.roomName" :disabled="true" placeholder="상품명/진료실명" />
+                        </div>
+                    </div>
+                </div>
+
                 <div v-show="!isFolded" class="info-lists-wrapper border-top border-bottom">
                     <div class="info-list">
                         <div class="info-item">

@@ -228,11 +228,11 @@ const fetchParams = computed(() => {
     const doctorIds = selectedDoctors.value.map(doc => doc.value);
 
     return {
-        status: null,
+        status: reservationStatus.value.includes('all') ? null : reservationStatus.value,
         doctorId: doctorIds,
         startDate: format(startOfMonth(currentDate.value), 'yyyy-MM-dd'),
         endDate: format(endOfMonth(currentDate.value), 'yyyy-MM-dd'),
-        reRoute: null,
+        reRoute: reservationChannel.value.includes('all') ? null : reservationChannel.value,
         clinicType: categoryFilter.value.length === categoryOptions.length ? null : categoryFilter.value,
    };
 });
@@ -452,7 +452,7 @@ const handleTitleUpdate = (newTitle) => {
 
 
 // 1. 조회 조건이 바뀔 때만 API 호출
-watch([dateRange, selectedDoctors, categoryFilter], () => {
+watch([dateRange, selectedDoctors, categoryFilter, reservationStatus, reservationChannel], () => {
     reservationStore.getReserveSchedule(fetchParams.value);
 }, { deep: true });
 
@@ -641,7 +641,7 @@ onUnmounted(() => {
     
                             <!-- 우측: 진료실 -->
                             <div class="res-location-box">
-                                <span class="room-badge">{{ event.clinicType === '개인일정' || event.clinicType == '일반예약' ? event.clinicType : event.roomName }}</span>
+                                <span class="room-badge">{{ event.reRoute !== 1 ? event.roomName : event.clinicType }}</span>
                             </div>
                         </div>
     

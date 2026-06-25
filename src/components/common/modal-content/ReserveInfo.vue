@@ -793,6 +793,11 @@ const clinicTypeLabel = computed(() => {
     const map = { '진료예약': '진료 예약', '진료예정': '진료 예정', '미용예약': '미용' };
     return map[reserveData.clinicType] || reserveData.clinicType || '';
 });
+
+// 예약 타입 표시 텍스트 (외부예약 판별 포함)
+const clinicTypeTxt = computed(() => {
+    return reserveData.reRoute !== 1 ? '외부예약' : reserveData.clinicType || '';
+});
 </script>
 
 <template>
@@ -919,8 +924,8 @@ const clinicTypeLabel = computed(() => {
                 <div class="info-lists-wrapper">
                     <div class="info-list w-100">
                         <div class="info-item">
-                            <p class="label">예약 내용</p>
-                            <InputTextBox :model-value="reserveData.roomName" :disabled="true" placeholder="예약 내용" />
+                            <p class="label">예약 타입</p>
+                            <InputTextBox :model-value="clinicTypeTxt" :disabled="true" placeholder="예약 타입" />
                         </div>
                         <div class="info-item">
                             <p class="label">예약 일시</p>
@@ -954,6 +959,14 @@ const clinicTypeLabel = computed(() => {
                                 placeholder="병원 메모"
                                 height="100px"
                             />
+                        </div>
+                    </div>
+                </div>
+                <div v-if="reserveData.roomName" class="info-lists-wrapper">
+                    <div class="info-list w-100">
+                        <div class="info-item">
+                            <p class="label">상품명/진료실명</p>
+                            <InputTextBox :model-value="reserveData.roomName" :disabled="true" placeholder="상품명/진료실명" />
                         </div>
                     </div>
                 </div>
@@ -1077,11 +1090,11 @@ const clinicTypeLabel = computed(() => {
                                 />
                             </div>
                             <div class="info-item">
-                                <p class="label">예약 내용</p>
+                                <p class="label">상품명/진료실명</p>
                                 <InputTextBox 
                                     v-model="reserveData.roomName"
                                     :disabled="true"
-                                    placeholder="예약 내용"
+                                    placeholder="상품명/진료실명"
                                 />
                             </div>
                             <div class="info-item">
@@ -1560,7 +1573,7 @@ const clinicTypeLabel = computed(() => {
 
         & > div {flex:1; width: 19%;}
         .label {
-            width: 80px;
+            width: 100px;
             flex-shrink: 0;
             @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
             color: $gray-700;

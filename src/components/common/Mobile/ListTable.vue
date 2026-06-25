@@ -82,7 +82,7 @@ const showHospitalMemo = (type) => type === '진료예정' || type === '미용' 
                 <!-- 예약 내용 / 담당의 / 메모 -->
                 <div class="list__bottom__bottom">
                     <div class="product-info">
-                        <span class="room-name">{{ row.clinicType === '개인일정' ? '개인일정' : row.clinicType === '일반예약' ? '일반 예약' : row.roomName }}</span>
+                        <span class="room-name">{{ row.reRoute !== 1 ? row.roomName : row.clinicType }}</span>
                         <span class="doctor">{{ row.doctor }}</span>
                     </div>
                     <!-- 병원 메모 (진료예정/미용/개인일정만) -->
