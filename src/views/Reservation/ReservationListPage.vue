@@ -62,7 +62,7 @@ const columns = [
     { key: 'reTimeHisTxt', label: '예약시간', width: '6%', sortable: true, },
     { key: 'inStateTxt', label: '예약상태', width: '6%' },
     { key: 'clinicTypeTxt', label: '예약 타입', width: '8%' },
-    { key: 'roomName', label: '상품명/진료실명', width: '10%', tooltip: 'Intovet GE 또는 Intovet Cloud에서 직접 생성한 예약의 경우,\n해당 예약으로 인해 마감된 상품명/진료실명이 표시됩니다.' },
+    { key: 'roomName', label: '상품명/진료실명', width: '10%', tooltip: 'Intovet GE 또는 Intovet Cloud에서 직접 생성한 예약의 경우,\n해당 예약으로 인해 마감된 외부예약의 상품명/진료실명이 표시됩니다.' },
     { key: 'userName', label: '고객명', width: '7%', sortable: true, },
     { key: 'phoneTxt', label: '전화번호', width: '10%' },
     { key: 'petName', label: '동물명', width: '8%' },
@@ -196,7 +196,7 @@ const searchList = async () => {
         reservationStore.reserveList = [];
         return;
     }
-    
+
     reservationStore.getReservationList({
         status: convertFilterParam(reservationStatus.value),
         doctorId: convertFilterParam(doctorList.value),
@@ -241,38 +241,17 @@ onMounted(async () => {
 </script>
 <template>
     <!-- 페이지 타이틀 -->
-    <PageTitle
-        title="전체 예약 조회"
-        :total="totalCount"
-        :details="reserveSummary"
-        helper-text="예약일자를 기준으로 내역이 조회됩니다"
-    />
+    <PageTitle title="전체 예약 조회" :total="totalCount" :details="reserveSummary" helper-text="예약일자를 기준으로 내역이 조회됩니다" />
 
     <!-- 테이블 콘텐츠 (검색필터 + 테이블) -->
     <TableLayout>
         <!-- 검색필터 -->
         <template #filter>
             <FilterDate v-model="dateRange" :default-select="'today'" />
-            <FilterSelect
-                label="담당의"
-                :options="doctorOptions"
-                v-model="doctorList"
-            />
-            <FilterSelect
-                label="예약상태"
-                :options="reserveStatusOptions"
-                v-model="reservationStatus"
-            />
-            <FilterSelect
-                label="예약 경로"
-                :options="reservationChannelOptions"
-                v-model="reservationChannel"
-            />
-            <FilterKeywordBtn
-                v-model="keyword"
-                :placeholder="'고객명, 동물명, 전화번호 검색'"
-                @search="searchList()"
-            />
+            <FilterSelect label="담당의" :options="doctorOptions" v-model="doctorList" />
+            <FilterSelect label="예약상태" :options="reserveStatusOptions" v-model="reservationStatus" />
+            <FilterSelect label="예약 경로" :options="reservationChannelOptions" v-model="reservationChannel" />
+            <FilterKeywordBtn v-model="keyword" :placeholder="'고객명, 동물명, 전화번호 검색'" @search="searchList()" />
 
             <button class="btn btn--size-32 btn--dark reset-btn" @click="searchClear()" style="width: 40px;">
                 <img :src="icReset" alt="초기화아이콘">
@@ -280,10 +259,7 @@ onMounted(async () => {
 
             <div class="filter-spacer"></div>
 
-            <FilterCheckbox
-                v-model="categoryFilter"
-                :options="categoryOptions"
-            />
+            <FilterCheckbox v-model="categoryFilter" :options="categoryOptions" />
         </template>
 
         <!-- 테이블 -->
@@ -296,15 +272,10 @@ onMounted(async () => {
                         </colgroup>
                         <thead>
                             <tr>
-                                <th
-                                    v-for="col in columns"
-                                    :key="col.key"
-                                    :class="[
-                                        { 'sortable-th': col.sortable },
-                                        { 'is-sorted': sortConfig.key === col.key && sortConfig.order !== 'none' }
-                                    ]"
-                                    @click="handleSort(col)"
-                                >
+                                <th v-for="col in columns" :key="col.key" :class="[
+                                    { 'sortable-th': col.sortable },
+                                    { 'is-sorted': sortConfig.key === col.key && sortConfig.order !== 'none' }
+                                ]" @click="handleSort(col)">
                                     <div class="d-flex align-center justify-center gap-4">
                                         {{ col.label }}
                                         <div v-if="col.tooltip" class="helper">
@@ -314,12 +285,16 @@ onMounted(async () => {
                                             </div>
                                         </div>
                                         <span v-if="col.sortable" class="sort-icons">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <rect x="0.5" y="0.5" width="23" height="23" rx="3.5" fill="white"/>
-                                                <rect x="0.5" y="0.5" width="23" height="23" rx="3.5" stroke="#CDCDD1"/>
-                                                <path d="M15.8459 10.3333C16.2836 10.3333 16.51 9.8107 16.2107 9.49136L12.7295 5.77817C12.3345 5.35676 11.6655 5.35676 11.2705 5.77817L7.78935 9.49136C7.48997 9.8107 7.7164 10.3333 8.15412 10.3333H15.8459Z"
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <rect x="0.5" y="0.5" width="23" height="23" rx="3.5" fill="white" />
+                                                <rect x="0.5" y="0.5" width="23" height="23" rx="3.5"
+                                                    stroke="#CDCDD1" />
+                                                <path
+                                                    d="M15.8459 10.3333C16.2836 10.3333 16.51 9.8107 16.2107 9.49136L12.7295 5.77817C12.3345 5.35676 11.6655 5.35676 11.2705 5.77817L7.78935 9.49136C7.48997 9.8107 7.7164 10.3333 8.15412 10.3333H15.8459Z"
                                                     :fill="sortConfig.key === col.key ? (sortConfig.order === 'asc' ? '#0C75FF' : '#CDCDD1') : '#49494D'" />
-                                                <path d="M15.8459 13.6667C16.2836 13.6667 16.51 14.1893 16.2107 14.5086L12.7295 18.2218C12.3345 18.6432 11.6655 18.6432 11.2705 18.2218L7.78935 14.5086C7.48997 14.1893 7.7164 13.6667 8.15412 13.6667H15.8459Z"
+                                                <path
+                                                    d="M15.8459 13.6667C16.2836 13.6667 16.51 14.1893 16.2107 14.5086L12.7295 18.2218C12.3345 18.6432 11.6655 18.6432 11.2705 18.2218L7.78935 14.5086C7.48997 14.1893 7.7164 13.6667 8.15412 13.6667H15.8459Z"
                                                     :fill="sortConfig.key === col.key ? (sortConfig.order === 'desc' ? '#0C75FF' : '#CDCDD1') : '#49494D'" />
                                             </svg>
                                         </span>
@@ -337,12 +312,8 @@ onMounted(async () => {
                             </tr>
                             <!-- 데이터 행 -->
                             <template v-if="group.items.length > 0">
-                                <tr
-                                    v-for="row in group.items"
-                                    :key="row.idx"
-                                    @click="handelReserveDetail(row)"
-                                    :class="[row.rowClass, 'is-clickable']"
-                                >
+                                <tr v-for="row in group.items" :key="row.idx" @click="handelReserveDetail(row)"
+                                    :class="[row.rowClass, 'is-clickable']">
                                     <td v-for="col in columns" :key="col.key">
                                         <!-- 예약상태 -->
                                         <template v-if="col.key === 'inStateTxt'">
@@ -360,8 +331,11 @@ onMounted(async () => {
                                         <!-- 관리 버튼 -->
                                         <template v-else-if="col.key === 'actions'">
                                             <div class="d-flex justify-center gap-4">
-                                                <button class="btn btn--size-24 btn--black-outline" @click.stop="handelReserveDetail(row)">상세</button>
-                                                <button class="btn btn--size-24 btn--black-outline" @click.stop="openSmsModal(row)"><img :src="icSms" alt="SMS"></button>
+                                                <button class="btn btn--size-24 btn--black-outline"
+                                                    @click.stop="handelReserveDetail(row)">상세</button>
+                                                <button class="btn btn--size-24 btn--black-outline"
+                                                    @click.stop="openSmsModal(row)"><img :src="icSms"
+                                                        alt="SMS"></button>
                                             </div>
                                         </template>
                                         <!-- 기본 -->
@@ -383,7 +357,8 @@ onMounted(async () => {
                         </tbody>
                     </table>
 
-                    <div v-if="!reservationStore.isLoading && reservationStore.reserveList.length === 0" class="empty-box">
+                    <div v-if="!reservationStore.isLoading && reservationStore.reserveList.length === 0"
+                        class="empty-box">
                         <img src="" alt="">
                         <span class="title-s">검색 결과가 없습니다.</span>
                     </div>
@@ -393,240 +368,265 @@ onMounted(async () => {
     </TableLayout>
 
     <!-- 예약 정보 안내 모달 -->
-    <Modal
-        v-if="modalStore.reserveInfoModal.isVisible"
-        :size="reserveInfoModalSize"
-        title="고객 예약 정보"
-        :modalState="modalStore.reserveInfoModal"
-    >
+    <Modal v-if="modalStore.reserveInfoModal.isVisible" :size="reserveInfoModalSize" title="고객 예약 정보"
+        :modalState="modalStore.reserveInfoModal">
         <ReserveInfo @refresh-list="searchList" />
     </Modal>
 
     <!-- 문자 발송 모달 -->
-    <Modal 
-        v-if="modalStore.smsModal.isVisible"
-        size="s"
-        title="알림톡/SMS 발송"
-        :modalState="modalStore.smsModal"
-    >
+    <Modal v-if="modalStore.smsModal.isVisible" size="s" title="알림톡/SMS 발송" :modalState="modalStore.smsModal">
         <SendSmsTalk ref="sendSmsTalkRef" :reservationData="selectedReservation" />
     </Modal>
 </template>
 
 <style lang="scss" scoped>
-    // 예약 대기 tr 배경색 (노란색)
-    .row-pending {
-        background-color: #FFF6D9 !important;
-        &:hover { background-color: #E2F3FF !important; }
+// 예약 대기 tr 배경색 (노란색)
+.row-pending {
+    background-color: #FFF6D9 !important;
+
+    &:hover {
+        background-color: #E2F3FF !important;
     }
-    // 예약 취소/거절 tr 연하게
-    .row-canceled {
-        td {color: $gray-400}
+}
+
+// 예약 취소/거절 tr 연하게
+.row-canceled {
+    td {
+        color: $gray-400
     }
+}
 
-    .status-cell {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
+.status-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+:deep(.search-filter) {
+    width: 100%;
+    flex-wrap: nowrap;
+    align-items: center;
+
+    .search-filter__label {
+        white-space: nowrap;
     }
+}
 
-    :deep(.search-filter) {
-        width: 100%;
-        flex-wrap: nowrap;
-        align-items: center;
+// 일자 datepicker 너비 축소
+:deep(.search-filter__datepicker) {
+    width: 220px;
+}
 
-        .search-filter__label {
-            white-space: nowrap;
-        }
+// 오늘, 7일, 기간선택 버튼 + 초기화 버튼 selected 스타일
+:deep(.search-filter__date-button) {
+    .btn.selected {
+        background-color: $gray-900;
+        color: $gray-200;
+        border-color: $gray-900;
     }
+}
 
-    // 일자 datepicker 너비 축소
-    :deep(.search-filter__datepicker) {
-        width: 220px;
+.btn--black-outline {
+
+    &:hover,
+    &.selected {
+        background-color: $gray-900;
+        color: $gray-200;
+        border-color: $gray-900;
     }
+}
 
-    // 오늘, 7일, 기간선택 버튼 + 초기화 버튼 selected 스타일
-    :deep(.search-filter__date-button) {
-        .btn.selected {
-            background-color: $gray-900;
-            color: $gray-200;
-            border-color: $gray-900;
-        }
+.reset-btn {
+    flex-shrink: 0;
+    background-color: #0C0C0D;
+    border-color: #0C0C0D;
+
+    img {
+        filter: brightness(0) invert(0.9);
     }
+}
 
-    .btn--black-outline {
-        &:hover, &.selected {
-            background-color: $gray-900;
-            color: $gray-200;
-            border-color: $gray-900;
-        }
-    }
+.filter-spacer {
+    flex: 1;
+}
 
-    .reset-btn {
-        flex-shrink: 0;
-        background-color: #0C0C0D;
-        border-color: #0C0C0D;
-        img { filter: brightness(0) invert(0.9); }
-    }
+.table-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid $gray-200;
+    background-color: $gray-00;
+}
 
-    .filter-spacer {
-        flex: 1;
-    }
+.table-wrapper {
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
 
-    .table-section {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        flex: 1 1 auto;
-        min-height: 0;
-        height: 100%;
-        padding: 16px;
-        border-radius: 8px;
-        border: 1px solid $gray-200;
-        background-color: $gray-00;
-    }
+.table {
+    width: 100%;
+    border-spacing: 0;
+    table-layout: fixed;
 
-    .table-wrapper {
-        width: 100%;
-        flex: 1 1 auto;
-        min-height: 0;
-        overflow-y: auto;
-    }
+    thead {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background-color: $gray-50;
 
-    .table {
-        width: 100%;
-        border-spacing: 0;
-        table-layout: fixed;
-
-        thead {
-            position: sticky;
-            top: 0;
-            z-index: 5;
-            background-color: $gray-50;
-
-            tr { height: 40px; }
-            th {
-                border-top: 2px solid $gray-700;
-                border-bottom: 1px solid $gray-300;
-                @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
-                color: $gray-700;
-                padding: 0 8px;
-                text-align: center;
-                white-space: nowrap;
-
-                &.sortable-th { cursor: pointer; }
-                &.sortable-th:hover { background-color: $gray-200; }
-                &.is-sorted { background-color: $gray-200; }
-            }
-        }
-
-        td {
-            @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
-            color: $gray-900;
-            border-bottom: 1px solid $gray-300;
-            padding: 0 8px;
-            text-align: center;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        tr {
+            height: 40px;
         }
 
-        tbody tr {
-            height: 36px;
-            background-color: $gray-00;
-
-            &:hover:not(.category-group-header) { background-color: #E2F3FF; }
-
-            &.is-clickable td { cursor: pointer; }
-        }
-    }
-
-    .category-group-header {
-        background-color: $gray-100 !important;
-        height: 36px;
-
-        &:hover { background-color: $gray-100 !important; }
-
-        td {
-            padding: 0 8px;
-            text-align: left;
+        th {
+            border-top: 2px solid $gray-700;
             border-bottom: 1px solid $gray-300;
             @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
-            color: $gray-900;
-        }
+            color: $gray-700;
+            padding: 0 8px;
+            text-align: center;
+            white-space: nowrap;
 
-        .category-dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #7899F0;
-            margin-right: 6px;
-            vertical-align: middle;
-        }
-    }
+            &.sortable-th {
+                cursor: pointer;
+            }
 
-    .category-empty-row {
-        &:hover { background-color: $gray-00 !important; }
+            &.sortable-th:hover {
+                background-color: $gray-200;
+            }
 
-        .category-empty {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 24px 0;
-            color: $gray-400;
+            &.is-sorted {
+                background-color: $gray-200;
+            }
         }
     }
 
-    .sort-icons { flex-shrink: 0; display: flex; align-items: center; }
+    td {
+        @include typo($body-m-size, $body-m-weight, $body-m-spacing, $body-m-line);
+        color: $gray-900;
+        border-bottom: 1px solid $gray-300;
+        padding: 0 8px;
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 
-    .empty-box {
-        height: 200px;
+    tbody tr {
+        height: 36px;
+        background-color: $gray-00;
+
+        &:hover:not(.category-group-header) {
+            background-color: #E2F3FF;
+        }
+
+        &.is-clickable td {
+            cursor: pointer;
+        }
+    }
+}
+
+.category-group-header {
+    background-color: $gray-100 !important;
+    height: 36px;
+
+    &:hover {
+        background-color: $gray-100 !important;
+    }
+
+    td {
+        padding: 0 8px;
+        text-align: left;
+        border-bottom: 1px solid $gray-300;
+        @include typo($title-s-size, $title-s-weight, $title-s-spacing, $title-s-line);
+        color: $gray-900;
+    }
+
+    .category-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #7899F0;
+        margin-right: 6px;
+        vertical-align: middle;
+    }
+}
+
+.category-empty-row {
+    &:hover {
+        background-color: $gray-00 !important;
+    }
+
+    .category-empty {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         gap: 8px;
+        padding: 24px 0;
+        color: $gray-400;
+    }
+}
+
+.sort-icons {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.empty-box {
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.helper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+
+    &__icon {
+        width: 16px;
+        height: 16px;
     }
 
-    .helper {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        cursor: pointer;
+    .tooltip-content {
+        visibility: hidden;
+        opacity: 0;
+        position: absolute;
+        top: 10px;
+        left: calc(100% + 8px);
+        width: max-content;
+        max-width: 400px;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid $primary-700;
+        background-color: $primary-50;
+        @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        white-space: pre-wrap;
+        text-align: left;
+        z-index: 1;
+    }
 
-        &__icon {
-            width: 16px;
-            height: 16px;
-        }
-
+    &:hover {
         .tooltip-content {
-            visibility: hidden;
-            opacity: 0;
-            position: absolute;
-            top: 10px;
-            left: calc(100% + 8px);
-            width: max-content;
-            max-width: 400px;
-            padding: 15px;
-            border-radius: 5px;
-            border: 1px solid $primary-700;
-            background-color: $primary-50;
-            @include typo($body-s-size, $body-s-weight, $body-s-spacing, $body-s-line);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            white-space: pre-wrap;
-            text-align: left;
-            z-index: 1;
-        }
-
-        &:hover {
-            .tooltip-content {
-                visibility: visible;
-                opacity: 1;
-            }
+            visibility: visible;
+            opacity: 1;
         }
     }
+}
 </style>
