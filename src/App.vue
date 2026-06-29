@@ -27,7 +27,6 @@ const isAuthChecked = ref(false); // SSO 체크 완료 여부 (UI 렌더링 제�
 onMounted(async () => {
   const params = new URLSearchParams(location.search);
   
-
   if (new URLSearchParams(location.search).has("at")) {
     setCookieByParams();
   }
@@ -47,7 +46,7 @@ onMounted(async () => {
         })
     }else {
         // SSO에서 돌아온 직후(at 파라미터 존재)인데 또 실패하면 무한루프 방지
-        if (!params.get('at') ) {
+        if (!params.get('at') && !getCookie('at')) {
             modalStore.confirmModal.openModal({
                 text: "인증에 실패하였습니다. 다시 시도해주세요.",
                 confirmText: "확인",
@@ -80,7 +79,6 @@ onMounted(async () => {
       
       const response = await authSsoLogin();
 
-      console.log(response);
       if (response.status == 200) {
         hospitalStore.hospitalData = response.data.member;
         isAuthChecked.value = true;
@@ -95,7 +93,7 @@ onMounted(async () => {
         });
       }
 
-      initSSOCheck(handleAuthResult); // sso 로그인 체크/
+      initSSOCheck(handleAuthResult); // sso 로그인 체크
 
     } else {
       //링크에 리다이렉트 해서 토큰 조회
