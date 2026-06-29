@@ -4,7 +4,7 @@ import DefaultLayout from "./components/layouts/DefaultLayout.vue";
 import ConfirmModal from "./components/common/ConfirmModal.vue";
 
 import { onMounted, ref } from "vue";
-import { loadSSOScript, initSSOCheck, authSsoLogin } from "@/utils/sso";
+import { loadSSOScript, initSSOCheck, authSsoLogin, redirectToSSOLogin } from "@/utils/sso";
 import { useRoute, useRouter } from "vue-router";
 import { showAlert } from "./utils/ui";
 import { useModalStore } from "./stores/modalStore";
@@ -20,68 +20,88 @@ const isMobile = useDevice();
 const route = useRoute();
 const router = useRouter();
 const modalStore = useModalStore();
+const hospitalStore = useHospitalStore();
 
 const isAuthChecked = ref(false); // SSO 체크 완료 여부 (UI 렌더링 제어)
 
 onMounted(async () => {
   const params = new URLSearchParams(location.search);
-
-  const at = getCookie("at") ?? getCookie("INTO_ACCESS") ?? null;
-  const rt = getCookie("rt") ?? getCookie("INTO_REFRESH") ?? null;
-
+  
 
   if (new URLSearchParams(location.search).has("at")) {
     setCookieByParams();
   }
 
-  
-
   // 인증 결과에 따른 처리를 위한 공통 콜백 함수
-  const handleAuthResult = async (status) => {
-    if (status === "cocode") {
-      modalStore.confirmModal.openModal({
-        text: "인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.",
-        confirmText: "확인",
-        noCancelBtn: true,
-        onConfirm: () => {
-          window.close(); // 실패 시 창 닫기
-        },
-      });
+  const handleAuthResult = (status) => {
+    if (status === 'success') {
+        isAuthChecked.value = true; // 인증 성공 시에만 레이아웃 노출
+    } else if(status === 'cocode') {
+        modalStore.confirmModal.openModal({
+            text: "인투링크 예약 서비스를 이용 중인 병원만 접근할 수 있는 메뉴입니다.",
+            confirmText: "확인",
+            noCancelBtn: true,
+            onConfirm: () => {
+                window.close(); // 실패 시 창 닫기
+            }
+        })
+    }else {
+        // SSO에서 돌아온 직후(at 파라미터 존재)인데 또 실패하면 무한루프 방지
+        if (!params.get('at') ) {
+            modalStore.confirmModal.openModal({
+                text: "인증에 실패하였습니다. 다시 시도해주세요.",
+                confirmText: "확인",
+                noCancelBtn: true,
+                onConfirm: () => {
+                    document.cookie = "INTO_ACCESS=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    document.cookie = "INTO_REFRESH=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    document.cookie = "at=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    document.cookie = "rt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    window.close();
+                }
+            })
+        }
     }
-  }
+  };
 
   try {
     console.log("스크립트 로드");
     await loadSSOScript(); // sso 스크립트 로드
 
+    const at = getCookie("at");
+    const rt = getCookie("rt");
+
+    //이미 토큰값을 가지고 있다면 로그인진행, 없으면 리다이렉트로 인투링크의 토큰을 조회
     if (params.has("at") || (at && rt)) {
-      if (params.has("at")) {
+
+      if(params.has("at")){
         setCookieByParams();
       }
-
-      if (at && rt) {
-        setCookieByAtRt();
-      }
-
+      
       const response = await authSsoLogin();
 
+      console.log(response);
       if (response.status == 200) {
-        const hospitalStore = useHospitalStore();
         hospitalStore.hospitalData = response.data.member;
         isAuthChecked.value = true;
-
-        document.cookie = `INTO_ACCESS=${encodeURI(at)};SameSite=None;Secure;path=/;expires=${getAccessDate().toUTCString()}`;
-        document.cookie = `INTO_REFRESH=${encodeURI(rt)};SameSite=None;Secure;path=/;expires=${getRefreshDate().toUTCString()}`;
-        window.localStorage.setItem("INTO_ACCESS", at);
-        window.localStorage.setItem("INTO_REFRESH", rt);
+      }else{
+        modalStore.confirmModal.openModal({
+          text: `인증에 실패하였습니다. 다시 시도해주세요.\n [${response.message}]`,
+          confirmText: "확인",
+          noCancelBtn: true,
+          onConfirm: () => {
+             redirectToSSOLogin();
+          },
+        });
       }
+
+      initSSOCheck(handleAuthResult); // sso 로그인 체크/
+
     } else {
-      alert("리다이렉트 로그인 시도");
-      window.location.href =
-        "http://localhost:20080/user/ssoRedirect?service=intobooking&next=" +
-        window.location;
+      //링크에 리다이렉트 해서 토큰 조회
+      window.location.href = `${import.meta.env.VITE_LINK_URL}/user/callBack?service=${import.meta.env.VITE_SSO_SERVICE_ID}&next=${window.location}`;
     }
-    initSSOCheck(handleAuthResult); // sso 로그인 체크/
+
   } catch (err) {
     console.error("SSO 프로세스 오류:", err);
     modalStore.confirmModal.openModal({

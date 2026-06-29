@@ -46,8 +46,8 @@ const toggleBooking = () => {
 
 //wd 클릭 이벤트 => 이동
 const openWd = () => {
-    const at = Cookies.get('INTO_ACCESS');
-    const rt = Cookies.get('INTO_REFRESH');
+    const at = Cookies.get('at');
+    const rt = Cookies.get('rt');
 
     window.open(`${EXTERNAL_LINKS.WD_SSO}?at=${at}&rt=${rt}`);
 }

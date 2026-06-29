@@ -82,8 +82,8 @@ export const setCookieByParams = () => {
     const params = new URLSearchParams(location.search);
     document.cookie = `INTO_ACCESS=${params.get("at")};SameSite=None;Secure;path=/;expires=${getAccessDate().toUTCString()}`;
     document.cookie = `INTO_REFRESH=${params.get("rt")};SameSite=None;Secure;path=/;expires=${getRefreshDate().toUTCString()}`;
-    document.cookie = `at=${encodeURIComponent(params.get("at"))}; path=/;`;
-    document.cookie = `rt=${encodeURIComponent(params.get("rt"))}; path=/;`;
+    document.cookie = `at=${encodeURIComponent(params.get("at"))};SameSite=None;Secure;path=/;expires=${getAccessDate().toUTCString()}`;
+    document.cookie = `rt=${encodeURIComponent(params.get("rt"))};SameSite=None;Secure;path=/;expires=${getRefreshDate().toUTCString()}`;
 };
 
 export const setCookieByAtRt = () => {

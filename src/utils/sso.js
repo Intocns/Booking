@@ -1,4 +1,5 @@
 import axios from "axios"; // 인터셉터 없는 순수 axios (헤더 없이 보내기용)
+import Cookies from "js-cookie";
 import { useHospitalStore } from "@/stores/hospitalStore";
 import { useModalStore } from "@/stores/modalStore";
 import { getCookie } from "@/utils/common";
@@ -27,7 +28,7 @@ export const authSsoLogin = async (_businessNo = null, next_url = null) => {
       {
         at: at,
         rt: rt,
-        service_id: "intobooking",
+        service_id: import.meta.env.VITE_SSO_SERVICE_ID,
       },
       {
         headers: { "Content-Type": "application/json" },
@@ -41,7 +42,7 @@ export const authSsoLogin = async (_businessNo = null, next_url = null) => {
     }
   } catch (err) {
     modalStore.confirmModal.openModal({
-      text: "로그인 인증 실패",
+      text: "인증에 실패하였습니다. 다시 시도해주세요.",
       confirmText: "확인",
       noCancelBtn: true,
       onConfirm: () => {
@@ -57,7 +58,7 @@ export const initSSOCheck = (onResult) => {
   const isSession = false; // 현재 사이트 자체 세션 유무
   const isTest = import.meta.env.VITE_IS_TEST === "false";
 
-  const sso = new INTOSSO("intobooking", false, isTest); // test일경우 마지막 인자값 true, live일 경우 false
+  const sso = new INTOSSO(import.meta.env.VITE_SSO_SERVICE_ID, false, isTest); // test일경우 마지막 인자값 true, live일 경우 false
 
   window.addEventListener("message", (e) => {
     console.log("MESSAGE", e.data);
@@ -117,4 +118,12 @@ export const initSSOCheck = (onResult) => {
     window.removeEventListener("message", messageHandler);
     if (onResult) onResult("error");
   }
+};
+
+// SSO 로그인 페이지로 리다이렉트
+export const redirectToSSOLogin = () => {
+  const isTest = import.meta.env.VITE_IS_TEST === "true";
+  const sso = new INTOSSO(import.meta.env.VITE_SSO_SERVICE_ID, true, isTest);
+  const loginUrl = sso.getLoginUrl(window.location.href);
+  window.location.href = loginUrl;
 };
