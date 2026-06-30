@@ -194,7 +194,14 @@ export const useReservationStore = defineStore("reservation", () => {
         // 진료예약이 아닌 경우 API 호출 없이 리스트 데이터로 모달 열기
         if (rowData && rowData.clinicType !== '진료예약') {
             reserveInfo.value = {
-                reserve: rowData,
+                reserve: {
+                    ...rowData,
+                    reTime: rowData.reTime || rowData.startDate || null,
+                    reTimeEnd: rowData.reTimeEnd || rowData.endDate || null,
+                    userTel: rowData.phone || rowData.userTel || null,
+                    spesice: rowData.speciesName || rowData.spesice || '',
+                    breed: rowData.breedName || (typeof rowData.breed === 'string' ? rowData.breed : '') || '',
+                },
                 clientPet: null,
                 clientList: [],
             };
