@@ -62,7 +62,6 @@ const searchList = async () => {
         keyword: keyword.value?.trim() || null,
         reRoute: convertFilterParam(reservationChannel.value),
     });
-    reservationStore.reservePendingList = reservationStore.reservePendingList.filter(row => row.reRoute !== 1);
 };
 
 let isInitialMount = true;

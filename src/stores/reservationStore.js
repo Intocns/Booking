@@ -155,13 +155,14 @@ export const useReservationStore = defineStore("reservation", () => {
                 }
 
                 // 배열이 아닌 경우(이전 API 호환)
+                const filterIntoVet = (list) => list.filter(row => row.reRoute !== 1);
                 if (Array.isArray(data)) {
-                    reservePendingList.value = data.map(mapReserveRow);
+                    reservePendingList.value = filterIntoVet(data.map(mapReserveRow));
                 } else {
-                    reservePendingList.value = rows.map(row => {
+                    reservePendingList.value = filterIntoVet(rows.map(row => {
                         try { return mapReserveRow(row); }
                         catch(e) { console.error('pendinglist row map error:', e, row); return null; }
-                    }).filter(Boolean);
+                    }).filter(Boolean));
                 }
             }
         } catch (error) {
