@@ -58,7 +58,7 @@ export const initSSOCheck = (onResult) => {
   const isSession = false; // 현재 사이트 자체 세션 유무
   const isTest = import.meta.env.VITE_IS_TEST === "true";
 
-  const sso = new INTOSSO(import.meta.env.VITE_SSO_SERVICE_ID, false, isTest); // test일경우 마지막 인자값 true, live일 경우 false
+  const sso = new INTOSSO(import.meta.env.VITE_SSO_SERVICE_ID, true, false); // test일경우 마지막 인자값 true, live일 경우 false
 
   window.addEventListener("message", (e) => {
     console.log("MESSAGE", e.data);
@@ -123,7 +123,7 @@ export const initSSOCheck = (onResult) => {
 // SSO 로그인 페이지로 리다이렉트
 export const redirectToSSOLogin = () => {
   const isTest = import.meta.env.VITE_IS_TEST === "true";
-  const sso = new INTOSSO(import.meta.env.VITE_SSO_SERVICE_ID, true, isTest);
+  const sso = new INTOSSO(import.meta.env.VITE_SSO_SERVICE_ID, true, false);
   const loginUrl = sso.getLoginUrl(window.location.href);
   window.location.href = loginUrl;
 };
