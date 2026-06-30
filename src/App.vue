@@ -46,7 +46,7 @@ onMounted(async () => {
         })
     }else {
         // SSO에서 돌아온 직후(at 파라미터 존재)인데 또 실패하면 무한루프 방지
-        if (!params.get('at') && !getCookie('at')) {
+        if (!params.get('at') && !getCookie('INTO_ACCESS')) {
             modalStore.confirmModal.openModal({
                 text: "인증에 실패하였습니다. 다시 시도해주세요.",
                 confirmText: "확인",
