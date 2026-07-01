@@ -54,7 +54,6 @@ onMounted(async () => {
     const at = getCookie("INTO_ACCESS");
     const rt = getCookie("INTO_REFRESH");
 
-      initSSOCheck(handleAuthResult); // sso 로그인 체크
 
     //이미 토큰값을 가지고 있다면 로그인진행, 없으면 리다이렉트로 인투링크의 토큰을 조회
     if (params.has("at") || (at && rt)) {
@@ -86,6 +85,8 @@ onMounted(async () => {
           },
         });
       }
+
+      initSSOCheck(handleAuthResult); // sso 로그인 체크
     } else {
       //링크에 리다이렉트 해서 토큰 조회
       window.location.href = `${import.meta.env.VITE_LINK_URL}/user/callBack?service=${import.meta.env.VITE_SSO_SERVICE_ID}&next=${window.location}`;

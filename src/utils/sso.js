@@ -20,8 +20,8 @@ export const loadSSOScript = () => {
 export const authSsoLogin = async (_businessNo = null, next_url = null) => {
   const modalStore = useModalStore();
   const urlParams = new URLSearchParams(window.location.search);
-  const at = urlParams.get("at") ?? getCookie("at") ?? getCookie("INTO_ACCESS");
-  const rt = urlParams.get("rt") ?? getCookie("rt") ?? getCookie("INTO_REFRESH");
+  const at = urlParams.get("at") ?? getCookie("INTO_ACCESS");
+  const rt = urlParams.get("rt") ?? getCookie("INTO_REFRESH");
 
   try {
     const response = await axios.post(
