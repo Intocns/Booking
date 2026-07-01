@@ -25,9 +25,9 @@ const hospitalStore = useHospitalStore();
 const isAuthChecked = ref(false); // SSO 체크 완료 여부 (UI 렌더링 제어)
 
 onMounted(async () => {
-  const params = new URLSearchParams(location.location.search);
+  const params = new URLSearchParams(window.location.search);
   
-  if (new URLSearchParams(location.location.search).has("at")) {
+  if (new URLSearchParams(window.location.search).has("at")) {
     setCookieByParams();
   }
 
