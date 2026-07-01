@@ -23,6 +23,8 @@ export const authSsoLogin = async (_businessNo = null, next_url = null) => {
   const at = urlParams.get("at") ?? getCookie("INTO_ACCESS");
   const rt = urlParams.get("rt") ?? getCookie("INTO_REFRESH");
 
+  alert(`${at}\n${rt}\n${window.location.hash}`);
+
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_SSO_URL}internalAuth`,
