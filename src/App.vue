@@ -88,17 +88,8 @@ onMounted(async () => {
 
       initSSOCheck(handleAuthResult); // sso 로그인 체크
     } else {
-       modalStore.confirmModal.openModal({
-          text: `링크에 리다이렉트 해서 토큰 조회\n${JSON.stringify(Cookies.get())}`,
-          confirmText: "확인",
-          noCancelBtn: true,
-          onConfirm: () => {
-             deleteCookie();
-             redirectToSSOLogin();
-          },
-        });
       //링크에 리다이렉트 해서 토큰 조회
-      //window.location.href = `${import.meta.env.VITE_LINK_URL}/user/callBack?service=${import.meta.env.VITE_SSO_SERVICE_ID}&next=${window.location}`;
+      window.location.href = `${import.meta.env.VITE_LINK_URL}/user/callBack?service=${import.meta.env.VITE_SSO_SERVICE_ID}&next=${window.location}`;
     }
   } catch (err) {
     console.error("SSO 프로세스 오류:", err);
