@@ -43,7 +43,7 @@ export const authSsoLogin = async (_businessNo = null, next_url = null) => {
     }
   } catch (err) {
     modalStore.confirmModal.openModal({
-      text: "인증에 실패하였습니다. 다시 시도해주세요.",
+      text: `인증에 실패하였습니다. 다시 시도해주세요.\n[${err.message}]`,
       confirmText: "확인",
       noCancelBtn: true,
       onConfirm: () => {
