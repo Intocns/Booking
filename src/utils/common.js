@@ -82,11 +82,14 @@ export const setCookieByParams = () => {
     const params = new URLSearchParams(location.search);
     document.cookie = `INTO_ACCESS=${params.get("at")};SameSite=None;Secure;path=/;expires=${getAccessDate().toUTCString()}`;
     document.cookie = `INTO_REFRESH=${params.get("rt")};SameSite=None;Secure;path=/;expires=${getRefreshDate().toUTCString()}`;
-    document.cookie = `at=${encodeURIComponent(params.get("at"))};SameSite=None;Secure;path=/;expires=${getAccessDate().toUTCString()}`;
-    document.cookie = `rt=${encodeURIComponent(params.get("rt"))};SameSite=None;Secure;path=/;expires=${getRefreshDate().toUTCString()}`;
 };
 
 export const setCookieByAtRt = () => {
   document.cookie = `INTO_ACCESS=${getCookie("at")};path=/;`;
   document.cookie = `INTO_REFRESH=${getCookie("rt")};path=/;`;
+};
+
+export const deleteCookie = () => {
+    document.cookie = "INTO_ACCESS=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "INTO_REFRESH=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 };
