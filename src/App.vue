@@ -51,8 +51,8 @@ onMounted(async () => {
     console.log("스크립트 로드");
     await loadSSOScript(); // sso 스크립트 로드
 
-    const at = getCookie("INTO_ACCESS");
-    const rt = getCookie("INTO_REFRESH");
+    const at = getCookie("INTO_ACCESS") ?? params.get("at")?? "";
+    const rt = getCookie("INTO_REFRESH") ?? params.get("rt")?? "";
 
 
     //이미 토큰값을 가지고 있다면 로그인진행, 없으면 리다이렉트로 인투링크의 토큰을 조회
