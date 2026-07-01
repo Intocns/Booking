@@ -89,7 +89,7 @@ onMounted(async () => {
       initSSOCheck(handleAuthResult); // sso 로그인 체크
     } else {
        modalStore.confirmModal.openModal({
-          text: `링크에 리다이렉트 해서 토큰 조회\n${at}\n${rt}`,
+          text: `링크에 리다이렉트 해서 토큰 조회\n${Cookies.get()}`,
           confirmText: "확인",
           noCancelBtn: true,
           onConfirm: () => {
